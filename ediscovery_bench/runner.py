@@ -1,114 +1,168 @@
-"""Runs one task across N models, writing one JSONL of predictions per model.
+"""Runs a job = (corpus, task set, arm, model key) and writes predictions JSONL.
 
-Resumable: existing predictions for a (task, model) are loaded and their
-doc_ids skipped, so a crashed or rate-limited run can be re-invoked safely.
-Failed predictions (error != None) are re-attempted on resume.
+Layout: results/<corpus>/<arm>/<model_key>.jsonl with one row per (doc, question).
+Resumable: rows already present (without error) are skipped.
+
+Arms:
+  single: one API call per (document, question)
+  multi:  one API call per document covering all questions
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+import time
 from pathlib import Path
+from typing import Callable
 
 from rich.console import Console
 from rich.progress import BarColumn, MofNCompleteColumn, Progress, TextColumn, TimeElapsedColumn
 
-from .config import ModelSpec
-from .providers import Prediction, make_provider
-from .tasks import Document, Task, iter_jsonl
+from .providers import Prediction, make_provider, parse_model_key
+from .tasks import Document, TaskSet, iter_jsonl
 
-console = Console()
+console = Console(width=220)
 
-# Per-provider concurrency. Jev's published limit is 1,200 rpm; the LLMs vary
-# by account tier. Conservative defaults; override with --concurrency.
-DEFAULT_CONCURRENCY = {
-    "typesafe": 16,
-    "anthropic": 6,
-    "openai": 6,
-    "gemini": 6,
-    "mock": 32,
-}
+DEFAULT_CONCURRENCY = {"typesafe": 12, "anthropic": 8, "openai": 8, "gemini": 8, "mock": 64}
 
 
-def predictions_path(out_dir: Path, task: Task, spec: ModelSpec) -> Path:
-    return out_dir / task.name / f"{spec.key}.jsonl"
+def job_path(out: Path, corpus: str, arm: str, model_key: str, tag: str = "") -> Path:
+    name = model_key.replace("@", "__") + (f"__{tag}" if tag else "")
+    return out / corpus / arm / f"{name}.jsonl"
 
 
-def load_predictions(path: Path) -> dict[str, Prediction]:
-    out: dict[str, Prediction] = {}
-    for row in iter_jsonl(path):
-        p = Prediction.from_row(row)
-        out[p.doc_id] = p
-    return out
+def load_predictions(path: Path) -> list[Prediction]:
+    return [Prediction.from_row(r) for r in iter_jsonl(path)]
 
 
-async def run_model(
-    task: Task,
+def _units(docs: list[Document], qids: list[str], arm: str) -> list[tuple[list[str], Document]]:
+    if arm == "multi":
+        return [(qids, d) for d in docs]
+    return [([q], d) for d in docs for q in qids]
+
+
+async def run_job(
+    ts: TaskSet,
     docs: list[Document],
-    spec: ModelSpec,
-    out_dir: Path,
+    model_key: str,
+    arm: str,
+    out: Path,
+    corpus: str,
     concurrency: int | None = None,
     effort: str | None = None,
+    phrasing: str = "rfp",
+    batch: bool = False,
+    flex: bool = True,
+    tag: str = "",
     progress: Progress | None = None,
+    log: Callable[[str], None] = console.print,
 ) -> list[Prediction]:
-    path = predictions_path(out_dir, task, spec)
+    path = job_path(out, corpus, arm, model_key, tag)
     path.parent.mkdir(parents=True, exist_ok=True)
+    spec, _ = parse_model_key(model_key)
 
     existing = load_predictions(path)
-    done_ok = {d for d, p in existing.items() if not p.error}
-    todo = [d for d in docs if d.id not in done_ok]
-
-    provider = make_provider(spec, effort_override=effort)
-    sem = asyncio.Semaphore(concurrency or DEFAULT_CONCURRENCY[spec.provider])
-    task_id = progress.add_task(f"{spec.key:<18}", total=len(docs), completed=len(done_ok)) if progress else None
-
-    # Rewrite file without stale errored rows, then append as we go.
+    done = {(p.doc_id, p.question) for p in existing if not p.error}
+    keep = [p for p in existing if not p.error]
     with path.open("w") as f:
-        for p in existing.values():
-            if not p.error:
-                f.write(json.dumps(p.to_row()) + "\n")
+        for p in keep:
+            f.write(json.dumps(p.to_row()) + "\n")
 
+    qids = ts.qids
+    units = [(qs, d) for qs, d in _units(docs, qids, arm) if any((d.id, q) not in done for q in qs)]
+    total = len(docs) * (1 if arm == "multi" else len(qids))
+    task_id = progress.add_task(f"{model_key:<24} {arm:<6}", total=total, completed=len(done)) if progress else None
+
+    provider = make_provider(model_key, effort_override=effort, phrasing=phrasing, batch=batch, flex=flex)
     lock = asyncio.Lock()
+    new: list[Prediction] = []
 
-    async def one(doc: Document) -> Prediction:
-        async with sem:
-            pred = await provider.classify(task, doc)
+    async def record(preds: list[Prediction]) -> None:
         async with lock:
             with path.open("a") as f:
-                f.write(json.dumps(pred.to_row()) + "\n")
+                for p in preds:
+                    f.write(json.dumps(p.to_row()) + "\n")
+            new.extend(preds)
             if progress and task_id is not None:
-                progress.advance(task_id)
-        return pred
+                progress.advance(task_id, len(preds) if arm == "single" else 1)
 
+    t0 = time.time()
     try:
-        new = await asyncio.gather(*(one(d) for d in todo))
+        if batch and getattr(provider, "supports_batch", False) and units:
+            results = await provider.run_batch(ts, units, log=log)  # type: ignore[attr-defined]
+            for idx, (qs, d) in enumerate(units):
+                r = results.get(idx)
+                if isinstance(r, Exception) or r is None:
+                    preds = _error_preds(ts, qs, d, model_key, spec.model_id, arm, str(r))
+                else:
+                    paid, listed = provider.cost(r)
+                    n = len(qs)
+                    preds = []
+                    for q in qs:
+                        p = float(min(1.0, max(0.0, r.p_positive.get(q, 0.5))))
+                        lab = r.labels.get(q)
+                        if lab not in (ts.positive_label, ts.negative_label):
+                            lab = ts.positive_label if p >= 0.5 else ts.negative_label
+                        preds.append(
+                            Prediction(
+                                doc_id=d.id, question=q, model_key=model_key, model_resolved=r.resolved_model, arm=arm,
+                                label=lab, p_positive=p, confidence=None, latency_ms=None,
+                                input_tokens=r.input_tokens // n, output_tokens=r.output_tokens // n,
+                                cached_tokens=r.cached_tokens // n, cost_usd=paid / n, list_cost_usd=listed / n,
+                                pricing_mode="batch", gold=d.gold(q, ts.negative_label), gray=q in d.gray,
+                            )
+                        )
+                await record(preds)
+        else:
+            sem = asyncio.Semaphore(concurrency or DEFAULT_CONCURRENCY[spec.provider])
+
+            async def one(qs: list[str], d: Document) -> None:
+                async with sem:
+                    preds = await provider.classify(ts, qs, d, arm)
+                await record(preds)
+
+            await asyncio.gather(*(one(qs, d) for qs, d in units))
     finally:
         await provider.aclose()
 
-    results = {**{d: p for d, p in existing.items() if not p.error}, **{p.doc_id: p for p in new}}
-    return [results[d.id] for d in docs if d.id in results]
+    allp = keep + new
+    n_err = sum(1 for p in new if p.error)
+    paid = sum(p.cost_usd for p in new)
+    log(
+        f"[dim]{corpus}/{arm}/{model_key}{('#'+tag) if tag else ''}: {len(new)} new rows, {n_err} errors, "
+        f"${paid:.3f} paid, {time.time()-t0:.0f}s[/dim]"
+    )
+    return allp
 
 
-async def run_task(
-    task: Task,
+def _error_preds(ts, qs, d, model_key, model_id, arm, msg) -> list[Prediction]:
+    return [
+        Prediction(
+            doc_id=d.id, question=q, model_key=model_key, model_resolved=model_id, arm=arm, label="",
+            p_positive=float("nan"), confidence=None, latency_ms=None, input_tokens=0, output_tokens=0,
+            cached_tokens=0, cost_usd=0.0, list_cost_usd=0.0, pricing_mode="batch",
+            gold=d.gold(q, ts.negative_label), gray=q in d.gray, error=msg[:500],
+        )
+        for q in qs
+    ]
+
+
+async def run_jobs(
+    ts: TaskSet,
     docs: list[Document],
-    specs: list[ModelSpec],
-    out_dir: Path,
-    concurrency: int | None = None,
-    effort: str | None = None,
-) -> dict[str, list[Prediction]]:
-    results: dict[str, list[Prediction]] = {}
+    model_keys: list[str],
+    arms: list[str],
+    out: Path,
+    corpus: str,
+    **kw,
+) -> dict[tuple[str, str], list[Prediction]]:
+    results: dict[tuple[str, str], list[Prediction]] = {}
     with Progress(
-        TextColumn("[bold]{task.description}"),
-        BarColumn(),
-        MofNCompleteColumn(),
-        TimeElapsedColumn(),
-        console=console,
+        TextColumn("[bold]{task.description}"), BarColumn(), MofNCompleteColumn(), TimeElapsedColumn(), console=console
     ) as progress:
-        coros = [
-            run_model(task, docs, spec, out_dir, concurrency, effort, progress) for spec in specs
-        ]
-        for spec, preds in zip(specs, await asyncio.gather(*coros)):
-            results[spec.key] = preds
+        coros = [run_job(ts, docs, mk, arm, out, corpus, progress=progress, **kw) for mk in model_keys for arm in arms]
+        keys = [(mk, arm) for mk in model_keys for arm in arms]
+        for k, preds in zip(keys, await asyncio.gather(*coros)):
+            results[k] = preds
     return results

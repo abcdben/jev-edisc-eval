@@ -6,22 +6,28 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 
 from ..config import ModelSpec
-from ..tasks import Document, Task
+from ..tasks import Document, TaskSet
 
 
 @dataclass
 class Prediction:
     doc_id: str
-    model_key: str
-    model_resolved: str  # what the API said actually answered (e.g. jev-1.13.0)
+    question: str
+    model_key: str  # roster key, or jev variant key like "jev@choice"
+    model_resolved: str  # what the API said actually answered
+    arm: str  # "single" | "multi"
     label: str
-    probabilities: dict[str, float]  # over task labels, sums to ~1
-    confidence: float | None  # provider-reported, if any (Jev Choice); else None
-    latency_ms: float
+    p_positive: float
+    confidence: float | None
+    latency_ms: float | None  # None for batch-mode rows
     input_tokens: int
     output_tokens: int
-    cost_usd: float
+    cached_tokens: int
+    cost_usd: float  # what we actually paid (flex/batch/cache discounts applied)
+    list_cost_usd: float  # standard-tier price for the same tokens
+    pricing_mode: str  # "standard" | "flex" | "batch"
     gold: str | None = None
+    gray: bool = False
     error: str | None = None
     raw: dict[str, Any] = field(default_factory=dict)
 
@@ -33,85 +39,130 @@ class Prediction:
         return Prediction(**row)
 
 
+@dataclass
+class RawResult:
+    """What a provider returns for one API call covering one or more questions."""
+
+    p_positive: dict[str, float]  # qid -> p(responsive)
+    labels: dict[str, str | None]  # qid -> label or None (use threshold on p)
+    confidence: dict[str, float | None]
+    resolved_model: str
+    input_tokens: int
+    output_tokens: int
+    cached_tokens: int = 0
+    cache_write_tokens: int = 0
+    pricing_mode: str = "standard"
+    raw: dict[str, Any] = field(default_factory=dict)
+
+
 class Provider(ABC):
+    arm_supports_multi = True
+
     def __init__(self, spec: ModelSpec):
         self.spec = spec
 
+    @property
+    def key(self) -> str:
+        return self.spec.key
+
     @abstractmethod
-    async def _classify(self, task: Task, doc: Document) -> tuple[dict[str, float], str | None, float | None, str, int, int, dict]:
-        """Return (probabilities, label_or_None, confidence, resolved_model, in_tok, out_tok, raw).
+    async def _call(self, ts: TaskSet, qids: list[str], doc: Document) -> RawResult:
+        """Answer `qids` (one for the single arm, all for the multi arm) about `doc`."""
 
-        If label is None the argmax of probabilities is used.
-        """
+    def cost(self, r: RawResult) -> tuple[float, float]:
+        """(paid, list) cost. Providers override to apply cache/flex/batch pricing."""
+        list_cost = self.spec.cost_usd(r.input_tokens, r.output_tokens)
+        return list_cost, list_cost
 
-    async def classify(self, task: Task, doc: Document) -> Prediction:
+    async def classify(self, ts: TaskSet, qids: list[str], doc: Document, arm: str) -> list[Prediction]:
         t0 = time.perf_counter()
         try:
-            probs, label, conf, resolved, in_tok, out_tok, raw = await self._classify(task, doc)
+            r = await self._call(ts, qids, doc)
             latency = (time.perf_counter() - t0) * 1000
-            probs = normalize(probs, task.label_names)
-            if label is None or label not in task.labels:
-                label = max(probs, key=probs.get)
-            return Prediction(
-                doc_id=doc.id,
-                model_key=self.spec.key,
-                model_resolved=resolved,
-                label=label,
-                probabilities=probs,
-                confidence=conf,
-                latency_ms=latency,
-                input_tokens=in_tok,
-                output_tokens=out_tok,
-                cost_usd=self.spec.cost_usd(in_tok, out_tok),
-                gold=doc.label,
-                raw=raw,
-            )
-        except Exception as e:  # noqa: BLE001 - we want every failure recorded, not raised
+            paid, listed = self.cost(r)
+            # Split shared call cost evenly across questions so per-question sums are exact.
+            n = len(qids)
+            out = []
+            for qid in qids:
+                p = float(min(1.0, max(0.0, r.p_positive.get(qid, 0.5))))
+                label = r.labels.get(qid)
+                if label not in (ts.positive_label, ts.negative_label):
+                    label = ts.positive_label if p >= 0.5 else ts.negative_label
+                out.append(
+                    Prediction(
+                        doc_id=doc.id,
+                        question=qid,
+                        model_key=self.key,
+                        model_resolved=r.resolved_model,
+                        arm=arm,
+                        label=label,
+                        p_positive=p,
+                        confidence=r.confidence.get(qid),
+                        latency_ms=latency,
+                        input_tokens=r.input_tokens // n,
+                        output_tokens=r.output_tokens // n,
+                        cached_tokens=r.cached_tokens // n,
+                        cost_usd=paid / n,
+                        list_cost_usd=listed / n,
+                        pricing_mode=r.pricing_mode,
+                        gold=doc.gold(qid, ts.negative_label),
+                        gray=qid in doc.gray,
+                        raw=r.raw if n == 1 else {},
+                    )
+                )
+            return out
+        except Exception as e:  # noqa: BLE001
             latency = (time.perf_counter() - t0) * 1000
-            return Prediction(
-                doc_id=doc.id,
-                model_key=self.spec.key,
-                model_resolved=self.spec.model_id,
-                label="",
-                probabilities={},
-                confidence=None,
-                latency_ms=latency,
-                input_tokens=0,
-                output_tokens=0,
-                cost_usd=0.0,
-                gold=doc.label,
-                error=f"{type(e).__name__}: {e}",
-            )
+            return [
+                Prediction(
+                    doc_id=doc.id,
+                    question=qid,
+                    model_key=self.key,
+                    model_resolved=self.spec.model_id,
+                    arm=arm,
+                    label="",
+                    p_positive=float("nan"),
+                    confidence=None,
+                    latency_ms=latency,
+                    input_tokens=0,
+                    output_tokens=0,
+                    cached_tokens=0,
+                    cost_usd=0.0,
+                    list_cost_usd=0.0,
+                    pricing_mode="standard",
+                    gold=doc.gold(qid, ts.negative_label),
+                    gray=qid in doc.gray,
+                    error=f"{type(e).__name__}: {str(e)[:500]}",
+                )
+                for qid in qids
+            ]
 
     async def healthcheck(self) -> str:
-        """Cheap call proving auth + connectivity. Returns a one-line status."""
-        from ..tasks import Task
+        from ..tasks import Question, TaskSet
 
-        task = Task(
+        ts = TaskSet(
             name="healthcheck",
-            kind="binary",
-            labels={"yes": "The text mentions an invoice.", "no": "It does not."},
-            instructions="Does this text mention an invoice?",
-            positive_label="yes",
+            context="A small company's mailbox.",
+            questions={
+                "invoice": Question(
+                    id="invoice",
+                    title="invoice",
+                    rfp_text="All documents mentioning an invoice.",
+                    positive_desc="The text mentions an invoice.",
+                    negative_desc="It does not mention an invoice.",
+                    literal="Does this text mention an invoice?",
+                )
+            },
         )
         doc = Document(id="hc", text="Attached is invoice #4471 for the March services.")
-        pred = await self.classify(task, doc)
-        if pred.error:
-            raise RuntimeError(pred.error)
+        preds = await self.classify(ts, ["invoice"], doc, arm="single")
+        p = preds[0]
+        if p.error:
+            raise RuntimeError(p.error)
         return (
-            f"ok  model={pred.model_resolved}  label={pred.label}  "
-            f"p(yes)={pred.probabilities.get('yes', 0):.2f}  {pred.latency_ms:.0f}ms  "
-            f"tokens={pred.input_tokens}/{pred.output_tokens}  ${pred.cost_usd:.6f}"
+            f"ok  model={p.model_resolved}  label={p.label}  p={p.p_positive:.2f}  "
+            f"{p.latency_ms:.0f}ms  tokens={p.input_tokens}/{p.output_tokens}  ${p.cost_usd:.6f} ({p.pricing_mode})"
         )
 
     async def aclose(self) -> None:
         return None
-
-
-def normalize(probs: dict[str, float], labels: list[str]) -> dict[str, float]:
-    """Clamp to [0,1], fill missing labels with 0, renormalize to sum 1."""
-    out = {l: max(0.0, float(probs.get(l, 0.0) or 0.0)) for l in labels}
-    s = sum(out.values())
-    if s <= 0:
-        return {l: 1.0 / len(labels) for l in labels}
-    return {l: v / s for l, v in out.items()}

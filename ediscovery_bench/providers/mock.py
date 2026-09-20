@@ -6,24 +6,24 @@ import asyncio
 import hashlib
 import re
 
-from ..tasks import Document, Task
-from .base import Provider
+from ..tasks import Document, TaskSet
+from .base import Provider, RawResult
 
 
 class MockProvider(Provider):
-    async def _classify(self, task: Task, doc: Document):
-        await asyncio.sleep(0.005)
+    async def _call(self, ts: TaskSet, qids: list[str], doc: Document) -> RawResult:
+        await asyncio.sleep(0.002)
         text = doc.text.lower()
-        scores: dict[str, float] = {}
-        for name, desc in task.labels.items():
-            words = {w for w in re.findall(r"[a-z]{5,}", (desc or "").lower())}
+        probs, labels = {}, {}
+        for qid in qids:
+            q = ts.questions[qid]
+            words = {w for w in re.findall(r"[a-z]{6,}", q.positive_desc.lower())}
             hits = sum(1 for w in words if w in text)
-            scores[name] = 1.0 + hits
-        # add a stable pseudo-random nudge so probabilities aren't all ties
-        h = int(hashlib.md5(doc.id.encode()).hexdigest(), 16) % 100 / 100
-        first = task.label_names[0]
-        scores[first] += h
-        total = sum(scores.values())
-        probs = {k: v / total for k, v in scores.items()}
-        in_tok = max(1, len(doc.text) // 4)
-        return probs, None, None, self.spec.model_id, in_tok, 12, {}
+            h = int(hashlib.md5((doc.id + qid).encode()).hexdigest(), 16) % 100 / 400
+            p = min(0.99, 0.1 + 0.15 * hits + h)
+            probs[qid] = p
+            labels[qid] = None
+        return RawResult(
+            p_positive=probs, labels=labels, confidence={q: None for q in qids},
+            resolved_model=self.spec.model_id, input_tokens=len(doc.text) // 4, output_tokens=12 * len(qids),
+        )

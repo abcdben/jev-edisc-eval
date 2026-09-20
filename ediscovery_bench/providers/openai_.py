@@ -2,54 +2,82 @@ from __future__ import annotations
 
 import openai
 
-from ..tasks import Document, Task
-from .base import Provider
-from .llm_common import SYSTEM_PROMPT, build_decision_model, build_user_prompt, decision_to_probs
+from ..tasks import Document, TaskSet
+from .base import Provider, RawResult
+from .llm_common import SYSTEM_PROMPT, build_decision_model, build_doc_suffix, build_prefix, parse_decisions
+
+CACHE_READ_MULT = 0.10
+FLEX_MULT = 0.50
 
 
 class OpenAIProvider(Provider):
-    def __init__(self, spec):
+    def __init__(self, spec, phrasing: str = "rfp", flex: bool = True):
         super().__init__(spec)
-        self.client = openai.AsyncOpenAI(max_retries=4, timeout=120.0)
-        self._models: dict[str, type] = {}
+        self.client = openai.AsyncOpenAI(max_retries=6, timeout=300.0)
+        self.phrasing = phrasing
+        self.flex = flex
 
-    def _decision_model(self, task: Task):
-        if task.name not in self._models:
-            self._models[task.name] = build_decision_model(task)
-        return self._models[task.name]
-
-    async def _classify(self, task: Task, doc: Document):
-        Decision = self._decision_model(task)
+    async def _call(self, ts: TaskSet, qids: list[str], doc: Document) -> RawResult:
+        Decision = build_decision_model(ts, qids)
         kwargs: dict = {}
         if self.spec.effort:
             kwargs["reasoning"] = {"effort": self.spec.effort}
+        if self.flex:
+            kwargs["service_tier"] = "flex"
         kwargs.update(self.spec.extra)
-
-        resp = await self.client.responses.parse(
-            model=self.spec.model_id,
-            instructions=SYSTEM_PROMPT,
-            input=build_user_prompt(task, doc),
-            text_format=Decision,
-            store=False,
-            **kwargs,
-        )
-        decision = resp.output_parsed
-        if decision is None:
+        # prefix first so the automatic prompt cache can hit on the shared part
+        prompt = build_prefix(ts, qids, self.phrasing) + "\n\n" + build_doc_suffix(doc)
+        try:
+            resp = await self.client.responses.parse(
+                model=self.spec.model_id,
+                instructions=SYSTEM_PROMPT,
+                input=prompt,
+                text_format=Decision,
+                store=False,
+                prompt_cache_key=f"{ts.name}:{'+'.join(qids)}:{self.phrasing}",
+                **kwargs,
+            )
+        except openai.BadRequestError as e:
+            if self.flex and "service_tier" in str(e):
+                self.flex = False  # model doesn't support flex; fall back silently
+                kwargs.pop("service_tier", None)
+                resp = await self.client.responses.parse(
+                    model=self.spec.model_id, instructions=SYSTEM_PROMPT, input=prompt,
+                    text_format=Decision, store=False, **kwargs,
+                )
+            else:
+                raise
+        obj = resp.output_parsed
+        if obj is None:
             raise RuntimeError("no parsed output")
-        probs, label = decision_to_probs(decision, task)
-        usage = resp.usage
-        reasoning_tokens = 0
-        if usage and usage.output_tokens_details:
-            reasoning_tokens = int(usage.output_tokens_details.reasoning_tokens or 0)
-        return (
-            probs,
-            label,
-            None,
-            resp.model,
-            int(usage.input_tokens or 0) if usage else 0,
-            int(usage.output_tokens or 0) if usage else 0,
-            {"reasoning_tokens": reasoning_tokens},
+        probs, labels = parse_decisions(obj, qids)
+        u = resp.usage
+        cached = int(u.input_tokens_details.cached_tokens or 0) if (u and u.input_tokens_details) else 0
+        reasoning = int(u.output_tokens_details.reasoning_tokens or 0) if (u and u.output_tokens_details) else 0
+        tier = getattr(resp, "service_tier", None) or ("flex" if self.flex else "default")
+        return RawResult(
+            p_positive=probs,
+            labels=labels,
+            confidence={q: None for q in qids},
+            resolved_model=resp.model,
+            input_tokens=int(u.input_tokens or 0) if u else 0,
+            output_tokens=int(u.output_tokens or 0) if u else 0,
+            cached_tokens=cached,
+            pricing_mode="flex" if tier == "flex" else "standard",
+            raw={"reasoning_tokens": reasoning, "service_tier": tier},
         )
+
+    def cost(self, r: RawResult) -> tuple[float, float]:
+        s = self.spec
+        listed = s.cost_usd(r.input_tokens, r.output_tokens)
+        paid = (
+            (r.input_tokens - r.cached_tokens) * s.input_per_mtok
+            + r.cached_tokens * s.input_per_mtok * CACHE_READ_MULT
+            + r.output_tokens * s.output_per_mtok
+        ) / 1e6
+        if r.pricing_mode == "flex":
+            paid *= FLEX_MULT
+        return paid, listed
 
     async def aclose(self) -> None:
         await self.client.close()

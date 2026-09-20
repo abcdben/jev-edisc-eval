@@ -1,8 +1,12 @@
-"""Shared prompt + structured-output schema for the generative LLMs.
+"""Shared prompts + structured-output schemas for the generative LLMs.
 
-Mirrors TypeSafe's "System One LLM wrapper" approach: the LLM is constrained to
-return a decision plus a probability distribution over the label set, so its
-output is directly comparable to Jev's `probabilities`.
+Two arms:
+- single: one question per call. Output {label, p_responsive}.
+- multi: all questions per call. Output {<qid>: {label, p_responsive}, ...}.
+
+The prompt is split into a *prefix* (system + matter context + the request
+text(s)) that is identical across documents, so vendors' prompt caches can hit,
+and a *suffix* carrying the document.
 """
 
 from __future__ import annotations
@@ -11,54 +15,85 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, create_model
 
-from ..tasks import Document, Task
+from ..tasks import Document, Question, TaskSet
 
 SYSTEM_PROMPT = (
-    "You are a document review classifier working on an eDiscovery matter. "
-    "Read the document and the review instructions, then classify the document. "
-    "Return only the structured result. Do not explain."
+    "You are a document review classifier working on an eDiscovery matter. Read the matter background, "
+    "the request(s) for production, and the document. Decide whether the document is responsive to each "
+    "request, and give a calibrated probability. Return only the structured result. Do not explain."
 )
 
+PhraseMode = Literal["rfp", "literal"]
 
-def build_user_prompt(task: Task, doc: Document) -> str:
-    parts = []
-    if task.context:
-        parts.append(f"<matter_context>\n{task.context}\n</matter_context>")
-    parts.append(f"<instructions>\n{task.instructions}\n</instructions>")
-    crit = "\n".join(f"- {name}: {desc}" for name, desc in task.labels.items())
-    parts.append(f"<labels>\n{crit}\n</labels>")
-    parts.append(f"<document id=\"{doc.id}\">\n{doc.text}\n</document>")
-    parts.append(
-        "Classify the document with exactly one label. Also give your probability "
-        "(0 to 1) for EACH label; the probabilities should sum to 1 and reflect how "
-        "likely each label is to be the correct one."
+
+def question_block(ts: TaskSet, q: Question, phrasing: PhraseMode = "rfp") -> str:
+    text = q.literal if (phrasing == "literal" and q.literal) else q.rfp_text
+    lab = ts.labels_for(q)
+    return (
+        f"<request id=\"{q.id}\" title=\"{q.title}\">\n{text}\n"
+        f"<responsive_means>{lab[ts.positive_label]}</responsive_means>\n"
+        f"<not_responsive_means>{lab[ts.negative_label]}</not_responsive_means>\n</request>"
     )
+
+
+def build_prefix(ts: TaskSet, qids: list[str], phrasing: PhraseMode = "rfp") -> str:
+    parts = []
+    if ts.context:
+        parts.append(f"<matter_background>\n{ts.context}\n</matter_background>")
+    parts.append("\n\n".join(question_block(ts, ts.questions[q], phrasing) for q in qids))
+    if len(qids) == 1:
+        parts.append(
+            "Classify the document as responsive or not_responsive to the request above, and give "
+            "p_responsive, your probability from 0 to 1 that the document is responsive."
+        )
+    else:
+        parts.append(
+            "For EACH request above, classify the document as responsive or not_responsive and give "
+            "p_responsive, your probability from 0 to 1 that the document is responsive to that request. "
+            "Judge each request independently."
+        )
     return "\n\n".join(parts)
 
 
-def build_decision_model(task: Task) -> type[BaseModel]:
-    """Dynamically build:
+def build_doc_suffix(doc: Document) -> str:
+    return f"<document id=\"{doc.id}\">\n{doc.text}\n</document>"
 
-        class Decision(BaseModel):
-            label: Literal[<labels>]
-            probabilities: Probabilities   # one float field per label
-    """
-    prob_fields = {
-        name: (float, Field(ge=0.0, le=1.0, description=f"Probability that '{name}' is correct"))
-        for name in task.label_names
-    }
-    Probabilities = create_model("Probabilities", **prob_fields)  # type: ignore[call-overload]
-    label_type = Literal[tuple(task.label_names)]  # type: ignore[valid-type]
-    Decision = create_model(
+
+def build_user_prompt(ts: TaskSet, qids: list[str], doc: Document, phrasing: PhraseMode = "rfp") -> str:
+    return build_prefix(ts, qids, phrasing) + "\n\n" + build_doc_suffix(doc)
+
+
+_model_cache: dict[tuple, type[BaseModel]] = {}
+
+
+def build_decision_model(ts: TaskSet, qids: list[str]) -> type[BaseModel]:
+    key = (ts.name, ts.positive_label, ts.negative_label, tuple(qids))
+    if key in _model_cache:
+        return _model_cache[key]
+    label_type = Literal[(ts.positive_label, ts.negative_label)]  # type: ignore[valid-type]
+    One = create_model(
         "Decision",
-        label=(label_type, Field(description="The single best label")),
-        probabilities=(Probabilities, Field(description="Probability for each label")),
+        label=(label_type, Field(description="responsive or not_responsive")),
+        p_responsive=(float, Field(ge=0.0, le=1.0, description="Probability (0-1) that the document is responsive")),
     )
-    return Decision
+    if len(qids) == 1:
+        M = One
+    else:
+        fields = {qid: (One, Field(description=f"Decision for request {qid}")) for qid in qids}
+        M = create_model("Decisions", **fields)  # type: ignore[call-overload]
+    _model_cache[key] = M
+    return M
 
 
-def decision_to_probs(decision: BaseModel, task: Task) -> tuple[dict[str, float], str]:
-    label = getattr(decision, "label")
-    probs_obj = getattr(decision, "probabilities")
-    probs = {name: float(getattr(probs_obj, name)) for name in task.label_names}
-    return probs, str(label)
+def parse_decisions(obj: BaseModel, qids: list[str]) -> tuple[dict[str, float], dict[str, str]]:
+    probs: dict[str, float] = {}
+    labels: dict[str, str] = {}
+    if len(qids) == 1:
+        probs[qids[0]] = float(getattr(obj, "p_responsive"))
+        labels[qids[0]] = str(getattr(obj, "label"))
+    else:
+        for qid in qids:
+            one = getattr(obj, qid)
+            probs[qid] = float(getattr(one, "p_responsive"))
+            labels[qid] = str(getattr(one, "label"))
+    return probs, labels

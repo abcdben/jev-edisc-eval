@@ -1,0 +1,405 @@
+# In re Veridian Orthopedics ApexHip Products Liability Litigation, MDL 3102
+# Ten requests for production. Every model gets the same `context` and `rfp_text`.
+# `literal`, `structured`, and `subparts` are alternative phrasings used only by
+# the Jev ablation levers (and, for fairness, re-run on the small LLM tier).
+
+name: veridian
+kind: binary
+positive_label: responsive
+negative_label: not_responsive
+
+context: |
+  Matter: In re Veridian Orthopedics ApexHip Products Liability Litigation, MDL No. 3102 (N.D. Ind.).
+  Veridian Orthopedics, Inc. (Warsaw, Indiana) manufactures the ApexHip metal-on-metal total hip system,
+  cleared by FDA in March 2017 and withdrawn from the market in February 2024. Plaintiffs allege that
+  ApexHip sheds cobalt and chromium wear debris causing tissue damage and early revision surgery, that
+  Veridian failed to warn, promoted the device to younger and more active patients, and paid consulting
+  surgeons to promote it. A separate June 2022 recall of acetabular cup lots V-2200 through V-2299
+  concerned coating adhesion. Veridian also sells KneeFlex knee implants, the legacy ClassicHip, and
+  ShoulderPro; those products are not at issue. The relevant period is January 1, 2015 through June 30, 2024.
+  Custodians are current and former Veridian employees. "Document" includes emails, chats, texts,
+  memoranda, reports, minutes, presentations, spreadsheets, forms, and letters.
+
+# Used only by the Jev "relevance gate" lever: p(final) = p(rfp) * p(gate).
+gate_question: |
+  Does this document substantively concern the ApexHip hip implant (its design, testing, manufacturing,
+  recall, complaints, regulatory status, marketing, sales, surgeon relationships, registry data, or
+  finances), or is it a personnel record for someone on the ApexHip, Quality, or Regulatory Affairs teams?
+  Answer no for documents about other products, general company business, IT, facilities, or social matters
+  that only mention ApexHip in passing or not at all.
+
+questions:
+
+  rfp01_recall:
+    title: Recall of acetabular cup lots V-2200 to V-2299
+    breadth: narrow
+    richness: thin
+    rfp_text: |
+      All documents concerning the June 2022 recall of ApexHip acetabular cup lots V-2200 through V-2299.
+    literal: |
+      Does this document discuss the 2022 recall of ApexHip acetabular cups from lots numbered V-2200 through
+      V-2299, including the KinetiCoat coating adhesion problem behind it, the Cork plasma-spray root cause,
+      tracing or return of those lots, notices to hospitals about them, the FDA recall filing (Z-1418-2022),
+      or recall effectiveness checks? Answer yes only if the document is about that recall or those lots.
+      Documents about other ApexHip problems (metal ions, revisions) or other products are not responsive.
+    positive_desc: |
+      The document discusses the June 2022 voluntary recall of ApexHip acetabular cup lots V-2200 through V-2299:
+      the coating adhesion failures, root cause at the Cork plant, lot tracing, hospital notifications, the FDA
+      recall filing, returns, or effectiveness checks.
+    negative_desc: |
+      The document does not discuss that recall or those lots. Documents about ApexHip metal-ion complaints,
+      revisions, or registry data, about other products' recalls, or that use "recall" in another sense are not responsive.
+    structured:
+      responsive:
+        what: The June 2022 recall of ApexHip acetabular cup lots V-2200 to V-2299 (KinetiCoat coating adhesion)
+        includes: [root cause at Cork plant, lot tracing, hospital notices, FDA recall Z-1418-2022, returns and credits, effectiveness checks, internal decision to recall]
+        examples: ["Northgate found coating flaking on cups from lot V-2231", "recall effectiveness check call log"]
+      not_responsive:
+        what: Anything else, including other ApexHip issues
+        includes: [metal-ion complaints, registry revision rates, KneeFlex or ClassicHip recalls, the word recall meaning remember]
+
+  rfp02_design_history:
+    title: ApexHip design history
+    breadth: broad
+    richness: rich
+    rfp_text: |
+      All documents constituting, reflecting, or relating to the design and development of the ApexHip system,
+      including without limitation: (a) design inputs, user needs, and design requirements; (b) risk analyses,
+      including any FMEA, hazard analysis, or risk management file; (c) design reviews and design review
+      meeting materials; (d) verification and validation testing, including wear testing, tribology testing,
+      metal ion testing, fatigue testing, and any test protocols, reports, or raw data, whether performed by
+      Veridian or by any third-party laboratory; (e) design changes, engineering change orders, or proposed
+      design changes, whether or not implemented; and (f) the design history file and any index thereto.
+      "ApexHip system" includes the femoral stem, femoral head, acetabular cup, and KinetiCoat coating.
+    literal: |
+      Is this document about how the ApexHip hip implant (stem, head, cup, or KinetiCoat coating) was designed,
+      tested, or changed? Yes if it discusses design requirements or inputs, FMEA or risk analysis, a design
+      review meeting, verification or validation testing (wear, tribology, metal ion, fatigue) including
+      protocols, reports, or data from Veridian or an outside lab, an engineering change order or proposed
+      design change (even if never implemented), or the design history file. No if it is about a different
+      product's design (KneeFlex, ClassicHip, ShoulderPro), or about ApexHip but not its design or testing
+      (for example sales, marketing, complaints without engineering analysis, or finances).
+    positive_desc: |
+      The document concerns the design, development, testing, or modification of the ApexHip system: design
+      inputs and requirements, FMEA or risk analysis, design reviews, verification and validation testing
+      (wear, tribology, metal ion, fatigue) by Veridian or a lab, engineering change orders or proposed design
+      changes, or the design history file.
+    negative_desc: |
+      The document does not concern ApexHip design, testing, or design changes. Design documents for other
+      products, and ApexHip documents about sales, marketing, complaints (without engineering analysis),
+      regulatory filings that do not discuss design, or finances, are not responsive.
+    structured:
+      responsive:
+        what: Design, development, V&V testing, and design changes of the ApexHip system (stem, head, cup, KinetiCoat)
+        includes: [design inputs and requirements, FMEA and hazard analysis, design review meetings and materials, wear/tribology/metal-ion/fatigue test protocols reports and data, Meridian Testing Labs reports, engineering change orders and proposed changes, design history file and index]
+        examples: ["DR-3 minutes approving the ISO 14242 protocol at 45 degrees", "ECO-2019-118 proposed cup rim change", "Apex_wear_55deg_rev2.xlsx"]
+      not_responsive:
+        what: Documents not about ApexHip design or testing
+        includes: [KneeFlex or ClassicHip design documents, ApexHip marketing or sales, complaints with no engineering analysis, financial forecasts, HR records]
+    subparts:
+      - Does this document discuss ApexHip design inputs, user needs, or design requirements?
+      - Does this document discuss an FMEA, hazard analysis, or risk management file for ApexHip?
+      - Does this document discuss an ApexHip design review or design review meeting?
+      - Does this document discuss wear, tribology, metal ion, or fatigue testing of ApexHip, including protocols, reports, or data from Veridian or a lab?
+      - Does this document discuss a design change, engineering change order, or proposed design change to ApexHip, whether or not implemented?
+      - Does this document discuss the ApexHip design history file or an index to it?
+
+  rfp03_complaints:
+    title: Complaints, adverse events, and MDRs
+    breadth: medium
+    richness: medium
+    rfp_text: |
+      All documents concerning complaints, adverse events, or reports of injury, revision surgery, elevated
+      metal ion levels, or adverse reaction to metal debris associated with the ApexHip system, including
+      complaint files, Medical Device Reports submitted or considered for submission to FDA, complaint
+      trending or trend analyses, CAPAs, and internal communications discussing any of the foregoing.
+    literal: |
+      Does this document discuss a complaint, adverse event, injury, revision surgery, elevated metal ion
+      level, or adverse reaction to metal debris involving an ApexHip patient or device? This includes
+      TrackWise complaint records, Medical Device Reports (MDRs) filed or considered, complaint trending or
+      trend reports, CAPAs about complaints, and emails or chats discussing any of those. It also includes
+      the coating-recall complaints if they are discussed as complaints. Answer no for complaints about
+      other products (KneeFlex, ClassicHip) and for ApexHip documents that do not discuss a complaint,
+      adverse event, revision, or metal-ion finding.
+    positive_desc: |
+      The document concerns complaints, adverse events, injuries, revision surgeries, elevated metal ions,
+      or adverse reactions to metal debris involving ApexHip: complaint files, MDRs filed or considered,
+      complaint trending, CAPAs, or internal discussion of any of these.
+    negative_desc: |
+      The document does not concern ApexHip complaints or adverse events. Complaints about other Veridian
+      products, and ApexHip documents about design, marketing, sales, or finance that do not discuss a
+      complaint, adverse event, revision, or metal-ion finding, are not responsive.
+    structured:
+      responsive:
+        what: Complaints, adverse events, revisions, metal-ion findings, ARMD, MDRs, trending, and CAPAs for ApexHip
+        includes: [TrackWise complaint records, MDR decisions and filings, trend reports, CAPA records, surgeon or hospital complaint letters, explant findings, internal emails and chats about specific complaints or trends]
+        examples: ["TW-2018-0233 Atlanta cluster", "should this be an MDR?", "Q3 complaint trending for Apex"]
+      not_responsive:
+        what: No ApexHip complaint or adverse event content
+        includes: [KneeFlex complaints, ApexHip marketing, design documents with no complaint discussion, finance, HR]
+
+  rfp04_fda:
+    title: Communications with FDA
+    breadth: medium
+    richness: medium
+    rfp_text: |
+      All communications between Veridian and the U.S. Food and Drug Administration concerning the ApexHip
+      system, and all internal documents discussing, preparing for, or responding to such communications,
+      including the 510(k) submission and any additional information requests, Medical Device Reports,
+      inspection observations (Form 483) and responses, recall filings, and any correspondence regarding
+      labeling or Dear Doctor letters.
+    literal: |
+      Does this document contain, discuss, prepare for, or respond to a communication between Veridian and
+      the FDA about ApexHip? This includes the 510(k) submission K162447 and FDA additional information
+      requests, MDR submissions, the 2021 inspection and Form 483 observations and Veridian's response, the
+      2022 recall filing, and FDA correspondence about ApexHip labeling or the Dear Doctor letter, plus
+      internal drafts, review comments, and planning for any of those. Answer no for FDA communications about
+      other products, for general FDA guidance forwarded without ApexHip discussion, and for ApexHip documents
+      that do not involve FDA.
+    positive_desc: |
+      The document is or concerns a communication between Veridian and FDA about ApexHip (510(k) and AI
+      requests, MDRs, Form 483 and response, recall filing, labeling or Dear Doctor correspondence), or is an
+      internal document preparing for, discussing, or responding to such a communication.
+    negative_desc: |
+      The document does not involve FDA communications about ApexHip. FDA correspondence about other
+      products, general regulatory guidance not tied to ApexHip, and ApexHip documents with no FDA
+      communication component are not responsive.
+    structured:
+      responsive:
+        what: Veridian–FDA communications about ApexHip and internal work on them
+        includes: [510(k) K162447 submission and AI requests, MDR filings to FDA, 2021 Warsaw inspection and Form 483 response, recall filing Z-1418-2022, labeling and Dear Doctor letter correspondence, internal drafts and review of any of these]
+        examples: ["draft response to 483 observation 2", "Dr. Anand asked for trending data"]
+      not_responsive:
+        what: No FDA-communication component about ApexHip
+        includes: [FDA letters about KneeFlex, forwarded FDA guidance with no ApexHip discussion, ApexHip sales or design documents that never involve FDA]
+
+  rfp06_marketing:
+    title: Marketing and promotional claims
+    breadth: broad
+    richness: rich
+    rfp_text: |
+      All promotional, marketing, advertising, educational, or training materials for the ApexHip system,
+      in draft or final form, in any medium, including brochures, sell sheets, websites, social media,
+      slide presentations, videos, trade show materials, press releases, surgeon-facing and patient-facing
+      materials, and materials prepared by or with any advertising or marketing agency; and all documents
+      concerning the review, approval, substantiation, or modification of any claim made in such materials,
+      including claims regarding longevity, wear, revision rates, metal ion levels, suitability for active
+      or younger patients, or comparisons to other hip systems. "Promotional" includes sales aids and
+      talking points provided to sales representatives.
+    literal: |
+      Is this document ApexHip marketing or promotional material (draft or final: brochure, sell sheet,
+      website copy, social post, slide deck, video script, trade show material, press release, surgeon or
+      patient material, agency work, sales aid, or rep talking points), or does it discuss reviewing,
+      approving, substantiating, or changing a claim in such material (about longevity, wear, revision
+      rates, metal ions, active or younger patients, or comparisons to other hips)? Answer no for marketing
+      of other products, for trade show or campaign logistics with no content about claims or materials,
+      and for ApexHip documents that are not promotional.
+    positive_desc: |
+      The document is ApexHip promotional or marketing material in any form (including sales aids and rep
+      talking points), or concerns the review, approval, substantiation, or modification of claims in such
+      material (longevity, wear, revision rates, metal ions, active or younger patients, comparisons).
+    negative_desc: |
+      The document is not ApexHip marketing and does not concern ApexHip marketing claims. Marketing for
+      other products, pure logistics (booth shipping, catering, badge lists) without content about claims or
+      materials, and non-promotional ApexHip documents are not responsive.
+    structured:
+      responsive:
+        what: ApexHip promotional/marketing materials and claim review
+        includes: [brochures and sell sheets, website and social copy, slide decks, videos, trade show materials, press releases, patient and surgeon materials, Kessler Reid agency drafts, sales aids and talking points, claim substantiation and approval reviews, discussions of longevity/wear/revision-rate/metal-ion/active-patient claims]
+        examples: ["Active Life brochure v3 copy review", "can we say 'designed to last a lifetime'?", "AAOS booth panel graphics"]
+      not_responsive:
+        what: Not ApexHip marketing or claims
+        includes: [KneeFlex marketing, booth shipping and catering logistics with no content, design or complaint documents, finance, HR]
+    subparts:
+      - Is this document ApexHip marketing, advertising, or promotional material, including sales aids or rep talking points, in draft or final form?
+      - Does this document discuss the review, approval, substantiation, or modification of a claim made in ApexHip marketing materials?
+      - Does this document discuss ApexHip claims about longevity, wear, revision rates, metal ion levels, suitability for active or younger patients, or comparison to other hip systems?
+
+  rfp07_surgeon_payments:
+    title: Payments and things of value to surgeons
+    breadth: medium
+    richness: medium
+    rfp_text: |
+      All documents concerning any payment or transfer of anything of value by or on behalf of Veridian to
+      any orthopedic surgeon in connection with the ApexHip system, including consulting agreements,
+      royalty agreements and statements, speaker or honoraria arrangements, advisory board participation,
+      travel, meals, and entertainment, and Open Payments (Sunshine Act) reporting, including without
+      limitation Dr. Marcus Feld and Dr. Anita Rao.
+    literal: |
+      Does this document discuss a payment or anything of value given by Veridian to an orthopedic surgeon in
+      connection with ApexHip: consulting or royalty agreements or statements, speaker fees or honoraria,
+      advisory board participation and payments, travel, meals, entertainment, or Sunshine Act / Open
+      Payments reporting? This specifically includes anything about payments to Dr. Marcus Feld or Dr. Anita
+      Rao. Answer no for payments to surgeons unrelated to ApexHip (for example KneeFlex consultants), and
+      for documents mentioning Feld or Rao without any payment, meal, travel, or agreement content.
+    positive_desc: |
+      The document concerns payments or things of value from Veridian to orthopedic surgeons in connection
+      with ApexHip: consulting or royalty agreements and statements, speaker honoraria, advisory boards,
+      travel, meals, entertainment, or Sunshine Act reporting, including Drs. Feld and Rao.
+    negative_desc: |
+      The document does not concern ApexHip-related payments or things of value to surgeons. Surgeon
+      payments tied only to other products, and documents mentioning surgeons without payment, meal, travel,
+      or agreement content, are not responsive.
+    structured:
+      responsive:
+        what: Payments and things of value to surgeons in connection with ApexHip
+        includes: [Feld consulting agreement and royalty statements, Rao speaker honoraria, advisory board meetings and payments, surgeon dinners and travel, Sunshine Act / Open Payments spreadsheets, speaker bureau contracts, requests to approve a surgeon payment]
+        examples: ["Feld Q2 royalty statement 1.5% of net sales", "Scottsdale advisory board expense report", "dinner with Dr. Rao at Husk"]
+      not_responsive:
+        what: No surgeon-payment content tied to ApexHip
+        includes: [KneeFlex consultant payments, clinical conversation with Feld with no payment content, complaint letters from surgeons]
+
+  rfp08_sales_scripts:
+    title: Sales training and scripts on revision rates and metal ions
+    breadth: narrow
+    richness: thin
+    rfp_text: |
+      All sales training materials, scripts, talking points, FAQs, or guidance provided to sales personnel
+      regarding how to respond to questions or concerns from surgeons or hospitals about ApexHip revision
+      rates, metal ion levels, adverse reaction to metal debris, or registry data.
+    literal: |
+      Does this document contain or discuss training, scripts, talking points, FAQs, or guidance for
+      Veridian sales reps on how to answer surgeon or hospital questions about ApexHip revision rates, metal
+      ion levels, adverse reactions to metal debris, or registry data (NJR, AJRR)? This includes reps
+      discussing among themselves or with managers what to say to surgeons about those topics. Answer no for
+      general sales training that does not address those topics, for sales guidance about the coating recall
+      only, and for surgeon communications not involving sales guidance.
+    positive_desc: |
+      The document contains or discusses guidance to sales personnel (training, scripts, talking points,
+      FAQs, manager or peer advice) on responding to surgeon or hospital questions about ApexHip revision
+      rates, metal ions, adverse reaction to metal debris, or registry data.
+    negative_desc: |
+      The document does not concern sales guidance on those topics. General sales training, quota or
+      territory discussion, and surgeon communications that do not involve guidance to reps are not responsive.
+    structured:
+      responsive:
+        what: Guidance to sales reps on answering ApexHip revision-rate, metal-ion, ARMD, or registry questions
+        includes: [talking points, FAQs, training decks, objection-handling scripts, manager emails telling reps what to say, rep chats asking or advising what to tell a surgeon about revisions or ions]
+        examples: ["Answering the metal ion question v2", "what do I tell Dr. Whitaker about the NJR number?"]
+      not_responsive:
+        what: Not sales guidance on those topics
+        includes: [general selling-skills training, quota emails, recall-only guidance, surgeon complaint letters]
+
+  rfp09_registry_decision:
+    title: Decision to continue selling after the registry signal
+    breadth: medium
+    richness: medium
+    rfp_text: |
+      All documents concerning Veridian's analysis of, response to, or decisions made in light of registry
+      data indicating elevated revision rates for the ApexHip system, including the March 2021 National
+      Joint Registry report and subsequent American Joint Replacement Registry data, including any
+      evaluation of whether to modify, suspend, withdraw, or continue marketing the ApexHip system, any
+      labeling changes, and any communications to surgeons regarding such data.
+    literal: |
+      Does this document discuss registry data showing elevated ApexHip revision rates (the March 2021 NJR
+      report, AJRR data, or internal registry analyses), or Veridian's response to that data, including the
+      September 2021 Registry Signal Review, whether to continue, suspend, or withdraw ApexHip, labeling
+      changes, the Dear Doctor letter, or the February 2024 market withdrawal? Answer no for registry data
+      about other products, for the coating recall alone, and for ApexHip documents that do not discuss
+      registry data or the decision to continue selling.
+    positive_desc: |
+      The document concerns registry data indicating elevated ApexHip revision rates (NJR March 2021, AJRR,
+      internal registry analysis) or Veridian's analysis of, response to, or decisions in light of it:
+      continue, suspend, or withdraw; labeling changes; surgeon communications; the 2024 withdrawal.
+    negative_desc: |
+      The document does not concern ApexHip registry data or decisions made in response to it. Registry data
+      for other products, the coating recall alone, and ApexHip documents that do not touch registry
+      revision-rate data or the continue/withdraw decision are not responsive.
+    structured:
+      responsive:
+        what: Registry revision-rate signal for ApexHip and Veridian's response
+        includes: [NJR March 2021 report and analyses, AJRR analyses, Novak signal reviews, Adeyemi clinical memo, Sept 14 2021 Registry Signal Review agenda and minutes, continue/suspend/withdraw discussion, labeling change, Dear Doctor letter, Feb 2024 market withdrawal decision]
+        examples: ["NJR has us at 7.1% at 5 years", "recommend continue with label update"]
+      not_responsive:
+        what: No registry-signal or continue/withdraw content
+        includes: [coating recall only, KneeFlex registry data, ApexHip design or marketing with no registry discussion]
+
+  rfp13_financials:
+    title: Financial forecasts, reserves, and insurance for ApexHip
+    breadth: medium
+    richness: rich
+    rfp_text: |
+      All documents concerning the financial performance of, or financial exposure arising from, the ApexHip
+      system, including: (a) sales forecasts, budgets, and revenue or margin analyses specific to ApexHip;
+      (b) any reserve, accrual, or contingency recorded or considered for ApexHip-related claims, recalls,
+      revisions, or litigation, including supporting analyses and communications with auditors;
+      (c) notices to, and communications with, any insurer or reinsurer regarding ApexHip, including
+      notices of circumstance, reservation-of-rights letters, and coverage analyses; and (d) analyses of
+      the financial impact of any recall, labeling change, market withdrawal, or litigation involving
+      ApexHip. "Reserve" means any amount set aside, accrued, or estimated for a probable or possible loss.
+    literal: |
+      Does this document discuss money specific to ApexHip: sales forecasts, budgets, revenue or margin
+      analyses for ApexHip; a reserve, accrual, or contingency for ApexHip claims, recall, revisions, or
+      litigation (including auditor communications); notices to or letters from an insurer (such as Aegis
+      Specialty) about ApexHip; or the financial impact of the recall, label change, withdrawal, or
+      litigation? Answer no for company-wide financials that do not break out ApexHip, for other products'
+      financials, and for ApexHip documents with no financial content. A conference room named "Reserve"
+      does not count.
+    positive_desc: |
+      The document concerns ApexHip financial performance or exposure: ApexHip-specific forecasts, budgets,
+      revenue or margin analyses; reserves or accruals for ApexHip claims, recall, revisions, or litigation;
+      insurer notices and correspondence about ApexHip; or the financial impact of the recall, label change,
+      withdrawal, or litigation.
+    negative_desc: |
+      The document does not concern ApexHip-specific financial performance or exposure. Company-wide
+      financials without an ApexHip breakout, other products' financials, and ApexHip documents without
+      financial content are not responsive.
+    structured:
+      responsive:
+        what: ApexHip-specific financial performance and exposure
+        includes: [ApexHip forecasts budgets and variance commentary, reserve or accrual memos (e.g. the $18M Q3 2022 reserve), auditor communications about the reserve, Aegis Specialty notice of circumstance and reservation of rights, coverage analysis, financial impact analyses of recall label change or withdrawal]
+        examples: ["Apex FY23 forecast down 40% post-DDL", "Aegis reservation of rights letter"]
+      not_responsive:
+        what: No ApexHip-specific financial content
+        includes: [company-wide budget with no Apex line, KneeFlex forecasts, ApexHip design or complaint documents, the conference room named Reserve]
+    subparts:
+      - Does this document discuss sales forecasts, budgets, or revenue or margin analyses specific to ApexHip?
+      - Does this document discuss a reserve, accrual, or contingency for ApexHip-related claims, recall, revisions, or litigation, or communications with auditors about it?
+      - Does this document discuss communications with an insurer or reinsurer about ApexHip, such as a notice of circumstance, reservation of rights, or coverage analysis?
+      - Does this document analyze the financial impact of an ApexHip recall, labeling change, market withdrawal, or litigation?
+
+  rfp17_personnel:
+    title: Personnel records for ApexHip, Quality, and Regulatory leadership
+    breadth: broad
+    richness: rich
+    rfp_text: |
+      For each of the following individuals, and for any other person who served as a member of the ApexHip
+      design team, as Director or above in Quality, or as Director or above in Regulatory Affairs at any
+      time during the relevant period: all organizational charts reflecting the person's reporting
+      relationships; all performance evaluations, reviews, and performance improvement plans; all
+      compensation, bonus, and incentive documentation; all documents concerning the person's hiring,
+      promotion, demotion, transfer, discipline, resignation, or termination; and all documents concerning
+      any complaint, grievance, or ethics hotline report made by or about the person. Individuals: Tom
+      Halvorsen, Priya Raman, Dana Okonkwo, Greg Novak, Devon Mitchell, Carlos Mendes. "Performance
+      evaluation" includes self-assessments, manager assessments, calibration notes, and rating summaries.
+    literal: |
+      Is this document a personnel record about one of these people: Tom Halvorsen, Priya Raman, Dana
+      Okonkwo, Greg Novak, Devon Mitchell, Carlos Mendes, or another ApexHip design team member, or a
+      Quality or Regulatory Affairs director or above? Personnel record means an org chart showing their
+      reporting line, a performance review, self-assessment, calibration note, rating, or PIP, compensation
+      or bonus documentation, documents about their hiring, promotion, demotion, transfer, discipline,
+      resignation, or termination, or a complaint, grievance, or hotline report by or about them. Answer no
+      for HR records about other employees (sales reps, IT, finance), and for documents these people wrote
+      or received about their work that are not personnel records.
+    positive_desc: |
+      The document is a personnel record (org chart, performance evaluation, PIP, compensation or bonus
+      documentation, hiring/promotion/discipline/resignation/termination documents, or a complaint or hotline
+      report by or about the person) for Halvorsen, Raman, Okonkwo, Novak, Mitchell, Mendes, another ApexHip
+      design team member, or a Quality or Regulatory Affairs director or above.
+    negative_desc: |
+      The document is not a personnel record for those people. HR records for other employees, and work
+      documents these people authored or received that are not personnel records, are not responsive.
+    structured:
+      responsive:
+        what: Personnel records for Halvorsen, Raman, Okonkwo, Novak, Mitchell, Mendes, other ApexHip design team members, and Quality/RA directors and above
+        includes: [org charts showing their reporting line, performance reviews self-assessments calibration notes ratings, PIPs, compensation and bonus letters, hiring promotion demotion transfer discipline resignation termination documents, complaints grievances or hotline reports by or about them]
+        examples: ["Halvorsen 2021 year-end review", "R&D org chart Q1 2022", "hotline intake HL-2021-014 naming Raman"]
+      not_responsive:
+        what: Not a personnel record for those people
+        includes: [reviews for sales reps or IT staff, Halvorsen's engineering emails, PTO notices, general HR announcements]
+    subparts:
+      - Is this document an organizational chart showing the reporting relationships of Halvorsen, Raman, Okonkwo, Novak, Mitchell, Mendes, or another ApexHip design team member or Quality/RA director?
+      - Is this document a performance evaluation, self-assessment, calibration note, rating summary, or performance improvement plan for one of those people?
+      - Is this document compensation, bonus, or incentive documentation for one of those people?
+      - Does this document concern the hiring, promotion, demotion, transfer, discipline, resignation, or termination of one of those people?
+      - Does this document concern a complaint, grievance, or ethics hotline report made by or about one of those people?

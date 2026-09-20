@@ -1,18 +1,29 @@
 from __future__ import annotations
 
-from ..config import ModelSpec
-from .base import Prediction, Provider
+from dataclasses import replace
+
+from ..config import MODELS, VENDOR_DEFAULT_EFFORT, ModelSpec
+from .base import Prediction, Provider, RawResult
 
 
-def make_provider(spec: ModelSpec, effort_override: str | None = None) -> Provider:
+def parse_model_key(key: str) -> tuple[ModelSpec, str | None]:
+    """'gpt-5.6-luna' -> (spec, None); 'jev@choice' -> (jev spec, 'choice')."""
+    if "@" in key:
+        base, variant = key.split("@", 1)
+        return MODELS[base], variant
+    return MODELS[key], None
+
+
+def make_provider(
+    key: str,
+    effort_override: str | None = None,
+    phrasing: str = "rfp",
+    batch: bool = False,
+    flex: bool = True,
+) -> Provider:
+    spec, variant = parse_model_key(key)
     if effort_override and spec.provider not in ("typesafe", "mock"):
-        # dataclass is frozen; build a modified copy
-        from dataclasses import replace
-
-        from ..config import VENDOR_DEFAULT_EFFORT
-
         if effort_override == "default":
-            # Vendor default: drop our floor settings (effort + thinking-disabled) entirely.
             spec = replace(spec, effort=VENDOR_DEFAULT_EFFORT.get(spec.key), extra={})
         else:
             spec = replace(spec, effort=effort_override, extra={})
@@ -20,19 +31,19 @@ def make_provider(spec: ModelSpec, effort_override: str | None = None) -> Provid
     if spec.provider == "typesafe":
         from .typesafe import TypeSafeProvider
 
-        return TypeSafeProvider(spec)
+        return TypeSafeProvider(spec, variant=variant or "base")
     if spec.provider == "anthropic":
         from .anthropic_ import AnthropicProvider
 
-        return AnthropicProvider(spec)
+        return AnthropicProvider(spec, phrasing=phrasing, batch=batch)
     if spec.provider == "openai":
         from .openai_ import OpenAIProvider
 
-        return OpenAIProvider(spec)
+        return OpenAIProvider(spec, phrasing=phrasing, flex=flex)
     if spec.provider == "gemini":
         from .gemini import GeminiProvider
 
-        return GeminiProvider(spec)
+        return GeminiProvider(spec, phrasing=phrasing)
     if spec.provider == "mock":
         from .mock import MockProvider
 
@@ -40,4 +51,4 @@ def make_provider(spec: ModelSpec, effort_override: str | None = None) -> Provid
     raise ValueError(f"unknown provider {spec.provider}")
 
 
-__all__ = ["Prediction", "Provider", "make_provider"]
+__all__ = ["Prediction", "Provider", "RawResult", "make_provider", "parse_model_key"]
