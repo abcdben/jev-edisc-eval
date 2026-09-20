@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 from .metrics import agreement, macro_f1, op_metrics, pooled_metrics, question_metrics
-from .runner import load_predictions
+from .runner import load_predictions, parse_job_stem
 from .tasks import TaskSet, load_corpus
 
 
@@ -35,13 +35,7 @@ def collect(out: Path, corpus: str, arms: list[str], docs, ts, tags: tuple[str, 
         if not d.exists():
             continue
         for f in sorted(d.glob("*.jsonl")):
-            name = f.stem
-            if name.startswith(("jev__", "laya__", "laya-typed__")):
-                prefix, rest = name.split("__", 1)
-                mk, _, tag = rest.partition("__")
-                mk = f"{prefix}@{mk}"
-            else:
-                mk, _, tag = name.partition("__")
+            mk, tag = parse_job_stem(f.stem)
             if tag not in tags:
                 continue
             preds = _rebind(load_predictions(f), docs, ts)

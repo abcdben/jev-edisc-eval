@@ -14,7 +14,7 @@ from rich.table import Table
 from .config import DEFAULT_ROSTER, ENV_KEYS, MODELS, SMALL_TIER, MID_TIER
 from .metrics import agreement, macro_f1, op_metrics, pooled_metrics, question_metrics
 from .providers import make_provider, parse_model_key
-from .runner import job_path, load_predictions, run_jobs
+from .runner import job_path, load_predictions, parse_job_stem, run_jobs
 from .tasks import TaskSet, load_corpus
 
 app = typer.Typer(no_args_is_help=True, help="Jev vs LLMs on eDiscovery classification.")
@@ -42,11 +42,12 @@ def _expand_models(keys: list[str] | None) -> list[str]:
 
                 out += [f"jev@{v}" for v in VARIANTS if v != "recipe"]
             elif part == "laya":
-                out += ["laya@base", "laya@choice", "laya@score", "laya-typed@base"]
+                out += ["laya@base", "laya@choice", "laya@score", "laya@compact", "laya@chunk", "laya@recipe",
+                        "laya-typed@base", "laya-typed@recipe", "laya-multilingual@base", "laya-multilingual@recipe"]
             elif part == "laya-ablations":
-                from .providers.typesafe import VARIANTS
+                from .providers.laya_ import LAYA_VARIANTS
 
-                out += [f"laya@{v}" for v in VARIANTS if v not in ("recipe", "preview")]
+                out += [f"laya@{v}" for v in LAYA_VARIANTS]
             elif part == "floors":
                 out += ["lexical", "laya@base", "laya-typed@base", "gemma3-12b"]
             elif part:
@@ -165,6 +166,28 @@ def sample(
     out.write_text("".join(json.dumps(r) + "\n" for r in chosen))
     counts = {q: sum(1 for r in chosen if q in (r.get("labels") or {})) for q in qids}
     console.print(f"wrote {len(chosen)} docs to {out}; positives per question: {counts}")
+
+
+@app.command("laya-ft")
+def laya_ft(
+    task: Path = typer.Option(..., "--task", "-t"),
+    data: Path = typer.Option(..., "--data", "-d", help="Full labeled corpus; split is written next to it"),
+    out: Path = typer.Option(..., "--out", "-o", help="Model output dir, e.g. models/laya-ft-veridian"),
+    frac_train: float = typer.Option(0.30, "--frac-train"),
+    seed: int = typer.Option(11, "--seed"),
+    epochs: int = typer.Option(3, "--epochs"),
+    device: Optional[str] = typer.Option(None, "--device"),
+    split_only: bool = typer.Option(False, "--split-only"),
+):
+    """SUPERVISED: split a corpus by document and fine-tune Laya on the dev split (RLCD recipe)."""
+    from .laya_ft import make_split, train
+
+    p_tr, p_te = make_split(data, data.parent, frac_train, seed)
+    n_tr = sum(1 for _ in p_tr.open()); n_te = sum(1 for _ in p_te.open())
+    console.print(f"split: {n_tr} train docs -> {p_tr}; {n_te} test docs -> {p_te}")
+    if split_only:
+        return
+    train(task, p_tr, out, device=device, log=console.print, epochs=epochs)
 
 
 @app.command()
@@ -349,13 +372,10 @@ def _report(ts, out: Path, corpus: str, arms, keys, tag="", exclude_gray=False, 
         if not d.exists():
             continue
         for f in sorted(d.glob("*.jsonl")):
-            name = f.stem
-            if tag and not name.endswith(f"__{tag}"):
-                continue
-            if not tag and "__" in name and not name.startswith(("jev__", "laya__", "laya-typed__")):
+            mk, ftag = parse_job_stem(f.stem)
+            if ftag != tag:
                 # tagged files (e.g. pilots) are excluded unless asked for
                 continue
-            mk = name.replace("__", "@", 1) if name.startswith(("jev__", "laya__", "laya-typed__")) else name.split("__")[0]
             if keys and mk not in keys:
                 continue
             preds = load_predictions(f)

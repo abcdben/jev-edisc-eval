@@ -8,6 +8,8 @@ import re
 from collections import defaultdict
 from pathlib import Path
 
+from .runner import parse_job_stem
+
 VENDOR = {"jev": "TypeSafe", "laya": "Laya (local)", "lexical": "Lexical (local)", "gemma3": "Ollama (local)", "qwen3": "Ollama (local)", "claude": "Anthropic", "gpt": "OpenAI", "gemini": "Google"}
 PREP = {  # from the generation logs
     ("Anthropic", "veridian manifest planner (Sonnet 5)"): 12.0,
@@ -36,11 +38,7 @@ def ledger(results: Path = Path("results")) -> str:
     for f in results.rglob("*.jsonl"):
         corpus = f.parts[-3]; arm = f.parts[-2]
         stem = f.stem
-        if stem.startswith(("jev__", "laya__", "laya-typed__")):
-            _, rest = stem.split("__", 1)
-            mk, _, tag = rest.partition("__")
-        else:
-            mk, _, tag = stem.partition("__")
+        mk, tag = parse_job_stem(stem)
         vendor = next((v for k, v in VENDOR.items() if stem.startswith(k)), "?")
         key = (vendor, purpose(corpus, tag))
         for line in f.open():

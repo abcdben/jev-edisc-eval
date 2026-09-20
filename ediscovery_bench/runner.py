@@ -32,6 +32,19 @@ def job_path(out: Path, corpus: str, arm: str, model_key: str, tag: str = "") ->
     return out / corpus / arm / f"{name}.jsonl"
 
 
+VARIANT_FAMILIES = ("jev", "laya")
+
+
+def parse_job_stem(stem: str) -> tuple[str, str]:
+    """Inverse of job_path: 'jev__choice__pilot' -> ('jev@choice', 'pilot');
+    'laya-typed__base' -> ('laya-typed@base', ''); 'gpt-5.6-luna__pilot' -> ('gpt-5.6-luna', 'pilot')."""
+    head, _, rest = stem.partition("__")
+    if rest and any(head == f or head.startswith(f + "-") for f in VARIANT_FAMILIES):
+        variant, _, tag = rest.partition("__")
+        return f"{head}@{variant}", tag
+    return head, rest
+
+
 def load_predictions(path: Path) -> list[Prediction]:
     return [Prediction.from_row(r) for r in iter_jsonl(path)]
 

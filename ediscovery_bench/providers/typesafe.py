@@ -39,6 +39,9 @@ class JevConfig:
     ensemble: bool = False  # average Noul over 3 phrasings
     decompose: bool = False  # OR over subparts where defined
     model_id: str = "jev-1.13.0"
+    # Laya-only levers (ignored by Jev): see providers/laya_.py
+    chunk: bool = False  # sliding window over the document, max-pool p per question
+    compact: bool = False  # short instruction + <=48-token criteria so nothing is truncated
 
 
 VARIANTS: dict[str, JevConfig] = {
