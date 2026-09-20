@@ -178,11 +178,15 @@ def laya_ft(
     epochs: int = typer.Option(3, "--epochs"),
     device: Optional[str] = typer.Option(None, "--device"),
     split_only: bool = typer.Option(False, "--split-only"),
+    train_file: Optional[Path] = typer.Option(None, "--train", help="Use this labeled file as the train split instead of splitting --data (e.g. TREC dev.jsonl); --data is then the test set"),
 ):
     """SUPERVISED: split a corpus by document and fine-tune Laya on the dev split (RLCD recipe)."""
     from .laya_ft import make_split, train
 
-    p_tr, p_te = make_split(data, data.parent, frac_train, seed)
+    if train_file is not None:
+        p_tr, p_te = train_file, data
+    else:
+        p_tr, p_te = make_split(data, data.parent, frac_train, seed)
     n_tr = sum(1 for _ in p_tr.open()); n_te = sum(1 for _ in p_te.open())
     console.print(f"split: {n_tr} train docs -> {p_tr}; {n_te} test docs -> {p_te}")
     if split_only:

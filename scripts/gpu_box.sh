@@ -84,6 +84,30 @@ cuad() {
 
 # Gemma 3 12B floor via Ollama. It saturates the GPU (~6 docs/min even on an A100 for the
 # 10-question multi-arm prompt), so it runs alone, after the Laya grid, on the 400-doc subsamples.
+trec() {
+  # TREC 2016 Total Recall. Zero-shot Laya on the 3,116 eval sample (both arms, v1 criteria) plus the
+  # bare-sentence v0 criteria for base; supervised fine-tune on dev.jsonl (the calibration set, disjoint
+  # from eval); then one multi-arm pass over the full 286k collection with the best zero-shot variant.
+  POOL=${POOL:-2}
+  C=tasks/trec.yaml; CD=data/trec/eval.jsonl
+  LAYA="laya@base laya@choice laya@score laya@compact laya@chunk laya@recipe laya@recipe_choice laya@literal laya@gate laya@ensemble laya@decompose laya-typed@base laya-typed@recipe laya-multilingual@base laya-multilingual@recipe"
+  echo "== Laya zero-shot, TREC eval, pool=$POOL"
+  { for v in $LAYA; do for a in multi single; do echo "$C $CD trec $v $a"; done; done; } | xargs -P "$POOL" -L 1 bash -c 'job "$@"' _
+  echo "== Laya v0 (bare sentence) criteria, TREC eval"
+  for a in multi single; do job design/trec/criteria_v0.yaml $CD trec laya@base $a 64 v0; done
+  echo "== Gemma, TREC eval subsample"
+  .venv/bin/bench sample -d $CD -o data/trec/local_subset.jsonl --n 600 --min-pos 20 2>&1 | tail -1 || true
+  job $C data/trec/local_subset.jsonl trec gemma3-12b multi 4
+  job $C data/trec/local_subset.jsonl trec gemma3-12b single 4
+  echo "== Laya fine-tune (SUPERVISED) on TREC dev, eval on eval"
+  .venv/bin/bench laya-ft -t $C -d $CD --train data/trec/dev.jsonl -o models/laya-ft-trec 2>&1 | grep -E "laya-ft\]|split:" || true
+  for a in multi single; do job $C $CD trec laya-ft-trec@compact $a; job $C $CD trec laya-ft-trec@recipe $a; done
+  echo "== Laya full collection (286k), multi arm"
+  job $C data/trec/full.jsonl trec_full laya@recipe multi 128
+  job $C data/trec/full.jsonl trec_full lexical multi 128
+  echo TREC_GRID_DONE
+}
+
 gemma() {
   V=tasks/veridian.yaml; M=tasks/mallinckrodt.yaml
   job $V data/veridian/local_subset.jsonl veridian gemma3-12b multi 4
@@ -98,5 +122,6 @@ case "${1:-}" in
   run) run 2>&1 | tee -a gpu_run.log ;;
   gemma) gemma 2>&1 | tee -a gpu_run.log ;;
   cuad) cuad 2>&1 | tee -a gpu_run.log ;;
-  *) echo "usage: $0 setup|run|gemma|cuad"; exit 1 ;;
+  trec) trec 2>&1 | tee -a gpu_run.log ;;
+  *) echo "usage: $0 setup|run|gemma|cuad|trec"; exit 1 ;;
 esac
