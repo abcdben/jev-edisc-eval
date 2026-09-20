@@ -1,0 +1,335 @@
+# TREC 2016 Total Recall track, "athome4" (Jeb Bush gubernatorial email, 290,099 messages).
+# Twelve of the 34 official topics. `rfp_text` is the official NIST topic description verbatim.
+# Gold = NIST assessor judgments (rel 1 or 2); unjudged = not responsive, per TREC convention.
+#
+# criteria_version: v0
+# v0 = positive_desc / negative_desc / structured / subparts / literal written from the official
+#      topic sentence alone, before any document was read for this purpose. Later versions are
+#      revised after a calibration round on data/trec/dev.jsonl (686 emails, never evaluated on);
+#      see design/06_trec_calibration.md for the per-version changes and the dev-set numbers.
+
+name: trec
+kind: binary
+positive_label: responsive
+negative_label: not_responsive
+
+context: |
+  Matter: a public-records request against the Executive Office of the Governor of Florida, covering email sent
+  or received by Governor Jeb Bush and his staff during his two terms (1999-2007). The collection is government
+  email: constituent letters, staff correspondence, press clippings and news forwards, scheduling, legislation
+  and budget traffic, agency reports, and personal messages. Each request below describes a subject matter; an
+  email is responsive if it substantively concerns that subject, whether in the message body, a quoted earlier
+  message, or a forwarded article. Emails are shown with their headers, as a reviewer would see them. A passing
+  mention of a word does not by itself make an email responsive, and an email can be responsive without using
+  the request's exact words if it is plainly about the subject.
+
+gate_question: |
+  Does this email have substantive content about a matter of Florida state government or public policy (as
+  opposed to a bare scheduling note, a greeting or thank-you with no subject matter, an empty forward, an
+  auto-reply, spam, or a purely personal message)?
+
+questions:
+
+  gw_bush:
+    title: George W. Bush
+    rfp_text: |
+      All documents concerning George W. Bush, whether by explicit reference or by his relationship to Governor Bush.
+    literal: |
+      Does this email concern George W. Bush, either by explicit reference to him or through his relationship to
+      Governor Jeb Bush?
+    positive_desc: |
+      The email concerns George W. Bush: it refers to him explicitly (as President, candidate, Texas governor, or
+      by name), or it concerns him through his relationship to Governor Jeb Bush (his brother), such as his
+      administration's dealings with Florida, his campaigns in Florida, or family matters involving him.
+    negative_desc: |
+      The email does not concern George W. Bush. Emails about Governor Jeb Bush, other members of the Bush family,
+      or federal matters that do not involve George W. Bush are not responsive.
+    structured:
+      responsive:
+        what: Content concerning George W. Bush, explicitly or via his relationship to Governor Jeb Bush
+        includes: [George W. Bush by name or as the President, his campaigns or administration, White House dealings with Florida involving him, the brothers' relationship, family events involving him]
+      not_responsive:
+        what: No connection to George W. Bush
+        includes: [Governor Jeb Bush alone, other Bush family members, federal agencies with no reference to the President, unrelated state business]
+    subparts:
+      - Does this email refer to George W. Bush explicitly, by name or as the President or candidate?
+      - Does this email concern George W. Bush through his relationship to Governor Jeb Bush (his brother)?
+
+  movie_gallery:
+    title: Movie Gallery
+    rfp_text: |
+      All documents concerning investments or divestments by the State of Florida in Movie Gallery.
+    literal: |
+      Does this email concern investments or divestments by the State of Florida in Movie Gallery?
+    positive_desc: |
+      The email concerns the State of Florida (including its pension or investment funds) investing in, holding,
+      or divesting from Movie Gallery, the video rental company.
+    negative_desc: |
+      The email does not concern Florida's investment in or divestment from Movie Gallery. Emails about other
+      state investments, about movies or film generally, or about Movie Gallery as a business with no state
+      investment angle are not responsive.
+    structured:
+      responsive:
+        what: Florida state investment or divestment in Movie Gallery
+        includes: [State Board of Administration or pension fund holdings in Movie Gallery, buying or selling Movie Gallery stock or bonds, decisions or criticism about the state's Movie Gallery position]
+      not_responsive:
+        what: No Florida investment in Movie Gallery
+        includes: [other state investments, the film industry, video rental generally, Movie Gallery stores without an investment angle]
+    subparts:
+      - Does this email concern the State of Florida investing in or holding a position in Movie Gallery?
+      - Does this email concern the State of Florida divesting or selling its position in Movie Gallery?
+
+  rilya_wilson:
+    title: Lost foster child Rilya Wilson
+    rfp_text: |
+      All documents concerning the disappearance of lost foster child, Rilya Wilson, and the impact or aftermath
+      in Florida resulting from the loss.
+    literal: |
+      Does this email concern the disappearance of foster child Rilya Wilson, or the impact or aftermath in
+      Florida resulting from her loss?
+    positive_desc: |
+      The email concerns Rilya Wilson, the foster child whose disappearance from Florida's child-welfare system was
+      discovered in 2002, or the impact and aftermath of that loss in Florida: investigations, the response of the
+      Department of Children and Families, reforms, resignations, hearings, or public reaction tied to the case.
+    negative_desc: |
+      The email does not concern Rilya Wilson or the aftermath of her disappearance. Child-welfare matters with no
+      connection to her case are not responsive.
+    structured:
+      responsive:
+        what: Rilya Wilson's disappearance and its aftermath in Florida
+        includes: [Rilya Wilson by name, the search or investigation, DCF response and reforms prompted by the case, resignations or hearings tied to the case, public and press reaction to the case]
+      not_responsive:
+        what: No connection to the Rilya Wilson case
+        includes: [other child-welfare or DCF matters, missing persons unrelated to her, foster care policy with no reference to the case]
+    subparts:
+      - Does this email concern Rilya Wilson or her disappearance?
+      - Does this email concern the impact or aftermath in Florida resulting from the loss of Rilya Wilson (investigations, DCF response, reforms, resignations, hearings, public reaction)?
+
+  faith_based:
+    title: Faith-based initiatives
+    rfp_text: |
+      All documents concerning grants or other initiatives in Florida to offload social services to so-called
+      faith-based agencies. Services include but are not limited to education, prisons, and emergency relief.
+    literal: |
+      Does this email concern grants or other initiatives in Florida to have social services (such as education,
+      prisons, or emergency relief) provided by faith-based agencies?
+    positive_desc: |
+      The email concerns Florida grants, programs, partnerships, legislation, or other initiatives that have
+      social services (education, prisons, emergency relief, welfare, youth, or similar services) delivered by
+      faith-based or religious organizations.
+    negative_desc: |
+      The email does not concern faith-based delivery of social services in Florida. Religious matters with no
+      social-service angle, and social services provided by secular agencies, are not responsive.
+    structured:
+      responsive:
+        what: Florida initiatives shifting social services to faith-based agencies
+        includes: [faith-based grants or funding, faith-based prisons or prison programs, faith-based education or school programs, faith-based emergency relief or welfare, offices or legislation on faith-based partnerships]
+      not_responsive:
+        what: No faith-based social-service initiative
+        includes: [religion or church matters without a service program, secular social services, prayers or greetings, general education or prison policy without a faith-based angle]
+    subparts:
+      - Does this email concern grants or funding for faith-based agencies to provide social services in Florida?
+      - Does this email concern any other Florida initiative, program, or policy to have social services delivered by faith-based agencies?
+
+  marketing:
+    title: Marketing
+    rfp_text: |
+      All documents concerning advertising or marketing efforts undertaken by the Florida Governor's office or any
+      other institution of the State of Florida.
+    literal: |
+      Does this email concern advertising or marketing efforts undertaken by the Florida Governor's office or any
+      other institution of the State of Florida?
+    positive_desc: |
+      The email concerns an advertising or marketing effort by the Governor's office or any Florida state agency,
+      board, university, or other state institution: campaigns, public-service announcements, tourism or business
+      promotion, branding, slogans, advertising contracts or spending, and the planning or evaluation of such efforts.
+    negative_desc: |
+      The email does not concern state advertising or marketing. Private-sector marketing, marketing of political
+      campaigns by non-state entities, and ordinary press or communications work that is not an advertising or
+      marketing effort are not responsive.
+    structured:
+      responsive:
+        what: Advertising or marketing by the Governor's office or a Florida state institution
+        includes: [state ad campaigns or PSAs, tourism or economic-development promotion, branding or slogans for state programs, advertising contracts or budgets, marketing plans or evaluations by state entities]
+      not_responsive:
+        what: No state advertising or marketing effort
+        includes: [private company marketing, political campaign advertising, unsolicited marketing received by staff, routine press releases or media inquiries]
+    subparts:
+      - Does this email concern advertising or marketing undertaken by the Florida Governor's office?
+      - Does this email concern advertising or marketing undertaken by any other institution of the State of Florida (agency, board, university, program)?
+
+  recount_2000:
+    title: 2000 recount
+    rfp_text: |
+      All documents concerning the contested result of the 2000 presidential election.
+    literal: |
+      Does this email concern the contested result of the 2000 presidential election?
+    positive_desc: |
+      The email concerns the contested outcome of the 2000 presidential election: the Florida recount, ballot
+      disputes, certification, litigation (including Bush v. Gore), the Electoral College dispute, or the
+      controversy and its aftermath.
+    negative_desc: |
+      The email does not concern the contested 2000 presidential result. Other elections, election administration
+      with no connection to the 2000 dispute, and general politics are not responsive.
+    structured:
+      responsive:
+        what: The contested result of the 2000 presidential election
+        includes: [Florida recount, butterfly ballots or chads or undervotes, certification of results, Bush v. Gore and related litigation, Electoral College dispute, election reform prompted by the 2000 controversy]
+      not_responsive:
+        what: No connection to the 2000 presidential dispute
+        includes: [other elections, routine elections administration, general political commentary, the 2000 campaign before the dispute]
+    subparts:
+      - Does this email concern the Florida recount, ballot disputes, certification, or litigation over the 2000 presidential election result?
+      - Does this email concern the controversy or aftermath of the contested 2000 presidential election?
+
+  condominiums:
+    title: Condominiums
+    rfp_text: |
+      All documents concerning the rules and organizations governing Florida condominium associations and
+      conflicts between owners and managers in Florida. Relevant documents include those concerning the
+      establishment of the Florida office of ombudsman, and issues relating to hiring and firing the ombudsman.
+    literal: |
+      Does this email concern the rules and organizations governing Florida condominium associations, conflicts
+      between condominium owners and managers in Florida, the establishment of the Florida condominium ombudsman
+      office, or the hiring or firing of the ombudsman?
+    positive_desc: |
+      The email concerns Florida condominium associations: the statutes, rules, and bodies that govern them;
+      disputes between unit owners and association boards or managers; or the Florida condominium ombudsman
+      (creation of the office, appointment, hiring, or firing of the ombudsman).
+    negative_desc: |
+      The email does not concern condominium association governance, owner-manager conflicts, or the condominium
+      ombudsman. Real estate, housing, or insurance matters with no condominium-association angle are not responsive.
+    structured:
+      responsive:
+        what: Florida condominium association governance, owner-manager conflicts, and the condominium ombudsman
+        includes: [condominium statutes or rules, association boards and management disputes, owner complaints against associations, the condominium ombudsman office, hiring or firing the ombudsman]
+      not_responsive:
+        what: No condominium-association angle
+        includes: [general housing or real estate, homeowner insurance, construction, condominium sales with no governance issue]
+    subparts:
+      - Does this email concern the rules or organizations governing Florida condominium associations, or conflicts between owners and managers?
+      - Does this email concern the Florida condominium ombudsman (establishing the office, or hiring or firing the ombudsman)?
+
+  bottled_water:
+    title: Bottled water
+    rfp_text: |
+      All documents concerning the extraction of water in Florida for bottling by commercial enterprises.
+    literal: |
+      Does this email concern the extraction of water in Florida for bottling by commercial enterprises?
+    positive_desc: |
+      The email concerns commercial companies pumping or withdrawing Florida water (springs, aquifer, groundwater)
+      for bottling: permits, water-use rights, opposition, environmental impact, legislation, or specific bottlers.
+    negative_desc: |
+      The email does not concern extraction of Florida water for commercial bottling. General water policy, water
+      supply, drinking-water quality, or bottled water as a product with no extraction angle are not responsive.
+    structured:
+      responsive:
+        what: Commercial extraction of Florida water for bottling
+        includes: [bottling companies and spring water withdrawals, water-use permits for bottlers, opposition to bottling operations, legislation or fees on bottled water extraction, environmental effects of bottling withdrawals]
+      not_responsive:
+        what: No extraction-for-bottling angle
+        includes: [general water supply or drought, drinking-water quality, water management districts on other matters, bottled water bought or distributed]
+    subparts:
+      - Does this email concern a commercial enterprise extracting or withdrawing water in Florida for bottling?
+      - Does this email concern permits, legislation, opposition, or environmental issues about extracting Florida water for bottling?
+
+  medicaid_reform:
+    title: Medicaid reform
+    rfp_text: |
+      All documents concerning efforts to reform Medicaid.
+    literal: |
+      Does this email concern efforts to reform Medicaid?
+    positive_desc: |
+      The email concerns efforts to reform Medicaid: proposals, legislation, waivers, pilots, managed-care or
+      market-based restructuring, cost-control plans, and debate or advocacy about changing the Medicaid program.
+    negative_desc: |
+      The email does not concern Medicaid reform. Routine Medicaid administration, individual eligibility or
+      provider matters, and other health programs with no reform angle are not responsive.
+    structured:
+      responsive:
+        what: Efforts to reform Medicaid
+        includes: [Medicaid reform proposals or legislation, Medicaid waivers or pilot programs, managed care or empowered-care restructuring, cost-containment plans, debate or advocacy about changing Medicaid]
+      not_responsive:
+        what: No Medicaid reform content
+        includes: [routine Medicaid claims or eligibility, individual cases, other health programs, general budget matters without a reform proposal]
+    subparts:
+      - Does this email concern a proposal, plan, waiver, pilot, or legislation to reform Medicaid?
+      - Does this email concern debate, advocacy, or analysis about changing how Medicaid works?
+
+  eminent_domain:
+    title: Eminent domain
+    rfp_text: |
+      All documents concerning the legality or morality of expropriating land in Florida for commercial development.
+    literal: |
+      Does this email concern the legality or morality of expropriating land in Florida for commercial development?
+    positive_desc: |
+      The email concerns whether taking private land in Florida through eminent domain for commercial or private
+      development is legal or right: the Kelo decision and its implications, proposed constitutional amendments or
+      legislation, and debate about such takings.
+    negative_desc: |
+      The email does not concern the legality or morality of eminent domain for commercial development. Takings for
+      roads or other public works, land purchases by agreement, and general property or zoning matters are not
+      responsive.
+    structured:
+      responsive:
+        what: Legality or morality of eminent domain for commercial development in Florida
+        includes: [Kelo and its effect on Florida, eminent domain amendments or legislation, takings for private or commercial development, opinion or debate on such takings]
+      not_responsive:
+        what: No eminent-domain-for-development angle
+        includes: [takings for roads or public works, voluntary land purchases, zoning or growth management, property tax]
+    subparts:
+      - Does this email concern the legality (court decisions, statutes, constitutional amendments) of expropriating Florida land for commercial development?
+      - Does this email concern the morality or fairness of expropriating Florida land for commercial development?
+
+  nra_rifle:
+    title: National Rifle Association (NRA)
+    pair: nra
+    rfp_text: |
+      All documents concerning the National Rifle Association, its members, and its influences. Documents
+      concerning the non-resident alien issue are not relevant.
+    literal: |
+      Does this email concern the National Rifle Association, its members, or its influence? Documents about the
+      non-resident alien issue (also abbreviated NRA) are not responsive.
+    positive_desc: |
+      The email concerns the National Rifle Association: the organization, its members, its positions or
+      lobbying, its influence on Florida legislation or officials, or its events and communications.
+    negative_desc: |
+      The email does not concern the National Rifle Association. Emails where "NRA" means non-resident alien, and
+      gun or hunting matters with no reference to the Association, are not responsive.
+    structured:
+      responsive:
+        what: The National Rifle Association, its members, and its influence
+        includes: [NRA the gun-rights organization, NRA lobbying or endorsements, NRA members or officials, NRA positions on Florida legislation, NRA events or mailings]
+      not_responsive:
+        what: Not about the National Rifle Association
+        includes: [NRA meaning non-resident alien, gun or hunting topics with no reference to the Association, other advocacy groups]
+    subparts:
+      - Does this email concern the National Rifle Association as an organization, or its members?
+      - Does this email concern the National Rifle Association's influence, lobbying, or positions on legislation or officials?
+
+  nra_aliens:
+    title: Non-resident aliens (NRA)
+    pair: nra
+    rfp_text: |
+      All documents involving discussions of the non-resident alien issue. Documents concerning the National
+      Rifle Association are not relevant.
+    literal: |
+      Does this email involve discussion of the non-resident alien issue? Documents about the National Rifle
+      Association (also abbreviated NRA) are not responsive.
+    positive_desc: |
+      The email involves discussion of the non-resident alien issue: the treatment of non-resident aliens under
+      Florida or federal law or policy, such as taxation, licensing, benefits, tuition, or employment of
+      non-resident aliens.
+    negative_desc: |
+      The email does not discuss the non-resident alien issue. Emails where "NRA" means the National Rifle
+      Association, and immigration matters that do not concern non-resident alien status, are not responsive.
+    structured:
+      responsive:
+        what: Discussion of the non-resident alien issue
+        includes: [non-resident alien status or treatment, taxation or licensing or benefits for non-resident aliens, policy or legislation on non-resident aliens]
+      not_responsive:
+        what: Not about non-resident aliens
+        includes: [NRA meaning National Rifle Association, general immigration matters not about non-resident alien status, foreign trade or travel]
+    subparts:
+      - Does this email discuss the status or treatment of non-resident aliens under law or policy?
+      - Does this email discuss a proposal, dispute, or issue specifically about non-resident aliens?

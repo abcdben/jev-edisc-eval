@@ -46,6 +46,13 @@ TOPICS_2016 = {  # topic -> question id
     "423": "nra_rifle",
     "422": "nra_aliens",
 }
+# (topic, facet) pairs whose gold contradicts the topic's own text. Kept as gold-positive (NIST's
+# label stands) but flagged gray so metrics can be reported with and without them.
+#   423/154: the "NRA issue" letters from Florida bankers about the IRS non-resident-alien interest
+#            reporting rule, judged relevant (mostly "important") to the National Rifle Association
+#            topic, which states "Documents concerning the non-resident alien issue are not relevant."
+GOLD_CONFLICT = {("423", "154")}
+
 TOPICS_2015 = {
     "athome100": "a1_school_funding",
     "athome101": "a1_judicial_selection",
@@ -121,6 +128,7 @@ def all_docnos() -> list[str]:
 def make_doc(docno: str, text: str, rel, facet, rel15) -> dict:
     labels = {}
     meta: dict = {"docno": docno, "n_chars": len(text), "important": [], "facet": {}}
+    gray: list[str] = []
     for t, q in TOPICS_2016.items():
         g = rel[t].get(docno)
         if g:
@@ -128,14 +136,18 @@ def make_doc(docno: str, text: str, rel, facet, rel15) -> dict:
             meta["facet"][q] = facet.get((t, docno))
             if g == 2:
                 meta["important"].append(q)
+            if (t, facet.get((t, docno))) in GOLD_CONFLICT:
+                gray.append(q)
     for t, q in TOPICS_2015.items():
         if docno in rel15[t]:
             labels[q] = "responsive"
-    return {"id": f"JB-{int(docno):06d}", "text": text, "labels": labels, "gray": [], "meta": meta}
+    return {"id": f"JB-{int(docno):06d}", "text": text, "labels": labels, "gray": gray, "meta": meta}
 
 
 def _clusters_pick(docnos: list[str], k: int, seed: int) -> list[str]:
     """One representative per TF-IDF k-means cluster (closest to centroid)."""
+    if k <= 0:
+        return []
     if len(docnos) <= k:
         return list(docnos)
     import numpy as np
@@ -165,7 +177,7 @@ def build_dev(out: Path, seen: set[str] | None = None, n_pos: int = 30, n_neg: i
     rng = random.Random(seed)
     chosen: dict[str, dict] = {}
     for t in TOPICS_2016:
-        pos = [d for d in rel[t] if len(read_email(d)) <= MAX_CHARS]
+        pos = [d for d in sorted(rel[t], key=int) if len(read_email(d)) <= MAX_CHARS]
         cap = min(n_pos, max(3, len(pos) // 3))
         picks: list[str] = [d for d in pos if d in seen][:cap]
         # spread remaining positives across subtopic facets: round-robin over facets, random within
@@ -179,7 +191,7 @@ def build_dev(out: Path, seen: set[str] | None = None, n_pos: int = 30, n_neg: i
             for f in sorted(by_f, key=lambda f: -len(by_f[f])):
                 if by_f[f] and len(picks) < cap:
                     picks.append(by_f[f].pop())
-        neg = [d for d in nonrel[t] if len(read_email(d)) <= MAX_CHARS and d not in rel[t]]
+        neg = [d for d in sorted(nonrel[t], key=int) if len(read_email(d)) <= MAX_CHARS and d not in rel[t]]
         neg_seen = [d for d in neg if d in seen]
         neg = neg_seen + [d for d in neg if d not in seen]
         rest = neg[len(neg_seen):]
