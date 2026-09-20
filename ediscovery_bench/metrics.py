@@ -66,6 +66,7 @@ class OpMetrics:
     total_list_cost_usd: float
     cost_per_1k_docs_usd: float  # per 1k (doc, question) decisions
     pricing_modes: dict[str, int]
+    label_prob_inconsistent: float = 0.0  # share of rows where label and p disagree about the 0.5 side
 
     def to_dict(self):
         return asdict(self)
@@ -167,7 +168,7 @@ def macro_f1(qms: list[QMetrics]) -> float | None:
     return float(np.mean(vals)) if vals else None
 
 
-def op_metrics(preds: list[Prediction]) -> OpMetrics:
+def op_metrics(preds: list[Prediction], positive: str = "responsive") -> OpMetrics:
     ok = [p for p in preds if not p.error]
     lat = [p.latency_ms for p in ok if p.latency_ms is not None]
     modes: dict[str, int] = {}
@@ -184,6 +185,7 @@ def op_metrics(preds: list[Prediction]) -> OpMetrics:
         total_list_cost_usd=float(sum(p.list_cost_usd for p in ok)),
         cost_per_1k_docs_usd=float(sum(p.list_cost_usd for p in ok)) / n * 1000,
         pricing_modes=modes,
+        label_prob_inconsistent=sum(1 for p in ok if (p.p_positive >= 0.5) != (p.label == positive)) / n if ok else 0.0,
     )
 
 

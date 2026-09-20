@@ -41,16 +41,20 @@ def build_prefix(ts: TaskSet, qids: list[str], phrasing: PhraseMode = "rfp") -> 
     if ts.context:
         parts.append(f"<matter_background>\n{ts.context}\n</matter_background>")
     parts.append("\n\n".join(question_block(ts, ts.questions[q], phrasing) for q in qids))
+    prob_rule = (
+        "p_responsive is the probability (0 to 1) that the document IS responsive, not your confidence in "
+        "your label: a confident not_responsive answer has p_responsive near 0, a confident responsive answer "
+        "has p_responsive near 1, and an uncertain case is near 0.5."
+    )
     if len(qids) == 1:
         parts.append(
-            "Classify the document as responsive or not_responsive to the request above, and give "
-            "p_responsive, your probability from 0 to 1 that the document is responsive."
+            "Classify the document as responsive or not_responsive to the request above, and give p_responsive. "
+            + prob_rule
         )
     else:
         parts.append(
-            "For EACH request above, classify the document as responsive or not_responsive and give "
-            "p_responsive, your probability from 0 to 1 that the document is responsive to that request. "
-            "Judge each request independently."
+            "For EACH request above, classify the document as responsive or not_responsive and give p_responsive "
+            "for that request. Judge each request independently. " + prob_rule
         )
     return "\n\n".join(parts)
 
@@ -74,7 +78,14 @@ def build_decision_model(ts: TaskSet, qids: list[str]) -> type[BaseModel]:
     One = create_model(
         "Decision",
         label=(label_type, Field(description="responsive or not_responsive")),
-        p_responsive=(float, Field(ge=0.0, le=1.0, description="Probability (0-1) that the document is responsive")),
+        p_responsive=(
+            float,
+            Field(
+                ge=0.0,
+                le=1.0,
+                description="Probability (0-1) that the document IS responsive. Near 0 for a confident not_responsive, near 1 for a confident responsive.",
+            ),
+        ),
     )
     if len(qids) == 1:
         M = One

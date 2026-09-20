@@ -310,6 +310,23 @@ def rebind_gold(preds, docs, ts):
     return out
 
 
+@app.command()
+def writeup(
+    task: Path = typer.Option(..., "--task", "-t"),
+    data: Path = typer.Option(..., "--data", "-d"),
+    corpus: str = typer.Option(..., "--corpus"),
+    out: Path = typer.Option(Path("results"), "--out", "-o"),
+    arm: list[str] = typer.Option(["single", "multi"], "--arm", "-a"),
+    tag: list[str] = typer.Option([""], "--tag"),
+    title: Optional[str] = typer.Option(None, "--title"),
+):
+    """Write results/<corpus>/REPORT.md from saved predictions."""
+    from .writeup import write_report
+
+    p = write_report(task, data, out, corpus, tuple(arm), tuple(tag), title)
+    console.print(f"wrote {p}")
+
+
 def _fmt(v, pct=False, nd=3):
     if v is None or (isinstance(v, float) and v != v):
         return "—"
