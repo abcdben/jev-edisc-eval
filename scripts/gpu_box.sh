@@ -70,7 +70,7 @@ cuad() {
   C=tasks/cuad.yaml; CD=data/cuad/cuad.jsonl
   LAYA="laya@base laya@choice laya@score laya@compact laya@chunk laya@recipe laya@recipe_choice laya@literal laya@gate laya@ensemble laya@decompose laya-typed@base laya-typed@recipe laya-multilingual@base laya-multilingual@recipe"
   echo "== Laya zero-shot, CUAD, pool=$POOL"
-  { for v in $LAYA; do for a in single multi; do echo "$C $CD cuad $v $a"; done; done; } | xargs -P "$POOL" -L 1 bash -c 'job "$@"' _
+  { for v in $LAYA; do for a in single multi; do [ "$v$a" = "laya@decomposesingle" ] && continue; echo "$C $CD cuad $v $a"; done; done; } | xargs -P "$POOL" -L 1 bash -c 'job "$@"' _
   echo "== Laya latency sample, CUAD"
   for v in laya@base laya@recipe laya-typed@base; do for a in single multi; do job $C data/cuad/local_subset.jsonl cuad $v $a 1 latency; done; done
   echo "== Laya fine-tune (SUPERVISED), CUAD"
@@ -85,6 +85,7 @@ cuad() {
 # Gemma 3 12B floor via Ollama. It saturates the GPU (~6 docs/min even on an A100 for the
 # 10-question multi-arm prompt), so it runs alone, after the Laya grid, on the 400-doc subsamples.
 trec() {
+  # laya@decompose single-arm is skipped: on Veridian it ran 4.5 h at 0% GPU (batcher starvation); multi-arm decompose is kept.
   # TREC 2016 Total Recall. Zero-shot Laya on the 3,116 eval sample (both arms, v1 criteria) plus the
   # bare-sentence v0 criteria for base; supervised fine-tune on dev.jsonl (the calibration set, disjoint
   # from eval); then one multi-arm pass over the full 286k collection with the best zero-shot variant.
@@ -92,7 +93,7 @@ trec() {
   C=tasks/trec.yaml; CD=data/trec/eval.jsonl
   LAYA="laya@base laya@choice laya@score laya@compact laya@chunk laya@recipe laya@recipe_choice laya@literal laya@gate laya@ensemble laya@decompose laya-typed@base laya-typed@recipe laya-multilingual@base laya-multilingual@recipe"
   echo "== Laya zero-shot, TREC eval, pool=$POOL"
-  { for v in $LAYA; do for a in multi single; do echo "$C $CD trec $v $a"; done; done; } | xargs -P "$POOL" -L 1 bash -c 'job "$@"' _
+  { for v in $LAYA; do for a in multi single; do [ "$v$a" = "laya@decomposesingle" ] && continue; echo "$C $CD trec $v $a"; done; done; } | xargs -P "$POOL" -L 1 bash -c 'job "$@"' _
   echo "== Laya v0 (bare sentence) criteria, TREC eval"
   for a in multi single; do job design/trec/criteria_v0.yaml $CD trec laya@base $a 64 v0; done
   echo "== Gemma, TREC eval subsample"
