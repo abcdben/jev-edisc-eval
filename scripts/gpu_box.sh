@@ -25,14 +25,18 @@ setup() {
   .venv/bin/bench doctor -m lexical -m laya@base -m gemma3-12b
 }
 
-# One job = "task data corpus model arm [concurrency]". Laya calls are ~30 ms of CPU
-# overhead each with the GPU nearly idle, so we run several jobs at once (POOL).
-job() { .venv/bin/bench run -t "$1" -d "$2" --corpus "$3" -m "$4" -a "$5" -c "${6:-1}" -y 2>&1 | grep "new rows" || true; }
+# One job = "task data corpus model arm [concurrency] [tag]". The Laya provider micro-batches
+# concurrent requests into single forward passes, so Laya jobs run at high concurrency (-c 64)
+# and only a couple of jobs at a time (POOL) share the GPU.
+job() {
+  local extra=(); [ -n "${7:-}" ] && extra=(--tag "$7")
+  .venv/bin/bench run -t "$1" -d "$2" --corpus "$3" -m "$4" -a "$5" -c "${6:-64}" "${extra[@]}" -y 2>&1 | grep "new rows" || true
+}
 export -f job
 
 run() {
   (pgrep -x ollama >/dev/null || (OLLAMA_NUM_PARALLEL=4 nohup ollama serve >ollama.log 2>&1 &)); sleep 3
-  POOL=${POOL:-6}
+  POOL=${POOL:-2}
   V=tasks/veridian.yaml; VD=data/veridian/veridian.jsonl
   M=tasks/mallinckrodt.yaml; MD=data/mallinckrodt/mnk.jsonl
   LAYA="laya@base laya@choice laya@score laya@compact laya@chunk laya@recipe laya@recipe_choice laya@literal laya@gate laya@ensemble laya@decompose laya-typed@base laya-typed@recipe laya-multilingual@base laya-multilingual@recipe"
@@ -41,6 +45,12 @@ run() {
   { for v in $LAYA; do for a in single multi; do echo "$V $VD veridian $v $a"; done; done
     for v in $LAYA; do for a in single multi; do echo "$M $MD mnk $v $a"; done; done
   } | xargs -P "$POOL" -L 1 bash -c 'job "$@"' _
+
+  echo "== Laya per-request latency sample (concurrency 1, unbatched; the speed table uses this, not the batched rows)"
+  for v in laya@base laya@recipe laya-typed@base; do for a in single multi; do
+    job $V data/veridian/local_subset.jsonl veridian $v $a 1 latency
+    job $M data/mallinckrodt/local_subset.jsonl mnk $v $a 1 latency
+  done; done
 
   echo "== Laya fine-tune (SUPERVISED), Veridian"
   .venv/bin/bench laya-ft -t $V -d $VD -o models/laya-ft-veridian 2>&1 | grep -E "laya-ft\]|split:" || true

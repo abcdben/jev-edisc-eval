@@ -23,8 +23,12 @@ Laya and are not offered as variants here.
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import os
+import queue
 import re
+import threading
+import time
 from dataclasses import replace
 from typing import Any
 
@@ -35,6 +39,8 @@ from .typesafe import SCORE_LEVELS, JevConfig
 
 # One process-wide agent per (repo, subfolder) so sequential jobs don't reload 400M params.
 _AGENTS: dict[tuple[str, str | None], Any] = {}
+_BATCHERS: dict[tuple[str, str | None], "_Batcher"] = {}
+_LOAD_LOCK = threading.Lock()
 
 LAYA_VARIANTS: dict[str, JevConfig] = {
     "base": JevConfig(),
@@ -57,12 +63,139 @@ COMPACT_MAX_WORDS = 34  # ~45 tokens; Laya caps each option at 48
 
 def _get_agent(model_id: str, subfolder: str | None):
     key = (model_id, subfolder)
-    if key not in _AGENTS:
-        os.environ.setdefault("USE_TF", "0")
-        import laya
+    with _LOAD_LOCK:
+        if key not in _AGENTS:
+            os.environ.setdefault("USE_TF", "0")
+            import laya
 
-        _AGENTS[key] = laya.load(model_id, subfolder=subfolder)
+            _AGENTS[key] = laya.load(model_id, subfolder=subfolder)
+            _BATCHERS[key] = _Batcher(_AGENTS[key])
     return _AGENTS[key]
+
+
+def _get_batcher(model_id: str, subfolder: str | None) -> "_Batcher":
+    _get_agent(model_id, subfolder)
+    return _BATCHERS[(model_id, subfolder)]
+
+
+class _Batcher:
+    """Micro-batches concurrent `system_one` requests into one forward pass.
+
+    `Agent.system_one` builds one sequence per question and runs them in a single forward.
+    We do the same across many (state, questions) requests at once, then split the answers
+    back out in `system_one`'s exact output format (same temperature scaling, same
+    probability/confidence fields). Numerically identical to calling `system_one` per
+    request; it just amortises the per-call Python/GPU-launch overhead that otherwise
+    leaves the GPU idle.
+    """
+
+    def __init__(self, agent, max_batch: int | None = None, max_wait_ms: float = 4.0):
+        import torch
+
+        self.agent = agent
+        self.max_batch = max_batch or int(os.environ.get("LAYA_MAX_BATCH", "64" if agent.device.type == "cuda" else "16"))
+        self.max_wait = max_wait_ms / 1000.0
+        self.q: queue.Queue = queue.Queue()
+        self.torch = torch
+        self.thread = threading.Thread(target=self._loop, daemon=True, name="laya-batcher")
+        self.thread.start()
+
+    def submit(self, state, questions: dict) -> concurrent.futures.Future:
+        fut: concurrent.futures.Future = concurrent.futures.Future()
+        self.q.put((state, questions, fut))
+        return fut
+
+    def _loop(self):
+        while True:
+            first = self.q.get()
+            batch = [first]
+            deadline = time.monotonic() + self.max_wait
+            while len(batch) < self.max_batch:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    break
+                try:
+                    batch.append(self.q.get(timeout=remaining))
+                except queue.Empty:
+                    break
+            try:
+                results = self._run(batch)
+            except Exception as e:  # noqa: BLE001
+                # Fall back to one request at a time so a single bad request can't poison the batch.
+                for state, questions, fut in batch:
+                    try:
+                        fut.set_result(self.agent.system_one(state, questions))
+                    except Exception as e2:  # noqa: BLE001
+                        fut.set_exception(e2)
+                continue
+            for (_, _, fut), res in zip(batch, results):
+                fut.set_result(res)
+
+    def _run(self, batch) -> list[dict]:
+        import numpy as np
+        from laya.common import QTYPES, build_sequence, collate_items, confidence_from_probs, render_options, temp_bucket
+
+        agent, torch = self.agent, self.torch
+        max_len = agent.cfg.get("max_len", 512)
+        head_max_len = agent.cfg.get("head_max_len", 192)
+        items, index = [], []  # index[i] = (request_idx, qid, internal_q)
+        for ri, (state, questions, _) in enumerate(batch):
+            for qid, qdef in questions.items():
+                q = agent._to_internal(qdef)
+                seq, markers = build_sequence(agent.tok, state, q, max_len, head_max_len)
+                if len(markers) != len(render_options(q)):
+                    raise ValueError("question %r options exceed head_max_len=%d" % (qid, head_max_len))
+                items.append({"ids": seq, "markers": markers, "qtype": QTYPES[q["t"]]})
+                index.append((ri, qid, q))
+        b = collate_items([items], agent.tok.pad_token_id)
+        dev = agent.device
+        use_amp = dev.type == "cuda"
+        with torch.no_grad(), torch.autocast(device_type=dev.type, dtype=agent.dtype, enabled=use_amp):
+            logits, act = agent.model(
+                b["input_ids"].to(dev), b["attention_mask"].to(dev), b["marker_pos"].to(dev), b["marker_mask"].to(dev), b["qtype"].to(dev)
+            )
+        logits = logits.float().cpu().numpy()
+        act = torch.softmax(act.float(), -1).cpu().numpy()
+        n_tok = b["attention_mask"].sum(-1).tolist()
+
+        answers: list[dict] = [{} for _ in batch]
+        tokens = [0] * len(batch)
+        for r, (ri, qid, q) in enumerate(index):
+            k = len(items[r]["markers"])
+            qt = QTYPES[q["t"]]
+            t_scale = agent.temperature_by_options.get(temp_bucket(qt, k), agent.temperature[qt])
+            z = logits[r, :k] / max(1e-3, float(t_scale))
+            p = np.exp(z - z.max())
+            p = p / p.sum()
+            conf = round(confidence_from_probs(p, k), 4)
+            ext = {"act_probability": round(float(act[r, 0]), 4)}
+            tokens[ri] += int(n_tok[r])
+            if q["t"] == "choice":
+                keys = list(q["crit"].keys())
+                answers[ri][qid] = {
+                    "type": "choice",
+                    "choice": keys[int(p.argmax())],
+                    "probabilities": {kk: round(float(v), 4) for kk, v in zip(keys, p)},
+                    "confidence": conf,
+                    "action": ext,
+                }
+            elif q["t"] == "score":
+                answers[ri][qid] = {
+                    "type": "score",
+                    "score": round(float((np.arange(k) * p).sum()), 4),
+                    "legend": {str(i): c for i, c in enumerate(q["crit"])},
+                    "probabilities": {str(i): round(float(v), 4) for i, v in enumerate(p)},
+                    "confidence": conf,
+                    "action": ext,
+                }
+            else:
+                answers[ri][qid] = {
+                    "type": "noul",
+                    "noul": round(float(p[1]), 4),
+                    "confidence": round(max(float(p[1]), 1.0 - float(p[1])), 4),
+                    "action": ext,
+                }
+        return [{"model": "laya-rl-agent", "answers": answers[ri], "usage": {"input_tokens": tokens[ri], "output_tokens": 0}} for ri in range(len(batch))]
 
 
 def first_sentence(text: str, max_words: int = COMPACT_MAX_WORDS) -> str:
@@ -204,10 +337,12 @@ class LayaProvider(Provider):
         return questions, plan
 
     # ---- inference ---------------------------------------------------------
-    def _predict_sync(self, ts: TaskSet, text: str, questions: dict) -> list[dict]:
+    async def _predict(self, ts: TaskSet, text: str, questions: dict) -> list[dict]:
         if self._agent is None:
-            self._agent = _get_agent(self.spec.model_id, self.subfolder)
-        return [self._agent.system_one(self._state(ts, w), questions) for w in self._windows(text)]
+            self._agent = await asyncio.to_thread(_get_agent, self.spec.model_id, self.subfolder)
+        batcher = _get_batcher(self.spec.model_id, self.subfolder)
+        futs = [batcher.submit(self._state(ts, w), questions) for w in self._windows(text)]
+        return list(await asyncio.gather(*[asyncio.wrap_future(f) for f in futs]))
 
     @staticmethod
     def _p_of(a: dict, kind: str, ts: TaskSet) -> float:
@@ -219,7 +354,7 @@ class LayaProvider(Provider):
 
     async def _call(self, ts: TaskSet, qids: list[str], doc: Document) -> RawResult:
         questions, plan = self._questions(ts, qids)
-        resps = await asyncio.to_thread(self._predict_sync, ts, doc.text, questions)
+        resps = await self._predict(ts, doc.text, questions)
         n_win = len(resps)
         # Max-pool each answer key across windows (a doc is responsive if any part is).
         pooled: dict[str, float] = {}
