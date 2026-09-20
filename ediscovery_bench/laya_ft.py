@@ -158,7 +158,12 @@ def train(task: Path, train_data: Path, out_dir: Path, device: str | None = None
     from laya.agent import _fix_tokenizer_config
     from laya.common import build_model, proper_reward
 
-    C = {**TRAIN_CFG, **overrides}
+    dev_probe = device or ("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
+    C = {**TRAIN_CFG}
+    if dev_probe.startswith("cuda"):
+        # On a real GPU run ConvAI's full recipe: every layer, all negatives, 3 epochs, fp16 autocast.
+        C.update(epochs=3, train_top_layers=0, neg_ratio=None, amp=True)
+    C.update(overrides)
     ts = TaskSet.load(task)
     docs = load_corpus(train_data)
 
@@ -168,7 +173,7 @@ def train(task: Path, train_data: Path, out_dir: Path, device: str | None = None
     cfg = json.load(open(os.path.join(model_dir, "rl_agent_config.json")))
     cfg["max_len"], cfg["head_max_len"] = C["max_len"], C["head_max_len"]
 
-    dev = torch.device(device or ("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"))
+    dev = torch.device(dev_probe)
     model = build_model(cfg, encoder_dir=os.path.join(model_dir, "encoder"))
     model.load_state_dict(load_file(os.path.join(model_dir, "model.safetensors")), strict=True)
     try:
@@ -211,7 +216,8 @@ def train(task: Path, train_data: Path, out_dir: Path, device: str | None = None
     steps_per_epoch = math.ceil(len(items) / (C["micro_batch"] * C["grad_accum"]))
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=max(1, steps_per_epoch * C["epochs"]), eta_min=1e-6)
     amp_dtype = torch.float16 if dev.type == "cuda" else torch.bfloat16
-    use_amp = dev.type in ("cuda", "mps") and C.get("amp", True)
+    use_amp = dev.type in ("cuda", "mps") and bool(C.get("amp", True))
+    scaler = torch.amp.GradScaler("cuda", enabled=(use_amp and dev.type == "cuda"))
 
     def batches(epoch_items):
         """Length-bucketed micro-batches (pads to the longest in the batch, so sort-then-chunk)."""
@@ -253,14 +259,16 @@ def train(task: Path, train_data: Path, out_dir: Path, device: str | None = None
                 log(f"[laya-ft] non-finite loss at epoch {epoch+1} batch {ci}; skipping batch")
                 opt.zero_grad(set_to_none=True)
                 continue
-            loss.backward()
+            scaler.scale(loss).backward()
             accum += 1
             if accum % C["grad_accum"] == 0 or ci + 1 == len(chunks):
+                scaler.unscale_(opt)
                 gn = torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad], 1.0)
                 if torch.isfinite(gn):
-                    opt.step()
+                    scaler.step(opt)
                 else:
                     log(f"[laya-ft] non-finite grad norm at epoch {epoch+1} batch {ci}; skipping step")
+                scaler.update()
                 sched.step()
                 opt.zero_grad(set_to_none=True)
             ep_loss += loss.item() * C["grad_accum"]
