@@ -103,6 +103,15 @@ MODELS: dict[str, ModelSpec] = {
         size="n/a",
         notes="SUPERVISED. English checkpoint fine-tuned (RLCD recipe, 1024 ctx) on the Mallinckrodt dev split. Evaluate on data/mallinckrodt/ft_test.jsonl only.",
     ),
+    "laya-ft-cuad": ModelSpec(
+        key="laya-ft-cuad",
+        provider="laya",
+        model_id="models/laya-ft-cuad",
+        input_per_mtok=0.0,
+        output_per_mtok=0.0,
+        size="n/a",
+        notes="SUPERVISED. English checkpoint fine-tuned (RLCD recipe, 1024 ctx) on the CUAD dev split. Evaluate on data/cuad/ft_test.jsonl only.",
+    ),
     # ---- SMALL tier: the cheapest model each vendor sells ---------------
     "claude-haiku-4.5": ModelSpec(
         key="claude-haiku-4.5",

@@ -51,26 +51,48 @@ TRAIN_CFG = dict(
 
 
 # ---------------------------------------------------------------- split ----
-def make_split(data: Path, out_dir: Path, frac_train: float = 0.30, seed: int = 11, min_pos: int = 15) -> tuple[Path, Path]:
-    """Doc-level split. Guarantees >= min_pos positives per question in train where the corpus has them."""
+def make_split(data: Path, out_dir: Path, frac_train: float = 0.30, seed: int = 11, min_pos: int = 15, group_key: str = "contract_idx") -> tuple[Path, Path]:
+    """Doc-level split. Guarantees >= min_pos positives per question in train where the corpus has them.
+
+    If documents carry `meta[group_key]` (CUAD paragraphs carry their contract), whole groups go to one
+    side so the held-out set never shares a contract with the training set."""
     rows = [json.loads(l) for l in data.read_text().splitlines() if l.strip()]
     rng = random.Random(seed)
     rng.shuffle(rows)
     n_train = int(round(frac_train * len(rows)))
     qids = sorted({q for r in rows for q in (r.get("labels") or {})})
+    grouped = any(group_key in (r.get("meta") or {}) for r in rows)
+    grp = lambda r: str((r.get("meta") or {}).get(group_key, r["id"]))  # noqa: E731
+    members: dict[str, list[dict]] = {}
+    for r in rows:
+        members.setdefault(grp(r), []).append(r)
     train: list[dict] = []
     ids: set[str] = set()
+
+    def take(r: dict) -> None:
+        for m in members[grp(r)] if grouped else [r]:
+            if m["id"] not in ids:
+                train.append(m)
+                ids.add(m["id"])
+
     for q in qids:
         pos = [r for r in rows if q in (r.get("labels") or {}) and r["id"] not in ids]
-        for r in pos[:min_pos]:
-            train.append(r)
-            ids.add(r["id"])
+        if grouped:
+            have = 0
+            for r in pos:
+                if have >= min_pos:
+                    break
+                if r["id"] not in ids:
+                    take(r)
+                    have = sum(1 for x in rows if q in (x.get("labels") or {}) and x["id"] in ids)
+        else:  # original doc-level behaviour (Veridian / Mallinckrodt splits were made this way)
+            for r in pos[:min_pos]:
+                take(r)
     for r in rows:
         if len(train) >= n_train:
             break
         if r["id"] not in ids:
-            train.append(r)
-            ids.add(r["id"])
+            take(r)
     test = [r for r in rows if r["id"] not in ids]
     out_dir.mkdir(parents=True, exist_ok=True)
     p_tr, p_te = out_dir / "ft_train.jsonl", out_dir / "ft_test.jsonl"
