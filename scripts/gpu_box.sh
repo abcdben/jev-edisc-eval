@@ -19,10 +19,14 @@ setup() {
   .venv/bin/pip install -q -U pip
   .venv/bin/pip install -q -e '.[laya]' httpx
   .venv/bin/python -c "import torch;print('torch',torch.__version__,'cuda',torch.cuda.is_available(),torch.cuda.get_device_name(0) if torch.cuda.is_available() else '')"
-  if ! command -v ollama >/dev/null; then curl -fsSL https://ollama.com/install.sh | sh; fi
-  (pgrep -x ollama >/dev/null || (OLLAMA_NUM_PARALLEL=4 nohup ollama serve >ollama.log 2>&1 &)); sleep 4
-  ollama pull gemma3:12b
-  .venv/bin/bench doctor -m lexical -m laya@base -m gemma3-12b
+  if [ -z "${SKIP_OLLAMA:-}" ]; then
+    if ! command -v ollama >/dev/null; then curl -fsSL https://ollama.com/install.sh | sh; fi
+    (pgrep -x ollama >/dev/null || (OLLAMA_NUM_PARALLEL=4 nohup ollama serve >ollama.log 2>&1 &)); sleep 4
+    ollama pull gemma3:12b
+    .venv/bin/bench doctor -m lexical -m laya@base -m gemma3-12b
+  else
+    .venv/bin/bench doctor -m lexical -m laya@base
+  fi
 }
 
 # One job = "task data corpus model arm [concurrency] [tag]". The Laya provider micro-batches
@@ -96,17 +100,34 @@ trec() {
   { for v in $LAYA; do for a in multi single; do [ "$v$a" = "laya@decomposesingle" ] && continue; echo "$C $CD trec $v $a"; done; done; } | xargs -P "$POOL" -L 1 bash -c 'job "$@"' _
   echo "== Laya v0 (bare sentence) criteria, TREC eval"
   for a in multi single; do job design/trec/criteria_v0.yaml $CD trec laya@base $a 64 v0; done
-  echo "== Gemma, TREC eval subsample"
-  .venv/bin/bench sample -d $CD -o data/trec/local_subset.jsonl --n 600 --min-pos 20 2>&1 | tail -1 || true
-  job $C data/trec/local_subset.jsonl trec gemma3-12b multi 4
-  job $C data/trec/local_subset.jsonl trec gemma3-12b single 4
   echo "== Laya fine-tune (SUPERVISED) on TREC dev, eval on eval"
   .venv/bin/bench laya-ft -t $C -d $CD --train data/trec/dev.jsonl -o models/laya-ft-trec 2>&1 | grep -E "laya-ft\]|split:" || true
   for a in multi single; do job $C $CD trec laya-ft-trec@compact $a; job $C $CD trec laya-ft-trec@recipe $a; done
-  echo "== Laya full collection (286k), multi arm"
-  job $C data/trec/full.jsonl trec_full laya@recipe multi 128
-  job $C data/trec/full.jsonl trec_full lexical multi 128
   echo TREC_GRID_DONE
+}
+
+trec_full() {
+  # Sharded full-collection pass: trec_full K N runs shard K of N (1-based) of data/trec/full.jsonl.
+  # Each box writes results/trec_full/multi/*.jsonl for its shard; shards are concatenated locally.
+  K=${1:-1}; N=${2:-1}
+  .venv/bin/python - "$K" "$N" <<'PY'
+import sys, itertools
+k, n = int(sys.argv[1]), int(sys.argv[2])
+src = open("data/trec/full.jsonl"); out = open(f"data/trec/full_{k}of{n}.jsonl", "w")
+for i, line in enumerate(src):
+    if i % n == k - 1: out.write(line)
+PY
+  echo "== Laya full collection shard $K/$N, multi arm"
+  job tasks/trec.yaml data/trec/full_${K}of${N}.jsonl trec_full laya@recipe multi 128
+  job tasks/trec.yaml data/trec/full_${K}of${N}.jsonl trec_full lexical multi 128
+  echo "TREC_FULL_DONE $K/$N"
+}
+
+trec_gemma() {
+  (pgrep -x ollama >/dev/null || (OLLAMA_NUM_PARALLEL=4 nohup ollama serve >ollama.log 2>&1 &)); sleep 3
+  job tasks/trec.yaml data/trec/local_subset.jsonl trec gemma3-12b multi 4
+  job tasks/trec.yaml data/trec/local_subset.jsonl trec gemma3-12b single 4
+  echo TREC_GEMMA_DONE
 }
 
 gemma() {
@@ -124,5 +145,7 @@ case "${1:-}" in
   gemma) gemma 2>&1 | tee -a gpu_run.log ;;
   cuad) cuad 2>&1 | tee -a gpu_run.log ;;
   trec) trec 2>&1 | tee -a gpu_run.log ;;
-  *) echo "usage: $0 setup|run|gemma|cuad|trec"; exit 1 ;;
+  trec_full) trec_full "${2:-1}" "${3:-1}" 2>&1 | tee -a gpu_run.log ;;
+  trec_gemma) trec_gemma 2>&1 | tee -a gpu_run.log ;;
+  *) echo "usage: $0 setup|run|gemma|cuad|trec|trec_full K N|trec_gemma"; exit 1 ;;
 esac
