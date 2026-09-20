@@ -36,8 +36,10 @@ def collect(out: Path, corpus: str, arms: list[str], docs, ts, tags: tuple[str, 
             continue
         for f in sorted(d.glob("*.jsonl")):
             name = f.stem
-            if name.startswith("jev__"):
-                mk, _, tag = name[5:].partition("__"); mk = "jev@" + mk
+            if name.startswith(("jev__", "laya__", "laya-typed__")):
+                prefix, rest = name.split("__", 1)
+                mk, _, tag = rest.partition("__")
+                mk = f"{prefix}@{mk}"
             else:
                 mk, _, tag = name.partition("__")
             if tag not in tags:

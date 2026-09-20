@@ -41,6 +41,14 @@ def _expand_models(keys: list[str] | None) -> list[str]:
                 from .providers.typesafe import VARIANTS
 
                 out += [f"jev@{v}" for v in VARIANTS if v != "recipe"]
+            elif part == "laya":
+                out += ["laya@base", "laya@choice", "laya@score", "laya-typed@base"]
+            elif part == "laya-ablations":
+                from .providers.typesafe import VARIANTS
+
+                out += [f"laya@{v}" for v in VARIANTS if v not in ("recipe", "preview")]
+            elif part == "floors":
+                out += ["lexical", "laya@base", "laya-typed@base", "gemma3-12b"]
             elif part:
                 parse_model_key(part)  # validates
                 out.append(part)
@@ -344,12 +352,10 @@ def _report(ts, out: Path, corpus: str, arms, keys, tag="", exclude_gray=False, 
             name = f.stem
             if tag and not name.endswith(f"__{tag}"):
                 continue
-            if not tag and "__" in name and not name.startswith("jev__"):
+            if not tag and "__" in name and not name.startswith(("jev__", "laya__", "laya-typed__")):
                 # tagged files (e.g. pilots) are excluded unless asked for
-                base = name.split("__")
-                if len(base) > 1 and base[0] != "jev":
-                    continue
-            mk = name.replace("__", "@", 1) if name.startswith("jev__") else name.split("__")[0]
+                continue
+            mk = name.replace("__", "@", 1) if name.startswith(("jev__", "laya__", "laya-typed__")) else name.split("__")[0]
             if keys and mk not in keys:
                 continue
             preds = load_predictions(f)

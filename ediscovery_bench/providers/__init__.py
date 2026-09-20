@@ -22,7 +22,7 @@ def make_provider(
     flex: bool = True,
 ) -> Provider:
     spec, variant = parse_model_key(key)
-    if effort_override and spec.provider not in ("typesafe", "mock"):
+    if effort_override and spec.provider not in ("typesafe", "laya", "ollama", "lexical", "mock"):
         if effort_override == "default":
             spec = replace(spec, effort=VENDOR_DEFAULT_EFFORT.get(spec.key), extra={})
         else:
@@ -32,6 +32,18 @@ def make_provider(
         from .typesafe import TypeSafeProvider
 
         return TypeSafeProvider(spec, variant=variant or "base")
+    if spec.provider == "laya":
+        from .laya_ import LayaProvider
+
+        return LayaProvider(spec, variant=variant or "base")
+    if spec.provider == "ollama":
+        from .ollama_ import OllamaProvider
+
+        return OllamaProvider(spec, phrasing=phrasing)
+    if spec.provider == "lexical":
+        from .lexical import LexicalProvider
+
+        return LexicalProvider(spec)
     if spec.provider == "anthropic":
         from .anthropic_ import AnthropicProvider
 

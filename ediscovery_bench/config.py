@@ -15,7 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-Provider = Literal["typesafe", "anthropic", "openai", "gemini", "mock"]
+Provider = Literal["typesafe", "laya", "ollama", "lexical", "anthropic", "openai", "gemini", "mock"]
 
 
 @dataclass(frozen=True)
@@ -54,6 +54,26 @@ MODELS: dict[str, ModelSpec] = {
         input_per_mtok=0.042,
         output_per_mtok=0.0,
         notes="Alias; moves when TypeSafe ships a new release. Response `model` field is logged.",
+    ),
+    # ---- ConvAI Laya (local System 1; same Noul/Choice/Score surface as Jev) ----
+    "laya": ModelSpec(
+        key="laya",
+        provider="laya",
+        model_id="convaiinnovations/laya",
+        input_per_mtok=0.0,
+        output_per_mtok=0.0,
+        size="n/a",
+        notes="Self-hosted English checkpoint (ModernBERT-large, 512 ctx). $0. Zero-shot; they say fine-tuning is where most quality comes from.",
+    ),
+    "laya-typed": ModelSpec(
+        key="laya-typed",
+        provider="laya",
+        model_id="convaiinnovations/laya",
+        input_per_mtok=0.0,
+        output_per_mtok=0.0,
+        size="n/a",
+        extra={"subfolder": "typed-decisions"},
+        notes="Self-hosted typed-decisions checkpoint (1024 ctx). Fine-tuned on invoice/security/CS/agent-trace, not eDiscovery.",
     ),
     # ---- SMALL tier: the cheapest model each vendor sells ---------------
     "claude-haiku-4.5": ModelSpec(
@@ -150,6 +170,35 @@ MODELS: dict[str, ModelSpec] = {
         effort="low",
         notes="Excluded from default roster 2026-09-19. Thinking cannot be disabled; 'low' is the floor.",
     ),
+    # ---- Floors / negative controls (local, $0) ---------------------------
+    "lexical": ModelSpec(
+        key="lexical",
+        provider="lexical",
+        model_id="lexical-terms",
+        input_per_mtok=0.0,
+        output_per_mtok=0.0,
+        notes="Keyword-overlap baseline built from the request text. No model. If this is close to the models, the set is too easy.",
+    ),
+    "gemma3-12b": ModelSpec(
+        key="gemma3-12b",
+        provider="ollama",
+        model_id="gemma3:12b",
+        input_per_mtok=0.0,
+        output_per_mtok=0.0,
+        size="small",
+        extra={"num_ctx": 8192},
+        notes="Local open model via Ollama on this Mac. Same prompt/schema as the cloud LLMs; temperature 0; no thinking.",
+    ),
+    "qwen3-14b": ModelSpec(
+        key="qwen3-14b",
+        provider="ollama",
+        model_id="qwen3:14b",
+        input_per_mtok=0.0,
+        output_per_mtok=0.0,
+        size="small",
+        extra={"num_ctx": 8192, "think": False},
+        notes="Local open model via Ollama; thinking disabled. Optional second local floor.",
+    ),
     # ---- Test double ----------------------------------------------------
     "mock": ModelSpec(
         key="mock",
@@ -179,6 +228,9 @@ VENDOR_DEFAULT_EFFORT: dict[str, str | None] = {
 
 ENV_KEYS: dict[Provider, str] = {
     "typesafe": "TYPESAFE_API_KEY",
+    "laya": "",
+    "ollama": "",
+    "lexical": "",
     "anthropic": "ANTHROPIC_API_KEY",
     "openai": "OPENAI_API_KEY",
     "gemini": "GEMINI_API_KEY",
