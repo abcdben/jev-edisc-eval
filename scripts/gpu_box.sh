@@ -11,11 +11,16 @@ export USE_TF=0 TOKENIZERS_PARALLELISM=false
 export OMP_NUM_THREADS=${OMP_NUM_THREADS:-4} MKL_NUM_THREADS=${MKL_NUM_THREADS:-4}
 
 setup() {
-  if ! command -v python3.12 >/dev/null && ! command -v python3.11 >/dev/null; then
-    sudo apt-get update -qq && sudo apt-get install -y -qq python3-venv python3-pip >/dev/null
+  if command -v python3.12 >/dev/null || command -v python3.11 >/dev/null; then
+    PY=$(command -v python3.12 || command -v python3.11)
+    $PY -m venv .venv
+  else
+    # image ships an older python: let uv fetch a standalone 3.12
+    command -v uv >/dev/null || (curl -LsSf https://astral.sh/uv/install.sh | sh >/dev/null 2>&1)
+    export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+    uv venv --python 3.12 .venv >/dev/null
+    uv pip install --python .venv/bin/python -q pip
   fi
-  PY=$(command -v python3.12 || command -v python3.11 || command -v python3)
-  $PY -m venv .venv
   .venv/bin/pip install -q -U pip
   .venv/bin/pip install -q -e '.[laya]' httpx
   .venv/bin/python -c "import torch;print('torch',torch.__version__,'cuda',torch.cuda.is_available(),torch.cuda.get_device_name(0) if torch.cuda.is_available() else '')"
