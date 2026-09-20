@@ -127,6 +127,158 @@ def run(
 
 
 @app.command()
+def sample(
+    data: Path = typer.Option(..., "--data", "-d"),
+    out: Path = typer.Option(..., "--out", "-o"),
+    n: int = typer.Option(100, "--n"),
+    min_pos: int = typer.Option(8, "--min-pos", help="Minimum positives per question where available"),
+    seed: int = typer.Option(3, "--seed"),
+):
+    """Stratified subsample of a labeled corpus (for pilots / dev splits)."""
+    import random
+
+    rows = [json.loads(l) for l in data.read_text().splitlines() if l.strip()]
+    rng = random.Random(seed)
+    rng.shuffle(rows)
+    qids = sorted({q for r in rows for q in (r.get("labels") or {})})
+    chosen: list[dict] = []
+    ids: set[str] = set()
+    for q in qids:
+        pos = [r for r in rows if q in (r.get("labels") or {}) and r["id"] not in ids]
+        for r in pos[:min_pos]:
+            chosen.append(r); ids.add(r["id"])
+    for r in rows:
+        if len(chosen) >= n:
+            break
+        if r["id"] not in ids:
+            chosen.append(r); ids.add(r["id"])
+    rng.shuffle(chosen)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text("".join(json.dumps(r) + "\n" for r in chosen))
+    counts = {q: sum(1 for r in chosen if q in (r.get("labels") or {})) for q in qids}
+    console.print(f"wrote {len(chosen)} docs to {out}; positives per question: {counts}")
+
+
+@app.command()
+def goldify(
+    data: Path = typer.Option(..., "--data", "-d", help="Unlabeled corpus JSONL"),
+    out: Path = typer.Option(..., "--out", "-o", help="Labeled corpus JSONL"),
+    corpus: str = typer.Option(..., "--corpus"),
+    results: Path = typer.Option(Path("results"), "--results"),
+    arm: str = typer.Option("multi", "--arm"),
+    model: list[str] = typer.Option(..., "--model", "-m", help="Panel members (prediction files must exist)"),
+    tag: str = typer.Option("", "--tag"),
+    positive: str = typer.Option("responsive"),
+):
+    """Build provisional gold labels from an LLM panel: majority vote; gray where the panel splits
+    or the mean probability is in [0.35, 0.65]. Writes panel votes into meta.panel."""
+    keys = _expand_models(model)
+    votes: dict[tuple[str, str], list[tuple[str, str, float]]] = {}
+    for k in keys:
+        f = job_path(results, corpus, arm, k, tag)
+        if not f.exists():
+            raise typer.BadParameter(f"missing predictions {f}")
+        for p in load_predictions(f):
+            if not p.error:
+                votes.setdefault((p.doc_id, p.question), []).append((k, p.label, p.p_positive))
+    by_doc: dict[str, dict[tuple[str, str], list]] = {}
+    for (d, q), vs in votes.items():
+        by_doc.setdefault(d, {})[(d, q)] = vs
+    rows = [json.loads(l) for l in data.read_text().splitlines() if l.strip()]
+    n_pos: dict[str, int] = {}; n_gray: dict[str, int] = {}
+    with out.open("w") as f:
+        for r in rows:
+            labels: dict[str, str] = {}; gray: list[str] = []; panel: dict[str, dict] = {}
+            for (d, q), vs in by_doc.get(r["id"], {}).items():
+                yes = sum(1 for _, lab, _ in vs if lab == positive)
+                mean_p = sum(p for _, _, p in vs) / len(vs)
+                panel[q] = {k: round(p, 3) for k, _, p in vs}
+                if yes * 2 > len(vs):
+                    labels[q] = positive; n_pos[q] = n_pos.get(q, 0) + 1
+                if (0 < yes < len(vs)) or 0.35 <= mean_p <= 0.65:
+                    gray.append(q); n_gray[q] = n_gray.get(q, 0) + 1
+            r["labels"] = labels; r["gray"] = sorted(gray)
+            r.setdefault("meta", {})["panel"] = panel
+            f.write(json.dumps(r) + "\n")
+    console.print(f"wrote {len(rows)} docs → {out}")
+    for q in sorted(set(n_pos) | set(n_gray)):
+        console.print(f"  {q:<28} positives={n_pos.get(q,0):<5} gray={n_gray.get(q,0)}")
+
+
+@app.command()
+def audit_merge(
+    data: Path = typer.Option(..., "--data", "-d", help="Planner-labeled corpus (writer output)"),
+    out: Path = typer.Option(..., "--out", "-o"),
+    corpus: str = typer.Option(..., "--corpus"),
+    results: Path = typer.Option(Path("results"), "--results"),
+    model: list[str] = typer.Option(..., "--model", "-m", help="Auditor panel"),
+    tag: str = typer.Option("audit", "--tag"),
+    arm: str = typer.Option("multi", "--arm"),
+    positive: str = typer.Option("responsive"),
+):
+    """Reconcile planner-intent labels with an auditor panel that read the rendered text.
+
+    Rules (P = planner label, A = auditor majority; `allowed` = RFPs the planner could assign in that arc):
+      P=yes, all auditors no  -> gold no, gray      (writer dropped the responsive content)
+      P=yes, split            -> gold yes, gray
+      P=no,  all yes, outside allowed -> gold yes   (planner never considered this RFP)
+      P=no,  all yes, inside allowed  -> gold no, gray (planner's intentional hard negative; disputed)
+      P=no,  split, outside allowed   -> gold no, gray
+      otherwise planner label stands.
+    """
+    from .synth.plan import ARCS, RFP_NUM
+
+    keys = _expand_models(model)
+    votes: dict[str, dict[str, list[tuple[str, str, float]]]] = {}
+    for k in keys:
+        f = job_path(results, corpus, arm, k, tag)
+        if not f.exists():
+            raise typer.BadParameter(f"missing predictions {f}")
+        for p in load_predictions(f):
+            if not p.error:
+                votes.setdefault(p.doc_id, {}).setdefault(p.question, []).append((k, p.label, p.p_positive))
+    rows = [json.loads(l) for l in data.read_text().splitlines() if l.strip()]
+    qids = list(RFP_NUM.values())
+    stats = {"flip_to_no": 0, "flip_to_yes": 0, "new_gray": 0}
+    with out.open("w") as f:
+        for r in rows:
+            arc = r["meta"]["arc"]
+            allowed = {RFP_NUM[n] for n in ARCS[arc]["allowed"] if n in RFP_NUM}
+            labels = dict(r["labels"]); gray = set(r.get("gray") or []); audit: dict[str, dict] = {}
+            planner_labels = sorted(labels)
+            for q in qids:
+                vs = votes.get(r["id"], {}).get(q, [])
+                if not vs:
+                    continue
+                yes = sum(1 for _, lab, _ in vs if lab == positive); n = len(vs)
+                audit[q] = {k: round(p, 3) for k, _, p in vs}
+                P = q in labels
+                if P and yes == 0:
+                    labels.pop(q); gray.add(q); stats["flip_to_no"] += 1
+                elif P and yes < n:
+                    if q not in gray: stats["new_gray"] += 1
+                    gray.add(q)
+                elif not P and yes == n:
+                    if q not in allowed:
+                        labels[q] = positive; stats["flip_to_yes"] += 1
+                    else:
+                        if q not in gray: stats["new_gray"] += 1
+                        gray.add(q)
+                elif not P and yes > 0 and q not in allowed:
+                    if q not in gray: stats["new_gray"] += 1
+                    gray.add(q)
+            r["labels"] = labels; r["gray"] = sorted(gray)
+            r["meta"]["planner_labels"] = planner_labels
+            r["meta"]["audit"] = audit
+            f.write(json.dumps(r) + "\n")
+    console.print(f"wrote {len(rows)} docs → {out}; {stats}")
+    from collections import Counter
+    c = Counter(q for r in rows for q in r["labels"]); g = Counter(q for r in rows for q in r["gray"])
+    for q in qids:
+        console.print(f"  {q:<26} pos={c[q]:<5} gray={g[q]}")
+
+
+@app.command()
 def report(
     task: Path = typer.Option(..., "--task", "-t"),
     corpus: str = typer.Option(..., "--corpus"),

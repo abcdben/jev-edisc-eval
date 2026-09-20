@@ -1,0 +1,270 @@
+# Mallinckrodt opioid litigation — eight requests arranged as four broad/narrow pairs
+# on the same underlying issue, so the effect of request breadth can be isolated.
+# Issues are drawn from the public record of the opioid MDL and state AG cases
+# against Mallinckrodt (suspicious order monitoring, downstream distribution data,
+# promotion of Exalgo and generic opioids, DEA quota and regulatory dealings).
+# Corpus: emails from the UCSF/JHU Opioid Industry Documents Archive,
+# "Mallinckrodt Litigation Documents" collection.
+
+name: mallinckrodt
+kind: binary
+positive_label: responsive
+negative_label: not_responsive
+
+context: |
+  Matter: opioid litigation against Mallinckrodt plc and Mallinckrodt LLC (MDL 2804, In re National Prescription
+  Opiate Litigation, and related state actions). Mallinckrodt was among the largest U.S. manufacturers of generic
+  opioids (oxycodone, hydrocodone, methadone) and also sold branded opioids including Exalgo (hydromorphone ER),
+  Roxicodone, and Methadose. Plaintiffs allege that Mallinckrodt failed to maintain effective controls against
+  diversion, including its suspicious order monitoring (SOM) program for wholesaler and distributor orders; that it
+  had, through chargeback and IMS data, visibility into downstream distribution to pharmacies (including Florida
+  "pill mills") and did not act on it; that it promoted opioids while minimizing addiction risk; and that it sought
+  ever-larger DEA production quota. Mallinckrodt also sold non-opioid products (e.g. Ofirmev, INOmax, Acthar,
+  contrast agents) that are not at issue. The relevant period is 2006 through 2017. The documents are emails,
+  reproduced with their headers as a reviewer would see them; quoted earlier messages in a thread are part of the
+  document. Newsletters and mass mailings received by an employee are documents in that employee's files.
+
+gate_question: |
+  Does this email substantively concern Mallinckrodt's opioid business (controlled-substance compliance, opioid
+  distribution or customers, opioid marketing or sales, or dealings with DEA/FDA/regulators about opioids)?
+  Answer no for emails about non-opioid products, general corporate or personal matters, or IT/HR/admin traffic.
+
+questions:
+
+  som_broad:
+    title: Suspicious order monitoring (broad)
+    breadth: broad
+    pair: som
+    rfp_text: |
+      All documents concerning Mallinckrodt's suspicious order monitoring program for controlled substances,
+      including its policies, procedures, and thresholds; the review, holding, release, reporting, or blocking of
+      orders; reports to or communications with DEA about suspicious orders; systems and vendors supporting the
+      program; training; audits; and communications with customers about orders held or reviewed under the program.
+    literal: |
+      Does this email discuss Mallinckrodt's suspicious order monitoring (SOM) program for controlled substances in
+      any way: the policy or procedure, order thresholds or algorithms, an order being reviewed, held, pended,
+      released, blocked, or reported, DEA suspicious order reporting, the software or vendors used, SOM training or
+      audits, or telling a customer their order is on hold or under review? Answer no if the email does not touch
+      the SOM program or the handling of orders under it.
+    positive_desc: |
+      The email concerns Mallinckrodt's suspicious order monitoring program: its policies, thresholds, or systems;
+      the review, hold, release, blocking, or reporting of any order; DEA suspicious order reporting; training or
+      audits of the program; or communications with customers about held or reviewed orders.
+    negative_desc: |
+      The email does not concern the suspicious order monitoring program or the handling of orders under it.
+      Ordinary order processing, pricing, and general compliance topics unrelated to suspicious order review are
+      not responsive.
+    structured:
+      responsive:
+        what: Anything about the suspicious order monitoring (SOM) program
+        includes: [SOM policy and SOPs, thresholds and algorithms, orders pended held released or blocked, DEA suspicious order reports, SOM software and vendors, SOM training and audits, customer notices about held orders, peculiar orders and orders of interest]
+      not_responsive:
+        what: No SOM content
+        includes: [routine order entry and shipping, pricing and contracts, non-controlled products, general compliance not about orders]
+
+  som_narrow:
+    title: Release or non-reporting of flagged orders (narrow)
+    breadth: narrow
+    pair: som
+    rfp_text: |
+      All documents concerning the decision to release, ship, or not report to DEA a specific customer order that
+      had been flagged, pended, or held under Mallinckrodt's suspicious order monitoring program, including the
+      justification for the decision and any customer due diligence relied upon.
+    literal: |
+      Does this email discuss a specific customer order (or specific orders) that was flagged, pended, or held under
+      the suspicious order monitoring program AND the decision to release it, ship it, or not report it to DEA,
+      including the reasons given or the customer due diligence relied on? Answer no for SOM policy discussions,
+      threshold changes, or held orders where no release, shipment, or reporting decision is discussed.
+    positive_desc: |
+      The email concerns a specific flagged, pended, or held order and the decision to release it, ship it, or not
+      report it to DEA, including the justification or customer due diligence relied on.
+    negative_desc: |
+      The email does not concern releasing, shipping, or declining to report a specific flagged order. General SOM
+      policy, thresholds, systems, training, and orders discussed without a release or reporting decision are not
+      responsive.
+    structured:
+      responsive:
+        what: Release, shipment, or non-reporting decisions on specific flagged or pended orders
+        includes: [approving release of a pended order, justification for shipping a held order, deciding an order is not suspicious after review, customer due diligence used to clear an order, deciding not to report an order to DEA]
+      not_responsive:
+        what: SOM content with no specific release or reporting decision
+        includes: [threshold policy, SOM system design, training, audit findings, orders mentioned as held with no decision discussed]
+
+  mktg_broad:
+    title: Opioid marketing and promotion (broad)
+    breadth: broad
+    pair: mktg
+    rfp_text: |
+      All documents concerning the marketing, promotion, or sale of any Mallinckrodt opioid product (including
+      Exalgo, Roxicodone, Methadose, Xartemis, and generic oxycodone, hydrocodone, and methadone), including
+      promotional materials, messaging and positioning, sales training and call plans, speaker programs and
+      key opinion leader engagement, advocacy and patient-group activities, market research, and sales incentive
+      plans relating to opioids.
+    literal: |
+      Does this email discuss the marketing, promotion, or selling of a Mallinckrodt opioid product (Exalgo,
+      Roxicodone, Methadose, Xartemis, or generic oxycodone, hydrocodone, or methadone)? This includes promotional
+      pieces, messaging, sales training, call plans, speaker programs, KOL or advocacy work, market research, and
+      opioid sales incentive plans. Answer no for non-opioid products, for opioid manufacturing or supply
+      logistics with no marketing or sales content, and for compliance or DEA topics that do not involve
+      marketing or selling.
+    positive_desc: |
+      The email concerns marketing, promotion, or sale of a Mallinckrodt opioid product: promotional materials,
+      messaging, sales training, call plans, speaker programs, KOL or advocacy engagement, market research, or
+      opioid sales incentives.
+    negative_desc: |
+      The email does not concern opioid marketing, promotion, or sales. Non-opioid products, manufacturing and
+      supply logistics, and compliance or regulatory topics without a marketing or sales component are not
+      responsive.
+    structured:
+      responsive:
+        what: Marketing, promotion, and sales of Mallinckrodt opioid products
+        includes: [Exalgo Roxicodone Methadose Xartemis promotion, generic oxycodone and hydrocodone sales strategy, promotional pieces and messaging, sales training and call plans, speaker programs, KOL and advocacy engagement, market research, opioid sales incentive plans, national account and wholesaler selling for opioids]
+      not_responsive:
+        what: No opioid marketing or sales content
+        includes: [Ofirmev INOmax Acthar or contrast agents, manufacturing and supply, DEA and compliance without marketing, HR IT and admin]
+
+  mktg_narrow:
+    title: Abuse and addiction risk in Exalgo promotion (narrow)
+    breadth: narrow
+    pair: mktg
+    rfp_text: |
+      All documents concerning how the risks of abuse, addiction, dependence, misuse, or diversion of Exalgo were
+      characterized, addressed, minimized, or omitted in Exalgo promotional materials, sales messaging, sales
+      training, or speaker program content, including any internal or regulatory review of such content.
+    literal: |
+      Does this email discuss how abuse, addiction, dependence, misuse, or diversion risk of Exalgo is handled in
+      Exalgo promotional or sales content (promotional pieces, messaging, sales training, speaker decks), including
+      medical/legal/regulatory review of that content? Answer no for Exalgo marketing that does not discuss those
+      risks, for abuse-risk discussion of other products, and for Exalgo REMS or safety topics with no promotional
+      or sales-content angle.
+    positive_desc: |
+      The email concerns the characterization, treatment, minimization, or omission of abuse, addiction,
+      dependence, misuse, or diversion risk in Exalgo promotional, sales-messaging, sales-training, or speaker
+      content, including internal or regulatory review of such content.
+    negative_desc: |
+      The email does not concern abuse or addiction risk in Exalgo promotional or sales content. Exalgo marketing
+      without risk discussion, other products, and Exalgo safety or REMS matters without a promotional angle are
+      not responsive.
+    structured:
+      responsive:
+        what: Abuse/addiction/diversion risk language in Exalgo promotional and sales content
+        includes: [fair balance review of Exalgo pieces, abuse-deterrence or tamper-resistance claims in messaging, how reps should discuss addiction risk, speaker deck safety slides, MLR comments on risk language, FDA or OPDP comments on Exalgo promotional risk presentation]
+      not_responsive:
+        what: No link between abuse risk and Exalgo promotional content
+        includes: [Exalgo pricing or launch logistics, Exalgo REMS operations without promotional content, abuse risk of oxycodone or other products, Exalgo clinical data with no promotional angle]
+
+  data_broad:
+    title: Downstream distribution data (broad)
+    breadth: broad
+    pair: data
+    rfp_text: |
+      All documents concerning chargeback data, IMS or other prescription or pharmacy-level sales data, 867 or
+      other wholesaler sales-out data, or any other information showing or analyzing the downstream distribution
+      of Mallinckrodt opioid products from wholesalers or distributors to pharmacies, prescribers, or geographic
+      areas, including the use of such data for compliance, due diligence, sales, or marketing purposes.
+    literal: |
+      Does this email discuss data showing where Mallinckrodt opioids went after the wholesaler, such as
+      chargeback data, IMS or pharmacy-level sales data, 867 sales-out data, or analyses of distribution to
+      specific pharmacies, prescribers, regions, or states, for any purpose (compliance, due diligence, sales, or
+      marketing)? Answer no for data about non-opioid products, for wholesaler-level orders with no downstream
+      breakdown, and for financial reporting that does not identify downstream customers or geographies.
+    positive_desc: |
+      The email concerns chargeback, IMS, 867, or other data showing or analyzing downstream distribution of
+      Mallinckrodt opioids to pharmacies, prescribers, or geographic areas, for any purpose.
+    negative_desc: |
+      The email does not concern downstream distribution data for Mallinckrodt opioids. Non-opioid data,
+      wholesaler-level orders without downstream detail, and aggregate financial reporting are not responsive.
+    structured:
+      responsive:
+        what: Downstream distribution data for opioids
+        includes: [chargeback data and reports, IMS Xponent or DDD data, 867 sales-out data, pharmacy-level or prescriber-level analyses, state or regional distribution analyses, use of chargeback data for due diligence, requests for downstream data from compliance or sales]
+      not_responsive:
+        what: No downstream distribution data for opioids
+        includes: [non-opioid product data, wholesaler purchase orders without downstream detail, P&L and revenue reporting, market share summaries without customer or geography detail]
+
+  data_narrow:
+    title: Florida oxycodone distribution and pill mills (narrow)
+    breadth: narrow
+    pair: data
+    rfp_text: |
+      All documents concerning the distribution of Mallinckrodt oxycodone products to, or the volume of oxycodone
+      purchased by, pharmacies, prescribers, or distributors located in Florida, including any reference to
+      Florida "pill mills," pain clinics, or the Florida oxycodone market.
+    literal: |
+      Does this email discuss oxycodone going to Florida: Mallinckrodt oxycodone shipped to or purchased by Florida
+      pharmacies, prescribers, or distributors, oxycodone volumes in Florida, Florida pill mills or pain clinics, or
+      the Florida oxycodone market? Answer no for Florida in other contexts (sales territories for non-opioid
+      products, conferences, personal travel), and for oxycodone distribution outside Florida.
+    positive_desc: |
+      The email concerns distribution or purchase volumes of Mallinckrodt oxycodone in Florida, including Florida
+      pharmacies, prescribers, distributors, pill mills, pain clinics, or the Florida oxycodone market.
+    negative_desc: |
+      The email does not concern oxycodone in Florida. Florida mentioned in unrelated contexts, and oxycodone
+      distribution elsewhere, are not responsive.
+    structured:
+      responsive:
+        what: Oxycodone distribution in Florida
+        includes: [Florida pharmacies buying oxycodone, Florida pain clinics or pill mills, Florida oxycodone volumes or market share, distributors shipping oxycodone into Florida, Florida legislation or enforcement affecting oxycodone sales, chargebacks for Florida pharmacies]
+      not_responsive:
+        what: No Florida oxycodone content
+        includes: [Florida sales meetings or travel, non-opioid products in Florida, oxycodone in other states, Florida in a mailing address only]
+
+  dea_broad:
+    title: Dealings with DEA and regulators on controlled substances (broad)
+    breadth: broad
+    pair: dea
+    rfp_text: |
+      All communications with, and all documents concerning communications with or actions by, the U.S. Drug
+      Enforcement Administration, the Food and Drug Administration, or any state regulator regarding Mallinckrodt's
+      controlled-substance obligations, including production quota, registrations, inspections, audits,
+      investigations, subpoenas, administrative actions, settlements, and meetings, and including internal
+      discussion of any of the foregoing.
+    literal: |
+      Does this email discuss DEA, FDA, or a state regulator in connection with Mallinckrodt's controlled-substance
+      obligations: quota, registrations, inspections, audits, investigations, subpoenas, administrative actions,
+      settlements, or meetings with the agency, including internal discussion or preparation for any of those?
+      Answer no for FDA matters unrelated to controlled substances (e.g. non-opioid product approvals), for
+      general news about DEA with no Mallinckrodt connection, and for lobbying that does not involve a regulator's
+      action toward Mallinckrodt.
+    positive_desc: |
+      The email concerns communications with, or actions by, DEA, FDA, or a state regulator regarding
+      Mallinckrodt's controlled-substance obligations (quota, registration, inspection, audit, investigation,
+      subpoena, administrative action, settlement, or meeting), including internal discussion of them.
+    negative_desc: |
+      The email does not concern regulator dealings on controlled substances. Non-controlled-substance FDA matters,
+      general industry news about DEA without a Mallinckrodt connection, and matters not involving a regulator are
+      not responsive.
+    structured:
+      responsive:
+        what: DEA, FDA, or state-regulator dealings on controlled substances
+        includes: [DEA quota applications and responses, DEA inspections and audits, DEA investigations subpoenas and settlements, registration matters, state board of pharmacy actions, FDA controlled-substance scheduling or REMS correspondence, meeting preparation and debriefs with DEA, ARCOS reporting questions]
+      not_responsive:
+        what: No regulator dealings on controlled substances
+        includes: [FDA approval of non-opioid products, DEA news articles forwarded without company relevance, trade association lobbying without regulator action, internal compliance not involving a regulator]
+
+  dea_narrow:
+    title: DEA production quota for oxycodone and hydrocodone (narrow)
+    breadth: narrow
+    pair: dea
+    rfp_text: |
+      All documents concerning DEA aggregate production quota, individual manufacturing quota, or procurement
+      quota for oxycodone or hydrocodone, including quota applications, requests for increases, DEA allocations or
+      denials, quota forecasting and planning, and communications with DEA concerning quota.
+    literal: |
+      Does this email discuss DEA quota for oxycodone or hydrocodone: quota applications, requests for more quota,
+      DEA allocations or denials, quota planning or forecasting, or communications with DEA about quota? Answer no
+      for quota for other substances (e.g. methadone, hydromorphone) unless oxycodone or hydrocodone is also
+      discussed, and for DEA topics other than quota.
+    positive_desc: |
+      The email concerns DEA production, manufacturing, or procurement quota for oxycodone or hydrocodone:
+      applications, increase requests, allocations, denials, planning, or communications with DEA about quota.
+    negative_desc: |
+      The email does not concern DEA quota for oxycodone or hydrocodone. Quota for other substances only, and DEA
+      matters other than quota, are not responsive.
+    structured:
+      responsive:
+        what: DEA quota for oxycodone or hydrocodone
+        includes: [quota applications, requests for quota increases, DEA quota allocations or denials, quota forecasting and planning, year-end quota status, communications with DEA quota section, quota impact on oxycodone or hydrocodone supply]
+      not_responsive:
+        what: Not oxycodone or hydrocodone quota
+        includes: [methadone or hydromorphone quota only, DEA inspections or SOM, supply planning with no quota discussion, sales forecasts]
