@@ -10,6 +10,13 @@ CACHE_READ_MULT = 0.10
 FLEX_MULT = 0.50
 
 
+def _cache_key(name: str, qids: list[str], phrasing: str) -> str:
+    import hashlib
+
+    h = hashlib.sha1(("+".join(qids) + ":" + phrasing).encode()).hexdigest()[:16]
+    return f"{name[:40]}-{h}"
+
+
 class OpenAIProvider(Provider):
     def __init__(self, spec, phrasing: str = "rfp", flex: bool = True):
         super().__init__(spec)
@@ -34,7 +41,7 @@ class OpenAIProvider(Provider):
                 input=prompt,
                 text_format=Decision,
                 store=False,
-                prompt_cache_key=f"{ts.name}:{'+'.join(qids)}:{self.phrasing}",
+                prompt_cache_key=_cache_key(ts.name, qids, self.phrasing),
                 **kwargs,
             )
         except openai.BadRequestError as e:

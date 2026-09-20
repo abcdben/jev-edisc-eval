@@ -27,9 +27,12 @@ class AnthropicProvider(Provider):
     def _kwargs(self, ts: TaskSet, qids: list[str], doc: Document) -> dict:
         Decision = build_decision_model(ts, qids)
         schema = Decision.model_json_schema()
+        thinking_on = self.spec.extra.get("thinking", {}).get("type") != "disabled"
+        base_max = 2048 if len(qids) > 1 else 512
         kwargs: dict = dict(
             model=self.spec.model_id,
-            max_tokens=2048 if len(qids) > 1 else 512,
+            # thinking tokens count against max_tokens; leave headroom when thinking may be on
+            max_tokens=base_max + (12000 if thinking_on else 0),
             system=SYSTEM_PROMPT,
             messages=[
                 {

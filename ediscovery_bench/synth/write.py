@@ -178,4 +178,4 @@ if __name__ == "__main__":
     load_dotenv(ROOT / ".env")
     man = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "veridian" / "manifest.jsonl"
     out = Path(sys.argv[2]) if len(sys.argv) > 2 else ROOT / "data" / "veridian" / "veridian.jsonl"
-    asyncio.run(write_all(man, out))
+    asyncio.run(write_all(man, out, concurrency=9))
