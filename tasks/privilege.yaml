@@ -1,0 +1,32 @@
+# Privilege screen for the same fictional matter.
+name: privilege
+kind: binary
+positive_label: privileged
+jev_question: noul
+
+labels:
+  privileged: >-
+    The document is a confidential communication between Meridian and its
+    attorneys (in-house counsel or outside counsel at Whitfield & Barr LLP) made
+    for the purpose of seeking or giving legal advice, or it is attorney work
+    product prepared in anticipation of litigation, or it relays such advice
+    internally among Meridian employees who need it.
+  not_privileged: >-
+    The document is an ordinary business communication. It does not seek or
+    convey legal advice from a lawyer and is not attorney work product, even if
+    it is marked confidential, mentions lawsuits or lawyers in passing, or
+    discusses business risk.
+
+context: |
+  Matter: Harbor Point Condominium Association v. Meridian Construction Group.
+  Meridian's in-house counsel is Dana Whitcomb (dwhitcomb@meridiancg.com).
+  Meridian's outside counsel is Whitfield & Barr LLP (@whitfieldbarr.com).
+  Communications with third parties such as Cascade Waterproofing are generally
+  not privileged unless counsel is coordinating a joint defense.
+
+instructions: >-
+  Is this document protected by the attorney-client privilege or the work
+  product doctrine, i.e. a confidential communication with Meridian's in-house
+  or outside counsel for the purpose of obtaining or providing legal advice, or
+  material prepared by or at the direction of counsel in anticipation of
+  litigation?

@@ -1,0 +1,36 @@
+# Responsiveness review for a (fictional) construction-defect matter.
+# The same text is sent to every model; only the delivery mechanism differs.
+name: responsiveness
+kind: binary
+positive_label: responsive
+jev_question: noul   # Jev answers as a yes/no probability; set to `choice` to compare
+
+labels:
+  responsive: >-
+    The document concerns the Harbor Point Condominium project's building
+    envelope: waterproofing, window or curtain-wall installation, flashing,
+    sealants, water intrusion or leaks into units, moisture or mold findings,
+    related inspections, change orders, schedules, or costs, or communications
+    with Cascade Waterproofing about that work.
+  not_responsive: >-
+    The document does not concern the Harbor Point building envelope or water
+    intrusion. Routine business, other projects, HR, IT, social messages, and
+    documents that merely mention Harbor Point without discussing the envelope
+    or leaks are not responsive.
+
+context: |
+  Matter: Harbor Point Condominium Association v. Meridian Construction Group.
+  The Association alleges that Meridian and its waterproofing subcontractor,
+  Cascade Waterproofing, defectively installed the building envelope (windows,
+  flashing, sealants, membrane) at the Harbor Point Condominium, causing water
+  intrusion into units beginning in 2023. Custodians are Meridian employees.
+  Request for Production No. 3 seeks all documents concerning the design,
+  installation, inspection, repair, or failure of the Harbor Point building
+  envelope, and all communications with Cascade Waterproofing about that work.
+
+instructions: >-
+  Is this document responsive to Request for Production No. 3, i.e. does it
+  concern the design, installation, inspection, repair, or failure of the Harbor
+  Point Condominium building envelope (waterproofing, windows, flashing,
+  sealants, membrane, water intrusion, leaks, moisture, mold), or communications
+  with Cascade Waterproofing about that work?
