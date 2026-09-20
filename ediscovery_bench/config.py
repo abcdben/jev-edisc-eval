@@ -25,7 +25,7 @@ class ModelSpec:
     model_id: str  # what gets sent on the wire
     input_per_mtok: float
     output_per_mtok: float
-    size: Literal["small", "large", "n/a"] = "n/a"
+    size: Literal["small", "mid", "large", "n/a"] = "n/a"
     effort: str | None = None  # vendor effort/thinking level, None = vendor default
     notes: str = ""
     # Provider-specific extras (e.g. Anthropic `thinking` param)
@@ -55,7 +55,7 @@ MODELS: dict[str, ModelSpec] = {
         output_per_mtok=0.0,
         notes="Alias; moves when TypeSafe ships a new release. Response `model` field is logged.",
     ),
-    # ---- Anthropic ------------------------------------------------------
+    # ---- SMALL tier: the cheapest model each vendor sells ---------------
     "claude-haiku-4.5": ModelSpec(
         key="claude-haiku-4.5",
         provider="anthropic",
@@ -63,9 +63,62 @@ MODELS: dict[str, ModelSpec] = {
         input_per_mtok=1.0,
         output_per_mtok=5.0,
         size="small",
-        effort=None,  # Haiku 4.5 does not support the effort parameter
-        notes="Extended thinking is manual on Haiku 4.5 and left off here.",
+        effort=None,  # Haiku 4.5 has no effort parameter; thinking is off unless requested
+        notes="Floor == default: no thinking.",
     ),
+    "gpt-5.6-luna": ModelSpec(
+        key="gpt-5.6-luna",
+        provider="openai",
+        model_id="gpt-5.6-luna",
+        input_per_mtok=0.20,
+        output_per_mtok=1.20,
+        size="small",
+        effort="none",
+        notes="Floor: reasoning.effort=none. Vendor default is medium.",
+    ),
+    "gemini-3.5-flash-lite": ModelSpec(
+        key="gemini-3.5-flash-lite",
+        provider="gemini",
+        model_id="gemini-3.5-flash-lite",
+        input_per_mtok=0.30,
+        output_per_mtok=2.50,
+        size="small",
+        effort="minimal",
+        notes="Floor: thinking_level=minimal (also the vendor default). Output price includes thinking tokens.",
+    ),
+    # ---- MID tier: what teams actually deploy for classification -------
+    "claude-sonnet-5": ModelSpec(
+        key="claude-sonnet-5",
+        provider="anthropic",
+        model_id="claude-sonnet-5",
+        input_per_mtok=2.0,
+        output_per_mtok=10.0,
+        size="mid",
+        effort="low",
+        extra={"thinking": {"type": "disabled"}},
+        notes="Floor: thinking disabled + effort=low. Vendor default is adaptive thinking at effort=high.",
+    ),
+    "gpt-5.6-terra": ModelSpec(
+        key="gpt-5.6-terra",
+        provider="openai",
+        model_id="gpt-5.6-terra",
+        input_per_mtok=2.0,
+        output_per_mtok=12.0,
+        size="mid",
+        effort="none",
+        notes="Floor: reasoning.effort=none. Vendor default is medium.",
+    ),
+    "gemini-3.8-flash": ModelSpec(
+        key="gemini-3.8-flash",
+        provider="gemini",
+        model_id="gemini-3.8-flash",
+        input_per_mtok=0.75,
+        output_per_mtok=3.75,
+        size="mid",
+        effort="low",
+        notes="Floor: thinking_level=low (minimal not supported on 3.8 Flash). Vendor default is medium. Promo price through 2026-12-31.",
+    ),
+    # ---- LARGE tier: defined but NOT in the default roster (cost) -------
     "claude-opus-5": ModelSpec(
         key="claude-opus-5",
         provider="anthropic",
@@ -74,17 +127,8 @@ MODELS: dict[str, ModelSpec] = {
         output_per_mtok=25.0,
         size="large",
         effort="low",
-        notes="Adaptive thinking is on by default; effort=low keeps it short. Thinking tokens bill as output.",
-    ),
-    # ---- OpenAI ---------------------------------------------------------
-    "gpt-5.6-luna": ModelSpec(
-        key="gpt-5.6-luna",
-        provider="openai",
-        model_id="gpt-5.6-luna",
-        input_per_mtok=0.20,
-        output_per_mtok=1.20,
-        size="small",
-        effort="low",
+        extra={"thinking": {"type": "disabled"}},
+        notes="Excluded from default roster 2026-09-19 (cost). Available with -m.",
     ),
     "gpt-5.6-sol": ModelSpec(
         key="gpt-5.6-sol",
@@ -93,19 +137,8 @@ MODELS: dict[str, ModelSpec] = {
         input_per_mtok=4.0,
         output_per_mtok=20.0,
         size="large",
-        effort="low",
-        notes="Promotional pricing through at least 2026-11-21.",
-    ),
-    # ---- Google ---------------------------------------------------------
-    "gemini-3.8-flash": ModelSpec(
-        key="gemini-3.8-flash",
-        provider="gemini",
-        model_id="gemini-3.8-flash",
-        input_per_mtok=0.75,
-        output_per_mtok=3.75,
-        size="small",
-        effort="low",
-        notes="Promo price through 2026-12-31 ($1.50/$7.50 after). Output price includes thinking tokens.",
+        effort="none",
+        notes="Excluded from default roster 2026-09-19 (cost). Available with -m.",
     ),
     "gemini-3.1-pro": ModelSpec(
         key="gemini-3.1-pro",
@@ -115,7 +148,7 @@ MODELS: dict[str, ModelSpec] = {
         output_per_mtok=12.0,
         size="large",
         effort="low",
-        notes="Thinking cannot be disabled on 3.1 Pro; 'low' is the floor.",
+        notes="Excluded from default roster 2026-09-19. Thinking cannot be disabled; 'low' is the floor.",
     ),
     # ---- Test double ----------------------------------------------------
     "mock": ModelSpec(
@@ -128,16 +161,21 @@ MODELS: dict[str, ModelSpec] = {
     ),
 }
 
-# The default comparison set: Jev vs a small and a large model from each vendor.
-DEFAULT_ROSTER = [
-    "jev",
-    "claude-haiku-4.5",
-    "claude-opus-5",
-    "gpt-5.6-luna",
-    "gpt-5.6-sol",
-    "gemini-3.8-flash",
-    "gemini-3.1-pro",
-]
+# The default comparison set: Jev vs the small and mid tier from each vendor.
+SMALL_TIER = ["claude-haiku-4.5", "gpt-5.6-luna", "gemini-3.5-flash-lite"]
+MID_TIER = ["claude-sonnet-5", "gpt-5.6-terra", "gemini-3.8-flash"]
+DEFAULT_ROSTER = ["jev", *SMALL_TIER, *MID_TIER]
+
+# Vendor-default effort settings, used by the effort pilot (`--effort default`).
+# None means "send no effort/thinking parameters at all".
+VENDOR_DEFAULT_EFFORT: dict[str, str | None] = {
+    "claude-haiku-4.5": None,
+    "gpt-5.6-luna": "medium",
+    "gemini-3.5-flash-lite": "minimal",
+    "claude-sonnet-5": "high",
+    "gpt-5.6-terra": "medium",
+    "gemini-3.8-flash": "medium",
+}
 
 ENV_KEYS: dict[Provider, str] = {
     "typesafe": "TYPESAFE_API_KEY",
@@ -156,6 +194,12 @@ def resolve_models(keys: list[str] | None) -> list[ModelSpec]:
         k = k.strip()
         if k == "all":
             out.extend(MODELS[x] for x in DEFAULT_ROSTER)
+            continue
+        if k == "small":
+            out.extend(MODELS[x] for x in SMALL_TIER)
+            continue
+        if k == "mid":
+            out.extend(MODELS[x] for x in MID_TIER)
             continue
         if k not in MODELS:
             raise KeyError(f"Unknown model key {k!r}. Known: {', '.join(MODELS)}")

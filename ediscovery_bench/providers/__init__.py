@@ -5,11 +5,17 @@ from .base import Prediction, Provider
 
 
 def make_provider(spec: ModelSpec, effort_override: str | None = None) -> Provider:
-    if effort_override and spec.provider != "typesafe":
+    if effort_override and spec.provider not in ("typesafe", "mock"):
         # dataclass is frozen; build a modified copy
         from dataclasses import replace
 
-        spec = replace(spec, effort=effort_override)
+        from ..config import VENDOR_DEFAULT_EFFORT
+
+        if effort_override == "default":
+            # Vendor default: drop our floor settings (effort + thinking-disabled) entirely.
+            spec = replace(spec, effort=VENDOR_DEFAULT_EFFORT.get(spec.key), extra={})
+        else:
+            spec = replace(spec, effort=effort_override, extra={})
 
     if spec.provider == "typesafe":
         from .typesafe import TypeSafeProvider
