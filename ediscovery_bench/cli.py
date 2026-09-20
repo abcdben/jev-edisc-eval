@@ -264,6 +264,25 @@ def cuad_build(
     build(cache, out, CUAD_CATEGORIES)
 
 
+@app.command("trec-build")
+def trec_build(
+    out_dir: Path = typer.Option(Path("data/trec"), "--out"),
+    full: bool = typer.Option(False, "--full", help="Also write full.jsonl (all ~290k emails; ~800 MB)"),
+):
+    """Build the TREC Total Recall (Jeb Bush) dev / eval / full corpora from NIST judgments."""
+    from .trec.build import build_dev, build_eval, build_full
+
+    seen = set()
+    p = out_dir / "seen_ids.txt"
+    if p.exists():
+        seen = {str(int(x)) for x in p.read_text().split() if x.strip()}
+    dev = build_dev(out_dir / "dev.jsonl", seen=seen)
+    (out_dir / "dev_ids.txt").write_text("\n".join(sorted(dev, key=int)) + "\n")
+    build_eval(out_dir / "eval.jsonl", exclude=dev | seen)
+    if full:
+        build_full(out_dir / "full.jsonl", exclude=dev | seen)
+
+
 @app.command()
 def audit_merge(
     data: Path = typer.Option(..., "--data", "-d", help="Planner-labeled corpus (writer output)"),
