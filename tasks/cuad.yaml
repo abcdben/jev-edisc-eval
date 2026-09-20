@@ -1,0 +1,343 @@
+# CUAD contract-review corpus — twelve clause categories framed as requests for production.
+# Source: Contract Understanding Atticus Dataset v1 (Hendrycks, Burns, Chen, Ball; NeurIPS 2021),
+# CC BY 4.0. Official test split: 102 EDGAR commercial contracts, expert-highlighted spans.
+# Unit of review: a contract paragraph (see ediscovery_bench/cuad/build.py for segmentation and
+# how spans become paragraph-level gold and gray flags).
+#
+# `literal` is CUAD's own category definition (the "Details:" text of its question), so every
+# model can also be run on the dataset's native phrasing. `rfp_text` is our RFP-style rewrite.
+# License Grant / Non-Transferable License form a broad/narrow pair with independent human gold.
+
+name: cuad
+kind: binary
+positive_label: responsive
+negative_label: not_responsive
+
+context: |
+  Matter: legal due diligence in connection with a corporate transaction. Counsel is reviewing the target
+  company's commercial contracts (license, distribution, supply, services, marketing, joint venture, and
+  similar agreements) to locate provisions that bear on the deal. The documents are excerpts from those
+  contracts: one paragraph or clause at a time, shown with the contract's title and its position in the
+  agreement. An excerpt is responsive to a request if the excerpt itself contains the kind of provision
+  the request describes (in whole or in substantial part). Excerpts that merely define a term, reference a
+  section elsewhere, or discuss a neighbouring topic are not responsive. Each excerpt is judged on its own.
+
+gate_question: |
+  Does this excerpt contain substantive contractual terms (rights, obligations, restrictions, payments,
+  liability, termination, licensing, or similar), as opposed to a title page, table of contents, signature
+  block, recital, notice address, definitions list, exhibit label, or page furniture?
+
+questions:
+
+  license_grant:
+    title: License grant (broad)
+    breadth: broad
+    pair: license
+    rfp_text: |
+      All provisions by which one party grants the other a license to intellectual property, technology,
+      software, content, data, trademarks, or other rights, including the scope of the grant (exclusive or
+      non-exclusive, territory, field of use, term) and any sublicensing rights.
+    literal: |
+      Does the contract contain a license granted by one party to its counterparty?
+    positive_desc: |
+      The excerpt grants a license (of any scope) from one party to the other: patents, copyrights, software,
+      know-how, trademarks, content, data, or other rights, including the terms of that grant or sublicensing.
+    negative_desc: |
+      The excerpt does not itself grant a license. Definitions of "Licensed Product" and the like, references to a
+      license granted elsewhere, ownership statements without a grant, and non-license obligations are not
+      responsive.
+    structured:
+      responsive:
+        what: A grant of license rights from one party to the other
+        includes: [hereby grants a license, exclusive or non-exclusive license, right to use or sell or distribute under IP, sublicense rights, scope territory or field of the grant, trademark or software or content license]
+      not_responsive:
+        what: No license is granted in this excerpt
+        includes: [definitions only, references to a license in another section, IP ownership without a grant, confidentiality, payment terms]
+    subparts:
+      - Does this excerpt grant one party a license or right to use, make, sell, distribute, or otherwise exploit the other party's intellectual property, technology, software, content, or marks?
+      - Does this excerpt set the scope of a license (exclusive/non-exclusive, territory, field, term) or grant sublicensing rights?
+
+  nontransferable_license:
+    title: Non-transferable license (narrow)
+    breadth: narrow
+    pair: license
+    rfp_text: |
+      All provisions restricting a licensee's ability to transfer, assign, or sublicense the license granted
+      under the agreement to a third party, including language making a license non-transferable,
+      non-assignable, or non-sublicensable.
+    literal: |
+      Does the contract limit the ability of a party to transfer the license being granted to a third party?
+    positive_desc: |
+      The excerpt grants or describes a license and states that it is non-transferable, non-assignable, or
+      non-sublicensable (or restricts sublicensing or transfer of the license to third parties).
+    negative_desc: |
+      The excerpt does not restrict transfer of a license. A license grant with no transfer restriction, a
+      general anti-assignment clause for the whole agreement, or unrelated terms are not responsive.
+    structured:
+      responsive:
+        what: A restriction on transferring or sublicensing the granted license
+        includes: [non-transferable license, non-sublicensable, may not sublicense or assign the license, license personal to licensee]
+      not_responsive:
+        what: No restriction on transferring the license
+        includes: [license grant without transfer language, assignment clause for the agreement as a whole, other restrictions]
+    subparts:
+      - Does this excerpt say a license is non-transferable, non-assignable, or non-sublicensable, or otherwise restrict the licensee from transferring or sublicensing the license to third parties?
+
+  anti_assignment:
+    title: Anti-assignment
+    rfp_text: |
+      All provisions restricting either party's ability to assign or transfer the agreement, or its rights
+      or obligations under it, to a third party, including requirements for the counterparty's consent or
+      notice and any exceptions (affiliates, successors, change of control).
+    literal: |
+      Is consent or notice required of a party if the contract is assigned to a third party?
+    positive_desc: |
+      The excerpt restricts assignment or transfer of the agreement (or rights/obligations under it), requires the
+      other party's consent or notice for assignment, or states exceptions to such a restriction.
+    negative_desc: |
+      The excerpt does not address assignment of the agreement. Successors-and-assigns boilerplate with no
+      restriction, license transfer restrictions, or unrelated terms are not responsive.
+    structured:
+      responsive:
+        what: Restriction or consent requirement on assigning the agreement
+        includes: [may not assign without prior written consent, assignment void, notice of assignment, exceptions for affiliates or successors, assignment by operation of law]
+      not_responsive:
+        what: No assignment restriction
+        includes: [binding on successors and assigns only, sublicensing of a license, subcontracting without assignment language]
+    subparts:
+      - Does this excerpt prohibit or restrict a party from assigning or transferring the agreement or its rights or obligations, or require consent or notice to do so?
+
+  cap_on_liability:
+    title: Cap on liability
+    rfp_text: |
+      All provisions limiting a party's liability for breach or other claims under the agreement, including
+      monetary caps (a fixed amount or amounts paid under the agreement), exclusions of consequential,
+      indirect, or punitive damages, and time limits for bringing claims.
+    literal: |
+      Does the contract include a cap on liability upon the breach of a party's obligation? This includes time
+      limitation for the counterparty to bring claims or maximum amount for recovery.
+    positive_desc: |
+      The excerpt limits or caps a party's liability: a maximum recoverable amount, an exclusion of consequential
+      or indirect damages, or a time limit within which claims must be brought.
+    negative_desc: |
+      The excerpt does not limit liability. Indemnities without a cap, warranty disclaimers that do not limit
+      damages, insurance requirements, and statements that liability is unlimited are not responsive.
+    structured:
+      responsive:
+        what: A limitation on the amount or type of recoverable damages or the time to claim
+        includes: [in no event shall liability exceed, aggregate liability limited to fees paid, no liability for consequential indirect special or punitive damages, claims must be brought within N months]
+      not_responsive:
+        what: No limitation of liability
+        includes: [indemnification without cap, warranty disclaimers alone, insurance, uncapped or unlimited liability statements]
+    subparts:
+      - Does this excerpt cap the amount a party can be liable for, or exclude consequential, indirect, special, or punitive damages?
+      - Does this excerpt set a time limit within which a party must bring a claim?
+
+  minimum_commitment:
+    title: Minimum commitment
+    rfp_text: |
+      All provisions requiring a party to purchase, order, or pay for a minimum quantity, volume, or dollar
+      amount of goods or services (per period or in total), including minimum royalties, minimum sales
+      targets, and consequences of failing to meet a minimum.
+    literal: |
+      Is there a minimum order size or minimum amount or units per-time period that one party must buy from the
+      counterparty under the contract?
+    positive_desc: |
+      The excerpt obligates a party to buy, order, sell, or pay a minimum quantity or amount (including minimum
+      royalties or minimum purchase targets) or describes the consequences of missing such a minimum.
+    negative_desc: |
+      The excerpt contains no minimum purchase, order, sales, or payment commitment. Ordinary pricing, forecasts
+      that are non-binding, and payment terms without a minimum are not responsive.
+    structured:
+      responsive:
+        what: A binding minimum quantity or amount obligation
+        includes: [minimum purchase requirement, minimum annual royalty, minimum order quantity, must purchase at least, shortfall payment for missing minimums, minimum sales targets]
+      not_responsive:
+        what: No minimum commitment
+        includes: [non-binding forecasts, unit pricing, payment terms without a floor, maximums only]
+    subparts:
+      - Does this excerpt require a party to purchase, order, sell, or pay at least a minimum quantity or amount?
+      - Does this excerpt describe consequences (shortfall payments, termination, loss of exclusivity) of failing to meet a minimum commitment?
+
+  revenue_profit_sharing:
+    title: Revenue / profit sharing
+    rfp_text: |
+      All provisions requiring one party to share revenue, profits, royalties, or commissions with the other
+      party in respect of products, services, technology, or content, including the percentage or formula
+      and the basis on which it is calculated.
+    literal: |
+      Is one party required to share revenue or profit with the counterparty for any technology, goods, or
+      services?
+    positive_desc: |
+      The excerpt requires a party to pay the other a share of revenue, profit, net sales, or similar (royalties
+      or commissions computed as a percentage of sales or revenue count), or sets the formula for that share.
+    negative_desc: |
+      The excerpt contains no revenue or profit sharing. Fixed fees, purchase prices, milestone payments, expense
+      reimbursement, and cost allocations are not responsive.
+    structured:
+      responsive:
+        what: A share of revenue, profit, or sales owed to the counterparty
+        includes: [royalty of N percent of net sales, revenue share, profit split, commission percentage on sales, gross margin sharing]
+      not_responsive:
+        what: No sharing of revenue or profit
+        includes: [fixed fees, purchase price per unit, milestone payments, reimbursement of expenses, cost sharing]
+    subparts:
+      - Does this excerpt require a party to pay the other a percentage or share of revenue, profit, net sales, or similar?
+
+  audit_rights:
+    title: Audit rights
+    rfp_text: |
+      All provisions giving a party the right to audit, inspect, or examine the other party's books, records,
+      accounts, facilities, or systems to verify compliance with the agreement, including the frequency,
+      notice, cost allocation, and consequences of an audit.
+    literal: |
+      Does a party have the right to audit the books, records, or physical locations of the counterparty to ensure
+      compliance with the contract?
+    positive_desc: |
+      The excerpt gives a party the right to audit or inspect the other's books, records, facilities, or systems
+      (or sets the mechanics of such an audit: notice, frequency, who pays, underpayment consequences).
+    negative_desc: |
+      The excerpt contains no audit or inspection right. Record-keeping obligations alone, quality inspections of
+      goods on delivery, and regulatory inspections by government agencies are not responsive.
+    structured:
+      responsive:
+        what: A right to audit or inspect the counterparty's records or premises
+        includes: [right to audit books and records, inspect facilities, independent accountant examination, audit once per year on notice, underpayment discovered by audit]
+      not_responsive:
+        what: No audit right
+        includes: [keep records obligation only, product acceptance inspection, government or FDA inspection, financial reporting without audit]
+    subparts:
+      - Does this excerpt give a party the right to audit, inspect, or examine the other party's books, records, facilities, or systems?
+
+  exclusivity:
+    title: Exclusivity
+    rfp_text: |
+      All provisions creating an exclusive dealing arrangement between the parties, including exclusive
+      appointments (sole distributor, exclusive supplier, exclusive license in a territory), requirements
+      contracts, and prohibitions on licensing, selling, or providing the covered goods, services, or
+      technology to third parties.
+    literal: |
+      Is there an exclusive dealing commitment with the counterparty? This includes a commitment to procure all
+      "requirements" from one party of certain technology, goods, or services or a prohibition on licensing or
+      selling technology, goods or services to third parties, or a prohibition on collaborating or working with
+      other parties, whether during the contract or after the contract ends (or both).
+    positive_desc: |
+      The excerpt makes a relationship exclusive: an exclusive appointment or license, a requirements
+      commitment, or a prohibition on dealing in the covered goods, services, or technology with third parties.
+    negative_desc: |
+      The excerpt contains no exclusive dealing commitment. Non-exclusive appointments, confidentiality,
+      non-competes about operating in a business generally, and reservations of rights are not responsive.
+    structured:
+      responsive:
+        what: An exclusive dealing commitment
+        includes: [exclusive distributor or supplier or licensee, sole and exclusive, shall purchase all requirements from, shall not license or sell the products to any third party, shall not appoint other distributors]
+      not_responsive:
+        what: No exclusivity
+        includes: [non-exclusive grant, general non-compete, confidentiality, most favored customer pricing]
+    subparts:
+      - Does this excerpt appoint a party as exclusive or sole distributor, supplier, licensee, or partner, or require a party to buy all its requirements from the other?
+      - Does this excerpt prohibit a party from licensing, selling, or providing the covered goods, services, or technology to third parties?
+
+  insurance:
+    title: Insurance
+    rfp_text: |
+      All provisions requiring a party to obtain or maintain insurance coverage (general liability, product
+      liability, professional, workers' compensation, or other), including coverage amounts, named insureds
+      or additional insureds, and certificates of insurance.
+    literal: |
+      Is there a requirement for insurance that must be maintained by one party for the benefit of the
+      counterparty?
+    positive_desc: |
+      The excerpt requires a party to carry or maintain insurance, or specifies the type, limits, insurer rating,
+      additional-insured status, or certificate requirements for such insurance.
+    negative_desc: |
+      The excerpt does not require insurance. Indemnification, limitation of liability, and passing references
+      to insurance proceeds are not responsive.
+    structured:
+      responsive:
+        what: An obligation to carry insurance
+        includes: [shall maintain insurance, commercial general liability of not less than, name the other party as additional insured, certificate of insurance, product liability coverage]
+      not_responsive:
+        what: No insurance requirement
+        includes: [indemnity, limitation of liability, self-insurance mention without obligation, risk of loss allocation]
+    subparts:
+      - Does this excerpt require a party to obtain or maintain insurance, or specify the coverage it must carry?
+
+  change_of_control:
+    title: Change of control
+    rfp_text: |
+      All provisions addressing a change of control of a party (merger, acquisition, sale of all or
+      substantially all assets, change in majority ownership, assignment by operation of law), including
+      rights to terminate, consent or notice requirements, or other consequences triggered by such an event.
+    literal: |
+      Does one party have the right to terminate or is consent or notice required of the counterparty if such
+      party undergoes a change of control, such as a merger, stock sale, transfer of all or substantially all of
+      its assets or business, or assignment by operation of law?
+    positive_desc: |
+      The excerpt gives a party rights (termination, consent, notice, payment, or other consequences) triggered by
+      the other party's change of control, merger, acquisition, or sale of substantially all assets.
+    negative_desc: |
+      The excerpt does not address change of control. General assignment restrictions with no change-of-control
+      trigger, termination for breach or convenience, and definitions of affiliates are not responsive.
+    structured:
+      responsive:
+        what: A right or consequence triggered by a change of control
+        includes: [terminate upon change of control, merger or acquisition of a party, sale of all or substantially all assets, consent required if control changes, assignment by operation of law treated as assignment]
+      not_responsive:
+        what: No change-of-control trigger
+        includes: [ordinary anti-assignment, termination for breach or insolvency, affiliate definitions]
+    subparts:
+      - Does this excerpt give a party the right to terminate, or require consent or notice, if the other party undergoes a change of control, merger, acquisition, or sale of substantially all of its assets?
+
+  ip_ownership_assignment:
+    title: IP ownership assignment
+    rfp_text: |
+      All provisions under which intellectual property created, developed, or delivered by one party becomes
+      the property of the other party, including present assignments of rights, work-for-hire designations,
+      and obligations to assign improvements, inventions, or deliverables.
+    literal: |
+      Does intellectual property created by one party become the property of the counterparty, either per the
+      terms of the contract or upon the occurrence of certain events?
+    positive_desc: |
+      The excerpt assigns or vests ownership of intellectual property created by one party in the other party
+      (present assignment, work made for hire, obligation to assign inventions or improvements or deliverables).
+    negative_desc: |
+      The excerpt does not transfer IP ownership between the parties. Each party retaining its own IP, license
+      grants, confidentiality, and joint ownership without assignment are not responsive.
+    structured:
+      responsive:
+        what: Transfer of IP ownership from creator to counterparty
+        includes: [hereby assigns all right title and interest, work made for hire, deliverables owned by customer, improvements shall be the property of licensor, agrees to assign inventions]
+      not_responsive:
+        what: No IP ownership transfer
+        includes: [each party retains its IP, license grant only, joint ownership, confidentiality obligations]
+    subparts:
+      - Does this excerpt assign, vest, or require assignment of intellectual property created by one party to the other party?
+
+  non_compete:
+    title: Non-compete
+    rfp_text: |
+      All provisions restricting a party from competing with the other party or from operating, marketing,
+      or selling in a specified business, technology, product category, or geography, during or after the
+      term of the agreement, including the scope and duration of the restriction and any exceptions.
+    literal: |
+      Is there a restriction on the ability of a party to compete with the counterparty or operate in a certain
+      geography or business or technology sector?
+    positive_desc: |
+      The excerpt restricts a party from competing with the other party, or from developing, marketing, or selling
+      competing products or operating in a defined business, sector, or geography (including the term and scope
+      of such restriction).
+    negative_desc: |
+      The excerpt contains no restriction on competing. Exclusive dealing commitments about the covered products,
+      confidentiality, non-solicitation of employees, and non-disparagement are not responsive unless they also
+      restrict competing.
+    structured:
+      responsive:
+        what: A restriction on competing
+        includes: [shall not compete, shall not develop market or sell competing products, restricted from operating in the territory or field, covenant not to compete for N years after termination]
+      not_responsive:
+        what: No non-compete
+        includes: [exclusivity about covered products only, confidentiality, non-solicitation of employees or customers, non-disparagement]
+    subparts:
+      - Does this excerpt restrict a party from competing with the other party or from developing, marketing, or selling competing products or services?
+      - Does this excerpt restrict a party from operating in a specified geography, business, or technology sector?

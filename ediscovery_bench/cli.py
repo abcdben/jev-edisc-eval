@@ -236,6 +236,34 @@ def goldify(
         console.print(f"  {q:<28} positives={n_pos.get(q,0):<5} gray={n_gray.get(q,0)}")
 
 
+CUAD_CATEGORIES = {
+    "License Grant": "license_grant",
+    "Non-Transferable License": "nontransferable_license",
+    "Anti-Assignment": "anti_assignment",
+    "Cap On Liability": "cap_on_liability",
+    "Minimum Commitment": "minimum_commitment",
+    "Revenue/Profit Sharing": "revenue_profit_sharing",
+    "Audit Rights": "audit_rights",
+    "Exclusivity": "exclusivity",
+    "Insurance": "insurance",
+    "Change Of Control": "change_of_control",
+    "Ip Ownership Assignment": "ip_ownership_assignment",
+    "Non-Compete": "non_compete",
+}
+
+
+@app.command("cuad-build")
+def cuad_build(
+    out: Path = typer.Option(Path("data/cuad/cuad.jsonl"), "--out", "-o"),
+    cache: Path = typer.Option(Path("data/cuad/raw"), "--cache", help="Where CUAD test.json is downloaded"),
+):
+    """Build the CUAD paragraph corpus (official test split, 12 clause categories) with human gold."""
+    from .cuad.build import build
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    build(cache, out, CUAD_CATEGORIES)
+
+
 @app.command()
 def audit_merge(
     data: Path = typer.Option(..., "--data", "-d", help="Planner-labeled corpus (writer output)"),
