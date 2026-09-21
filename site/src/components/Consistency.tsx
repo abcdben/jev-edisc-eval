@@ -60,7 +60,7 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
                 </g>
               );
             }
-            const bars = [{ c: x.d, op: 1, dy: x.t0 ? -4.5 : 0, bh: x.t0 ? 7 : 12 }, ...(x.t0 ? [{ c: x.t0, op: 0.45, dy: 4.5, bh: 7 }] : [])];
+            const bars = [{ c: x.d, op: 1, dy: x.t0 ? -4 : 0, bh: x.t0 ? 6 : 10 }, ...(x.t0 ? [{ c: x.t0, op: 0.45, dy: 4, bh: 6 }] : [])];
             return (
               <g key={x.r.model}>
                 <g color="var(--ink-2)"><LogoGlyph model={x.r.model} cx={8} cy={y + ROW / 2} /></g>
@@ -71,7 +71,7 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
                   return (
                     <g key={j} onMouseMove={(e) => show(e, { title: `${nm}${b.c.setting === "t0" ? " · temperature 0" : ""}`, color: c, ...tipFor(b.c, nm) })} onMouseLeave={hide} style={{ cursor: "default" }}>
                       <rect x={LABEL_W - 4} y={cy - b.bh / 2 - 2} width={W - LABEL_W + 4} height={b.bh + 4} fill="transparent" />
-                      <rect x={LABEL_W} y={cy - b.bh / 2} width={Math.max(1.5, X(v) - LABEL_W)} height={b.bh} fill={c} opacity={b.op} rx={2} />
+                      <rect x={LABEL_W} y={cy - b.bh / 2} width={Math.max(1.5, X(v) - LABEL_W)} height={b.bh} fill={c} rx={1.5} style={{ fillOpacity: `calc(var(--bar-alpha) * ${b.op})` }} />
                       <line x1={X(lo)} x2={X(hi)} y1={cy} y2={cy} stroke="var(--ink)" strokeWidth={1} opacity={0.6} />
                       <text x={X(hi) + 7} y={cy + 4} fontSize={11} fill={b.op < 1 ? "var(--ink-3)" : "var(--ink)"} className="mono">
                         {v === 0 ? "0" : fmtPct(v, v < 0.001 ? 2 : 1)}{b.c.setting === "t0" ? "  t=0" : ""}

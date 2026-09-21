@@ -20,6 +20,7 @@
   --tip-fg-2: #a9aba5;
   --tip-line: #3a3b38;
   --box-alpha: 0.14;
+  --bar-alpha: 0.55;
 
   /* model palette, light */
   --c-jev: #b52f8a;
@@ -60,6 +61,7 @@
   --tip-fg-2: #9a9d97;
   --tip-line: #2c3034;
   --box-alpha: 0.2;
+  --bar-alpha: 0.7;
 
   --c-jev: #ea5fbf;
   --c-jev-2: #f2a1d8;
