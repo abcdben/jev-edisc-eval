@@ -10,7 +10,7 @@ import { Modal } from "./ui";
 const CONTACT_HREF = "mailto:abcdben@gmail.com";
 const CONTACT_LABEL = "email";
 
-const ACK_KEY = "disclaimer_ack_v1";
+const ACK_KEY = "disclaimer_ack_v2";
 
 const read = () => { try { return localStorage.getItem(ACK_KEY) === "1"; } catch { return true; } };
 const write = () => { try { localStorage.setItem(ACK_KEY, "1"); } catch { /* private mode: show again next visit */ } };
@@ -32,19 +32,24 @@ export function useDisclaimer() {
 
 export function DisclaimerModal({ onClose }: { onClose: () => void }) {
   return (
-    <Modal className="disclaimer" eyebrow="Disclaimer" title="Before you read the numbers" onClose={onClose}>
+    <Modal className="disclaimer" eyebrow="Status of this work" title="Preliminary results" onClose={onClose}>
       <div className="disc-body">
         <p>
-          These evaluations were run with care. Their purpose was a snapshot of how new decision models stack up against LLMs and classical TAR
-          on document review tasks, not a conclusive judgement and not a formal academic comparison.
+          This is a working study. The evaluations were designed and run carefully, and the findings seemed important enough to share now,
+          but they have not been independently replicated or peer reviewed and should be read as preliminary.
         </p>
         <p>
-          The results are meaningful, but they are not what you should expect on your own matter. Many inputs and choices went into them:
-          how each corpus was built, how gold labels were made, the criteria, the configurations, the pricing modes, the sampling. A reader
-          may not be aware of all of them. The Method table describes the main ones.
+          The figures describe how a set of decision models, language models and classical TAR workflows performed on three specific corpora
+          under specific conditions: particular issue criteria, gold labels, configurations, pricing modes and samples. Changing any of these
+          would change the results. They are a snapshot for orientation, not a forecast of what any model will do on your matter, and not a
+          claim of general superiority.
         </p>
         <p>
-          Questions are welcome, and I am happy to share more. You can reach me by <a href={CONTACT_HREF}>{CONTACT_LABEL}</a>.
+          Where a result looks surprising, assume there is a reason in the method before assuming it is a finding. The Method table lists
+          the main choices, and the details view on any row shows exactly what that model was asked.
+        </p>
+        <p>
+          Questions, corrections and requests for the underlying data are welcome: <a href={CONTACT_HREF}>{CONTACT_LABEL}</a>.
         </p>
         <button type="button" className="disc-ok" onClick={onClose}>Understood</button>
         <div className="disc-note">You can reopen this from the footer.</div>
