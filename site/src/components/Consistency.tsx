@@ -35,18 +35,15 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
   const max = Math.max(0.01, ...measured.flatMap((x) => [x.d!.pairwise[2], x.t0?.pairwise[2] ?? 0]));
   const plotW = Math.max(120, W - LABEL_W - 130);
   const X = (v: number) => LABEL_W + (v / max) * plotW;
-  const h = sorted.length * ROW + 26;
+  const h = sorted.length * ROW + 24;
   const hasT0 = sorted.some((x) => x.t0);
-  const anyT0Refused = sorted.some((x) => x.d && !x.t0 && x.r.kind === "llm");
   return (
     <div className="card" style={{ marginTop: 20 }}>
       <div className="card-t">
         <h3>Determinism</h3>
-        <span className="unit">
-          run-to-run disagreement on the same documents · {det ? `${fmtInt(det.sample.n_docs)} Mallinckrodt emails` : "not measured"}{arm === "single" ? ", two narrow issues, one issue per call" : ", all eight issues per call"}
-        </span>
+        <span className="unit">run-to-run disagreement · {det ? `${fmtInt(det.sample.n_docs)} Mallinckrodt emails` : "not measured"} · {measured[0]?.d?.k ?? 5} runs</span>
         <span className="right">
-          <Hint left text="Each model scored the same fixed sample of 300 Mallinckrodt emails five times under identical settings (100 emails with a debatable gold label, 100 clear positives, 100 clear negatives; the benchmark run counts as the first repeat). The bar is pairwise disagreement: the probability that two independent runs give a different label for the same (document, issue) decision. The whisker is a 95% bootstrap interval over decisions. Lighter bars are the same models at temperature 0 where the API accepts it; Anthropic rejects sampling parameters on Sonnet 5, so it has no zero arm. Jev and Laya expose no sampling controls, so their bars are intrinsic behavior. Hover for flip rates by stratum, issue and gold label, and for how much recall moved between runs." />
+          <Hint left text="Measured on Mallinckrodt only and shown for every corpus, since it is a property of the model rather than the documents. Each model scored the same fixed sample of 300 Mallinckrodt emails five times under identical settings (100 emails with a debatable gold label, 100 clear positives, 100 clear negatives; the benchmark run counts as the first repeat). The bar is pairwise disagreement: the probability that two independent runs give a different label for the same (document, issue) decision. The whisker is a 95% bootstrap interval over decisions. Lighter bars are the same models at temperature 0 where the API accepts it; Anthropic rejects sampling parameters on Sonnet 5, so it has no temperature-0 bar. Jev and Laya expose no sampling controls, so their bars are intrinsic behavior. Hover for flip rates by stratum, issue and gold label, and for how much recall moved between runs." />
         </span>
       </div>
       <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
@@ -86,14 +83,9 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
             );
           })}
           <line x1={LABEL_W} x2={LABEL_W} y1={0} y2={sorted.length * ROW} stroke="var(--axis)" />
-          <text x={LABEL_W} y={sorted.length * ROW + 17} fontSize={10.5} fill="var(--ink-3)">probability two runs disagree on a decision · {measured[0]?.d?.k ?? 5} runs each</text>
+          <text x={LABEL_W} y={sorted.length * ROW + 17} fontSize={10.5} fill="var(--ink-3)">probability two runs disagree{hasT0 ? " · lighter bar: temperature 0" : ""}</text>
         </svg>
         <TipBox tip={tip} />
-      </div>
-      <div className="legend-note">
-        {hasT0 && <span>lighter bar: temperature 0</span>}
-        {anyT0Refused && <span>Sonnet 5: the API rejects sampling parameters, no zero arm</span>}
-        <span>measured on Mallinckrodt only; shown for every corpus since it is a property of the model, not the documents</span>
       </div>
     </div>
   );
