@@ -1,7 +1,7 @@
 import { DATA, fmtCI, fmtInt, fmtPct, type DetCell, type Rec } from "../data";
 import { LogoGlyph } from "../logos";
 import { useState } from "react";
-import { Hint, Seg, TipBox, useTip, useWidth, type TipLine } from "./ui";
+import { CLICK_HINT, Hint, Seg, TipBox, selectable, useTip, useWidth, type TipLine } from "./ui";
 
 const LABEL_W = 168, ROW = 20;
 
@@ -53,8 +53,10 @@ function tipFor(x: DetEntry, r: Rec, name: string): { lines: TipLine[]; notes: s
   return { lines, notes };
 }
 
-export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single" }) {
+/** `onSelect` makes each row a button (click, Enter, Space), including the rows without a measurement. */
+export function Consistency({ recs, colorOf, nameOf, arm, onSelect }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single"; onSelect?: (r: Rec) => void }) {
   const { tip, show, hide, hostRef } = useTip();
+  const pickRow = onSelect && ((r: Rec) => { hide(); onSelect(r); });
   const W = useWidth(hostRef, 760);
   const det = DATA.determinism;
   const [setting, setSetting] = useState<"default" | "t0">("default");
@@ -88,7 +90,8 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
             const c = colorOf(x.r), nm = nameOf(x.r);
             if (!x.c) {
               return (
-                <g key={x.r.model}>
+                <g key={x.r.model} {...selectable(pickRow, x.r, nm)}>
+                  <rect className="hit" x={0} y={y} width={W} height={ROW} fill="transparent" />
                   <g color="var(--ink-4)"><LogoGlyph model={x.r.model} cx={8} cy={y + ROW / 2} opacity={0.5} /></g>
                   <text x={22} y={y + ROW / 2 + 4} fontSize={12} fill="var(--ink-4)">{nm}</text>
                   <text x={LABEL_W + 7} y={y + ROW / 2 + 4} fontSize={11} fill="var(--ink-4)">{setting === "t0" ? "API rejects temperature" : "not measured"}</text>
@@ -98,8 +101,8 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
             const v = x.c.pairwise[0], lo = x.c.pairwise[1], hi = x.c.pairwise[2];
             const cy = y + ROW / 2;
             return (
-              <g key={x.r.model} onMouseMove={(e) => show(e, { title: `${nm}${x.c!.setting === "t0" ? " · temperature 0" : ""}`, color: c, ...tipFor(x.c!, x.r, nm) })} onMouseLeave={hide} style={{ cursor: "default" }}>
-                <rect x={0} y={y} width={W} height={ROW} fill="transparent" />
+              <g key={x.r.model} onMouseMove={(e) => show(e, { title: `${nm}${x.c!.setting === "t0" ? " · temperature 0" : ""}`, color: c, ...tipFor(x.c!, x.r, nm) })} onMouseLeave={hide} {...selectable(pickRow, x.r, nm)}>
+                <rect className="hit" x={0} y={y} width={W} height={ROW} fill="transparent" />
                 <g color="var(--ink-2)"><LogoGlyph model={x.r.model} cx={8} cy={cy} /></g>
                 <text x={22} y={cy + 4} fontSize={12} fill="var(--ink-2)">{nm}</text>
                 <rect x={LABEL_W} y={cy - 4} width={Math.max(1.5, X(v) - LABEL_W)} height={8} fill={c} rx={1.5} style={{ fillOpacity: "var(--bar-alpha)" }} />
@@ -111,7 +114,7 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
           <line x1={LABEL_W} x2={LABEL_W} y1={0} y2={sorted.length * ROW} stroke="var(--axis)" />
           <text x={LABEL_W} y={sorted.length * ROW + 17} fontSize={10.5} fill="var(--ink-3)">probability two runs disagree{setting === "t0" ? " · temperature 0" : ""}</text>
         </svg>
-        <TipBox tip={tip} />
+        <TipBox tip={tip} hint={onSelect ? CLICK_HINT : undefined} />
       </div>
     </div>
   );

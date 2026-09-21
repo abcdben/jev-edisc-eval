@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { CI } from "../data";
 import { LogoGlyph, logoFor } from "../logos";
-import { TipBox, useSize, useTip, type TipLine } from "./ui";
+import { CLICK_HINT, TipBox, selectable, useSize, useTip, type TipLine } from "./ui";
 
 export type PRItem = {
   id: string; name: string; color: string; recall: CI; precision: CI; dashed?: boolean; subset?: string | null;
@@ -20,8 +20,10 @@ function niceTicks(lo: number, hi: number): number[] {
 
 /** Recall (x) against precision (y). Each item is a dot at the point estimate inside a box spanning both 95% intervals. */
 /** `fill`: size to the host's box (host must be positioned, e.g. an absolutely-filled flex child) instead of a fixed height. */
-export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false }: { items: PRItem[]; zoom: boolean; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean }) {
+/** `onSelect` makes each mark (dot, label and interval box) a button: click, Enter or Space. */
+export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect }: { items: PRItem[]; zoom: boolean; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void }) {
   const { tip, show, hide, hostRef } = useTip();
+  const pickMark = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const sz = useSize(hostRef, { w: 760, h: height });
   const W = sz.w, H = fill ? Math.max(300, sz.h) : height;
   const pts = items.filter((it) => it.recall && it.precision) as (PRItem & { recall: NonNullable<CI>; precision: NonNullable<CI> })[];
@@ -98,31 +100,30 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
         {pts.map((p) => {
           const x0 = X(p.recall[1]), x1 = X(p.recall[2]), y0 = Y(p.precision[2]), y1 = Y(p.precision[1]);
           return (
-            <g key={`b${p.id}`} onMouseMove={(e) => show(e, { title: p.name, color: p.color, ...p.tip })} onMouseLeave={hide}>
+            <g key={`b${p.id}`} onMouseMove={(e) => show(e, { title: p.name, color: p.color, ...p.tip })} onMouseLeave={hide} {...selectable(pickMark, p, p.name)} tabIndex={-1}>
               <rect x={x0} y={y0} width={Math.max(1, x1 - x0)} height={Math.max(1, y1 - y0)} fill={p.color} style={{ fillOpacity: "var(--box-alpha)" }} rx={1} />
             </g>
           );
         })}
-        {pts.map((p) => {
-          const x = X(p.recall[0]), y = Y(p.precision[0]);
+        {/* the mark and its label share one group so both hover, click and focus as a unit; labels have a panel-coloured halo so they read over the boxes */}
+        {pts.map((p, i) => {
+          const x = X(p.recall[0]), y = Y(p.precision[0]), l = labels[i];
           return (
-            <g key={`d${p.id}`} onMouseMove={(e) => show(e, { title: p.name, color: p.color, ...p.tip })} onMouseLeave={hide} style={{ cursor: "default" }}>
-              <circle cx={x} cy={y} r={9} fill="transparent" />
+            <g key={`d${p.id}`} onMouseMove={(e) => show(e, { title: p.name, color: p.color, ...p.tip })} onMouseLeave={hide} {...selectable(pickMark, p, p.name)}>
+              <circle className="hit" cx={x} cy={y} r={9} fill="transparent" />
               {logos && logoFor(p.id) ? (
                 <g color={p.color}><LogoGlyph model={p.id} cx={x} cy={y} size={12} /></g>
               ) : (
                 <circle cx={x} cy={y} r={3.2} fill={p.color} />
               )}
+              {l && (
+                <text x={l.x} y={l.y + 10} fontSize={11} fill="var(--ink)" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round", pointerEvents: onSelect ? "auto" : "none" }}>
+                  {l.text}
+                </text>
+              )}
             </g>
           );
         })}
-        {labels.map((l, i) =>
-          l ? (
-            <text key={`l${i}`} x={l.x} y={l.y + 10} fontSize={11} fill="var(--ink)" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round", pointerEvents: "none" }}>
-              {l.text}
-            </text>
-          ) : null,
-        )}
         {labels.some((l) => !l) && <text x={W - PR} y={PT - 6} fontSize={10.5} textAnchor="end" fill="var(--ink-4)">some labels hidden where marks overlap; hover to identify</text>}
         {pts.length === 0 && <text x={W / 2} y={H / 2} textAnchor="middle" fontSize={13} fill="var(--ink-4)">{emptyText ?? "Select at least one model."}</text>}
       </svg>
@@ -133,7 +134,7 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
           ))}
         </div>
       )}
-      <TipBox tip={tip} />
+      <TipBox tip={tip} hint={onSelect ? CLICK_HINT : undefined} />
     </div>
   );
 }

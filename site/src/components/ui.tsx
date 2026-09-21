@@ -46,7 +46,23 @@ export function useWidth(hostRef: React.RefObject<HTMLDivElement | null>, fallba
   return w;
 }
 
-export function TipBox({ tip }: { tip: Tip }) {
+/**
+ * Props for an SVG row or mark that opens something on click (the details modal): pointer cursor, button role, Enter/Space, and the `sel` class
+ * whose `.hit` child (the transparent full-row rect behind the row) tints on hover. Without `onSelect` the element stays inert.
+ */
+export function selectable<T>(onSelect: ((t: T) => void) | undefined, t: T, label: string) {
+  if (!onSelect) return { style: { cursor: "default" } as React.CSSProperties };
+  return {
+    className: "sel", role: "button" as const, tabIndex: 0, "aria-label": `${label}: details`, style: { cursor: "pointer" } as React.CSSProperties,
+    onClick: (e: React.MouseEvent) => { e.stopPropagation(); onSelect(t); },
+    onKeyDown: (e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onSelect(t); } },
+  };
+}
+
+/** The muted last line of a chart tooltip when its rows open the details modal. */
+export const CLICK_HINT = "click for details";
+
+export function TipBox({ tip, hint }: { tip: Tip; hint?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
   useLayoutEffect(() => {
@@ -76,6 +92,7 @@ export function TipBox({ tip }: { tip: Tip }) {
         ),
       )}
       {tip.notes?.filter(Boolean).map((n, i) => <div key={i} className="note">{n}</div>)}
+      {hint && <div className="cta">{hint}</div>}
     </div>
   );
 }

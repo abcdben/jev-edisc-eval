@@ -20,10 +20,11 @@ type Chart = "map" | "ranked";
 const PICK_ORDER: Kind[] = ["system1", "system1_ft", "baseline", "llm", "local_llm", "tar"];
 const KIND_SHORT: Record<Kind, string> = { system1: "Deciders", system1_ft: "Supervised", llm: "LLM", local_llm: "Local LLM", tar: "Classical TAR", baseline: "Floor" };
 
-/** Recall/precision card with a map (scatter with interval boxes) or ranked (rows with whiskers) view. The chart mode is owned by the section so it can switch the dashboard layout. */
-function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = true, height = 380 }: { items: PRItem[]; hint: string; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number }) {
+/** Recall/precision card with a map (scatter with interval boxes) or ranked (rows with whiskers) view. The chart mode is owned by the section so it can switch the dashboard layout. `explain` opens the details modal for a clicked mark or row (item ids are model keys). */
+function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain }: { items: PRItem[]; hint: string; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void }) {
   const setChart = onChart;
   const [zoom, setZoom] = useState(defaultZoom);
+  const onSelect = explain && ((it: PRItem) => explain(it.id));
   return (
     <div className={`card${chart === "map" ? " fill" : ""}`}>
       <div className="card-t">
@@ -34,7 +35,7 @@ function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = t
           <Hint left text={hint} />
         </span>
       </div>
-      {chart === "map" ? <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill /></div> : <PRRows items={items} zoom={zoom} sortBy="f1" logos={logos} />}
+      {chart === "map" ? <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill onSelect={onSelect} /></div> : <PRRows items={items} zoom={zoom} sortBy="f1" logos={logos} onSelect={onSelect} />}
       <div className="legend-note">
         {chart === "map" ? <span>Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span> : <span>Sorted by F1. Dot: point estimate. Whisker: 95% interval.</span>}
         {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
@@ -134,8 +135,9 @@ const OPS_MODE_OPTIONS = [
 ];
 const HUMAN_SENTENCE = `The '+ human time' view adds the prompt or criteria development a person does for every non-TAR row: ${HUMAN_DEV_DOCS} documents reviewed at ${HUMAN_DEV_DOCS_PER_HOUR}/hour and $${HUMAN_DEV_USD_PER_HOUR}/hour, ${fmtHours(HUMAN_DEV_HOURS)} and ${fmtUSD(HUMAN_DEV_USD)}, counted once per 100k-document project; TAR rows are already human time, so in 'machine only' they show none.`;
 
-function OpsCards({ recs, colorOf, nameOf, logos = true }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean }) {
+function OpsCards({ recs, colorOf, nameOf, logos = true, explain }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean; explain?: (k: string) => void }) {
   const [mode, setMode] = useState<OpsMode>(() => (localStorage.getItem(OPS_MODE_KEY) === "human" ? "human" : "machine"));
+  const onSelect = explain && ((it: BarItem) => explain(it.id));
   useEffect(() => { localStorage.setItem(OPS_MODE_KEY, mode); }, [mode]);
   const empty = (r: Rec) => (r.tar && mode === "machine" ? "human only" : undefined);
   const time: BarItem[] = recs.map((r) => {
@@ -154,14 +156,14 @@ function OpsCards({ recs, colorOf, nameOf, logos = true }: { recs: Rec[]; colorO
           <h3>Review time</h3><span className="unit">per 100k documents, single stream</span>
           <span className="right">{seg}<Hint left text={`Median wall-clock time of the model's own calls per document, one request at a time, scaled to 100,000 documents. In the 'all issues per call' arm that is one call per document; in 'one issue per call' it is the sum over issues. Every service accepts parallel requests, so absolute hours shrink with concurrency for all models alike; the ratios are the comparison. Laya and Gemma ran on one A100. ${HUMAN_SENTENCE}`} /></span>
         </div>
-        <OpsBars items={time} axis="hours" logos={logos} />
+        <OpsBars items={time} axis="hours" logos={logos} onSelect={onSelect} />
       </div>
       <div className="card">
         <div className="card-t">
           <h3>Cost</h3><span className="unit">per 100k documents, as paid</span>
           <span className="right">{seg}<Hint left text={`What was actually paid to the vendor, summed over the model's decisions and scaled to 100,000 documents. OpenAI ran on flex pricing (half of list); Anthropic used prompt caching on the all-issues arm. Laya and Gemma ran on a rented ${GPU_NAME} ($${GPU_USD_PER_HOUR.toFixed(2)}/hour), so their cost is that GPU time for the single-stream review time shown; serving many documents concurrently would lower it. ${HUMAN_SENTENCE}`} /></span>
         </div>
-        <OpsBars items={cost} axis="US dollars" logos={logos} />
+        <OpsBars items={cost} axis="US dollars" logos={logos} onSelect={onSelect} />
       </div>
     </>
   );
@@ -190,7 +192,6 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
   const rows = useRows(v);
   const primary = rows.filter((r) => r.primary);
   const sel = PRIMARY.map((p) => primary.find((r) => r.model === p.key)).filter((r): r is Rec => !!r && on.has(r.model));
-  void explain;
   const [chart, setChart] = useState<Chart>("map");
 
   const items: PRItem[] = sel.map((r) => {
@@ -203,12 +204,12 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
     <section className="section">
       <div className={`dash${chart === "ranked" ? " ranked" : ""}`}>
         <PRCard
-          items={items} chart={chart} onChart={setChart} defaultZoom={true}
+          items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
           hint="Recall: gold-responsive items the model flagged, over all gold-responsive items. Precision: flagged items that were gold-responsive, over all flagged. Intervals are 95% Wilson score intervals. Because every document in each test set carries a gold label, the recall interval is computed over the gold-positive set and the precision interval over the model's flagged set, rather than from a review sample. All metrics use the model's own label, not a tuned threshold."
         />
         <div className="stack">
-          <OpsCards recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} />
-          <Consistency recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} arm={v.arm} />
+          <OpsCards recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} explain={explain} />
+          <Consistency recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} arm={v.arm} onSelect={(r) => explain(r.model)} />
         </div>
       </div>
     </section>
@@ -258,7 +259,7 @@ function VariantPicker({ v, grp, setGrp, off, setOff, explain }: { v: View; grp:
   );
 }
 
-function AblationSection({ v, grp, off }: { v: View; grp: string; off: Set<string> }) {
+function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: Set<string>; explain: (k: string) => void }) {
   const G = ABLATION_GROUPS.find((g) => g.id === grp)!;
   const variants = useVariants(v, grp);
   const sel = variants.filter((r) => !off.has(r.variant!));
@@ -275,12 +276,12 @@ function AblationSection({ v, grp, off }: { v: View; grp: string; off: Set<strin
     <section className="section">
       <div className={`dash${chart === "ranked" ? " ranked" : ""}`}>
         <PRCard
-          items={items} chart={chart} onChart={setChart} defaultZoom={true}
+          items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
           emptyText={variants.length ? "Select at least one configuration." : "No configurations of this model were run on this corpus and arm."}
           logos={false}
           hint="Same measurement as on Compare models. Differences between configurations are usually smaller than between model families, so this card defaults to ranked rows with the axes fitted to the data; switch to map and 0–100% to see the same points on the scale used there. Hover a configuration for what the lever changes. ★ marks the optimized configuration, the one selected on the Veridian dev split."
         />
-        <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} /></div>
+        <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} explain={explain} /></div>
       </div>
     </section>
   );
@@ -388,7 +389,7 @@ export default function App() {
       </div>
       )}
 
-      {pageId === "compare" ? <CompareSection v={v} on={on} explain={setExplain} /> : <AblationSection v={v} grp={grp} off={off} />}
+      {pageId === "compare" ? <CompareSection v={v} on={on} explain={setExplain} /> : <AblationSection v={v} grp={grp} off={off} explain={setExplain} />}
       {explain && <ExplainModal initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)} />}
 
       <details className="notes">

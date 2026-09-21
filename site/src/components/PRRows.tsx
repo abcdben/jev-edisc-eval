@@ -2,13 +2,14 @@ import type { CI } from "../data";
 import { fmtPct } from "../data";
 import type { PRItem } from "./PRScatter";
 import { LogoGlyph } from "../logos";
-import { TipBox, useTip, useWidth } from "./ui";
+import { CLICK_HINT, TipBox, selectable, useTip, useWidth } from "./ui";
 
 const ROW = 26, NUM_W = 54;
 
-/** Ranked rows: recall and precision side by side, dot at the point estimate, whisker across the 95% interval. */
-export function PRRows({ items, zoom, sortBy, logos = true }: { items: PRItem[]; zoom: boolean; sortBy: "recall" | "precision" | "f1"; logos?: boolean }) {
+/** Ranked rows: recall and precision side by side, dot at the point estimate, whisker across the 95% interval. `onSelect` makes each row a button (click, Enter, Space). */
+export function PRRows({ items, zoom, sortBy, logos = true, onSelect }: { items: PRItem[]; zoom: boolean; sortBy: "recall" | "precision" | "f1"; logos?: boolean; onSelect?: (item: PRItem) => void }) {
   const { tip, show, hide, hostRef } = useTip();
+  const pickRow = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const W = useWidth(hostRef, 760);
   // In the full-width ranked layout (~1100px) the label column and the gap between the panels grow with the width, so long names keep clear of the whiskers.
   const wide = Math.max(0, W - 760) / 340;
@@ -50,8 +51,8 @@ export function PRRows({ items, zoom, sortBy, logos = true }: { items: PRItem[];
         {rows.map((r, i) => {
           const y = 20 + i * ROW + ROW / 2;
           return (
-            <g key={r.id} onMouseMove={(e) => show(e, { title: r.name, color: r.color, ...r.tip })} onMouseLeave={hide} style={{ cursor: "default" }}>
-              <rect x={0} y={y - ROW / 2} width={W} height={ROW} fill="transparent" />
+            <g key={r.id} onMouseMove={(e) => show(e, { title: r.name, color: r.color, ...r.tip })} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
+              <rect className="hit" x={0} y={y - ROW / 2} width={W} height={ROW} fill="transparent" />
               {logos ? (
                 <>
                   <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={8} cy={y} /></g>
@@ -76,7 +77,7 @@ export function PRRows({ items, zoom, sortBy, logos = true }: { items: PRItem[];
         })}
         {rows.length === 0 && <text x={W / 2} y={40} textAnchor="middle" fontSize={13} fill="var(--ink-4)">Select at least one model.</text>}
       </svg>
-      <TipBox tip={tip} />
+      <TipBox tip={tip} hint={onSelect ? CLICK_HINT : undefined} />
     </div>
   );
 }

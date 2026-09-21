@@ -239,6 +239,13 @@ svg text { user-select: none; font-family: var(--sans); }
 .tip .kv .v { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; font-size: 12px; white-space: nowrap; }
 .tip .line { color: var(--tip-fg-2); margin-top: 4px; }
 .tip .note { color: var(--tip-fg-2); margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--tip-line); }
+.tip .cta { color: var(--tip-fg-2); opacity: 0.75; font-size: 11px; margin-top: 7px; letter-spacing: 0.02em; }
+
+/* clickable chart rows and marks: the transparent hit area behind a row tints faintly on hover or keyboard focus */
+.sel { outline: none; }
+.sel .hit { fill: var(--ink); fill-opacity: 0; transition: fill-opacity 0.12s; }
+.sel:hover .hit, .sel:focus-visible .hit { fill-opacity: 0.05; }
+.sel:focus-visible .hit { fill-opacity: 0.09; }
 
 .legend-note { color: var(--ink-3); font-size: 12px; margin-top: 8px; display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
 .legend-note .k { display: inline-flex; align-items: center; gap: 6px; }
