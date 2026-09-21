@@ -107,10 +107,7 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
             <g key={`d${p.id}`} onMouseMove={(e) => show(e, { title: p.name, color: p.color, ...p.tip })} onMouseLeave={hide} style={{ cursor: "default" }}>
               <circle cx={x} cy={y} r={9} fill="transparent" />
               {logos && logoFor(p.id) ? (
-                <g color={p.color}>
-                  <circle cx={x} cy={y} r={8.5} fill="var(--panel)" fillOpacity={0.92} />
-                  <LogoGlyph model={p.id} cx={x} cy={y} size={12} />
-                </g>
+                <g color={p.color}><LogoGlyph model={p.id} cx={x} cy={y} size={12} /></g>
               ) : (
                 <circle cx={x} cy={y} r={3.2} fill={p.color} />
               )}
