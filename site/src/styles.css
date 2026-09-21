@@ -188,6 +188,11 @@ svg text { user-select: none; font-family: var(--sans); }
 .dash .stack { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .dash .card { min-width: 0; }
 @media (max-width: 1000px) { .dash { grid-template-columns: 1fr; } }
+/* ranked view: recall/precision spans the full width, the other cards sit beneath it in one row of equal columns */
+.dash.ranked { grid-template-columns: minmax(0, 1fr); }
+.dash.ranked > .card { grid-column: 1 / -1; }
+.dash.ranked .stack { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }
+@media (max-width: 900px) { .dash.ranked .stack { grid-auto-flow: row; grid-auto-columns: auto; } }
 
 /* select */
 .select { position: relative; }

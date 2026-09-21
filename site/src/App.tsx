@@ -20,9 +20,9 @@ type Chart = "map" | "ranked";
 const PICK_ORDER: Kind[] = ["system1", "system1_ft", "baseline", "llm", "local_llm", "tar"];
 const KIND_SHORT: Record<Kind, string> = { system1: "Deciders", system1_ft: "Supervised", llm: "LLM (API)", local_llm: "Local LLM", tar: "Classical TAR", baseline: "Floor" };
 
-/** Recall/precision card with a map (scatter with interval boxes) or ranked (rows with whiskers) view. */
-function PRCard({ items, hint, defaultChart, defaultZoom, emptyText, logos = true, height = 380 }: { items: PRItem[]; hint: string; defaultChart: Chart; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number }) {
-  const [chart, setChart] = useState<Chart>(defaultChart);
+/** Recall/precision card with a map (scatter with interval boxes) or ranked (rows with whiskers) view. The chart mode is owned by the section so it can switch the dashboard layout. */
+function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = true, height = 380 }: { items: PRItem[]; hint: string; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number }) {
+  const setChart = onChart;
   const [zoom, setZoom] = useState(defaultZoom);
   return (
     <div className={`card${chart === "map" ? " fill" : ""}`}>
@@ -149,6 +149,7 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
   const primary = rows.filter((r) => r.primary);
   const sel = PRIMARY.map((p) => primary.find((r) => r.model === p.key)).filter((r): r is Rec => !!r && on.has(r.model));
   void explain;
+  const [chart, setChart] = useState<Chart>("map");
 
   const items: PRItem[] = sel.map((r) => {
     const p = pick(r, v.level, v.gray, v.issue);
@@ -158,9 +159,9 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
 
   return (
     <section className="section">
-      <div className="dash">
+      <div className={`dash${chart === "ranked" ? " ranked" : ""}`}>
         <PRCard
-          items={items} defaultChart="map" defaultZoom={true}
+          items={items} chart={chart} onChart={setChart} defaultZoom={true}
           hint="Recall: gold-responsive items the model flagged, over all gold-responsive items. Precision: flagged items that were gold-responsive, over all flagged. Intervals are 95% Wilson score intervals. Because every document in each test set carries a gold label, the recall interval is computed over the gold-positive set and the precision interval over the model's flagged set, rather than from a review sample. All metrics use the model's own label, not a tuned threshold."
         />
         <div className="stack">
@@ -221,6 +222,7 @@ function AblationSection({ v, grp, off }: { v: View; grp: string; off: Set<strin
   const sel = variants.filter((r) => !off.has(r.variant!));
   const color = (r: Rec) => variantColor(r.variant!, G.recipe);
   const name = (r: Rec) => VARIANT_LABEL[r.variant!] ?? r.variant!;
+  const [chart, setChart] = useState<Chart>("ranked");
 
   const items: PRItem[] = sel.map((r) => {
     const p = pick(r, v.level, v.gray, v.issue);
@@ -229,9 +231,9 @@ function AblationSection({ v, grp, off }: { v: View; grp: string; off: Set<strin
 
   return (
     <section className="section">
-      <div className="dash">
+      <div className={`dash${chart === "ranked" ? " ranked" : ""}`}>
         <PRCard
-          items={items} defaultChart="ranked" defaultZoom={true}
+          items={items} chart={chart} onChart={setChart} defaultZoom={true}
           emptyText={variants.length ? "Select at least one configuration." : "No configurations of this model were run on this corpus and arm."}
           logos={false}
           hint="Same measurement as on Compare models. Differences between configurations are usually smaller than between model families, so this card defaults to ranked rows with the axes fitted to the data; switch to map and 0–100% to see the same points on the scale used there. Hover a configuration for what the lever changes. ★ marks the recipe carried into Compare models."

@@ -4,13 +4,16 @@ import type { PRItem } from "./PRScatter";
 import { LogoGlyph } from "../logos";
 import { TipBox, useTip, useWidth } from "./ui";
 
-const ROW = 26, GAP = 26, NUM_W = 54;
+const ROW = 26, NUM_W = 54;
 
 /** Ranked rows: recall and precision side by side, dot at the point estimate, whisker across the 95% interval. */
 export function PRRows({ items, zoom, sortBy, logos = true }: { items: PRItem[]; zoom: boolean; sortBy: "recall" | "precision" | "f1"; logos?: boolean }) {
   const { tip, show, hide, hostRef } = useTip();
   const W = useWidth(hostRef, 760);
-  const LABEL_W = logos ? 196 : 170;
+  // In the full-width ranked layout (~1100px) the label column and the gap between the panels grow with the width, so long names keep clear of the whiskers.
+  const wide = Math.max(0, W - 760) / 340;
+  const LABEL_W = Math.round((logos ? 196 : 170) + Math.min(1, wide) * 44);
+  const GAP = Math.round(26 + Math.min(1, wide) * 22);
   const f1 = (it: PRItem) => (it.recall && it.precision ? (2 * it.recall[0] * it.precision[0]) / (it.recall[0] + it.precision[0] || 1) : -1);
   const rows = [...items].sort((a, b) => {
     const va = sortBy === "f1" ? f1(a) : (a[sortBy]?.[0] ?? -1), vb = sortBy === "f1" ? f1(b) : (b[sortBy]?.[0] ?? -1);
@@ -65,7 +68,7 @@ export function PRRows({ items, zoom, sortBy, logos = true }: { items: PRItem[];
                     <text x={x0[col] + colW + 8} y={y + 4} fontSize={11.5} fill="var(--ink)" className="mono">{fmtPct(ci[0])}</text>
                   </g>
                 ) : (
-                  <text key={col} x={x0[col]} y={y + 4} fontSize={11} fill="var(--ink-4)">undefined</text>
+                  <text key={col} x={x0[col] + colW + 8} y={y + 4} fontSize={11.5} fill="var(--ink-4)" className="mono">—</text>
                 ),
               )}
             </g>
