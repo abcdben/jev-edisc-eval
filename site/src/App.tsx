@@ -15,14 +15,13 @@ import { Logo } from "./logos";
 type Chart = "map" | "ranked";
 
 /** Recall/precision card with a map (scatter with interval boxes) or ranked (rows with whiskers) view. */
-function PRCard({ items, v, hint, defaultChart, defaultZoom, emptyText, logos = true }: { items: PRItem[]; v: View; hint: string; defaultChart: Chart; defaultZoom: boolean; emptyText?: string; logos?: boolean }) {
+function PRCard({ items, hint, defaultChart, defaultZoom, emptyText, logos = true }: { items: PRItem[]; hint: string; defaultChart: Chart; defaultZoom: boolean; emptyText?: string; logos?: boolean }) {
   const [chart, setChart] = useState<Chart>(defaultChart);
   const [zoom, setZoom] = useState(defaultZoom);
   return (
     <div className="card">
       <div className="card-t">
         <h3>Recall and precision</h3>
-        <span className="unit">{describe(v)}</span>
         <span className="right">
           <Seg value={chart} onChange={setChart} options={[{ id: "map", label: "map", title: "Recall against precision, one box per model" }, { id: "ranked", label: "ranked", title: "Rows sorted by F1, whiskers for the intervals" }]} />
           <Seg value={zoom ? "zoom" : "full"} onChange={(z) => setZoom(z === "zoom")} options={[{ id: "full", label: "0–100%" }, { id: "zoom", label: "fit to data" }]} />
@@ -154,7 +153,7 @@ function CompareSection({ v, explain }: { v: View; explain: (k: string) => void 
         </aside>
         <div>
           <PRCard
-            items={items} v={v} defaultChart="map" defaultZoom={true}
+            items={items} defaultChart="map" defaultZoom={true}
             hint="Recall: gold-responsive items the model flagged, over all gold-responsive items. Precision: flagged items that were gold-responsive, over all flagged. Intervals are 95% Wilson score intervals. Because every document in each test set carries a gold label, the recall interval is computed over the gold-positive set and the precision interval over the model's flagged set, rather than from a review sample. All metrics use the model's own label, not a tuned threshold."
           />
           <OpsPair recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} arm={v.arm} />
@@ -220,7 +219,7 @@ function AblationSection({ v, explain }: { v: View; explain: (k: string) => void
         </aside>
         <div>
           <PRCard
-            items={items} v={v} defaultChart="ranked" defaultZoom={true}
+            items={items} defaultChart="ranked" defaultZoom={true}
             emptyText={variants.length ? "Select at least one configuration." : "No configurations available for this view."}
             logos={false}
             hint="Same measurement as above. Differences between configurations are usually smaller than between model families, so this card defaults to ranked rows with the axes fitted to the data; switch to map and 0–100% to see the same points on the scale used above. Hover a configuration for what the lever changes."
@@ -233,13 +232,6 @@ function AblationSection({ v, explain }: { v: View; explain: (k: string) => void
 }
 
 // ------------------------------------------------------------------------------------------------
-
-function describe(v: View): string {
-  const meta = DATA.corpora[corpusKey(v.corpus, v.tag)];
-  const issue = v.issue ? `issue: ${meta.issues[v.issue]}` : v.level === "doc" ? "document-level, responsive to any issue" : "decision-level, every (document, issue) pair";
-  const gold = v.issue ? "all gold labels" : v.gray === "all" ? "all gold labels" : "gray labels excluded";
-  return `${issue} · ${gold} · ${v.arm === "multi" ? "all issues per call" : "one issue per call"}`;
-}
 
 type Page = "compare" | "configurations";
 const PAGES: { id: Page; label: string }[] = [{ id: "compare", label: "Compare models" }, { id: "configurations", label: "Configurations of one model" }];
