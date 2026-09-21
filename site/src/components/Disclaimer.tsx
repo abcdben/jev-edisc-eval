@@ -36,10 +36,10 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
       <div className="disc-body">
         <h4>What was tested</h4>
         <p>
-          Two new decision models, Jev (TypeSafe AI) and Laya (ConvAI), against seven commercially available language models: Haiku 4.5,
-          Sonnet 5, GPT‑5.6 Luna and Terra, Gemini 3.5 Flash‑Lite and 3.8 Flash, and a locally run Gemma 3 12B. Classical TAR is included
-          for reference: a simulated reviewer with TF‑IDF and logistic regression, as TAR 1.0 and as continuous active learning. The task is
-          the one review teams do in discovery: is this document responsive, and to which issues.
+          <b>Two new decision models</b>, Jev (TypeSafe AI) and Laya (ConvAI), against <b>seven commercially available language models</b>: Haiku 4.5,
+          Sonnet 5, GPT‑5.6 Luna and Terra, Gemini 3.5 Flash‑Lite and 3.8 Flash, and a locally run Gemma 3 12B. <b>Classical TAR</b> is included
+          for reference: a simulated reviewer with TF‑IDF and logistic regression, as TAR 1.0 at several training-sample sizes. The task is
+          the one review teams do in discovery: <mark>is this document responsive, and to which issues.</mark>
         </p>
         <h4>Data sets</h4>
         <ul>
@@ -49,19 +49,19 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         </ul>
         <h4>Set‑up</h4>
         <p>
-          Every model saw the same document text, issue criteria and matter context, and returned a label with a probability. Reported: recall
-          and precision with 95% intervals, time and cost per 100,000 documents, and how often each model changes its answer across repeated
+          Every model saw the <b>same document text, issue criteria and matter context</b>, and returned a label with a probability. Reported: <b>recall
+          and precision</b> with 95% intervals, <b>time and cost</b> per 100,000 documents, and <b>how often each model changes its answer</b> across repeated
           runs. The Method table has the specifics for each corpus.
         </p>
         <h4>What this is</h4>
         <p>
-          A comparison done with care, meant to give a sense of what these new models can do on review tasks next to the models people already use.
+          <mark>A comparison done with care</mark>, meant to give a sense of what these new models can do on review tasks next to the models people already use.
         </p>
         <h4>What this is not</h4>
         <p>
-          A peer‑reviewed study. It has not been independently replicated, the gold labels for one corpus are model‑generated, and every
+          <b>A peer‑reviewed study.</b> It has not been independently replicated, the gold labels for one corpus are model‑generated, and every
           figure rests on choices about criteria, configurations, pricing and sampling that would shift on another matter. Read the numbers
-          as a well‑built snapshot, not a forecast.
+          as <mark>a well‑built snapshot, not a forecast</mark>.
         </p>
         <p>
           Questions, corrections and requests for the underlying data are welcome: <a href={CONTACT_HREF}>{CONTACT_LABEL}</a>.

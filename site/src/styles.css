@@ -309,6 +309,9 @@ svg text { user-select: none; font-family: var(--sans); }
 .disc-body ul { margin: 0 0 12px; padding-left: 16px; }
 .disc-body li { margin: 0 0 5px; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
 .disc-body li b { font-weight: 500; color: var(--ink); }
+.disc-body p b { font-weight: 500; color: var(--ink); }
+.disc-body mark { background: var(--hl, #f2fbc4); color: var(--ink); padding: 0 3px; border-radius: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+[data-theme="dark"] .disc-body mark { background: var(--hl, rgba(206, 240, 60, .16)); }
 .disc-body a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
 .disc-ok {
   display: block; width: 100%; margin-top: 18px; padding: 8px 14px; border: 1px solid var(--ink); border-radius: 6px; background: var(--ink); color: var(--bg);
