@@ -1,7 +1,8 @@
 import { LogoGlyph } from "../logos";
 import { TipBox, useTip, useWidth, type TipLine } from "./ui";
 
-export type BarItem = { id: string; name: string; color: string; value: number | null; label: string; tip: { lines: TipLine[]; notes?: string[] }; subset?: string | null };
+/** `empty` replaces the "not measured" text when `value` is null for a reason other than missing data. */
+export type BarItem = { id: string; name: string; color: string; value: number | null; label: string; tip: { lines: TipLine[]; notes?: string[] }; subset?: string | null; empty?: string };
 
 const ROW = 20;
 
@@ -35,7 +36,7 @@ export function OpsBars({ items, axis, sort = true, logos = true }: { items: Bar
                 <text x={LABEL_W - 10} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
               )}
               <rect x={LABEL_W} y={y + 6} width={bw} height={ROW - 12} fill={r.color} rx={1.5} style={{ fillOpacity: v === 0 ? "calc(var(--bar-alpha) * 0.5)" : "var(--bar-alpha)" }} />
-              <text x={LABEL_W + bw + 7} y={y + ROW / 2 + 4} fontSize={11.5} fill={v == null ? "var(--ink-4)" : "var(--ink)"} className="mono">{v == null ? "not measured" : r.label}</text>
+              <text x={LABEL_W + bw + 7} y={y + ROW / 2 + 4} fontSize={11.5} fill={v == null ? "var(--ink-4)" : "var(--ink)"} className="mono">{v == null ? r.empty ?? "not measured" : r.label}</text>
             </g>
           );
         })}

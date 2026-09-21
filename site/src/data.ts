@@ -71,13 +71,11 @@ export const KIND_LABEL: Record<Kind, string> = {
 };
 export const KIND_ORDER: Kind[] = ["system1", "system1_ft", "llm", "local_llm", "tar", "baseline"];
 
-/** Headline roster, in display order, with a stable colour each. */
-export const PRIMARY: { key: string; color: string; short: string; note: string }[] = [
+/** Headline roster, in display order, with a stable colour each. `kind` overrides the record's kind for grouping on the Compare page. */
+export const PRIMARY: { key: string; color: string; short: string; note: string; kind?: Kind }[] = [
   { key: "jev@base", color: "var(--c-jev)", short: "Jev", note: "TypeSafe Jev 1.13, default configuration: Noul question form, prose criteria, RFP phrasing, matter context." },
   { key: "jev@state_string", color: "var(--c-jev-2)", short: "Jev · recipe", note: "Jev 1.13 with the one lever that won the 12-variant ablation on the Veridian dev split (flat-string state). Chosen before any other corpus was scored." },
-  { key: "laya@base", color: "var(--c-laya)", short: "Laya", note: "ConvAI Laya, zero-shot, default configuration. 512-token context; long documents are truncated." },
-  { key: "laya@recipe", color: "var(--c-laya-2)", short: "Laya · recipe", note: "Laya zero-shot with compact criteria and a sliding window over the document (max-pooled), the two levers that fit its 512-token context." },
-  { key: "laya-ft", color: "var(--c-laya-ft)", short: "Laya · fine-tuned", note: "SUPERVISED. Laya fine-tuned (RLCD) on a 30% document-level dev split of the same corpus and scored on the held-out 70%. Not on equal footing with the zero-shot rows." },
+  { key: "laya-ft", color: "var(--c-laya-ft)", short: "Laya", kind: "system1", note: "ConvAI Laya, fine-tuned (RLCD) on a 30% document-level dev split of the same corpus and scored on the held-out 70%; every other row is zero-shot. The labeled data it needed is not counted in the time and cost panels. Zero-shot Laya configurations are on the Configurations page." },
   { key: "claude-haiku-4.5", color: "var(--c-haiku)", short: "Haiku 4.5", note: "Anthropic Claude Haiku 4.5, structured JSON output, default effort." },
   { key: "claude-sonnet-5", color: "var(--c-sonnet)", short: "Sonnet 5", note: "Anthropic Claude Sonnet 5, structured JSON output, default effort, prompt caching on the all-issues arm." },
   { key: "gpt-5.6-luna", color: "var(--c-luna)", short: "GPT-5.6 Luna", note: "OpenAI GPT-5.6 Luna, structured output, minimal reasoning, flex pricing (50% off list)." },
@@ -93,7 +91,37 @@ export const PRIMARY: { key: string; color: string; short: string; note: string 
   { key: "lexical", color: "var(--c-lexical)", short: "Keyword floor", note: "Term overlap between the RFP text and the document, thresholded at 0.5. No model; shows what vocabulary alone buys." },
 ];
 export const PRIMARY_BY_KEY = Object.fromEntries(PRIMARY.map((p) => [p.key, p]));
-export const DEFAULT_ON = new Set(["jev@base", "laya@recipe", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gemini-3.8-flash", "tar@t1_1000", "tar@cal", "lexical"]);
+export const DEFAULT_ON = new Set(["jev@base", "laya-ft", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash", "gemma3-12b", "tar@t1_100", "tar@t1_300", "tar@t1_1000", "tar@t1_5000", "tar@cal"]);
+
+/**
+ * Human prompt/criteria development, added to every non-TAR row when the ops cards are set to "+ human time".
+ * Someone has to write and iterate the criteria (or the search terms) for an LLM, a decider model or the keyword floor;
+ * we assume that iteration reviews 500 documents at 50 docs/hour and $175/hour, i.e. 10 h and $1,750, and count it
+ * once per 100k-document project since the cards are per 100k documents. TAR rows are already human time.
+ */
+export const HUMAN_DEV_DOCS = 500;
+export const HUMAN_DEV_DOCS_PER_HOUR = 50;
+export const HUMAN_DEV_USD_PER_HOUR = 175;
+export const HUMAN_DEV_HOURS = HUMAN_DEV_DOCS / HUMAN_DEV_DOCS_PER_HOUR;
+export const HUMAN_DEV_USD = HUMAN_DEV_HOURS * HUMAN_DEV_USD_PER_HOUR;
+
+/**
+ * GPU rental for the rows that ran on our own hardware rather than an API (Laya checkpoints, Gemma 3 12B).
+ * Both were measured on a Lambda Cloud 1× A100 (Laya single-stream latency samples; Gemma via Ollama with 4 concurrent requests).
+ * Lambda on-demand list price, lambda.ai/pricing, checked 2026-09-21: 1× A100 40 GB SXM $1.99/GPU-h; 1× H100 PCIe $3.29/GPU-h (H100 SXM $4.29).
+ * Cost per document = hours_per_100k_docs × GPU_USD_PER_HOUR / 100,000, i.e. the GPU time for the single-stream review time shown.
+ * The keyword floor ran on CPU and stays at $0.
+ */
+export const GPU_USD_PER_HOUR = 1.99;
+export const GPU_USD_PER_HOUR_H100 = 3.29;
+export const GPU_NAME = "Lambda Cloud 1× A100";
+/** Rows whose cost is GPU rental rather than an API bill. */
+export const isGpuRow = (r: Rec) => r.kind === "local_llm" || r.family === "Laya";
+/** Cost per document under the site's accounting: API rows as paid, GPU rows as rental for their review time. */
+export const costPerDoc = (r: Rec): number | null => {
+  if (isGpuRow(r)) return r.ops.hours_per_100k_docs == null ? null : (r.ops.hours_per_100k_docs * GPU_USD_PER_HOUR) / 1e5;
+  return r.ops.cost_per_doc;
+};
 
 /** Ablation families: a base model whose variants change one lever at a time. */
 export const ABLATION_GROUPS: { id: string; label: string; recipe: string; note: string }[] = [

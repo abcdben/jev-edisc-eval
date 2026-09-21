@@ -51,7 +51,7 @@ export const EX_GROUPS: { id: string; label: string; match: (k: string) => boole
   { id: "laya-multilingual", label: "Laya · multilingual", match: (k) => k.startsWith("laya-multilingual@"), intro: "The multilingual Laya checkpoint, same request shapes as Laya." },
   {
     id: "laya-ft", label: "Laya · fine-tuned", match: (k) => k === "laya-ft",
-    intro: "SUPERVISED. The same Laya request, sent to a checkpoint fine-tuned on a 30% dev split of this corpus's own gold labels. The request does not change; the weights do. Not on equal footing with the zero-shot rows.",
+    intro: "The Laya row on Compare models. The same Laya request, sent to a checkpoint fine-tuned (RLCD) on a 30% document-level dev split of this corpus's own gold labels and scored on the held-out 70%. The request does not change; the weights do. Not on equal footing with the zero-shot rows.",
   },
   {
     id: "llm", label: "Language models", match: (k) => !k.includes("@") && k !== "lexical" && k !== "laya-ft",

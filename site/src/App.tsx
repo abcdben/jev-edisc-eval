@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ABLATION_GROUPS, CORPORA, DATA, DEFAULT_ON, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
-  corpusKey, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, pick, variantColor,
+  ABLATION_GROUPS, CORPORA, DATA, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, HUMAN_DEV_DOCS, HUMAN_DEV_DOCS_PER_HOUR, HUMAN_DEV_HOURS, HUMAN_DEV_USD, HUMAN_DEV_USD_PER_HOUR, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
+  corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isGpuRow, pick, variantColor,
   type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
 import { Control, Hint, Seg, type TipLine } from "./components/ui";
@@ -67,8 +67,24 @@ function qualityLines(r: Rec, v: View): { lines: TipLine[]; notes: string[] } {
   return { lines, notes };
 }
 
-function opsLines(r: Rec): { lines: TipLine[]; notes: string[] } {
+/** "machine": the model's own time and bill. "human": adds the prompt/criteria development a person does for every non-TAR row. */
+type OpsMode = "machine" | "human";
+
+/** Hours and dollars per 100k documents for a record under the toggle; null when not measured or, for TAR in machine mode, not applicable. */
+function opsValues(r: Rec, mode: OpsMode): { hours: number | null; usd: number | null } {
+  const c = costPerDoc(r);
+  if (r.tar) return mode === "machine" ? { hours: null, usd: null } : { hours: r.ops.hours_per_100k_docs, usd: c == null ? null : c * 1e5 };
+  const add = mode === "human";
+  return {
+    hours: r.ops.hours_per_100k_docs == null ? null : r.ops.hours_per_100k_docs + (add ? HUMAN_DEV_HOURS : 0),
+    usd: c == null ? null : c * 1e5 + (add ? HUMAN_DEV_USD : 0),
+  };
+}
+
+function opsLines(r: Rec, mode: OpsMode): { lines: TipLine[]; notes: string[] } {
   const o = r.ops;
+  const c = costPerDoc(r);
+  const usd100k = c == null ? "—" : fmtUSD(c * 1e5);
   if (r.tar) {
     const t = r.tar;
     return {
@@ -76,20 +92,33 @@ function opsLines(r: Rec): { lines: TipLine[]; notes: string[] } {
         ["Documents reviewed by hand", `${fmtInt(t.docs_reviewed)} of ${fmtInt(t.n_corpus)}`],
         ["Reviewer hours", fmtHours(t.hours)],
         ["Reviewer cost", fmtUSD(t.cost_usd)],
-        ["Per 100k docs, scaled from this corpus", `${fmtHours(o.hours_per_100k_docs)} · ${o.cost_per_doc == null ? "—" : fmtUSD(o.cost_per_doc * 1e5)}`],
+        ["Per 100k docs, scaled from this corpus", `${fmtHours(o.hours_per_100k_docs)} · ${usd100k}`],
       ],
       notes: [`${t.reviewer.docs_per_hour} docs/hour at $${t.reviewer.usd_per_hour}/hour; classifier compute not charged. A fixed coded sample does not scale with corpus size, so the per-100k figure is specific to a ${fmtInt(t.n_corpus)}-document collection.`],
     };
   }
-  return {
-    lines: [
-      ["Time per 100k docs", fmtHours(o.hours_per_100k_docs)],
-      ["Cost per 100k docs", o.cost_per_doc == null ? "—" : fmtUSD(o.cost_per_doc * 1e5)],
-      ["Median time per doc", fmtMs(o.doc_latency_p50_ms)],
-      ["Tokens in / out per doc", o.tokens_in_per_doc == null ? "—" : `${fmtInt(Math.round(o.tokens_in_per_doc))} / ${fmtInt(Math.round(o.tokens_out_per_doc ?? 0))}`],
-    ],
-    notes: [],
-  };
+  const lines: TipLine[] = [
+    ["Time per 100k docs", fmtHours(o.hours_per_100k_docs)],
+    ["Cost per 100k docs", usd100k],
+  ];
+  const notes: string[] = [];
+  if (isGpuRow(r) && o.hours_per_100k_docs != null) {
+    lines.push(["GPU rental", `${GPU_NAME} at $${GPU_USD_PER_HOUR.toFixed(2)}/h × ${fmtHours(o.hours_per_100k_docs)} = ${usd100k} per 100k`]);
+    notes.push("Cost is the rented GPU time for the single-stream review time shown; serving many documents concurrently would lower it.");
+  }
+  if (mode === "human") {
+    const tot = opsValues(r, mode);
+    lines.push(
+      ["Prompt development", `${fmtHours(HUMAN_DEV_HOURS)} · ${fmtUSD(HUMAN_DEV_USD)} (${HUMAN_DEV_DOCS} docs at ${HUMAN_DEV_DOCS_PER_HOUR}/h, $${HUMAN_DEV_USD_PER_HOUR}/h; counted once per 100k-document project)`],
+      ["Shown, machine + human", `${fmtHours(tot.hours)} · ${fmtUSD(tot.usd)}`],
+    );
+    if (r.model === "laya-ft") notes.push("The labeled training data this checkpoint needed is not counted here, only the same 500-document iteration every row gets.");
+  }
+  lines.push(
+    ["Median time per doc", fmtMs(o.doc_latency_p50_ms)],
+    ["Tokens in / out per doc", o.tokens_in_per_doc == null ? "—" : `${fmtInt(Math.round(o.tokens_in_per_doc))} / ${fmtInt(Math.round(o.tokens_out_per_doc ?? 0))}`],
+  );
+  return { lines, notes };
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -98,27 +127,39 @@ function useRows(v: View) {
   return useMemo(() => DATA.records.filter((r) => r.corpus === v.corpus && r.tag === v.tag && r.arm === v.arm), [v.corpus, v.tag, v.arm]);
 }
 
+const OPS_MODE_KEY = "opsMode";
+const OPS_MODE_OPTIONS = [
+  { id: "machine" as const, label: "machine only", title: "The model's own time and bill" },
+  { id: "human" as const, label: "+ human time", title: `Adds ${fmtHours(HUMAN_DEV_HOURS)} and ${fmtUSD(HUMAN_DEV_USD)} of prompt development to every non-TAR row` },
+];
+const HUMAN_SENTENCE = `The '+ human time' view adds the prompt or criteria development a person does for every non-TAR row: ${HUMAN_DEV_DOCS} documents reviewed at ${HUMAN_DEV_DOCS_PER_HOUR}/hour and $${HUMAN_DEV_USD_PER_HOUR}/hour, ${fmtHours(HUMAN_DEV_HOURS)} and ${fmtUSD(HUMAN_DEV_USD)}, counted once per 100k-document project; TAR rows are already human time, so in 'machine only' they show none.`;
+
 function OpsCards({ recs, colorOf, nameOf, logos = true }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean }) {
-  const time: BarItem[] = recs.map((r) => ({
-    id: r.model, name: nameOf(r), color: colorOf(r), value: r.ops.hours_per_100k_docs, label: fmtHours(r.ops.hours_per_100k_docs), tip: opsLines(r), subset: r.subset,
-  }));
-  const cost: BarItem[] = recs.map((r) => ({
-    id: r.model, name: nameOf(r), color: colorOf(r), value: r.ops.cost_per_doc == null ? null : r.ops.cost_per_doc * 1e5,
-    label: r.ops.cost_per_doc == null ? "—" : fmtUSD(r.ops.cost_per_doc * 1e5), tip: opsLines(r), subset: r.subset,
-  }));
+  const [mode, setMode] = useState<OpsMode>(() => (localStorage.getItem(OPS_MODE_KEY) === "human" ? "human" : "machine"));
+  useEffect(() => { localStorage.setItem(OPS_MODE_KEY, mode); }, [mode]);
+  const empty = (r: Rec) => (r.tar && mode === "machine" ? "human only" : undefined);
+  const time: BarItem[] = recs.map((r) => {
+    const { hours } = opsValues(r, mode);
+    return { id: r.model, name: nameOf(r), color: colorOf(r), value: hours, label: fmtHours(hours), tip: opsLines(r, mode), subset: r.subset, empty: empty(r) };
+  });
+  const cost: BarItem[] = recs.map((r) => {
+    const { usd } = opsValues(r, mode);
+    return { id: r.model, name: nameOf(r), color: colorOf(r), value: usd, label: fmtUSD(usd), tip: opsLines(r, mode), subset: r.subset, empty: empty(r) };
+  });
+  const seg = <Seg value={mode} onChange={setMode} options={OPS_MODE_OPTIONS} />;
   return (
     <>
       <div className="card">
         <div className="card-t">
           <h3>Review time</h3><span className="unit">per 100k documents, single stream</span>
-          <span className="right"><Hint left text="Median wall-clock time of the model's own calls per document, one request at a time, scaled to 100,000 documents. In the 'all issues per call' arm that is one call per document; in 'one issue per call' it is the sum over issues. Every service accepts parallel requests, so absolute hours shrink with concurrency for all models alike; the ratios are the comparison. Laya and Gemma ran on one A100." /></span>
+          <span className="right">{seg}<Hint left text={`Median wall-clock time of the model's own calls per document, one request at a time, scaled to 100,000 documents. In the 'all issues per call' arm that is one call per document; in 'one issue per call' it is the sum over issues. Every service accepts parallel requests, so absolute hours shrink with concurrency for all models alike; the ratios are the comparison. Laya and Gemma ran on one A100. ${HUMAN_SENTENCE}`} /></span>
         </div>
         <OpsBars items={time} axis="hours" logos={logos} />
       </div>
       <div className="card">
         <div className="card-t">
           <h3>Cost</h3><span className="unit">per 100k documents, as paid</span>
-          <span className="right"><Hint left text="What was actually paid to the vendor, summed over the model's decisions and scaled to 100,000 documents. OpenAI ran on flex pricing (half of list); Anthropic used prompt caching on the all-issues arm. Laya, Gemma and the keyword floor ran on rented hardware (about $2 per A100-hour) and show $0 here; their cost is the review-time panel." /></span>
+          <span className="right">{seg}<Hint left text={`What was actually paid to the vendor, summed over the model's decisions and scaled to 100,000 documents. OpenAI ran on flex pricing (half of list); Anthropic used prompt caching on the all-issues arm. Laya and Gemma ran on a rented ${GPU_NAME} ($${GPU_USD_PER_HOUR.toFixed(2)}/hour), so their cost is that GPU time for the single-stream review time shown; serving many documents concurrently would lower it. The keyword floor ran on CPU and is $0. ${HUMAN_SENTENCE}`} /></span>
         </div>
         <OpsBars items={cost} axis="US dollars" logos={logos} />
       </div>
@@ -131,8 +172,9 @@ function OpsCards({ recs, colorOf, nameOf, logos = true }: { recs: Rec[]; colorO
 /** The model multi-select for Compare models, rendered in the control bar. */
 function ModelPicker({ v, on, setOn, explain }: { v: View; on: Set<string>; setOn: (s: Set<string>) => void; explain: (k: string) => void }) {
   const rows = useRows(v);
-  const primary = rows.filter((r) => r.primary);
-  const byKind = PICK_ORDER.map((k) => ({ kind: k, recs: PRIMARY.map((p) => primary.find((r) => r.model === p.key)).filter((r): r is Rec => !!r && r.kind === k) })).filter((g) => g.recs.length);
+  const primary = rows.filter((r) => r.primary && PRIMARY_BY_KEY[r.model]);
+  const kindOf = (r: Rec) => PRIMARY_BY_KEY[r.model].kind ?? r.kind;
+  const byKind = PICK_ORDER.map((k) => ({ kind: k, recs: PRIMARY.map((p) => primary.find((r) => r.model === p.key)).filter((r): r is Rec => !!r && kindOf(r) === k) })).filter((g) => g.recs.length);
   const avail = primary.filter((r) => on.has(r.model)).length;
   const groups: PickGroup[] = byKind.map((g) => ({
     id: g.kind, label: KIND_SHORT[g.kind as Kind],
@@ -354,7 +396,19 @@ export default function App() {
         <footer className="foot">
         <div>
           <h4>What every model saw</h4>
-          <p>The same document text, the same issue criteria and matter context, and returned a label plus a probability. Metrics use the model's own label. Jev and Laya rows are the default configuration unless marked recipe.</p>
+          <p>The same document text, the same issue criteria and matter context, and returned a label plus a probability. Metrics use the model's own label. Jev rows are the default configuration unless marked recipe.</p>
+        </div>
+        <div>
+          <h4>Laya</h4>
+          <p>The Laya row on Compare models is a checkpoint fine-tuned (RLCD) on a 30% document-level dev split of the same corpus and scored on the held-out 70%; every other row is zero-shot, so it is not on equal footing, and the labeled data it needed is not counted in the time and cost panels. The zero-shot Laya configurations are on the Configurations page.</p>
+        </div>
+        <div>
+          <h4>GPU cost</h4>
+          <p>Laya and Gemma 3 12B ran on a rented {GPU_NAME} rather than an API. Their cost is that GPU's on-demand rate (${GPU_USD_PER_HOUR.toFixed(2)}/hour, Lambda list price as of September 2026) times the single-stream review time shown, so it is an upper bound: serving many documents concurrently would lower it. The keyword floor ran on CPU and is $0.</p>
+        </div>
+        <div>
+          <h4>Human time</h4>
+          <p>The '+ human time' toggle on the time and cost cards adds the prompt or criteria development a person does for every non-TAR row: {HUMAN_DEV_DOCS} documents reviewed at {HUMAN_DEV_DOCS_PER_HOUR}/hour and ${HUMAN_DEV_USD_PER_HOUR}/hour, {fmtHours(HUMAN_DEV_HOURS)} and {fmtUSD(HUMAN_DEV_USD)}, counted once per 100k-document project. TAR rows are already human time and are unchanged; in 'machine only' they show none.</p>
         </div>
         <div>
           <h4>Intervals</h4>
