@@ -67,7 +67,7 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
           Questions, corrections and requests for the underlying data are welcome: <a href={CONTACT_HREF}>{CONTACT_LABEL}</a>.
         </p>
         <button type="button" className="disc-ok" onClick={onClose}>Understood</button>
-        <div className="disc-note">You can reopen this from the footer.</div>
+        <div className="disc-note">You can reopen this from "About this comparison" at the foot of the page.</div>
       </div>
     </Modal>
   );
@@ -75,5 +75,5 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
 
 /** The footer's "Disclaimer" text link, beside the Method button. */
 export function DisclaimerLink({ onClick }: { onClick: () => void }) {
-  return <button type="button" className="disc-link" onClick={onClick} title="What these numbers are and are not">Disclaimer</button>;
+  return <button type="button" className="disc-link" onClick={onClick} title="What was tested, on which data, and what this comparison is and is not">About this comparison</button>;
 }
