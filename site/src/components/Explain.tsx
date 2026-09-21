@@ -164,7 +164,6 @@ export function ExplainModal({ initialKey, initialCorpus, onClose }: { initialKe
   const [group, setGroup] = useState(groupOf(initialKey));
   const [key, setKey] = useState(initialKey);
   const [docIdx, setDocIdx] = useState(0);
-  const [showDiff, setShowDiff] = useState(true);
 
   const C = EX.corpora[corpus];
   const members = useMemo(() => sortMembers(membersOf(corpus, group)), [corpus, group]);
@@ -189,7 +188,7 @@ export function ExplainModal({ initialKey, initialCorpus, onClose }: { initialKe
   useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
 
   const ex = cfg?.examples[docIdx];
-  const d = diff(ex?.request, showDiff && base ? base.examples[docIdx]?.request : ex?.request);
+  const d = diff(ex?.request, base ? base.examples[docIdx]?.request : ex?.request);
   const doc = C.documents[docIdx];
   const variant = cfg?.variant ?? "";
   const note = group === "jev" ? EX.notes.jev[variant] : group.startsWith("laya") && group !== "laya-ft" ? EX.notes.laya[variant] : group === "llm" ? `${PRIMARY_BY_KEY[active]?.note ?? ""} ${EX.notes.llm}` : G.intro;
@@ -238,11 +237,6 @@ export function ExplainModal({ initialKey, initialCorpus, onClose }: { initialKe
               ))}
               <div className="ex-q">Issue: <b>{C.question.title}</b></div>
             </div>
-            {base && (
-              <div className="grp">
-                <label className="ex-check"><input type="checkbox" checked={showDiff} onChange={(e) => setShowDiff(e.target.checked)} /> highlight what differs from the default</label>
-              </div>
-            )}
           </aside>
 
           <div className="ex-main">
@@ -257,13 +251,13 @@ export function ExplainModal({ initialKey, initialCorpus, onClose }: { initialKe
                   <div className="ex-col">
                     <div className="ex-col-t">{group === "tar" ? "Workflow" : "Request"}<span className="ex-col-s">{group === "tar" ? "how the coded sample and classifier were produced" : "what was sent, with the document and background folded"}</span></div>
                     {ex && <Node v={ex.request} path="" changed={d.changed} doc={doc.text} ctx={C.context} />}
-                    {showDiff && base && d.removed.length > 0 && (
+                    {base && d.removed.length > 0 && (
                       <div className="ex-removed">Not present in this configuration (present in the default): {d.removed.map((p) => p.replace(/^questions\.[^.]+\./, "question.")).join(", ")}</div>
                     )}
                   </div>
                   <div className="ex-col pin">
                     <div className="ex-col-t">Settings<span className="ex-col-s">fixed for the whole run</span></div>
-                    <Node v={settingsFor(group, cfg.settings)} path="settings" changed={showDiff && base ? diff(settingsFor(group, cfg.settings), settingsFor(group, base.settings)).changed : new Set()} doc="" ctx="" />
+                    <Node v={settingsFor(group, cfg.settings)} path="settings" changed={base ? diff(settingsFor(group, cfg.settings), settingsFor(group, base.settings)).changed : new Set()} doc="" ctx="" />
                     <div className="ex-col-t" style={{ marginTop: 18 }}>Output<span className="ex-col-s">what the model actually returned</span></div>
                     <Output o={ex?.output ?? null} gold={doc.gold} contended={group.startsWith("laya")} />
                   </div>
