@@ -1,7 +1,32 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { CORPORA, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER, fmtMs, fmtPct } from "../data";
 import { EX, EX_GROUPS, exCorpus, groupOf, membersOf, type ExOutput } from "../examples";
-import { Seg } from "./ui";
+import { Seg, type TipLine } from "./ui";
+
+/** The Metrics block: the full figures for one model on one corpus (what the chart tooltips used to carry), one fact list per card. */
+export type MetricSection = { title: string; lines: TipLine[]; notes?: string[] };
+export type Metrics = { name: string; color: string; context: string; sections: MetricSection[] };
+
+function MetricsBlock({ m }: { m: Metrics }) {
+  return (
+    <section className="ex-metrics" aria-label="Metrics">
+      <div className="ex-metrics-t"><span className="sw" style={{ background: m.color }} />Metrics<span className="ex-col-s">{m.name} · {m.context}</span></div>
+      <div className="ex-metrics-grid">
+        {m.sections.map((s) => (
+          <div key={s.title} className="ex-metric">
+            <div className="ex-metric-t">{s.title}</div>
+            <dl>
+              {s.lines.map((l, i) => (typeof l === "string"
+                ? <div key={i} className="row"><dd className="line">{l}</dd></div>
+                : <div key={i} className="row"><dt>{l[0]}</dt><dd>{l[1]}</dd></div>))}
+            </dl>
+            {s.notes?.filter(Boolean).map((n, i) => <p key={i} className="ex-metric-note">{n}</p>)}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
 
 // ------------------------------------------------------------------------------------------------
 // diff helpers: leaf paths whose value differs from the family's default configuration
@@ -159,7 +184,8 @@ function Output({ o, gold, contended }: { o: ExOutput; gold: string; contended: 
 
 // ------------------------------------------------------------------------------------------------
 
-export function ExplainModal({ initialKey, initialCorpus, onClose }: { initialKey: string; initialCorpus: string; onClose: () => void }) {
+/** `metrics` supplies the Metrics block for the selected configuration on the modal's corpus; without it (or when it returns null) the block is omitted. */
+export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { initialKey: string; initialCorpus: string; onClose: () => void; metrics?: (key: string, corpus: string) => Metrics | null }) {
   const [corpus, setCorpus] = useState(exCorpus(initialCorpus));
   const [group, setGroup] = useState(groupOf(initialKey));
   const [key, setKey] = useState(initialKey);
@@ -192,6 +218,7 @@ export function ExplainModal({ initialKey, initialCorpus, onClose }: { initialKe
   const doc = C.documents[docIdx];
   const variant = cfg?.variant ?? "";
   const note = group === "jev" ? EX.notes.jev[variant] : group.startsWith("laya") && group !== "laya-ft" ? EX.notes.laya[variant] : group === "llm" ? `${PRIMARY_BY_KEY[active]?.note ?? ""} ${EX.notes.llm}` : G.intro;
+  const m = metrics && active ? metrics(active, corpus) : null;
 
   return (
     <div className="ex-back" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -240,6 +267,7 @@ export function ExplainModal({ initialKey, initialCorpus, onClose }: { initialKe
           </aside>
 
           <div className="ex-main">
+            {m && <MetricsBlock m={m} />}
             <p className="ex-intro">{G.intro}</p>
             {cfg && (
               <>

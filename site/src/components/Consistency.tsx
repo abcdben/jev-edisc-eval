@@ -1,5 +1,5 @@
 import { DATA, fmtCI, fmtInt, fmtPct, type DetCell, type Rec } from "../data";
-import { LogoGlyph } from "../logos";
+import { Logo, LogoGlyph } from "../logos";
 import { useState } from "react";
 import { CLICK_HINT, Hint, Seg, TipBox, selectable, useTip, useWidth, type HintItem, type TipLine } from "./ui";
 import { hoverable } from "./hover";
@@ -13,7 +13,7 @@ const DET_ITEMS: HintItem[] = [
   { k: "t = 0", v: "The same models at temperature 0 where the API accepts it; Sonnet 5 rejects it and is marked not measured." },
   { k: "Deciders", v: "Jev and Laya expose no sampling controls, so one bar serves both views." },
   { k: "TAR rows", v: "0 by construction: the classifier and the simulated reviewer make the same call on every pass." },
-  { k: "Hover", v: "Flip rates by stratum, issue and gold label, and how much recall moved between runs." },
+  { k: "Click a row", v: "The details modal lists the runs, decisions compared, flip rate and how much recall and precision moved between runs." },
 ];
 
 const LABEL_W = 168, ROW = 20;
@@ -39,17 +39,18 @@ export function detFor(r: Rec, arm: "multi" | "single", setting: "default" | "t0
   return cell ? { pairwise: cell.pairwise, setting: cell.setting, cell } : null;
 }
 
-const TAR_TIP: { lines: TipLine[]; notes: string[] } = {
+const TAR_LINES: { lines: TipLine[]; notes: string[] } = {
   lines: [["Pairwise disagreement", "0"]],
   notes: [
     "Deterministic given its training sample: the same trained classifier gives the same score on every pass, and the simulated reviewer is deterministic too.",
-    "The variation across random training samples is the seed range in the recall and precision tooltip, not a determinism effect.",
+    "The variation across random training samples is the seed range under recall and precision, not a determinism effect.",
   ],
 };
 
-function tipFor(x: DetEntry, r: Rec, name: string): { lines: TipLine[]; notes: string[] } {
+/** The full determinism facts for a record (shown in the details modal's Metrics block; the hover carries only the bar's figure). */
+export function detLines(x: DetEntry, r: Rec, name: string): { lines: TipLine[]; notes: string[] } {
   const c = x.cell;
-  if (!c) return TAR_TIP;
+  if (!c) return TAR_LINES;
   const lines: TipLine[] = [
     ["Runs", String(c.k)],
     ["Decisions compared", fmtInt(c.n_decisions)],
@@ -86,6 +87,9 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
   const X = (v: number) => LABEL_W + (v / max) * plotW;
   const h = sorted.length * ROW + 20;
   const lbl = (v: number) => (v === 0 ? "0" : fmtPct(v, v < 0.001 ? 2 : 1));
+  // where the widest whisker's figure ends: a tooltip beside the pointer may only sit right of this
+  const clearX = Math.max(LABEL_W + 120, ...measured.map((x) => X(x.c!.pairwise[2]) + 7 + lbl(x.c!.pairwise[0]).length * 6.6));
+  const sub = (c: DetEntry) => (c.cell ? `${fmtInt(c.cell.n_decisions)} decisions · ${c.cell.k} runs` : "deterministic by construction");
   return (
     <div className="card">
       <div className="card-t">
@@ -117,7 +121,7 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
             const cy = y + ROW / 2;
             return (
               <g key={x.r.model} className={highlight === x.r.model ? "hl" : undefined} {...hoverable(onHover, x.r.model)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
-              <g key={x.r.model} onMouseMove={(e) => show(e, { title: `${nm}${x.c!.setting === "t0" ? " · temperature 0" : ""}`, color: c, ...tipFor(x.c!, x.r, nm) })} onMouseLeave={hide} {...selectable(pickRow, x.r, nm)}>
+              <g key={x.r.model} onMouseMove={(e) => show(e, { kind: "row", top: y, height: ROW, clearX }, { title: `${nm}${x.c!.setting === "t0" ? " · temperature 0" : ""}`, color: c, icon: <Logo model={x.r.model} size={12} />, value: v === 0 ? "0" : fmtPct(v, 2), unit: "pairwise disagreement", lines: v === 0 ? undefined : [["95% interval", `${fmtPct(lo, 2)} – ${fmtPct(hi, 2)}`]], sub: sub(x.c!) })} onMouseLeave={hide} {...selectable(pickRow, x.r, nm)}>
                 <rect className="hit" x={0} y={y} width={W} height={ROW} fill="transparent" />
                 <g color="var(--ink-2)"><LogoGlyph model={x.r.model} cx={8} cy={cy} /></g>
                 <text x={22} y={cy + 4} fontSize={12} fill="var(--ink-2)">{nm}</text>

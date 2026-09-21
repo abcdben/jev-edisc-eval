@@ -15,10 +15,6 @@
   --grid: #e6e6df;
   --dots: #c6c7bf;
   --axis: #c9cac2;
-  --tip-bg: #1b1c1a;
-  --tip-fg: #e8e8e3;
-  --tip-fg-2: #a9aba5;
-  --tip-line: #3a3b38;
   --box-alpha: 0.14;
   --bar-alpha: 0.55;
 
@@ -57,10 +53,6 @@
   --grid: #2c3034;
   --dots: #3a3f44;
   --axis: #464b50;
-  --tip-bg: #0f1113;
-  --tip-fg: #e9eae6;
-  --tip-fg-2: #9a9d97;
-  --tip-line: #2c3034;
   --box-alpha: 0.2;
   --bar-alpha: 0.7;
 
@@ -239,19 +231,24 @@ svg text { user-select: none; font-family: var(--sans); }
 .hint .pop .more { display: inline-block; margin-top: 10px; padding: 0; border: 0; background: none; font: inherit; font-size: 11.5px; color: var(--ink-3); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .hint .pop .more:hover { color: var(--ink); }
 
-/* tooltip */
+/* hover tooltip: a light translucent panel (the same in both themes; dark uses the elevated panel colour), compact, beside the row it describes */
 .tip {
-  position: absolute; z-index: 50; pointer-events: none; background: var(--tip-bg); color: var(--tip-fg); border-radius: 6px; padding: 10px 12px; min-width: 240px; max-width: 360px;
-  font-size: 12px; line-height: 1.45; box-shadow: 0 8px 28px rgba(0,0,0,0.3); border: 1px solid var(--tip-line);
+  position: absolute; z-index: 50; pointer-events: none; color: var(--ink); border-radius: 6px; padding: 7px 10px 6px; width: max-content; min-width: 150px; max-width: 260px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  border: 1px solid var(--line); box-shadow: 0 4px 16px rgba(0,0,0,0.10); font-size: 12px; line-height: 1.4;
 }
-.tip .t { font-weight: 500; font-size: 12.5px; margin-bottom: 6px; display: flex; align-items: center; gap: 7px; }
-.tip .t .sw { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
-.tip .kv { display: flex; justify-content: space-between; gap: 16px; }
-.tip .kv .k { color: var(--tip-fg-2); }
-.tip .kv .v { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; font-size: 12px; white-space: nowrap; }
-.tip .line { color: var(--tip-fg-2); margin-top: 4px; }
-.tip .note { color: var(--tip-fg-2); margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--tip-line); }
-.tip .cta { color: var(--tip-fg-2); opacity: 0.75; font-size: 11px; margin-top: 7px; letter-spacing: 0.02em; }
+[data-theme="dark"] .tip { background: color-mix(in srgb, var(--bg-2) 92%, transparent); border-color: var(--line-2); box-shadow: 0 6px 20px rgba(0,0,0,0.35); }
+.tip .t { font-weight: 500; font-size: 12px; margin-bottom: 4px; display: flex; align-items: center; gap: 7px; }
+.tip .t .sw { width: 8px; height: 8px; border-radius: 2px; display: inline-block; flex: none; }
+.tip .t .ic { display: inline-flex; align-items: center; flex: none; }
+.tip .val { display: flex; align-items: baseline; gap: 2px 6px; flex-wrap: wrap; }
+.tip .val .n { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; font-feature-settings: "tnum", "cv11"; white-space: nowrap; }
+.tip .val .u { color: var(--ink-3); font-size: 11.5px; }
+.tip .kv { display: flex; justify-content: space-between; gap: 14px; }
+.tip .kv .k { color: var(--ink-3); white-space: nowrap; }
+.tip .kv .v { font-variant-numeric: tabular-nums; font-feature-settings: "tnum", "cv11"; text-align: right; }
+.tip .line, .tip .sub { color: var(--ink-3); margin-top: 3px; }
+.tip .cta { color: var(--ink-4); font-size: 11px; margin-top: 5px; text-align: right; letter-spacing: 0.02em; }
 
 /* clickable chart rows and marks: the transparent hit area behind a row tints faintly on hover or keyboard focus */
 .sel { outline: none; }
@@ -289,7 +286,6 @@ svg text { user-select: none; font-family: var(--sans); }
   .ex-modal.disclaimer { animation: disc-in 0.18s ease-out; }
   @keyframes disc-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 }
-
 
 /* Method modal: fact tables. The body scrolls both ways, so the corpus table keeps its columns and scrolls sideways on narrow screens. */
 .ex-modal.method { width: min(1120px, 100%); height: auto; max-height: min(900px, 100%); }
@@ -400,6 +396,20 @@ svg text { user-select: none; font-family: var(--sans); }
 .ex-v .ex-blocks { margin-top: 2px; }
 .ex-row.full { grid-template-columns: 1fr; gap: 6px; }
 .ex-col.pin { position: sticky; top: 0; }
+
+/* the Metrics block at the top of the details modal: the full figures the chart tooltips used to carry, one fact list per card */
+.ex-metrics { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px 12px; margin: 0 0 18px; }
+.ex-metrics-t { font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.ex-metrics-t .sw { width: 9px; height: 9px; border-radius: 2px; display: inline-block; flex: none; }
+.ex-metrics-t .ex-col-s { margin-left: 2px; }
+.ex-metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px 28px; align-items: start; }
+.ex-metric-t { font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; padding-bottom: 5px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
+.ex-metric dl { display: grid; grid-template-columns: minmax(0, max-content) minmax(0, 1fr); gap: 3px 14px; margin: 0; font-size: 12px; line-height: 1.45; }
+.ex-metric dl .row { display: contents; }
+.ex-metric dt { color: var(--ink-3); max-width: 200px; }
+.ex-metric dd { margin: 0; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; font-feature-settings: "tnum", "cv11"; overflow-wrap: anywhere; }
+.ex-metric dd.line { grid-column: 1 / -1; text-align: left; color: var(--ink-2); }
+.ex-metric-note { margin: 8px 0 0; color: var(--ink-3); font-size: 11.5px; line-height: 1.45; }
 .ex-same { margin: -8px 0 18px; color: var(--ink-3); font-size: 12.5px; line-height: 1.5; max-width: 900px; }
 
 /* advanced controls */

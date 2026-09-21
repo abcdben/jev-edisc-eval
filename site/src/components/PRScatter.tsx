@@ -1,13 +1,14 @@
-import { useMemo } from "react";
-import type { CI } from "../data";
-import { LogoGlyph, logoFor } from "../logos";
-import { CLICK_HINT, TipBox, selectable, useSize, useTip, type TipLine } from "./ui";
+import { useMemo, type ReactNode } from "react";
+import { fmtCI, type CI } from "../data";
+import { Logo, LogoGlyph, logoFor } from "../logos";
+import { CLICK_HINT, TipBox, selectable, useSize, useTip, type TipContent } from "./ui";
 import { hoverable } from "./hover";
 
-export type PRItem = {
-  id: string; name: string; color: string; recall: CI; precision: CI; dashed?: boolean; subset?: string | null;
-  tip: { lines: TipLine[]; notes?: string[] };
-};
+/** `sub` is the one secondary line of the hover tooltip (what the point was scored on); the full figures live in the details modal. */
+export type PRItem = { id: string; name: string; color: string; recall: CI; precision: CI; dashed?: boolean; subset?: string | null; sub?: string };
+
+/** The compact hover tooltip of a recall/precision mark or row: both intervals and the scoring line. */
+export const prTip = (p: PRItem, icon?: ReactNode): TipContent => ({ title: p.name, color: p.color, icon, lines: [["Recall", fmtCI(p.recall)], ["Precision", fmtCI(p.precision)]], sub: p.sub });
 
 const PL = 56, PR = 20, PT = 18, PB = 48;
 
@@ -105,9 +106,10 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
         {/* CI boxes first so dots sit on top */}
         {drawn.map((p) => {
           const x0 = X(p.recall[1]), x1 = X(p.recall[2]), y0 = Y(p.precision[2]), y1 = Y(p.precision[1]);
+          const mark = { kind: "mark" as const, x: X(p.recall[0]), y: Y(p.precision[0]), r: 9 };
           return (
             <g key={`b${p.id}`} style={fade(p.id)} {...hoverable(onHover, p.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
-            <g key={`b${p.id}`} onMouseMove={(e) => show(e, { title: p.name, color: p.color, ...p.tip })} onMouseLeave={hide} {...selectable(pickMark, p, p.name)} tabIndex={-1}>
+            <g key={`b${p.id}`} onMouseMove={(e) => show(e, mark, prTip(p, logos ? <Logo model={p.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)} tabIndex={-1}>
               <rect x={x0} y={y0} width={Math.max(1, x1 - x0)} height={Math.max(1, y1 - y0)} fill={p.color} stroke={hl === p.id ? p.color : undefined} strokeWidth={1} style={{ fillOpacity: hl === p.id ? 0.45 : "var(--box-alpha)", transition: "fill-opacity 120ms" }} rx={1} />
             </g>
             </g>
@@ -119,7 +121,7 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
           const x = X(p.recall[0]), y = Y(p.precision[0]), l = labels[pts.indexOf(p)] ?? (hl === p.id ? { x: x + 9, y: y - 6.5, w: 0, text: p.name + (p.subset ? " *" : "") } : null);
           return (
             <g key={`d${p.id}`} style={fade(p.id)} {...hoverable(onHover, p.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
-            <g key={`d${p.id}`} onMouseMove={(e) => show(e, { title: p.name, color: p.color, ...p.tip })} onMouseLeave={hide} {...selectable(pickMark, p, p.name)}>
+            <g key={`d${p.id}`} onMouseMove={(e) => show(e, { kind: "mark", x, y, r: 9 }, prTip(p, logos ? <Logo model={p.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)}>
               <circle className="hit" cx={x} cy={y} r={9} fill="transparent" />
               {hl === p.id && <circle cx={x} cy={y} r={logos && logoFor(p.id) ? 9 : 6.5} fill="none" stroke={p.color} strokeWidth={1.5} />}
               {logos && logoFor(p.id) ? (

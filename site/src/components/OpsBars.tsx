@@ -1,14 +1,14 @@
-import { LogoGlyph } from "../logos";
-import { CLICK_HINT, TipBox, selectable, useTip, useWidth, type TipLine } from "./ui";
+import { Logo, LogoGlyph } from "../logos";
+import { CLICK_HINT, TipBox, selectable, useTip, useWidth } from "./ui";
 import { hoverable } from "./hover";
 
-/** `empty` replaces the "not measured" text when `value` is null for a reason other than missing data. */
-export type BarItem = { id: string; name: string; color: string; value: number | null; label: string; tip: { lines: TipLine[]; notes?: string[] }; subset?: string | null; empty?: string };
+/** `sub` is the one secondary line of the row's hover tooltip. `empty` replaces the "not measured" text when `value` is null for a reason other than missing data. */
+export type BarItem = { id: string; name: string; color: string; value: number | null; label: string; sub?: string; subset?: string | null; empty?: string };
 
 const ROW = 20;
 
-/** Horizontal bars with the number written at the end of each bar. Zero-valued items are drawn as a hairline. `onSelect` makes each row a button (click, Enter, Space). `highlight` tints the row with that id (cross-chart hover, see hover.tsx); `onHover` reports the row under the pointer or keyboard focus. */
-export function OpsBars({ items, axis, sort = true, logos = true, onSelect, highlight, onHover }: { items: BarItem[]; axis: string; sort?: boolean; logos?: boolean; onSelect?: (item: BarItem) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
+/** Horizontal bars with the number written at the end of each bar. Zero-valued items are drawn as a hairline. `unit` follows the value in the tooltip. `onSelect` makes each row a button (click, Enter, Space). `highlight` tints the row with that id (cross-chart hover, see hover.tsx); `onHover` reports the row under the pointer or keyboard focus. */
+export function OpsBars({ items, axis, unit, sort = true, logos = true, onSelect, highlight, onHover }: { items: BarItem[]; axis: string; unit?: string; sort?: boolean; logos?: boolean; onSelect?: (item: BarItem) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickRow = onSelect && ((it: BarItem) => { hide(); onSelect(it); });
   const W = useWidth(hostRef, 560);
@@ -17,18 +17,20 @@ export function OpsBars({ items, axis, sort = true, logos = true, onSelect, high
   const max = Math.max(1e-9, ...rows.map((r) => r.value ?? 0));
   const plotW = W - LABEL_W - 80;
   const h = rows.length * ROW + 20;
-  const best = rows.find((r) => (r.value ?? 0) > 0)?.value ?? null;
+  const barW = (v: number | null) => (v == null ? 0 : v === 0 ? 1.5 : Math.max(2, (v / max) * plotW));
+  // where the longest bar's figure ends: a tooltip beside the pointer may only sit right of this
+  const clearX = Math.max(LABEL_W, ...rows.map((r) => LABEL_W + barW(r.value) + 7 + (r.value == null ? r.empty ?? "not measured" : r.label).length * 6.6));
   return (
     <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
       <svg viewBox={`0 0 ${W} ${h}`} width={W} height={h} style={{ display: "block", overflow: "visible" }}>
         {rows.map((r, i) => {
           const y = i * ROW;
           const v = r.value;
-          const bw = v == null ? 0 : v === 0 ? 1.5 : Math.max(2, (v / max) * plotW);
-          const ratio = v != null && best && v > 0 ? v / best : null;
+          const bw = barW(v);
+          const content = { title: r.name, color: r.color, icon: logos ? <Logo model={r.id} size={12} /> : undefined, value: v == null ? r.empty ?? "not measured" : r.label, unit: v == null ? undefined : unit, sub: r.sub };
           return (
             <g key={r.id} className={highlight === r.id ? "hl" : undefined} {...hoverable(onHover, r.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
-            <g key={r.id} onMouseMove={(e) => show(e, { title: r.name, color: r.color, lines: [...r.tip.lines, ...(ratio && ratio > 1.05 ? [[`vs. lowest shown`, `${ratio >= 10 ? Math.round(ratio) : ratio.toFixed(1)}×`] as TipLine] : [])], notes: r.tip.notes })} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
+            <g key={r.id} onMouseMove={(e) => show(e, { kind: "row", top: y, height: ROW, clearX }, content)} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
               <rect className="hit" x={0} y={y} width={W} height={ROW} fill="transparent" />
               {logos ? (
                 <>

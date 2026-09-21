@@ -8,9 +8,9 @@ import { Control, Hint, MethodContext, Seg, type HintItem, type TipLine } from "
 import { PRScatter, type PRItem } from "./components/PRScatter";
 import { PRRows } from "./components/PRRows";
 import { OpsBars, type BarItem } from "./components/OpsBars";
-import { Consistency } from "./components/Consistency";
+import { Consistency, detFor, detLines } from "./components/Consistency";
 import { HoverProvider, useHover } from "./components/hover";
-import { ExplainButton, ExplainModal } from "./components/Explain";
+import { ExplainButton, ExplainModal, type MetricSection, type Metrics } from "./components/Explain";
 import { Picker, type PickGroup } from "./components/Picker";
 import { MethodButton, MethodModal } from "./components/Method";
 import { DisclaimerLink, DisclaimerModal, useDisclaimer } from "./components/Disclaimer";
@@ -70,7 +70,15 @@ const CONFIG_PR_ITEMS: HintItem[] = [
 ];
 
 // ------------------------------------------------------------------------------------------------
-// tooltip content
+// Metrics: the full figures for a row. Shown in the details modal's Metrics block; the chart hovers carry only the plotted value and one
+// secondary line (qualitySub, opsSub).
+
+/** The one secondary line of a recall/precision hover: what the point was scored on. */
+function qualitySub(r: Rec, v: View): string | undefined {
+  if (r.subset) return `scored on ${r.subset}`;
+  const n = pick(r, v.level, v.gray, v.issue).detail?.n;
+  return n ? `${fmtInt(n)} ${v.level === "decision" && !v.issue ? "decisions" : "documents"} scored` : undefined;
+}
 
 function qualityLines(r: Rec, v: View): { lines: TipLine[]; notes: string[] } {
   const p = pick(r, v.level, v.gray, v.issue);
@@ -107,6 +115,14 @@ function opsValues(r: Rec, mode: OpsMode): { hours: number | null; usd: number |
     hours: r.ops.hours_per_100k_docs == null ? null : r.ops.hours_per_100k_docs + (add ? HUMAN_DEV_HOURS : 0),
     usd: c == null ? null : c * 1e5 + (add ? HUMAN_DEV_USD : 0),
   };
+}
+
+/** The one secondary line of a Review time or Cost hover: the per-document time, or where the money went. */
+function opsSub(r: Rec, mode: OpsMode, kind: "time" | "cost"): string {
+  const human = mode === "human" ? " · incl. prompt development" : "";
+  if (r.tar) return kind === "time" ? `${fmtInt(r.tar.docs_reviewed)} documents read by hand` : `reviewer at $${r.tar.reviewer.usd_per_hour}/h`;
+  if (kind === "time") return `${fmtMs(r.ops.doc_latency_p50_ms)} per doc${human}`;
+  return `as paid · ${isGpuRow(r) ? "GPU rental" : "API"}${human}`;
 }
 
 function opsLines(r: Rec, mode: OpsMode): { lines: TipLine[]; notes: string[] } {
@@ -149,13 +165,55 @@ function opsLines(r: Rec, mode: OpsMode): { lines: TipLine[]; notes: string[] } 
   return { lines, notes };
 }
 
+const OPS_MODE_KEY = "opsMode";
+
+/**
+ * Everything the details modal's Metrics block lists for one row on one corpus: the recall/precision, review time and cost, and determinism
+ * facts that the chart tooltips used to carry. `shown` picks the page's selection out of the corpus rows, the referent of "vs. lowest shown".
+ */
+function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) => Rec[]): Metrics | null {
+  const tag = corpus === "trec" ? v.tag : "";
+  const rows = DATA.records.filter((r) => r.corpus === corpus && r.tag === tag && r.arm === v.arm);
+  const r = rows.find((x) => x.model === key);
+  if (!r) return null;
+  const vv: View = { ...v, corpus, tag, issue: corpus === v.corpus ? v.issue : null };
+  const meta = DATA.corpora[corpusKey(corpus, tag)];
+  const mode: OpsMode = localStorage.getItem(OPS_MODE_KEY) === "human" ? "human" : "machine";
+  const group = ABLATION_GROUPS.find((g) => g.id === r.group);
+  const name = PRIMARY_BY_KEY[r.model]?.short ?? (r.variant ? `${group?.label ?? r.family} · ${VARIANT_LABEL[r.variant] ?? r.variant}` : r.name);
+  const color = PRIMARY_BY_KEY[r.model]?.color ?? (r.variant ? variantColor(r.variant, group?.recipe ?? "") : "var(--ink)");
+  const scope = vv.issue ? meta.issues[vv.issue] : vv.level === "decision" ? "every decision" : "document level";
+  const context = [meta.display, vv.arm === "single" ? "one issue per call" : "all issues per call", scope, !vv.issue && vv.gray === "nogray" ? "gray excluded" : null].filter(Boolean).join(" · ");
+  const q = qualityLines(r, vv);
+  const o = opsLines(r, mode);
+  const peers = shown(rows);
+  const lowest = (f: (x: Rec) => number | null) => { const vals = peers.map(f).filter((x): x is number => x != null && x > 0); return vals.length ? Math.min(...vals) : null; };
+  const ratio = (label: string, val: number | null, best: number | null): TipLine[] => {
+    if (val == null || !best || val / best <= 1.05) return [];
+    const k = val / best;
+    return [[label, `${k >= 10 ? Math.round(k) : k.toFixed(1)}×`]];
+  };
+  const mine = opsValues(r, mode);
+  const sections: MetricSection[] = [
+    { title: "Recall and precision", lines: q.lines, notes: q.notes },
+    {
+      title: mode === "human" ? "Review time and cost · machine + human" : "Review time and cost",
+      lines: [...o.lines, ...ratio("Time vs. lowest shown", mine.hours, lowest((x) => opsValues(x, mode).hours)), ...ratio("Cost vs. lowest shown", mine.usd, lowest((x) => opsValues(x, mode).usd))],
+      notes: o.notes,
+    },
+  ];
+  const det = detFor(r, vv.arm, "default"), t0 = detFor(r, vv.arm, "t0");
+  if (det) { const d = detLines(det, r, name); sections.push({ title: "Determinism", lines: d.lines, notes: d.notes }); }
+  if (t0) { const d = detLines(t0, r, name); sections.push({ title: "Determinism · temperature 0", lines: d.lines, notes: d.notes }); }
+  return { name, color, context, sections };
+}
+
 // ------------------------------------------------------------------------------------------------
 
 function useRows(v: View) {
   return useMemo(() => DATA.records.filter((r) => r.corpus === v.corpus && r.tag === v.tag && r.arm === v.arm), [v.corpus, v.tag, v.arm]);
 }
 
-const OPS_MODE_KEY = "opsMode";
 const OPS_MODE_OPTIONS = [
   { id: "machine" as const, label: "machine only", title: "The model's own time and bill" },
   { id: "human" as const, label: "+ human time", title: `Adds ${fmtHours(HUMAN_DEV_HOURS)} and ${fmtUSD(HUMAN_DEV_USD)} of prompt development to every non-TAR row` },
@@ -187,11 +245,11 @@ function OpsCards({ recs, colorOf, nameOf, logos = true, explain }: { recs: Rec[
   const empty = (r: Rec) => (r.tar && mode === "machine" ? "human only" : undefined);
   const time: BarItem[] = recs.map((r) => {
     const { hours } = opsValues(r, mode);
-    return { id: r.model, name: nameOf(r), color: colorOf(r), value: hours, label: fmtHours(hours), tip: opsLines(r, mode), subset: r.subset, empty: empty(r) };
+    return { id: r.model, name: nameOf(r), color: colorOf(r), value: hours, label: fmtHours(hours), sub: opsSub(r, mode, "time"), subset: r.subset, empty: empty(r) };
   });
   const cost: BarItem[] = recs.map((r) => {
     const { usd } = opsValues(r, mode);
-    return { id: r.model, name: nameOf(r), color: colorOf(r), value: usd, label: fmtUSD(usd), tip: opsLines(r, mode), subset: r.subset, empty: empty(r) };
+    return { id: r.model, name: nameOf(r), color: colorOf(r), value: usd, label: fmtUSD(usd), sub: opsSub(r, mode, "cost"), subset: r.subset, empty: empty(r) };
   });
   const seg = <Seg value={mode} onChange={setMode} options={OPS_MODE_OPTIONS} />;
   return (
@@ -201,14 +259,14 @@ function OpsCards({ recs, colorOf, nameOf, logos = true, explain }: { recs: Rec[
           <h3>Review time</h3><span className="unit">per 100k documents, single stream</span>
           <span className="right">{seg}<Hint items={TIME_ITEMS} more="Method" /></span>
         </div>
-        <OpsBars items={time} axis="hours" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
+        <OpsBars items={time} axis="hours" unit="per 100k docs" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
       </div>
       <div className="card">
         <div className="card-t">
           <h3>Cost</h3><span className="unit">per 100k documents, as paid</span>
           <span className="right">{seg}<Hint items={COST_ITEMS} more="Method" /></span>
         </div>
-        <OpsBars items={cost} axis="US dollars" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
+        <OpsBars items={cost} axis="US dollars" unit="per 100k docs" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
       </div>
     </>
   );
@@ -242,7 +300,7 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
   const items: PRItem[] = sel.map((r) => {
     const p = pick(r, v.level, v.gray, v.issue);
     const meta = PRIMARY_BY_KEY[r.model];
-    return { id: r.model, name: meta.short, color: meta.color, recall: p.recall, precision: p.precision, dashed: r.kind === "system1_ft", subset: r.subset, tip: qualityLines(r, v) };
+    return { id: r.model, name: meta.short, color: meta.color, recall: p.recall, precision: p.precision, dashed: r.kind === "system1_ft", subset: r.subset, sub: qualitySub(r, v) };
   });
 
   return (
@@ -322,7 +380,7 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
 
   const items: PRItem[] = sel.map((r) => {
     const p = pick(r, v.level, v.gray, v.issue);
-    return { id: r.model, name: name(r), color: color(r), recall: p.recall, precision: p.precision, subset: r.subset, tip: qualityLines(r, v) };
+    return { id: r.model, name: name(r), color: color(r), recall: p.recall, precision: p.precision, subset: r.subset, sub: qualitySub(r, v) };
   });
 
   return (
@@ -456,7 +514,12 @@ export default function App() {
       )}
 
       {pageId === "compare" ? <CompareSection v={v} on={on} explain={setExplain} /> : <AblationSection v={v} grp={grp} off={off} explain={setExplain} />}
-      {explain && <ExplainModal initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)} />}
+      {explain && (
+        <ExplainModal
+          initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)}
+          metrics={(k, c) => metricsFor(k, c, v, (rows) => (pageId === "compare" ? rows.filter((r) => r.primary && on.has(r.model)) : rows.filter((r) => r.group === grp && !!r.variant && !off.has(r.variant))))}
+        />
+      )}
 
       {method && <MethodModal onClose={closeMethod} />}
       {disclaimer.open && <DisclaimerModal onClose={disclaimer.close} />}

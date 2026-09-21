@@ -1,8 +1,9 @@
 import type { CI } from "../data";
 import { fmtPct } from "../data";
 import type { PRItem } from "./PRScatter";
-import { LogoGlyph } from "../logos";
+import { Logo, LogoGlyph } from "../logos";
 import { CLICK_HINT, TipBox, selectable, useTip, useWidth } from "./ui";
+import { prTip } from "./PRScatter";
 import { hoverable } from "./hover";
 
 const ROW = 26, NUM_W = 54;
@@ -53,7 +54,7 @@ export function PRRows({ items, zoom, sortBy, logos = true, onSelect, highlight,
           const y = 20 + i * ROW + ROW / 2;
           return (
             <g key={r.id} className={highlight === r.id ? "hl" : undefined} {...hoverable(onHover, r.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
-            <g key={r.id} onMouseMove={(e) => show(e, { title: r.name, color: r.color, ...r.tip })} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
+            <g key={r.id} onMouseMove={(e) => show(e, { kind: "row", top: y - ROW / 2, height: ROW, clearX: W }, prTip(r, logos ? <Logo model={r.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
               <rect className="hit" x={0} y={y - ROW / 2} width={W} height={ROW} fill="transparent" />
               {logos ? (
                 <>
