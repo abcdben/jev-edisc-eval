@@ -318,5 +318,6 @@ svg text { user-select: none; font-family: var(--sans); }
 .controls-more { position: static; z-index: auto; backdrop-filter: none; background: var(--panel); border-bottom: 1px solid var(--line); padding-top: 10px; padding-bottom: 10px; }
 
 .logo { border-radius: 3px; object-fit: contain; display: inline-block; }
-.pick .logo { color: var(--ink-2); }
-.pick.off .logo { opacity: 0.35; filter: grayscale(1); }
+/* the tinted vendor mark is the colour key; a deselected row goes grey */
+.pick .mark { display: inline-flex; flex: none; align-items: center; }
+.pick.off .mark { color: var(--ink-4) !important; opacity: 0.6; filter: grayscale(1); }

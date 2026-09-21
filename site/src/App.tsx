@@ -147,8 +147,7 @@ function CompareSection({ v, explain }: { v: View; explain: (k: string) => void 
                 const m = PRIMARY_BY_KEY[r.model];
                 return (
                   <button key={r.model} className={`pick${on.has(r.model) ? "" : " off"}`} onClick={() => toggle(r.model)} title={m.note}>
-                    <span className="sw" style={{ background: m.color }} />
-                    <Logo model={r.model} />
+                    <span className="mark" style={{ color: m.color }}><Logo model={r.model} /></span>
                     <span className="nm" title={r.subset ? `scored on ${r.subset}` : undefined}>{m.short}{r.subset ? " *" : ""}</span>
                     <ExplainButton onClick={() => explain(r.model)} />
                   </button>
