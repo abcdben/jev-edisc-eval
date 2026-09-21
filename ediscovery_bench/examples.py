@@ -29,6 +29,11 @@ CORPORA = [
 
 MAX_DOC_CHARS = 2600
 
+# Issues to show per corpus. Otherwise the pick is automatic (an issue with sub-questions, structured
+# criteria and a literal phrasing, so every lever is visible). TREC's automatic pick was George W. Bush,
+# which reads like a name search; faith-based initiatives is a conceptual issue.
+PREFERRED_QUESTION = {"trec": "faith_based"}
+
 JEV_NOTES: dict[str, str] = {
     "base": "The default. One Noul question per issue: a yes/no question whose answer is a probability. The RFP text is the instruction; the positive and negative descriptions from the task file are the true/false criteria. The state is a structured object with the matter background and the document.",
     "choice": "Same instruction and criteria, but asked as a Choice between the two labels rather than a yes/no Noul. The model returns a probability for each label and picks one; p(responsive) is what we score.",
@@ -78,7 +83,10 @@ def _pick_examples(ts: TaskSet, docs: list[Document], results: Path, corpus: str
     def q_rank(qid: str) -> tuple:
         q = ts.questions[qid]
         return (bool(q.subparts), bool(q.structured), bool(q.literal), len(scored.get(qid, ())))
-    for qid in sorted(ts.qids, key=q_rank, reverse=True):
+    order = sorted(ts.qids, key=q_rank, reverse=True)
+    if corpus in PREFERRED_QUESTION:
+        order = [PREFERRED_QUESTION[corpus]] + [q for q in order if q != PREFERRED_QUESTION[corpus]]
+    for qid in order:
         ok = scored.get(qid, set())
         short = [d for d in docs if len(d.text) <= MAX_DOC_CHARS and d.id in ok and qid not in d.gray]
         pos = [d for d in short if d.gold(qid, ts.negative_label) == ts.positive_label]
