@@ -89,7 +89,7 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
           const x0 = X(p.recall[1]), x1 = X(p.recall[2]), y0 = Y(p.precision[2]), y1 = Y(p.precision[1]);
           return (
             <g key={`b${p.id}`} onMouseMove={(e) => show(e, { title: p.name, color: p.color, ...p.tip })} onMouseLeave={hide}>
-              <rect x={x0} y={y0} width={Math.max(1, x1 - x0)} height={Math.max(1, y1 - y0)} fill={p.color} style={{ fillOpacity: "var(--box-alpha)" }} stroke={p.dashed ? p.color : "none"} strokeOpacity={0.7} strokeWidth={1} strokeDasharray={p.dashed ? "3 3" : undefined} rx={1} />
+              <rect x={x0} y={y0} width={Math.max(1, x1 - x0)} height={Math.max(1, y1 - y0)} fill={p.color} style={{ fillOpacity: "var(--box-alpha)" }} rx={1} />
             </g>
           );
         })}

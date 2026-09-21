@@ -50,7 +50,7 @@ export function PRRows({ items, zoom, sortBy }: { items: PRItem[]; zoom: boolean
               {([r.recall, r.precision] as CI[]).map((ci, col) =>
                 ci ? (
                   <g key={col}>
-                    <line x1={sx(col, ci[1])} x2={sx(col, ci[2])} y1={y} y2={y} stroke={r.color} strokeWidth={1.5} strokeLinecap="butt" strokeDasharray={r.dashed ? "3 3" : undefined} />
+                    <line x1={sx(col, ci[1])} x2={sx(col, ci[2])} y1={y} y2={y} stroke={r.color} strokeWidth={1.5} strokeLinecap="butt" />
                     <circle cx={sx(col, ci[0])} cy={y} r={3.2} fill={r.color} />
                     <text x={x0[col] + colW + 8} y={y + 4} fontSize={11.5} fill="var(--ink)" className="mono">{fmtPct(ci[0])}</text>
                   </g>
