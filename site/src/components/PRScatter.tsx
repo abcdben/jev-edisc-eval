@@ -89,7 +89,7 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
           const x0 = X(p.recall[1]), x1 = X(p.recall[2]), y0 = Y(p.precision[2]), y1 = Y(p.precision[1]);
           return (
             <g key={`b${p.id}`} onMouseMove={(e) => show(e, { title: p.name, color: p.color, ...p.tip })} onMouseLeave={hide}>
-              <rect x={x0} y={y0} width={Math.max(1, x1 - x0)} height={Math.max(1, y1 - y0)} fill={p.color} fillOpacity={0.09} stroke={p.color} strokeOpacity={0.55} strokeWidth={1} strokeDasharray={p.dashed ? "3 3" : undefined} rx={2} />
+              <rect x={x0} y={y0} width={Math.max(1, x1 - x0)} height={Math.max(1, y1 - y0)} fill={p.color} fillOpacity={0.16} stroke={p.dashed ? p.color : "none"} strokeOpacity={0.6} strokeWidth={1} strokeDasharray={p.dashed ? "3 3" : undefined} rx={2} />
             </g>
           );
         })}
@@ -97,9 +97,9 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
           const x = X(p.recall[0]), y = Y(p.precision[0]);
           return (
             <g key={`d${p.id}`} onMouseMove={(e) => show(e, { title: p.name, color: p.color, ...p.tip })} onMouseLeave={hide} style={{ cursor: "default" }}>
-              <line x1={X(p.recall[1])} x2={X(p.recall[2])} y1={y} y2={y} stroke={p.color} strokeWidth={1.25} />
-              <line x1={x} x2={x} y1={Y(p.precision[1])} y2={Y(p.precision[2])} stroke={p.color} strokeWidth={1.25} />
-              <circle cx={x} cy={y} r={5.5} fill={p.color} stroke="#fbfaf7" strokeWidth={1.5} />
+              <circle cx={x} cy={y} r={8} fill="transparent" />
+              <path d={`M${x - 5} ${y - 5}L${x + 5} ${y + 5}M${x - 5} ${y + 5}L${x + 5} ${y - 5}`} stroke="#fbfaf7" strokeWidth={4.5} strokeLinecap="round" fill="none" />
+              <path d={`M${x - 5} ${y - 5}L${x + 5} ${y + 5}M${x - 5} ${y + 5}L${x + 5} ${y - 5}`} stroke={p.color} strokeWidth={2.25} strokeLinecap="round" fill="none" />
             </g>
           );
         })}

@@ -29,7 +29,7 @@ function PRCard({ items, v, hint, defaultChart, defaultZoom, emptyText }: { item
       </div>
       {chart === "map" ? <PRScatter items={items} zoom={zoom} emptyText={emptyText} /> : <PRRows items={items} zoom={zoom} sortBy="f1" />}
       <div className="legend-note">
-        {chart === "map" ? <span>Dot: point estimate. Box: 95% interval on recall (width) and precision (height).</span> : <span>Sorted by F1. Dot: point estimate. Whisker: 95% interval.</span>}
+        {chart === "map" ? <span>×: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span> : <span>Sorted by F1. Dot: point estimate. Whisker: 95% interval.</span>}
         {items.some((i) => i.dashed) && <span className="k"><span style={{ width: 14, height: 10, border: "1px dashed #7b5ea7", display: "inline-block", borderRadius: 2 }} />dashed: supervised on a split of this corpus</span>}
         {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
       </div>
