@@ -1,0 +1,72 @@
+import raw from "../../results/examples.json";
+
+export type ExOutput = {
+  arm: "single" | "multi";
+  label: string | null;
+  p_positive: number | null;
+  confidence: number | null;
+  latency_ms: number | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  cost_usd: number | null;
+  model_resolved: string | null;
+  raw: Record<string, unknown>;
+  gold: string | null;
+  error: string | null;
+} | null;
+
+export type ExConfig = {
+  group: string;
+  variant: string;
+  settings: Record<string, unknown>;
+  examples: { request: unknown; output: ExOutput }[];
+};
+
+export type ExCorpus = {
+  context: string;
+  question: { id: string; title: string; rfp_text: string };
+  documents: { id: string; text: string; gold: string }[];
+  configs: Record<string, ExConfig>;
+};
+
+export type Examples = {
+  corpora: Record<string, ExCorpus>;
+  notes: { jev: Record<string, string>; laya: Record<string, string>; llm: string };
+  score_levels: string[];
+};
+
+export const EX = raw as unknown as Examples;
+
+/** Families the modal can page through. `members` is resolved per corpus from the config keys. */
+export const EX_GROUPS: { id: string; label: string; match: (k: string) => boolean; intro: string }[] = [
+  {
+    id: "jev", label: "Jev", match: (k) => k.startsWith("jev@"),
+    intro: "Jev is a decider model: it does not write text. Each call sends a state (the document, and usually the matter background) plus one or more typed questions; the answer to each is a probability, an option with probabilities, or a level on an ordinal scale. The twelve configurations below change one thing each from the default. Switch between them to see exactly what changes in the request, and what the model returned for the same document.",
+  },
+  {
+    id: "laya", label: "Laya", match: (k) => k.startsWith("laya@"),
+    intro: "Laya is a local decider model with the same three question types (Noul / Choice / Score). It reads at most 512 tokens: the question head takes up to 192, the rest is the document, truncated from the right. Two of its configurations (compact, chunked) exist only to work around that limit.",
+  },
+  { id: "laya-typed", label: "Laya · typed", match: (k) => k.startsWith("laya-typed@"), intro: "The typed Laya checkpoint, same request shapes as Laya." },
+  { id: "laya-multilingual", label: "Laya · multilingual", match: (k) => k.startsWith("laya-multilingual@"), intro: "The multilingual Laya checkpoint, same request shapes as Laya." },
+  {
+    id: "laya-ft", label: "Laya · fine-tuned", match: (k) => k === "laya-ft",
+    intro: "SUPERVISED. The same Laya request, sent to a checkpoint fine-tuned on a 30% dev split of this corpus's own gold labels. The request does not change; the weights do. Not on equal footing with the zero-shot rows.",
+  },
+  {
+    id: "llm", label: "Language models", match: (k) => !k.includes("@") && k !== "lexical" && k !== "laya-ft",
+    intro: "Every generative model received the same prompt: a system instruction, a user message with the matter background, the request with its responsive / not-responsive criteria, and the document, plus a JSON schema the vendor enforces on the reply. The reply is a label and a probability, nothing else. Switch models to see the settings that differ; the prompt does not.",
+  },
+  { id: "lexical", label: "Keyword floor", match: (k) => k === "lexical", intro: "No model. The vocabulary of the request is matched against the document and the count of distinct hits is squashed into a score. Shown so the reader can see what the words alone buy." },
+];
+
+export const groupOf = (key: string) => EX_GROUPS.find((g) => g.match(key))?.id ?? "jev";
+export const membersOf = (corpus: string, group: string): string[] => {
+  const g = EX_GROUPS.find((x) => x.id === group)!;
+  const c = EX.corpora[corpus];
+  if (!c) return [];
+  return Object.keys(c.configs).filter(g.match);
+};
+
+/** Corpus key used by the site view -> corpus key in examples.json. */
+export const exCorpus = (viewCorpus: string) => (EX.corpora[viewCorpus] ? viewCorpus : "veridian");

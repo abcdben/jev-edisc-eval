@@ -9,6 +9,7 @@ import { PRScatter, type PRItem } from "./components/PRScatter";
 import { PRRows } from "./components/PRRows";
 import { OpsBars, type BarItem } from "./components/OpsBars";
 import { Consistency } from "./components/Consistency";
+import { ExplainButton, ExplainModal } from "./components/Explain";
 
 type Chart = "map" | "ranked";
 
@@ -122,7 +123,7 @@ function OpsPair({ recs, colorOf, nameOf, arm }: { recs: Rec[]; colorOf: (r: Rec
 
 // ------------------------------------------------------------------------------------------------
 
-function CompareSection({ v }: { v: View }) {
+function CompareSection({ v, explain }: { v: View; explain: (k: string) => void }) {
   const rows = useRows(v);
   const [on, setOn] = useState<Set<string>>(new Set(DEFAULT_ON));
   const primary = rows.filter((r) => r.primary);
@@ -142,6 +143,7 @@ function CompareSection({ v }: { v: View }) {
       <div className="sec-head">
         <h2>Compare models</h2>
         <span className="sub">Each dot is a model's recall and precision; the box around it is the 95% interval on both.</span>
+        <ExplainButton label="how each model is asked" onClick={() => explain("jev@base")} />
       </div>
       <div className="sec-body">
         <aside className="picker">
@@ -161,6 +163,7 @@ function CompareSection({ v }: { v: View }) {
                     <span className="nm">{m.short}</span>
                     {r.subset && <span className="tag" title={`scored on ${r.subset}`}>subset</span>}
                     {r.kind === "system1_ft" && <span className="tag">supervised</span>}
+                    <ExplainButton onClick={() => explain(r.model)} />
                   </button>
                 );
               })}
@@ -181,7 +184,7 @@ function CompareSection({ v }: { v: View }) {
 
 // ------------------------------------------------------------------------------------------------
 
-function AblationSection({ v }: { v: View }) {
+function AblationSection({ v, explain }: { v: View; explain: (k: string) => void }) {
   const rows = useRows(v);
   const [grp, setGrp] = useState("jev");
   const [off, setOff] = useState<Set<string>>(new Set());
@@ -205,6 +208,7 @@ function AblationSection({ v }: { v: View }) {
       <div className="sec-head">
         <h2>Configurations of one model</h2>
         <span className="sub">Each variant changes a single lever from the default. The recipe is the configuration carried into the comparison above.</span>
+        <ExplainButton label="see the requests side by side" onClick={() => explain(`${grp}@base`)} />
       </div>
       <div className="sec-body">
         <aside className="picker">
@@ -228,6 +232,7 @@ function AblationSection({ v }: { v: View }) {
                 <span className="nm">{name(r)}</span>
                 {r.variant === G.recipe && <span className="star" title="recipe">★</span>}
                 {r.subset && <span className="tag">subset</span>}
+                <ExplainButton onClick={() => explain(r.model)} />
               </button>
             ))}
             {variants.length === 0 && <div className="empty">No configurations of this model were run on this corpus and arm.</div>}
@@ -266,6 +271,7 @@ export default function App() {
   const meta = DATA.corpora[corpusKey(v.corpus, v.tag)];
 
   const pickCorpus = (c: string) => { setCorpus(c); setIssue(null); };
+  const [explain, setExplain] = useState<string | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "dark");
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
 
@@ -321,8 +327,9 @@ export default function App() {
         </span>
       </div>
 
-      <CompareSection v={v} />
-      <AblationSection v={v} />
+      <CompareSection v={v} explain={setExplain} />
+      <AblationSection v={v} explain={setExplain} />
+      {explain && <ExplainModal initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)} />}
 
       <footer className="foot">
         <div>

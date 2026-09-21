@@ -432,6 +432,18 @@ def export_findings(
     console.print(f"wrote {export(out, dest)}")
 
 
+@app.command("export-examples")
+def export_examples(
+    out: Path = typer.Option(Path("results"), "--out", "-o"),
+    dest: Path = typer.Option(Path("results/examples.json"), "--dest"),
+):
+    """Worked request/response examples per configuration for the site's explainer modal -> examples.json."""
+    from .examples import export
+
+    export(out, dest)
+    console.print(f"wrote {dest}")
+
+
 @app.command("det-sample")
 def det_sample(
     src: Path = typer.Option(Path("data/mallinckrodt/mnk.jsonl"), "--src"),
