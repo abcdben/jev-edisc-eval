@@ -155,7 +155,8 @@ svg text { user-select: none; font-family: var(--sans); }
   background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 6px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
   width: max-content; max-width: min(92vw, 760px);
 }
-.pick-grps { display: flex; flex-wrap: wrap; gap: 2px 14px; }
+/* Groups sit side by side as top-aligned columns of natural height; they wrap to fewer columns as the panel narrows. */
+.pick-grps { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 2px 14px; }
 .pick-pop.r { left: auto; right: 0; }
 .pick-grp { flex: 1 0 auto; min-width: 210px; }
 .pick-grp { padding: 4px 0 6px; }

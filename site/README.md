@@ -15,7 +15,7 @@ npm run build      # static bundle in site/dist (open dist/index.html or host an
 Two sections, both driven by the sticky control bar (corpus, TREC criteria, prompting arm, scope, gold labels):
 
 - **Compare models**: pick any subset of the headline roster. Recall against precision with 95% interval boxes (or ranked rows with whiskers), plus review time and cost per 100,000 documents for the same selection.
-- **Configurations of one model**: pick Jev or a Laya checkpoint and compare its ablation variants the same way. The recipe carried into the headline comparison is starred.
+- **Configurations of one model**: pick Jev or a Laya checkpoint and compare its ablation variants the same way. The optimized configuration (the one selected on the Veridian dev split and carried into the headline comparison) is starred.
 
 Every mark carries a hover tooltip with the counts and intervals behind it; every panel title has an (i) explaining the measurement.
 

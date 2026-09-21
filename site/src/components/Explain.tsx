@@ -23,7 +23,7 @@ function diff(cur: unknown, base: unknown): { changed: Set<string>; removed: str
   return { changed, removed };
 }
 const memberLabel = (k: string) => {
-  if (k === "laya-ft" || k === "lexical" || !k.includes("@")) return PRIMARY_BY_KEY[k]?.short ?? k;
+  if (k === "laya-ft" || !k.includes("@")) return PRIMARY_BY_KEY[k]?.short ?? k;
   const v = k.split("@")[1];
   return VARIANT_LABEL[v] ?? v;
 };

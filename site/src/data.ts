@@ -74,7 +74,7 @@ export const KIND_ORDER: Kind[] = ["system1", "system1_ft", "llm", "local_llm", 
 /** Headline roster, in display order, with a stable colour each. `kind` overrides the record's kind for grouping on the Compare page. */
 export const PRIMARY: { key: string; color: string; short: string; note: string; kind?: Kind }[] = [
   { key: "jev@base", color: "var(--c-jev)", short: "Jev", note: "TypeSafe Jev 1.13, default configuration: Noul question form, prose criteria, RFP phrasing, matter context." },
-  { key: "jev@state_string", color: "var(--c-jev-2)", short: "Jev · recipe", note: "Jev 1.13 with the one lever that won the 12-variant ablation on the Veridian dev split (flat-string state). Chosen before any other corpus was scored." },
+  { key: "jev@state_string", color: "var(--c-jev-2)", short: "Jev · optimized", note: "Jev 1.13 with the one lever that won the 12-variant ablation on the Veridian dev split (flat-string state): the optimized configuration, selected before any other corpus was scored." },
   { key: "laya-ft", color: "var(--c-laya-ft)", short: "Laya", kind: "system1", note: "ConvAI Laya, fine-tuned (RLCD) on a 30% document-level dev split of the same corpus and scored on the held-out 70%; every other row is zero-shot. The labeled data it needed is not counted in the time and cost panels. Zero-shot Laya configurations are on the Configurations page." },
   { key: "claude-haiku-4.5", color: "var(--c-haiku)", short: "Haiku 4.5", note: "Anthropic Claude Haiku 4.5, structured JSON output, default effort." },
   { key: "claude-sonnet-5", color: "var(--c-sonnet)", short: "Sonnet 5", note: "Anthropic Claude Sonnet 5, structured JSON output, default effort, prompt caching on the all-issues arm." },
@@ -82,20 +82,19 @@ export const PRIMARY: { key: string; color: string; short: string; note: string;
   { key: "gpt-5.6-terra", color: "var(--c-terra)", short: "GPT-5.6 Terra", note: "OpenAI GPT-5.6 Terra, structured output, minimal reasoning, flex pricing (50% off list)." },
   { key: "gemini-3.5-flash-lite", color: "var(--c-flashlite)", short: "Gemini 3.5 Flash-Lite", note: "Google Gemini 3.5 Flash-Lite, structured output." },
   { key: "gemini-3.8-flash", color: "var(--c-flash)", short: "Gemini 3.8 Flash", note: "Google Gemini 3.8 Flash, structured output." },
-  { key: "gemma3-12b", color: "var(--c-gemma)", short: "Gemma 3 12B", note: "Google Gemma 3 12B run locally via Ollama on an A100. Scored on a 400-600 document stratified subsample; latency measured with 4 concurrent requests." },
+  { key: "gemma3-12b", color: "var(--c-gemma)", short: "Gemma 3 12B", kind: "llm", note: "Local, open-weight. Google Gemma 3 12B run via Ollama on a rented A100. Scored on a 400-600 document stratified subsample; latency measured with 4 concurrent requests." },
   { key: "tar@t1_100", color: "var(--c-tar-1)", short: "TAR 1.0 · 100", note: "Simple learning. A simulated reviewer (50 docs/h, $65/h) codes 100 random documents; TF-IDF + logistic regression labels the rest with a cutoff targeting 80% recall, chosen by cross-validation on the coded sample. Median of 5 random seeds." },
   { key: "tar@t1_300", color: "var(--c-tar-2)", short: "TAR 1.0 · 300", note: "As above with 300 documents coded." },
   { key: "tar@t1_1000", color: "var(--c-tar-3)", short: "TAR 1.0 · 1,000", note: "As above with 1,000 documents coded." },
   { key: "tar@t1_5000", color: "var(--c-tar-4)", short: "TAR 1.0 · 5,000", note: "As above with 5,000 documents coded." },
   { key: "tar@cal", color: "var(--c-cal)", short: "TAR 2.0 · CAL", note: "Continuous active learning. Seeded with 100 random documents and the 100 strongest keyword hits, then the reviewer codes the classifier's top-ranked batch and it retrains, until two consecutive batches come back under 5% relevant. The production set is what the reviewer coded relevant." },
-  { key: "lexical", color: "var(--c-lexical)", short: "Keyword floor", note: "Term overlap between the RFP text and the document, thresholded at 0.5. No model; shows what vocabulary alone buys." },
 ];
 export const PRIMARY_BY_KEY = Object.fromEntries(PRIMARY.map((p) => [p.key, p]));
 export const DEFAULT_ON = new Set(["jev@base", "laya-ft", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash", "gemma3-12b", "tar@t1_100", "tar@t1_300", "tar@t1_1000", "tar@t1_5000", "tar@cal"]);
 
 /**
  * Human prompt/criteria development, added to every non-TAR row when the ops cards are set to "+ human time".
- * Someone has to write and iterate the criteria (or the search terms) for an LLM, a decider model or the keyword floor;
+ * Someone has to write and iterate the criteria for an LLM or a decider model;
  * we assume that iteration reviews 500 documents at 50 docs/hour and $175/hour, i.e. 10 h and $1,750, and count it
  * once per 100k-document project since the cards are per 100k documents. TAR rows are already human time.
  */
@@ -110,7 +109,6 @@ export const HUMAN_DEV_USD = HUMAN_DEV_HOURS * HUMAN_DEV_USD_PER_HOUR;
  * Both were measured on a Lambda Cloud 1× A100 (Laya single-stream latency samples; Gemma via Ollama with 4 concurrent requests).
  * Lambda on-demand list price, lambda.ai/pricing, checked 2026-09-21: 1× A100 40 GB SXM $1.99/GPU-h; 1× H100 PCIe $3.29/GPU-h (H100 SXM $4.29).
  * Cost per document = hours_per_100k_docs × GPU_USD_PER_HOUR / 100,000, i.e. the GPU time for the single-stream review time shown.
- * The keyword floor ran on CPU and stays at $0.
  */
 export const GPU_USD_PER_HOUR = 1.99;
 export const GPU_USD_PER_HOUR_H100 = 3.29;
@@ -125,8 +123,8 @@ export const costPerDoc = (r: Rec): number | null => {
 
 /** Ablation families: a base model whose variants change one lever at a time. */
 export const ABLATION_GROUPS: { id: string; label: string; recipe: string; note: string }[] = [
-  { id: "jev", label: "Jev 1.13", recipe: "state_string", note: "Twelve configurations of TypeSafe Jev. Each changes one lever from the default; the recipe is the lever that won on the Veridian dev split." },
-  { id: "laya", label: "Laya", recipe: "recipe", note: "ConvAI Laya, English checkpoint, zero-shot. Two levers (compact, chunk) exist only to fit its 512-token context; the recipe combines them." },
+  { id: "jev", label: "Jev 1.13", recipe: "state_string", note: "Twelve configurations of TypeSafe Jev. Each variant changes a single lever from the default. ★ marks the configuration selected on the Veridian dev split and carried into Compare models." },
+  { id: "laya", label: "Laya", recipe: "recipe", note: "ConvAI Laya, English checkpoint, zero-shot. Two levers (compact, chunk) exist only to fit its 512-token context; ★ marks the configuration that combines them, selected on the Veridian dev split." },
   { id: "laya-typed", label: "Laya · typed", recipe: "recipe", note: "Laya typed checkpoint, zero-shot." },
   { id: "laya-multilingual", label: "Laya · multilingual", recipe: "recipe", note: "Laya multilingual checkpoint, zero-shot." },
   { id: "tar", label: "Classical TAR", recipe: "", note: "A simulated reviewer (50 docs/h, $65/h) plus TF-IDF + logistic regression. TAR 1.0 rows vary the size of the coded sample, the cutoff rule (80% recall vs. F1) and reviewer accuracy; TAR 2.0 is continuous active learning. Every row is the median of the random seeds." },

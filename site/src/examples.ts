@@ -61,7 +61,6 @@ export const EX_GROUPS: { id: string; label: string; match: (k: string) => boole
     id: "tar", label: "Classical TAR", match: (k) => k.startsWith("tar@"),
     intro: "No model reads the request. A reviewer codes documents by hand (simulated from the gold labels at 50 documents/hour, $65/hour) and a TF-IDF + logistic-regression classifier learns from those codes. The request shown is the workflow and the coded sample; the output is the median seed's call on this document. Switch rows to compare sample sizes, cutoff rules, reviewer accuracy, and TAR 1.0 against continuous active learning.",
   },
-  { id: "lexical", label: "Keyword floor", match: (k) => k === "lexical", intro: "No model. The vocabulary of the request is matched against the document and the count of distinct hits is squashed into a score. Shown so the reader can see what the words alone buy." },
 ];
 
 export const groupOf = (key: string) => EX_GROUPS.find((g) => g.match(key))?.id ?? "jev";

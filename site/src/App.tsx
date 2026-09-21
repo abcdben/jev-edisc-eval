@@ -16,9 +16,9 @@ import { Logo } from "./logos";
 type Chart = "map" | "ranked";
 
 /** Short group names for the one-line picker. */
-/** Picker order: the floor sits with the deciders so the first line reads small → keyword, then the LLMs, then TAR. */
+/** Picker order: deciders first, then the LLMs (API and local share one group via the PRIMARY `kind` override), then TAR. Kinds with no roster member (`baseline`, `local_llm`) are dropped before rendering. */
 const PICK_ORDER: Kind[] = ["system1", "system1_ft", "baseline", "llm", "local_llm", "tar"];
-const KIND_SHORT: Record<Kind, string> = { system1: "Deciders", system1_ft: "Supervised", llm: "LLM (API)", local_llm: "Local LLM", tar: "Classical TAR", baseline: "Floor" };
+const KIND_SHORT: Record<Kind, string> = { system1: "Deciders", system1_ft: "Supervised", llm: "LLM", local_llm: "Local LLM", tar: "Classical TAR", baseline: "Floor" };
 
 /** Recall/precision card with a map (scatter with interval boxes) or ranked (rows with whiskers) view. The chart mode is owned by the section so it can switch the dashboard layout. */
 function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = true, height = 380 }: { items: PRItem[]; hint: string; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number }) {
@@ -159,7 +159,7 @@ function OpsCards({ recs, colorOf, nameOf, logos = true }: { recs: Rec[]; colorO
       <div className="card">
         <div className="card-t">
           <h3>Cost</h3><span className="unit">per 100k documents, as paid</span>
-          <span className="right">{seg}<Hint left text={`What was actually paid to the vendor, summed over the model's decisions and scaled to 100,000 documents. OpenAI ran on flex pricing (half of list); Anthropic used prompt caching on the all-issues arm. Laya and Gemma ran on a rented ${GPU_NAME} ($${GPU_USD_PER_HOUR.toFixed(2)}/hour), so their cost is that GPU time for the single-stream review time shown; serving many documents concurrently would lower it. The keyword floor ran on CPU and is $0. ${HUMAN_SENTENCE}`} /></span>
+          <span className="right">{seg}<Hint left text={`What was actually paid to the vendor, summed over the model's decisions and scaled to 100,000 documents. OpenAI ran on flex pricing (half of list); Anthropic used prompt caching on the all-issues arm. Laya and Gemma ran on a rented ${GPU_NAME} ($${GPU_USD_PER_HOUR.toFixed(2)}/hour), so their cost is that GPU time for the single-stream review time shown; serving many documents concurrently would lower it. ${HUMAN_SENTENCE}`} /></span>
         </div>
         <OpsBars items={cost} axis="US dollars" logos={logos} />
       </div>
@@ -235,7 +235,7 @@ function VariantPicker({ v, grp, setGrp, off, setOff, explain }: { v: View; grp:
     items: variants.map((r) => ({
       id: r.variant!, label: VARIANT_LABEL[r.variant!] ?? r.variant!, title: r.lever ?? undefined,
       mark: <span className="sw" style={{ background: variantColor(r.variant!, G.recipe) }} />,
-      suffix: <>{r.variant === G.recipe && <span className="star" title="recipe carried into Compare models">★</span>}{r.subset && <span className="sub" title={`scored on ${r.subset}`}>*</span>}</>,
+      suffix: <>{r.variant === G.recipe && <span className="star" title="optimized configuration: selected on the Veridian dev split">★</span>}{r.subset && <span className="sub" title={`scored on ${r.subset}`}>*</span>}</>,
       detail: () => explain(r.model),
     })),
   }];
@@ -278,7 +278,7 @@ function AblationSection({ v, grp, off }: { v: View; grp: string; off: Set<strin
           items={items} chart={chart} onChart={setChart} defaultZoom={true}
           emptyText={variants.length ? "Select at least one configuration." : "No configurations of this model were run on this corpus and arm."}
           logos={false}
-          hint="Same measurement as on Compare models. Differences between configurations are usually smaller than between model families, so this card defaults to ranked rows with the axes fitted to the data; switch to map and 0–100% to see the same points on the scale used there. Hover a configuration for what the lever changes. ★ marks the recipe carried into Compare models."
+          hint="Same measurement as on Compare models. Differences between configurations are usually smaller than between model families, so this card defaults to ranked rows with the axes fitted to the data; switch to map and 0–100% to see the same points on the scale used there. Hover a configuration for what the lever changes. ★ marks the optimized configuration, the one selected on the Veridian dev split."
         />
         <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} /></div>
       </div>
@@ -396,7 +396,7 @@ export default function App() {
         <footer className="foot">
         <div>
           <h4>What every model saw</h4>
-          <p>The same document text, the same issue criteria and matter context, and returned a label plus a probability. Metrics use the model's own label. Jev rows are the default configuration unless marked recipe.</p>
+          <p>The same document text, the same issue criteria and matter context, and returned a label plus a probability. Metrics use the model's own label. Jev rows are the default configuration unless marked optimized.</p>
         </div>
         <div>
           <h4>Laya</h4>
@@ -404,7 +404,7 @@ export default function App() {
         </div>
         <div>
           <h4>GPU cost</h4>
-          <p>Laya and Gemma 3 12B ran on a rented {GPU_NAME} rather than an API. Their cost is that GPU's on-demand rate (${GPU_USD_PER_HOUR.toFixed(2)}/hour, Lambda list price as of September 2026) times the single-stream review time shown, so it is an upper bound: serving many documents concurrently would lower it. The keyword floor ran on CPU and is $0.</p>
+          <p>Laya and Gemma 3 12B ran on a rented {GPU_NAME} rather than an API. Their cost is that GPU's on-demand rate (${GPU_USD_PER_HOUR.toFixed(2)}/hour, Lambda list price as of September 2026) times the single-stream review time shown, so it is an upper bound: serving many documents concurrently would lower it.</p>
         </div>
         <div>
           <h4>Human time</h4>

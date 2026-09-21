@@ -13,11 +13,15 @@ export function Picker({ label, summary, groups, on, onChange, onReset, footer }
 }) {
   const [open, setOpen] = useState(false);
   const [alignR, setAlignR] = useState(false);
+  const [maxW, setMaxW] = useState<number | undefined>();
   const ref = useRef<HTMLSpanElement>(null);
-  // Anchor the panel to the button's right edge when it sits in the right half of the viewport, so it never runs off-screen.
+  // Anchor the panel to the button's right edge when it sits in the right half of the viewport, and cap its width to the
+  // room on that side, so it never runs off-screen; the group columns then wrap to fewer per row.
   const toggleOpen = () => {
     const b = ref.current?.getBoundingClientRect();
-    setAlignR(!!b && b.left > window.innerWidth / 2);
+    const r = !!b && b.left > window.innerWidth / 2;
+    setAlignR(r);
+    setMaxW(b ? Math.max(240, (r ? b.right : window.innerWidth - b.left) - 12) : undefined);
     setOpen((o) => !o);
   };
   useEffect(() => {
@@ -40,7 +44,7 @@ export function Picker({ label, summary, groups, on, onChange, onReset, footer }
         <span className="chev" />
       </button>
       {open && (
-        <div className={`pick-pop${alignR ? " r" : ""}`} role="listbox" aria-multiselectable>
+        <div className={`pick-pop${alignR ? " r" : ""}`} style={maxW ? { maxWidth: Math.min(maxW, 760) } : undefined} role="listbox" aria-multiselectable>
           <div className="pick-grps">
           {groups.map((g) => {
             const ids = g.items.map((i) => i.id);
