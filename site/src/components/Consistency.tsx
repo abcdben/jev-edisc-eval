@@ -61,7 +61,7 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
   return (
     <div className="card" style={{ marginTop: 20 }}>
       <div className="card-t">
-        <h3>Consistency</h3>
+        <h3>Determinism</h3>
         <span className="unit">
           run-to-run disagreement on the same documents · {det ? `${fmtInt(det.sample.n_docs)} Mallinckrodt emails` : "not measured"}{arm === "single" ? ", two narrow issues, one issue per call" : ", all eight issues per call"}
         </span>

@@ -90,7 +90,7 @@ function useRows(v: View) {
   return useMemo(() => DATA.records.filter((r) => r.corpus === v.corpus && r.tag === v.tag && r.arm === v.arm), [v.corpus, v.tag, v.arm]);
 }
 
-function OpsPair({ recs, colorOf, nameOf, arm }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single" }) {
+function OpsPair({ recs, colorOf, nameOf, arm, determinism = true }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single"; determinism?: boolean }) {
   const time: BarItem[] = recs.map((r) => ({
     id: r.model, name: nameOf(r), color: colorOf(r), value: r.ops.hours_per_100k_docs, label: fmtHours(r.ops.hours_per_100k_docs), tip: opsLines(r), subset: r.subset,
   }));
@@ -116,7 +116,7 @@ function OpsPair({ recs, colorOf, nameOf, arm }: { recs: Rec[]; colorOf: (r: Rec
         <OpsBars items={cost} axis="US dollars" />
       </div>
     </div>
-    <Consistency recs={recs} colorOf={colorOf} nameOf={nameOf} arm={arm} />
+    {determinism && <Consistency recs={recs} colorOf={colorOf} nameOf={nameOf} arm={arm} />}
     </>
   );
 }
@@ -244,7 +244,7 @@ function AblationSection({ v, explain }: { v: View; explain: (k: string) => void
             emptyText={variants.length ? "Select at least one configuration." : "No configurations available for this view."}
             hint="Same measurement as above. Differences between configurations are usually smaller than between model families, so this card defaults to ranked rows with the axes fitted to the data; switch to map and 0–100% to see the same points on the scale used above. Hover a configuration for what the lever changes."
           />
-          <OpsPair recs={sel} colorOf={color} nameOf={name} arm={v.arm} />
+          <OpsPair recs={sel} colorOf={color} nameOf={name} arm={v.arm} determinism={false} />
         </div>
       </div>
     </section>
@@ -272,6 +272,12 @@ export default function App() {
 
   const pickCorpus = (c: string) => { setCorpus(c); setIssue(null); };
   const [explain, setExplain] = useState<string | null>(null);
+  const [more, setMore] = useState(false);
+  const nonDefault = [
+    arm === "single" ? "one issue per call" : null,
+    issue ? `issue: ${meta.issues[issue]}` : level === "decision" ? "every decision" : null,
+    !issue && gray === "nogray" ? "gray excluded" : null,
+  ].filter((x): x is string => !!x);
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "dark");
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
 
@@ -294,6 +300,15 @@ export default function App() {
             ]} />
           </Control>
         )}
+        <span className="more-wrap">
+          {!more && nonDefault.length > 0 && <span className="more-summary">{nonDefault.join(" · ")}</span>}
+          <button className={`more${more ? " on" : ""}`} onClick={() => setMore((m) => !m)} aria-expanded={more}>
+            {more ? "Fewer options" : "More options"}<span className="chev" />
+          </button>
+        </span>
+      </div>
+      {more && (
+      <div className="controls controls-more">
         <Control label="Prompting">
           <Seg value={arm} onChange={setArm} options={[
             { id: "multi", label: "all issues per call", title: "One call per document answers every issue" },
@@ -319,6 +334,7 @@ export default function App() {
           ]} />
         </Control>
       </div>
+      )}
 
       <div style={{ marginTop: 18, color: "var(--ink-2)", fontSize: 13, display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
         <span style={{ fontSize: 16, fontWeight: 500, color: "var(--ink)" }}>{meta.display}</span>
@@ -345,7 +361,7 @@ export default function App() {
           <p>Issue criteria were refined once on a 668-email calibration set that is disjoint from the evaluation set shown. The bare-topic toggle shows the NIST topic sentence with no iteration.</p>
         </div>
         <div>
-          <h4>Consistency</h4>
+          <h4>Determinism</h4>
           <p>Each model re-scored the same 300 Mallinckrodt emails five times (all eight issues per call, and the two narrow issues one per call). Bars are the probability that two runs disagree on a decision; the benchmark run is repeat one. Temperature 0 was run where the API accepts it.</p>
         </div>
         <div>
