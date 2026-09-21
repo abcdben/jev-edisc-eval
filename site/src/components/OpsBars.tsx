@@ -1,13 +1,14 @@
 import { LogoGlyph } from "../logos";
 import { CLICK_HINT, TipBox, selectable, useTip, useWidth, type TipLine } from "./ui";
+import { hoverable } from "./hover";
 
 /** `empty` replaces the "not measured" text when `value` is null for a reason other than missing data. */
 export type BarItem = { id: string; name: string; color: string; value: number | null; label: string; tip: { lines: TipLine[]; notes?: string[] }; subset?: string | null; empty?: string };
 
 const ROW = 20;
 
-/** Horizontal bars with the number written at the end of each bar. Zero-valued items are drawn as a hairline. `onSelect` makes each row a button (click, Enter, Space). */
-export function OpsBars({ items, axis, sort = true, logos = true, onSelect }: { items: BarItem[]; axis: string; sort?: boolean; logos?: boolean; onSelect?: (item: BarItem) => void }) {
+/** Horizontal bars with the number written at the end of each bar. Zero-valued items are drawn as a hairline. `onSelect` makes each row a button (click, Enter, Space). `highlight` tints the row with that id (cross-chart hover, see hover.tsx); `onHover` reports the row under the pointer or keyboard focus. */
+export function OpsBars({ items, axis, sort = true, logos = true, onSelect, highlight, onHover }: { items: BarItem[]; axis: string; sort?: boolean; logos?: boolean; onSelect?: (item: BarItem) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickRow = onSelect && ((it: BarItem) => { hide(); onSelect(it); });
   const W = useWidth(hostRef, 560);
@@ -26,6 +27,7 @@ export function OpsBars({ items, axis, sort = true, logos = true, onSelect }: { 
           const bw = v == null ? 0 : v === 0 ? 1.5 : Math.max(2, (v / max) * plotW);
           const ratio = v != null && best && v > 0 ? v / best : null;
           return (
+            <g key={r.id} className={highlight === r.id ? "hl" : undefined} {...hoverable(onHover, r.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
             <g key={r.id} onMouseMove={(e) => show(e, { title: r.name, color: r.color, lines: [...r.tip.lines, ...(ratio && ratio > 1.05 ? [[`vs. lowest shown`, `${ratio >= 10 ? Math.round(ratio) : ratio.toFixed(1)}×`] as TipLine] : [])], notes: r.tip.notes })} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
               <rect className="hit" x={0} y={y} width={W} height={ROW} fill="transparent" />
               {logos ? (
@@ -38,6 +40,7 @@ export function OpsBars({ items, axis, sort = true, logos = true, onSelect }: { 
               )}
               <rect x={LABEL_W} y={y + 6} width={bw} height={ROW - 12} fill={r.color} rx={1.5} style={{ fillOpacity: v === 0 ? "calc(var(--bar-alpha) * 0.5)" : "var(--bar-alpha)" }} />
               <text x={LABEL_W + bw + 7} y={y + ROW / 2 + 4} fontSize={11.5} fill={v == null ? "var(--ink-4)" : "var(--ink)"} className="mono">{v == null ? r.empty ?? "not measured" : r.label}</text>
+            </g>
             </g>
           );
         })}

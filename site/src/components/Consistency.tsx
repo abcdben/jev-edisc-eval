@@ -2,6 +2,7 @@ import { DATA, fmtCI, fmtInt, fmtPct, type DetCell, type Rec } from "../data";
 import { LogoGlyph } from "../logos";
 import { useState } from "react";
 import { CLICK_HINT, Hint, Seg, TipBox, selectable, useTip, useWidth, type HintItem, type TipLine } from "./ui";
+import { hoverable } from "./hover";
 
 /** The Determinism card's "i" popover. */
 const DET_ITEMS: HintItem[] = [
@@ -65,8 +66,8 @@ function tipFor(x: DetEntry, r: Rec, name: string): { lines: TipLine[]; notes: s
   return { lines, notes };
 }
 
-/** `onSelect` makes each row a button (click, Enter, Space), including the rows without a measurement. */
-export function Consistency({ recs, colorOf, nameOf, arm, onSelect }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single"; onSelect?: (r: Rec) => void }) {
+/** `onSelect` makes each row a button (click, Enter, Space), including the rows without a measurement. `highlight` tints the row of that model (cross-chart hover, see hover.tsx); `onHover` reports the row under the pointer or keyboard focus. */
+export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, onHover }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single"; onSelect?: (r: Rec) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickRow = onSelect && ((r: Rec) => { hide(); onSelect(r); });
   const W = useWidth(hostRef, 760);
@@ -102,17 +103,20 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect }: { recs: Re
             const c = colorOf(x.r), nm = nameOf(x.r);
             if (!x.c) {
               return (
+                <g key={x.r.model} className={highlight === x.r.model ? "hl" : undefined} {...hoverable(onHover, x.r.model)}>{/* cross-chart hover (hover.tsx) */}
                 <g key={x.r.model} {...selectable(pickRow, x.r, nm)}>
                   <rect className="hit" x={0} y={y} width={W} height={ROW} fill="transparent" />
                   <g color="var(--ink-4)"><LogoGlyph model={x.r.model} cx={8} cy={y + ROW / 2} opacity={0.5} /></g>
                   <text x={22} y={y + ROW / 2 + 4} fontSize={12} fill="var(--ink-4)">{nm}</text>
                   <text x={LABEL_W + 7} y={y + ROW / 2 + 4} fontSize={11} fill="var(--ink-4)">{setting === "t0" ? "API rejects temperature" : "not measured"}</text>
                 </g>
+                </g>
               );
             }
             const v = x.c.pairwise[0], lo = x.c.pairwise[1], hi = x.c.pairwise[2];
             const cy = y + ROW / 2;
             return (
+              <g key={x.r.model} className={highlight === x.r.model ? "hl" : undefined} {...hoverable(onHover, x.r.model)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
               <g key={x.r.model} onMouseMove={(e) => show(e, { title: `${nm}${x.c!.setting === "t0" ? " · temperature 0" : ""}`, color: c, ...tipFor(x.c!, x.r, nm) })} onMouseLeave={hide} {...selectable(pickRow, x.r, nm)}>
                 <rect className="hit" x={0} y={y} width={W} height={ROW} fill="transparent" />
                 <g color="var(--ink-2)"><LogoGlyph model={x.r.model} cx={8} cy={cy} /></g>
@@ -120,6 +124,7 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect }: { recs: Re
                 <rect x={LABEL_W} y={cy - 4} width={Math.max(1.5, X(v) - LABEL_W)} height={8} fill={c} rx={1.5} style={{ fillOpacity: "var(--bar-alpha)" }} />
                 <line x1={X(lo)} x2={X(hi)} y1={cy} y2={cy} stroke="var(--ink)" strokeWidth={1} opacity={0.6} />
                 <text x={X(hi) + 7} y={cy + 4} fontSize={11} fill="var(--ink)" className="mono">{lbl(v)}</text>
+              </g>
               </g>
             );
           })}

@@ -9,6 +9,7 @@ import { PRScatter, type PRItem } from "./components/PRScatter";
 import { PRRows } from "./components/PRRows";
 import { OpsBars, type BarItem } from "./components/OpsBars";
 import { Consistency } from "./components/Consistency";
+import { HoverProvider, useHover } from "./components/hover";
 import { ExplainButton, ExplainModal } from "./components/Explain";
 import { Picker, type PickGroup } from "./components/Picker";
 import { MethodButton, MethodModal } from "./components/Method";
@@ -26,6 +27,7 @@ function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = t
   const setChart = onChart;
   const [zoom, setZoom] = useState(defaultZoom);
   const onSelect = explain && ((it: PRItem) => explain(it.id));
+  const hover = useHover();
   return (
     <div className={`card${chart === "map" ? " fill" : ""}`}>
       <div className="card-t">
@@ -36,7 +38,7 @@ function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = t
           <Hint items={hint} more="Method" />
         </span>
       </div>
-      {chart === "map" ? <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill onSelect={onSelect} /></div> : <PRRows items={items} zoom={zoom} sortBy="f1" logos={logos} onSelect={onSelect} />}
+      {chart === "map" ? <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill onSelect={onSelect} highlight={hover.id} onHover={hover.set} /></div> : <PRRows items={items} zoom={zoom} sortBy="f1" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />}
       <div className="legend-note">
         {chart === "map" ? <span>Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span> : <span>Sorted by F1. Dot: point estimate. Whisker: 95% interval.</span>}
         {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
@@ -179,6 +181,7 @@ const COST_ITEMS: HintItem[] = [
 function OpsCards({ recs, colorOf, nameOf, logos = true, explain }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean; explain?: (k: string) => void }) {
   const [mode, setMode] = useState<OpsMode>(() => (localStorage.getItem(OPS_MODE_KEY) === "human" ? "human" : "machine"));
   const onSelect = explain && ((it: BarItem) => explain(it.id));
+  const hover = useHover();
   useEffect(() => { localStorage.setItem(OPS_MODE_KEY, mode); }, [mode]);
   const empty = (r: Rec) => (r.tar && mode === "machine" ? "human only" : undefined);
   const time: BarItem[] = recs.map((r) => {
@@ -197,14 +200,14 @@ function OpsCards({ recs, colorOf, nameOf, logos = true, explain }: { recs: Rec[
           <h3>Review time</h3><span className="unit">per 100k documents, single stream</span>
           <span className="right">{seg}<Hint items={TIME_ITEMS} more="Method" /></span>
         </div>
-        <OpsBars items={time} axis="hours" logos={logos} onSelect={onSelect} />
+        <OpsBars items={time} axis="hours" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
       </div>
       <div className="card">
         <div className="card-t">
           <h3>Cost</h3><span className="unit">per 100k documents, as paid</span>
           <span className="right">{seg}<Hint items={COST_ITEMS} more="Method" /></span>
         </div>
-        <OpsBars items={cost} axis="US dollars" logos={logos} onSelect={onSelect} />
+        <OpsBars items={cost} axis="US dollars" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
       </div>
     </>
   );
@@ -243,18 +246,26 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
 
   return (
     <section className="section">
-      <div className={`dash${chart === "ranked" ? " ranked" : ""}`}>
-        <PRCard
-          items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
-          hint={PR_ITEMS}
-        />
-        <div className="stack">
-          <OpsCards recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} explain={explain} />
-          <Consistency recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} arm={v.arm} onSelect={(r) => explain(r.model)} />
+      <HoverProvider>
+        <div className={`dash${chart === "ranked" ? " ranked" : ""}`}>
+          <PRCard
+            items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
+            hint={PR_ITEMS}
+          />
+          <div className="stack">
+            <OpsCards recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} explain={explain} />
+            <ConsistencyCard recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} arm={v.arm} onSelect={(r) => explain(r.model)} />
+          </div>
         </div>
-      </div>
+      </HoverProvider>
     </section>
   );
+}
+
+/** The Determinism card wired to the section's cross-chart hover (hover.tsx). */
+function ConsistencyCard(props: Parameters<typeof Consistency>[0]) {
+  const hover = useHover();
+  return <Consistency {...props} highlight={hover.id} onHover={hover.set} />;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -315,15 +326,17 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
 
   return (
     <section className="section">
-      <div className={`dash${chart === "ranked" ? " ranked" : ""}`}>
-        <PRCard
-          items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
-          emptyText={variants.length ? "Select at least one configuration." : "No configurations of this model were run on this corpus and arm."}
-          logos={false}
-          hint={CONFIG_PR_ITEMS}
-        />
-        <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} explain={explain} /></div>
-      </div>
+      <HoverProvider>
+        <div className={`dash${chart === "ranked" ? " ranked" : ""}`}>
+          <PRCard
+            items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
+            emptyText={variants.length ? "Select at least one configuration." : "No configurations of this model were run on this corpus and arm."}
+            logos={false}
+            hint={CONFIG_PR_ITEMS}
+          />
+          <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} explain={explain} /></div>
+        </div>
+      </HoverProvider>
     </section>
   );
 }

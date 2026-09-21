@@ -3,11 +3,12 @@ import { fmtPct } from "../data";
 import type { PRItem } from "./PRScatter";
 import { LogoGlyph } from "../logos";
 import { CLICK_HINT, TipBox, selectable, useTip, useWidth } from "./ui";
+import { hoverable } from "./hover";
 
 const ROW = 26, NUM_W = 54;
 
-/** Ranked rows: recall and precision side by side, dot at the point estimate, whisker across the 95% interval. `onSelect` makes each row a button (click, Enter, Space). */
-export function PRRows({ items, zoom, sortBy, logos = true, onSelect }: { items: PRItem[]; zoom: boolean; sortBy: "recall" | "precision" | "f1"; logos?: boolean; onSelect?: (item: PRItem) => void }) {
+/** Ranked rows: recall and precision side by side, dot at the point estimate, whisker across the 95% interval. `onSelect` makes each row a button (click, Enter, Space). `highlight` tints the row with that id (cross-chart hover, see hover.tsx); `onHover` reports the row under the pointer or keyboard focus. */
+export function PRRows({ items, zoom, sortBy, logos = true, onSelect, highlight, onHover }: { items: PRItem[]; zoom: boolean; sortBy: "recall" | "precision" | "f1"; logos?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickRow = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const W = useWidth(hostRef, 760);
@@ -51,6 +52,7 @@ export function PRRows({ items, zoom, sortBy, logos = true, onSelect }: { items:
         {rows.map((r, i) => {
           const y = 20 + i * ROW + ROW / 2;
           return (
+            <g key={r.id} className={highlight === r.id ? "hl" : undefined} {...hoverable(onHover, r.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
             <g key={r.id} onMouseMove={(e) => show(e, { title: r.name, color: r.color, ...r.tip })} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
               <rect className="hit" x={0} y={y - ROW / 2} width={W} height={ROW} fill="transparent" />
               {logos ? (
@@ -72,6 +74,7 @@ export function PRRows({ items, zoom, sortBy, logos = true, onSelect }: { items:
                   <text key={col} x={x0[col] + colW + 8} y={y + 4} fontSize={11.5} fill="var(--ink-4)" className="mono">—</text>
                 ),
               )}
+            </g>
             </g>
           );
         })}

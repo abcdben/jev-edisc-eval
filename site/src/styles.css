@@ -258,6 +258,9 @@ svg text { user-select: none; font-family: var(--sans); }
 .sel .hit { fill: var(--ink); fill-opacity: 0; transition: fill-opacity 0.12s; }
 .sel:hover .hit, .sel:focus-visible .hit { fill-opacity: 0.05; }
 .sel:focus-visible .hit { fill-opacity: 0.09; }
+/* cross-chart highlight (components/hover.tsx): a row whose model is hovered in another card takes the hover tint and its muted label goes full ink */
+.hl .hit { fill: var(--ink); fill-opacity: 0.05; transition: fill-opacity 0.12s; }
+.hl text[fill="var(--ink-2)"] { fill: var(--ink); }
 
 .legend-note { color: var(--ink-3); font-size: 12px; margin-top: 8px; display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
 .legend-note .k { display: inline-flex; align-items: center; gap: 6px; }
