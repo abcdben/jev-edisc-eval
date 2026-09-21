@@ -69,27 +69,27 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
         {/* grid */}
         {xt.map((t) => (
           <g key={`x${t}`}>
-            <line x1={X(t)} x2={X(t)} y1={PT} y2={H - PB} stroke="#e6e3db" />
-            <text x={X(t)} y={H - PB + 16} fontSize={10.5} textAnchor="middle" fill="#8a8780" className="mono">{Math.round(t * 100)}%</text>
+            <line x1={X(t)} x2={X(t)} y1={PT} y2={H - PB} stroke="var(--grid)" />
+            <text x={X(t)} y={H - PB + 16} fontSize={10.5} textAnchor="middle" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>
           </g>
         ))}
         {yt.map((t) => (
           <g key={`y${t}`}>
-            <line x1={PL} x2={W - PR} y1={Y(t)} y2={Y(t)} stroke="#e6e3db" />
-            <text x={PL - 8} y={Y(t) + 3.5} fontSize={10.5} textAnchor="end" fill="#8a8780" className="mono">{Math.round(t * 100)}%</text>
+            <line x1={PL} x2={W - PR} y1={Y(t)} y2={Y(t)} stroke="var(--grid)" />
+            <text x={PL - 8} y={Y(t) + 3.5} fontSize={10.5} textAnchor="end" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>
           </g>
         ))}
-        <line x1={PL} x2={W - PR} y1={H - PB} y2={H - PB} stroke="#cfcbc1" />
-        <line x1={PL} x2={PL} y1={PT} y2={H - PB} stroke="#cfcbc1" />
-        <text x={(PL + W - PR) / 2} y={H - 10} fontSize={12} textAnchor="middle" fill="#4a4845">{xLabel}</text>
-        <text x={14} y={(PT + H - PB) / 2} fontSize={12} textAnchor="middle" fill="#4a4845" transform={`rotate(-90 14 ${(PT + H - PB) / 2})`}>{yLabel}</text>
+        <line x1={PL} x2={W - PR} y1={H - PB} y2={H - PB} stroke="var(--axis)" />
+        <line x1={PL} x2={PL} y1={PT} y2={H - PB} stroke="var(--axis)" />
+        <text x={(PL + W - PR) / 2} y={H - 10} fontSize={12} textAnchor="middle" fill="var(--ink-2)">{xLabel}</text>
+        <text x={14} y={(PT + H - PB) / 2} fontSize={12} textAnchor="middle" fill="var(--ink-2)" transform={`rotate(-90 14 ${(PT + H - PB) / 2})`}>{yLabel}</text>
 
         {/* CI boxes first so dots sit on top */}
         {pts.map((p) => {
           const x0 = X(p.recall[1]), x1 = X(p.recall[2]), y0 = Y(p.precision[2]), y1 = Y(p.precision[1]);
           return (
             <g key={`b${p.id}`} onMouseMove={(e) => show(e, { title: p.name, color: p.color, ...p.tip })} onMouseLeave={hide}>
-              <rect x={x0} y={y0} width={Math.max(1, x1 - x0)} height={Math.max(1, y1 - y0)} fill={p.color} fillOpacity={0.16} stroke={p.dashed ? p.color : "none"} strokeOpacity={0.6} strokeWidth={1} strokeDasharray={p.dashed ? "3 3" : undefined} rx={2} />
+              <rect x={x0} y={y0} width={Math.max(1, x1 - x0)} height={Math.max(1, y1 - y0)} fill={p.color} style={{ fillOpacity: "var(--box-alpha)" }} stroke={p.dashed ? p.color : "none"} strokeOpacity={0.7} strokeWidth={1} strokeDasharray={p.dashed ? "3 3" : undefined} rx={1} />
             </g>
           );
         })}
@@ -98,20 +98,19 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
           return (
             <g key={`d${p.id}`} onMouseMove={(e) => show(e, { title: p.name, color: p.color, ...p.tip })} onMouseLeave={hide} style={{ cursor: "default" }}>
               <circle cx={x} cy={y} r={8} fill="transparent" />
-              <path d={`M${x - 5} ${y - 5}L${x + 5} ${y + 5}M${x - 5} ${y + 5}L${x + 5} ${y - 5}`} stroke="#fbfaf7" strokeWidth={4.5} strokeLinecap="round" fill="none" />
-              <path d={`M${x - 5} ${y - 5}L${x + 5} ${y + 5}M${x - 5} ${y + 5}L${x + 5} ${y - 5}`} stroke={p.color} strokeWidth={2.25} strokeLinecap="round" fill="none" />
+              <circle cx={x} cy={y} r={3.2} fill={p.color} />
             </g>
           );
         })}
         {labels.map((l, i) =>
           l ? (
-            <text key={`l${i}`} x={l.x} y={l.y + 10} fontSize={11} fill="#171614" style={{ paintOrder: "stroke", stroke: "#fbfaf7", strokeWidth: 3, strokeLinejoin: "round", pointerEvents: "none" }}>
+            <text key={`l${i}`} x={l.x} y={l.y + 10} fontSize={11} fill="var(--ink)" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round", pointerEvents: "none" }}>
               {l.text}
             </text>
           ) : null,
         )}
-        {labels.some((l) => !l) && <text x={W - PR} y={PT - 6} fontSize={10.5} textAnchor="end" fill="#aaa69e">some labels hidden where marks overlap; hover to identify</text>}
-        {pts.length === 0 && <text x={W / 2} y={H / 2} textAnchor="middle" fontSize={13} fill="#aaa69e">{emptyText ?? "Select at least one model."}</text>}
+        {labels.some((l) => !l) && <text x={W - PR} y={PT - 6} fontSize={10.5} textAnchor="end" fill="var(--ink-4)">some labels hidden where marks overlap; hover to identify</text>}
+        {pts.length === 0 && <text x={W / 2} y={H / 2} textAnchor="middle" fontSize={13} fill="var(--ink-4)">{emptyText ?? "Select at least one model."}</text>}
       </svg>
       {undefinedOnes.length > 0 && (
         <div className="legend-note">

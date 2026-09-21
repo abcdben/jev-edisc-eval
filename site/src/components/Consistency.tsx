@@ -76,15 +76,15 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
             if (!x.d) {
               return (
                 <g key={x.r.model}>
-                  <text x={LABEL_W - 10} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="#aaa69e">{nm}</text>
-                  <text x={LABEL_W + 7} y={y + ROW / 2 + 4} fontSize={11} fill="#aaa69e">not measured</text>
+                  <text x={LABEL_W - 10} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-4)">{nm}</text>
+                  <text x={LABEL_W + 7} y={y + ROW / 2 + 4} fontSize={11} fill="var(--ink-4)">not measured</text>
                 </g>
               );
             }
             const bars = [{ c: x.d, op: 1, dy: x.t0 ? -5 : 0, bh: x.t0 ? 9 : 14 }, ...(x.t0 ? [{ c: x.t0, op: 0.45, dy: 5, bh: 9 }] : [])];
             return (
               <g key={x.r.model}>
-                <text x={LABEL_W - 10} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="#4a4845">{nm}</text>
+                <text x={LABEL_W - 10} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{nm}</text>
                 {bars.map((b, j) => {
                   const v = b.c.pairwise[0], lo = b.c.pairwise[1], hi = b.c.pairwise[2];
                   const cy = y + ROW / 2 + b.dy;
@@ -92,8 +92,8 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
                     <g key={j} onMouseMove={(e) => show(e, { title: `${nm}${b.c.setting === "t0" ? " · temperature 0" : ""}`, color: c, ...tipFor(b.c, nm) })} onMouseLeave={hide} style={{ cursor: "default" }}>
                       <rect x={LABEL_W - 4} y={cy - b.bh / 2 - 2} width={W - LABEL_W + 4} height={b.bh + 4} fill="transparent" />
                       <rect x={LABEL_W} y={cy - b.bh / 2} width={Math.max(1.5, X(v) - LABEL_W)} height={b.bh} fill={c} opacity={b.op} rx={2} />
-                      <line x1={X(lo)} x2={X(hi)} y1={cy} y2={cy} stroke="#171614" strokeWidth={1} opacity={0.6} />
-                      <text x={X(hi) + 7} y={cy + 4} fontSize={11} fill={b.op < 1 ? "#7d7a74" : "#171614"} className="mono">
+                      <line x1={X(lo)} x2={X(hi)} y1={cy} y2={cy} stroke="var(--ink)" strokeWidth={1} opacity={0.6} />
+                      <text x={X(hi) + 7} y={cy + 4} fontSize={11} fill={b.op < 1 ? "var(--ink-3)" : "var(--ink)"} className="mono">
                         {v === 0 ? "0" : fmtPct(v, v < 0.001 ? 2 : 1)}{b.c.setting === "t0" ? "  t=0" : ""}
                       </text>
                     </g>
@@ -102,8 +102,8 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
               </g>
             );
           })}
-          <line x1={LABEL_W} x2={LABEL_W} y1={0} y2={sorted.length * ROW} stroke="#cfcbc1" />
-          <text x={LABEL_W} y={sorted.length * ROW + 17} fontSize={10.5} fill="#8a8780">probability two runs disagree on a decision · {measured[0]?.d?.k ?? 5} runs each</text>
+          <line x1={LABEL_W} x2={LABEL_W} y1={0} y2={sorted.length * ROW} stroke="var(--axis)" />
+          <text x={LABEL_W} y={sorted.length * ROW + 17} fontSize={10.5} fill="var(--ink-3)">probability two runs disagree on a decision · {measured[0]?.d?.k ?? 5} runs each</text>
         </svg>
         <TipBox tip={tip} />
       </div>

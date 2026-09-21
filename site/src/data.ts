@@ -63,19 +63,19 @@ export const KIND_ORDER: Kind[] = ["system1", "system1_ft", "llm", "local_llm", 
 
 /** Headline roster, in display order, with a stable colour each. */
 export const PRIMARY: { key: string; color: string; short: string; note: string }[] = [
-  { key: "jev@base", color: "#1f6b4a", short: "Jev", note: "TypeSafe Jev 1.13, default configuration: Noul question form, prose criteria, RFP phrasing, matter context." },
-  { key: "jev@state_string", color: "#5fa37d", short: "Jev · recipe", note: "Jev 1.13 with the one lever that won the 12-variant ablation on the Veridian dev split (flat-string state). Chosen before any other corpus was scored." },
-  { key: "laya@base", color: "#2f5f8f", short: "Laya", note: "ConvAI Laya, zero-shot, default configuration. 512-token context; long documents are truncated." },
-  { key: "laya@recipe", color: "#6f9bc4", short: "Laya · recipe", note: "Laya zero-shot with compact criteria and a sliding window over the document (max-pooled), the two levers that fit its 512-token context." },
-  { key: "laya-ft", color: "#7b5ea7", short: "Laya · fine-tuned", note: "SUPERVISED. Laya fine-tuned (RLCD) on a 30% document-level dev split of the same corpus and scored on the held-out 70%. Not on equal footing with the zero-shot rows." },
-  { key: "claude-haiku-4.5", color: "#d99a6c", short: "Haiku 4.5", note: "Anthropic Claude Haiku 4.5, structured JSON output, default effort." },
-  { key: "claude-sonnet-5", color: "#b5623a", short: "Sonnet 5", note: "Anthropic Claude Sonnet 5, structured JSON output, default effort, prompt caching on the all-issues arm." },
-  { key: "gpt-5.6-luna", color: "#8a8780", short: "GPT-5.6 Luna", note: "OpenAI GPT-5.6 Luna, structured output, minimal reasoning, flex pricing (50% off list)." },
-  { key: "gpt-5.6-terra", color: "#3a3835", short: "GPT-5.6 Terra", note: "OpenAI GPT-5.6 Terra, structured output, minimal reasoning, flex pricing (50% off list)." },
-  { key: "gemini-3.5-flash-lite", color: "#dcbf5a", short: "Gemini 3.5 Flash-Lite", note: "Google Gemini 3.5 Flash-Lite, structured output." },
-  { key: "gemini-3.8-flash", color: "#b5952a", short: "Gemini 3.8 Flash", note: "Google Gemini 3.8 Flash, structured output." },
-  { key: "gemma3-12b", color: "#8c9a4a", short: "Gemma 3 12B", note: "Google Gemma 3 12B run locally via Ollama on an A100. Scored on a 400-600 document stratified subsample; latency measured with 4 concurrent requests." },
-  { key: "lexical", color: "#b9b5ac", short: "Keyword floor", note: "Term overlap between the RFP text and the document, thresholded at 0.5. No model; shows what vocabulary alone buys." },
+  { key: "jev@base", color: "var(--c-jev)", short: "Jev", note: "TypeSafe Jev 1.13, default configuration: Noul question form, prose criteria, RFP phrasing, matter context." },
+  { key: "jev@state_string", color: "var(--c-jev-2)", short: "Jev · recipe", note: "Jev 1.13 with the one lever that won the 12-variant ablation on the Veridian dev split (flat-string state). Chosen before any other corpus was scored." },
+  { key: "laya@base", color: "var(--c-laya)", short: "Laya", note: "ConvAI Laya, zero-shot, default configuration. 512-token context; long documents are truncated." },
+  { key: "laya@recipe", color: "var(--c-laya-2)", short: "Laya · recipe", note: "Laya zero-shot with compact criteria and a sliding window over the document (max-pooled), the two levers that fit its 512-token context." },
+  { key: "laya-ft", color: "var(--c-laya-ft)", short: "Laya · fine-tuned", note: "SUPERVISED. Laya fine-tuned (RLCD) on a 30% document-level dev split of the same corpus and scored on the held-out 70%. Not on equal footing with the zero-shot rows." },
+  { key: "claude-haiku-4.5", color: "var(--c-haiku)", short: "Haiku 4.5", note: "Anthropic Claude Haiku 4.5, structured JSON output, default effort." },
+  { key: "claude-sonnet-5", color: "var(--c-sonnet)", short: "Sonnet 5", note: "Anthropic Claude Sonnet 5, structured JSON output, default effort, prompt caching on the all-issues arm." },
+  { key: "gpt-5.6-luna", color: "var(--c-luna)", short: "GPT-5.6 Luna", note: "OpenAI GPT-5.6 Luna, structured output, minimal reasoning, flex pricing (50% off list)." },
+  { key: "gpt-5.6-terra", color: "var(--c-terra)", short: "GPT-5.6 Terra", note: "OpenAI GPT-5.6 Terra, structured output, minimal reasoning, flex pricing (50% off list)." },
+  { key: "gemini-3.5-flash-lite", color: "var(--c-flashlite)", short: "Gemini 3.5 Flash-Lite", note: "Google Gemini 3.5 Flash-Lite, structured output." },
+  { key: "gemini-3.8-flash", color: "var(--c-flash)", short: "Gemini 3.8 Flash", note: "Google Gemini 3.8 Flash, structured output." },
+  { key: "gemma3-12b", color: "var(--c-gemma)", short: "Gemma 3 12B", note: "Google Gemma 3 12B run locally via Ollama on an A100. Scored on a 400-600 document stratified subsample; latency measured with 4 concurrent requests." },
+  { key: "lexical", color: "var(--c-lexical)", short: "Keyword floor", note: "Term overlap between the RFP text and the document, thresholded at 0.5. No model; shows what vocabulary alone buys." },
 ];
 export const PRIMARY_BY_KEY = Object.fromEntries(PRIMARY.map((p) => [p.key, p]));
 export const DEFAULT_ON = new Set(["jev@base", "laya@recipe", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gemini-3.8-flash", "lexical"]);
@@ -93,8 +93,8 @@ export const VARIANT_LABEL: Record<string, string> = {
   no_context: "no matter context", state_string: "flat-string state", gate: "gated", ensemble: "3-phrasing ensemble", decompose: "decomposed",
   preview: "jev-preview", compact: "compact", chunk: "chunked", recipe: "compact + chunk", recipe_choice: "compact + chunk, Choice",
 };
-const VARIANT_PALETTE = ["#171614", "#b5623a", "#d99a6c", "#2f5f8f", "#6f9bc4", "#7b5ea7", "#b08ad0", "#1f6b4a", "#5fa37d", "#b5952a", "#dcbf5a", "#8c9a4a", "#8a8780", "#c4c0b8", "#d16a8a", "#e6a5b8"];
-export const variantColor = (v: string, recipe: string) => (v === recipe ? "#1f6b4a" : v === "base" ? "#171614" : VARIANT_PALETTE[(VARIANT_ORDER.indexOf(v) + 1) % VARIANT_PALETTE.length]);
+const VARIANT_PALETTE = Array.from({ length: 16 }, (_, i) => `var(--v${i})`);
+export const variantColor = (v: string, recipe: string) => (v === recipe ? "var(--c-jev)" : v === "base" ? "var(--c-base)" : VARIANT_PALETTE[(VARIANT_ORDER.indexOf(v) + 1) % VARIANT_PALETTE.length]);
 
 // ------------------------------------------------------------------------------------------------
 

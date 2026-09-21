@@ -32,11 +32,11 @@ export function PRRows({ items, zoom, sortBy }: { items: PRItem[]; zoom: boolean
       <svg viewBox={`0 0 ${W} ${h}`} width="100%" style={{ display: "block", overflow: "visible" }}>
         {[0, 1].map((col) => (
           <g key={col}>
-            <text x={x0[col]} y={12} fontSize={12} fontWeight={500} fill="#171614">{col === 0 ? "Recall" : "Precision"}</text>
+            <text x={x0[col]} y={12} fontSize={12} fontWeight={500} fill="var(--ink)">{col === 0 ? "Recall" : "Precision"}</text>
             {ticks.map((t) => (
               <g key={t}>
-                <line x1={sx(col, t)} x2={sx(col, t)} y1={20} y2={20 + rows.length * ROW} stroke="#e6e3db" />
-                <text x={sx(col, t)} y={20 + rows.length * ROW + 14} fontSize={10} textAnchor="middle" fill="#8a8780" className="mono">{Math.round(t * 100)}%</text>
+                <line x1={sx(col, t)} x2={sx(col, t)} y1={20} y2={20 + rows.length * ROW} stroke="var(--grid)" />
+                <text x={sx(col, t)} y={20 + rows.length * ROW + 14} fontSize={10} textAnchor="middle" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>
               </g>
             ))}
           </g>
@@ -46,22 +46,22 @@ export function PRRows({ items, zoom, sortBy }: { items: PRItem[]; zoom: boolean
           return (
             <g key={r.id} onMouseMove={(e) => show(e, { title: r.name, color: r.color, ...r.tip })} onMouseLeave={hide} style={{ cursor: "default" }}>
               <rect x={0} y={y - ROW / 2} width={W} height={ROW} fill="transparent" />
-              <text x={LABEL_W - 12} y={y + 4} textAnchor="end" fontSize={12} fill="#4a4845">{r.name}{r.subset ? " *" : ""}</text>
+              <text x={LABEL_W - 12} y={y + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
               {([r.recall, r.precision] as CI[]).map((ci, col) =>
                 ci ? (
                   <g key={col}>
-                    <line x1={sx(col, ci[1])} x2={sx(col, ci[2])} y1={y} y2={y} stroke={r.color} strokeWidth={2.5} strokeLinecap="round" strokeDasharray={r.dashed ? "3 3" : undefined} />
-                    <circle cx={sx(col, ci[0])} cy={y} r={4.5} fill={r.color} stroke="#fbfaf7" strokeWidth={1.5} />
-                    <text x={x0[col] + colW + 8} y={y + 4} fontSize={11.5} fill="#171614" className="mono">{fmtPct(ci[0])}</text>
+                    <line x1={sx(col, ci[1])} x2={sx(col, ci[2])} y1={y} y2={y} stroke={r.color} strokeWidth={1.5} strokeLinecap="butt" strokeDasharray={r.dashed ? "3 3" : undefined} />
+                    <circle cx={sx(col, ci[0])} cy={y} r={3.2} fill={r.color} />
+                    <text x={x0[col] + colW + 8} y={y + 4} fontSize={11.5} fill="var(--ink)" className="mono">{fmtPct(ci[0])}</text>
                   </g>
                 ) : (
-                  <text key={col} x={x0[col]} y={y + 4} fontSize={11} fill="#aaa69e">undefined</text>
+                  <text key={col} x={x0[col]} y={y + 4} fontSize={11} fill="var(--ink-4)">undefined</text>
                 ),
               )}
             </g>
           );
         })}
-        {rows.length === 0 && <text x={W / 2} y={40} textAnchor="middle" fontSize={13} fill="#aaa69e">Select at least one model.</text>}
+        {rows.length === 0 && <text x={W / 2} y={40} textAnchor="middle" fontSize={13} fill="var(--ink-4)">Select at least one model.</text>}
       </svg>
       <TipBox tip={tip} />
     </div>

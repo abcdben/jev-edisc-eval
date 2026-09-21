@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ABLATION_GROUPS, CORPORA, DATA, DEFAULT_ON, KIND_LABEL, KIND_ORDER, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
   corpusKey, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, pick, variantColor,
@@ -29,8 +29,8 @@ function PRCard({ items, v, hint, defaultChart, defaultZoom, emptyText }: { item
       </div>
       {chart === "map" ? <PRScatter items={items} zoom={zoom} emptyText={emptyText} /> : <PRRows items={items} zoom={zoom} sortBy="f1" />}
       <div className="legend-note">
-        {chart === "map" ? <span>×: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span> : <span>Sorted by F1. Dot: point estimate. Whisker: 95% interval.</span>}
-        {items.some((i) => i.dashed) && <span className="k"><span style={{ width: 14, height: 10, border: "1px dashed #7b5ea7", display: "inline-block", borderRadius: 2 }} />dashed: supervised on a split of this corpus</span>}
+        {chart === "map" ? <span>Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span> : <span>Sorted by F1. Dot: point estimate. Whisker: 95% interval.</span>}
+        {items.some((i) => i.dashed) && <span className="k"><span style={{ width: 14, height: 10, border: "1px dashed var(--c-laya-ft)", display: "inline-block", borderRadius: 2 }} />dashed: supervised on a split of this corpus</span>}
         {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
       </div>
     </div>
@@ -270,11 +270,14 @@ export default function App() {
   const nDocs = Object.values(DATA.corpora).filter((c) => !c.tag).reduce((a, c) => a + c.n_docs, 0);
 
   const pickCorpus = (c: string) => { setCorpus(c); setIssue(null); };
+  const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "dark");
+  useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
 
   return (
     <div className="page">
       <header className="masthead">
         <span className="eyebrow">Benchmark · document review · {new Date().getFullYear()}</span>
+        <span className="theme"><Seg value={theme} onChange={setTheme} options={[{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }]} /></span>
         <h1 className="title">System 1 decision models against <em>large language models</em> for relevance and issue review</h1>
         <p className="lede">
           Four labeled corpora, {nModels} classifiers, {nConfigs} configurations, one shared set of requests for production per corpus. Choose a corpus and the models you care about; every mark on the page can be hovered for the numbers behind it.
@@ -326,7 +329,7 @@ export default function App() {
       </div>
 
       <div style={{ marginTop: 18, color: "var(--ink-2)", fontSize: 13, display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
-        <span style={{ fontFamily: "var(--serif)", fontSize: 18, color: "var(--ink)" }}>{meta.display}</span>
+        <span style={{ fontSize: 16, fontWeight: 500, color: "var(--ink)" }}>{meta.display}</span>
         <span style={{ color: "var(--ink-3)" }}>
           {fmtInt(meta.n_docs)} documents · {meta.n_issues} issues · {fmtInt(meta.n_pos_docs_any)} responsive to at least one ({fmtPct(meta.n_pos_docs_any / meta.n_docs, 0)}) · gold: {meta.gold}
         </span>

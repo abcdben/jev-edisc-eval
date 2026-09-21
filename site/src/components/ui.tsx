@@ -28,7 +28,7 @@ export function TipBox({ tip }: { tip: Tip }) {
       </div>
       {tip.lines.map((l, i) =>
         typeof l === "string" ? (
-          <div key={i} style={{ color: "#c8c4bb", marginTop: 4 }}>{l}</div>
+          <div key={i} className="line">{l}</div>
         ) : (
           <div key={i} className="kv"><span className="k">{l[0]}</span><span className="v">{l[1]}</span></div>
         ),

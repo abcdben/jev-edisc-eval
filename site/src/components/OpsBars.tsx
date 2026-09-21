@@ -23,15 +23,15 @@ export function OpsBars({ items, axis, sort = true }: { items: BarItem[]; axis: 
           return (
             <g key={r.id} onMouseMove={(e) => show(e, { title: r.name, color: r.color, lines: [...r.tip.lines, ...(ratio && ratio > 1.05 ? [[`vs. lowest shown`, `${ratio >= 10 ? Math.round(ratio) : ratio.toFixed(1)}×`] as TipLine] : [])], notes: r.tip.notes })} onMouseLeave={hide} style={{ cursor: "default" }}>
               <rect x={0} y={y} width={W} height={ROW} fill="transparent" />
-              <text x={LABEL_W - 10} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="#4a4845">{r.name}{r.subset ? " *" : ""}</text>
+              <text x={LABEL_W - 10} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
               <rect x={LABEL_W} y={y + 6} width={bw} height={ROW - 12} fill={r.color} rx={2} opacity={v === 0 ? 0.5 : 1} />
-              <text x={LABEL_W + bw + 7} y={y + ROW / 2 + 4} fontSize={11.5} fill={v == null ? "#aaa69e" : "#171614"} className="mono">{v == null ? "not measured" : r.label}</text>
+              <text x={LABEL_W + bw + 7} y={y + ROW / 2 + 4} fontSize={11.5} fill={v == null ? "var(--ink-4)" : "var(--ink)"} className="mono">{v == null ? "not measured" : r.label}</text>
             </g>
           );
         })}
-        <line x1={LABEL_W} x2={LABEL_W} y1={0} y2={rows.length * ROW} stroke="#cfcbc1" />
-        <text x={LABEL_W} y={rows.length * ROW + 15} fontSize={10.5} fill="#8a8780">{axis}</text>
-        {rows.length === 0 && <text x={W / 2} y={12} textAnchor="middle" fontSize={12} fill="#aaa69e">—</text>}
+        <line x1={LABEL_W} x2={LABEL_W} y1={0} y2={rows.length * ROW} stroke="var(--axis)" />
+        <text x={LABEL_W} y={rows.length * ROW + 15} fontSize={10.5} fill="var(--ink-3)">{axis}</text>
+        {rows.length === 0 && <text x={W / 2} y={12} textAnchor="middle" fontSize={12} fill="var(--ink-4)">—</text>}
       </svg>
       <TipBox tip={tip} />
     </div>
