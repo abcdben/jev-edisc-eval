@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ABLATION_GROUPS, CORPORA, DATA, DEFAULT_ON, KIND_LABEL, KIND_ORDER, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
   corpusKey, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, pick, variantColor,
-  type Gray, type IssueScore, type Kind, type Level, type PRF, type Rec,
+  type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
 import { Control, Hint, Seg, type TipLine } from "./components/ui";
 import { PRScatter, type PRItem } from "./components/PRScatter";
@@ -49,10 +49,6 @@ function qualityLines(r: Rec, v: View): { lines: TipLine[]; notes: string[] } {
   if (p.detail && "tp" in p.detail) {
     const m = p.detail as PRF;
     lines.push(["F1", m.f1 == null ? "—" : fmtPct(m.f1)]);
-    lines.push(["Documents", fmtInt(m.tp + m.fp + m.fn + m.tn)]);
-  } else if (p.detail) {
-    const s = p.detail as IssueScore;
-    lines.push(["Documents", fmtInt(s.n)]);
   }
   if (r.subset) lines.push(["Scored on", r.subset]);
   const notes: string[] = [];
