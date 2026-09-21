@@ -392,6 +392,49 @@ export function Modal({ eyebrow, title, controls, onClose, className, children }
 
 export type HintItem = { k: string; v: ReactNode };
 
+/** Where an anchored popover goes: `l` left-aligned to its anchor (else right-aligned), `up` above it (else below); `left`/`top` are the same placement in viewport pixels for a position: fixed box. */
+export type PopPlace = { l: boolean; up: boolean; left: number; top: number };
+/**
+ * Placement of a popover hanging off `anchor`, measured once it is in the DOM (`open`). `prefer` is the horizontal alignment when both fit:
+ * `right` (right edges flush, the popover extends left; the Hint icon at a card's right edge) or `left` (left edges flush, it extends right;
+ * the title menus). The other alignment is used when the preferred one would leave the viewport, or when neither fits, whichever side the anchor
+ * has more room on. Below the anchor unless that leaves the viewport and above fits (or has more room). `null` until measured.
+ */
+export function usePopPlace(open: boolean, anchor: React.RefObject<HTMLElement | null>, pop: React.RefObject<HTMLElement | null>, prefer: "left" | "right" = "right"): PopPlace | null {
+  const [place, setPlace] = useState<PopPlace | null>(null);
+  useLayoutEffect(() => {
+    if (!open) { setPlace(null); return; }
+    const w = anchor.current, p = pop.current;
+    if (!w || !p) return;
+    const a = w.getBoundingClientRect();
+    const pw = p.offsetWidth, ph = p.offsetHeight;
+    const M = 8, GAP = 7;
+    const fitsL = a.left + pw <= window.innerWidth - M; // left-aligned: extends right
+    const fitsR = a.right - pw >= M; // right-aligned: extends left
+    const leftHalf = a.left + a.right < window.innerWidth;
+    const l = prefer === "left" ? fitsL || (!fitsR && leftHalf) : !fitsR && (fitsL || leftHalf);
+    const up = a.bottom + GAP + ph > window.innerHeight - M && (a.top - GAP - ph >= M || a.top > window.innerHeight - a.bottom);
+    const left = Math.max(M, Math.min(l ? a.left : a.right - pw, window.innerWidth - M - pw));
+    const top = Math.max(M, up ? a.top - GAP - ph : a.bottom + GAP);
+    setPlace({ l, up, left, top });
+  }, [open, prefer, anchor, pop]);
+  return place;
+}
+
+/** Closes an open popover on a pointerdown outside `wrap` or on Esc; the Esc is stopped so an enclosing modal's Esc handler does not fire too. */
+export function usePopDismiss(open: boolean, wrap: React.RefObject<HTMLElement | null>, close: () => void): void {
+  const closeRef = useRef(close);
+  closeRef.current = close;
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) closeRef.current(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { e.stopPropagation(); closeRef.current(); } };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("pointerdown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [open, wrap]);
+}
+
 /**
  * The "i" control in card headers and the control bar. Click opens a small anchored popover (no hover behaviour) that closes on outside click,
  * Esc, or clicking the icon again. Content is either structured `items` (a compact label/value list, one short sentence per value) or a legacy
@@ -402,33 +445,14 @@ export function Hint({ text, items, more, title }: { text?: string; items?: Hint
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLSpanElement>(null);
   const pop = useRef<HTMLDivElement>(null);
-  const [place, setPlace] = useState<{ l: boolean; up: boolean } | null>(null);
+  // right-aligned to the icon unless that would leave the viewport, below unless it would (usePopPlace); the .l / .up classes place it
+  const place = usePopPlace(open, wrap, pop, "right");
   const [cardTitle, setCardTitle] = useState<string | undefined>(undefined);
   const openMethod = useContext(MethodContext);
   useLayoutEffect(() => {
-    if (!open) { setPlace(null); return; }
-    const w = wrap.current, p = pop.current;
-    if (!w || !p) return;
-    const a = w.getBoundingClientRect();
-    const pw = p.offsetWidth, ph = p.offsetHeight;
-    const M = 8;
-    // right-aligned to the icon unless that would leave the viewport; then left-aligned if that fits, or if the icon is in the left half
-    const l = a.right - pw < M && (a.left + pw <= window.innerWidth - M || a.left + a.right < window.innerWidth);
-    // below unless it would leave the viewport; then above if that fits, or whichever side has more room
-    const up = a.bottom + 8 + ph > window.innerHeight - M && (a.top - 8 - ph >= M || a.top > window.innerHeight - a.bottom);
-    setPlace({ l, up });
-  }, [open]);
-  useLayoutEffect(() => {
     if (title === undefined) setCardTitle(wrap.current?.closest(".card-t")?.querySelector("h3")?.textContent ?? undefined);
   }, [title]);
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false); };
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
-    document.addEventListener("pointerdown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => { document.removeEventListener("pointerdown", onDown); document.removeEventListener("keydown", onKey); };
-  }, [open]);
+  usePopDismiss(open, wrap, () => setOpen(false));
   const t = title ?? cardTitle;
   return (
     <span ref={wrap} className={`hint${open ? " open" : ""}`}>

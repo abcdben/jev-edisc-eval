@@ -365,43 +365,65 @@ svg text { user-select: none; font-family: var(--sans); }
 }
 .ex-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 18px 24px 14px; border-bottom: 1px solid var(--line); }
 .ex-head h2 { margin: 2px 0 0; font-size: 20px; font-weight: 500; letter-spacing: -0.015em; }
-.ex-h-var { color: var(--ink-3); font-weight: 400; }
+/* the details modal's title is two menu buttons, [family ▾] · [configuration ▾], styled as the title text */
+.ex-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 8px; }
+.ex-title-dot { color: var(--ink-4); font-weight: 400; }
+.ex-menu { position: relative; display: inline-flex; align-items: baseline; }
+.ex-menu-b {
+  border: 0; background: none; padding: 0; margin: 0; font: inherit; color: inherit; letter-spacing: inherit; cursor: pointer; text-align: left;
+  border-radius: 3px; text-decoration: underline transparent; text-decoration-thickness: 1px; text-underline-offset: 4px; transition: text-decoration-color 120ms;
+}
+.ex-menu-b.muted { color: var(--ink-3); font-weight: 400; }
+.ex-menu-b:hover, .ex-menu.open .ex-menu-b { text-decoration-color: var(--ink-3); }
+.ex-menu-b:focus-visible { outline: 1.5px solid var(--ink-3); outline-offset: 3px; }
+.ex-chev { display: inline-block; margin-left: 5px; color: var(--ink-4); vertical-align: 0.05em; transition: transform 120ms, color 120ms; }
+.ex-menu-b:hover .ex-chev, .ex-menu.open .ex-chev { color: var(--ink-3); }
+.ex-menu.open .ex-chev { transform: translateY(1px); }
+/* the menu: position: fixed (the modal box clips overflow), placed by usePopPlace; .wide is the configuration menu with definitions */
+.ex-menu-pop {
+  position: fixed; z-index: 240; min-width: 200px; max-width: calc(100vw - 16px); background: var(--panel); color: var(--ink); border: 1px solid var(--line);
+  border-radius: 8px; padding: 4px; font-size: 13px; font-weight: 400; letter-spacing: 0; line-height: 1.4; text-align: left; box-shadow: 0 6px 20px rgba(0,0,0,0.14);
+  display: flex; flex-direction: column; max-height: 60vh; animation: rise-2 120ms var(--ease);
+}
+[data-theme="dark"] .ex-menu-pop { box-shadow: 0 8px 24px rgba(0,0,0,0.4); border-color: var(--line-2); }
+.ex-menu-pop.wide { width: 460px; }
+.ex-menu-list { overflow: auto; min-height: 0; display: flex; flex-direction: column; gap: 1px; }
+.ex-mi {
+  display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 8px; align-items: start; padding: 6px 10px 6px 8px; border: 0; border-radius: 5px; background: none;
+  color: var(--ink); font: inherit; text-align: left; cursor: pointer; width: 100%;
+}
+.ex-mi:hover, .ex-mi:focus-visible { background: var(--bg-2); outline: none; }
+.ex-mi.on { color: var(--ink); }
+.ex-mi-chk { color: var(--ink); font-size: 11px; line-height: 1.4; padding-top: 1px; text-align: center; }
+.ex-mi-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ex-mi-l { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.ex-mi-l .tag { font-size: 10px; color: var(--ink-4); letter-spacing: 0.02em; }
+.ex-mi-d { color: var(--ink-3); font-size: 12px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ex-menu-foot { flex: none; color: var(--ink-4); font-size: 10.5px; letter-spacing: 0.04em; padding: 6px 10px 4px; border-top: 1px solid var(--line); margin-top: 3px; }
 .ex-eyebrow { font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
 .ex-head-ctl { display: flex; align-items: center; gap: 14px; }
 .ex-close { border: 0; background: none; color: var(--ink-3); font-size: 24px; line-height: 1; cursor: pointer; padding: 0 2px; }
 .ex-close:hover { color: var(--ink); }
 
-.ex-body { display: grid; grid-template-columns: 220px 1fr; gap: 0; flex: 1; min-height: 0; }
-.ex-rail { padding: 18px 18px 18px 24px; border-right: 1px solid var(--line); overflow: auto; display: flex; flex-direction: column; gap: 16px; }
-.ex-rail .grp { display: flex; flex-direction: column; gap: 2px; }
-.ex-rail .grp-t { display: flex; align-items: center; justify-content: space-between; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); padding: 0 0 6px; font-weight: 500; }
-.ex-rail .pick {
-  display: flex; align-items: center; gap: 9px; padding: 5px 8px; margin: 0 -8px; border-radius: 5px; cursor: pointer; border: 0; background: none; text-align: left;
-  color: var(--ink); font-size: 13px; width: calc(100% + 16px);
-}
-.ex-rail .pick:hover { background: var(--bg-2); }
-.ex-rail .pick.off { color: var(--ink-3); }
-.ex-rail .pick:not(.off) { background: var(--bg-2); }
-.ex-rail .pick .nm { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ex-rail .pick .sw { width: 10px; height: 10px; border-radius: 2px; flex: none; }
-.ex-rail .pick .tag { font-size: 10px; color: var(--ink-4); letter-spacing: 0.02em; }
-.ex-kbd { color: var(--ink-4); font-size: 10px; letter-spacing: 0.1em; text-transform: none; }
-.ex-q { color: var(--ink-3); font-size: 12px; margin-top: 8px; line-height: 1.45; }
-.ex-q b { color: var(--ink-2); font-weight: 500; }
-.ex-check { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: var(--ink-2); line-height: 1.4; cursor: pointer; }
-.ex-check input { margin: 2px 0 0; accent-color: var(--ink); }
+.ex-body { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 
-.ex-main { padding: 18px 24px 24px; overflow: auto; min-width: 0; }
+.ex-main { flex: 1; min-height: 0; padding: 18px 24px 24px; overflow: auto; min-width: 0; }
 /* the opening sentence: what this configuration is; the bold name, the definition on the --hl highlight */
-.ex-lead { margin: 0 0 16px; color: var(--ink); font-size: 14px; line-height: 1.6; max-width: 900px; }
+.ex-lead { margin: 0 0 16px; color: var(--ink); font-size: 14px; line-height: 1.6; }
 .ex-lead b, .ex-intro b, .ex-note b { font-weight: 600; color: var(--ink); }
 .ex-lead mark { background: var(--hl); color: var(--ink); padding: 1px 3px; margin: 0 -1px; border-radius: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-.ex-intro { margin: 0 0 10px; color: var(--ink-2); font-size: 13.5px; line-height: 1.55; max-width: 900px; }
-.ex-note { margin: 0 0 18px; color: var(--ink); font-size: 13.5px; line-height: 1.55; max-width: 900px; padding: 10px 14px; border-left: 2px solid var(--c-jev); background: var(--hl); border-radius: 0 6px 6px 0; }
-.ex-cols { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.ex-intro { margin: 0 0 10px; color: var(--ink-2); font-size: 13.5px; line-height: 1.55; }
+.ex-note { margin: 0 0 18px; color: var(--ink); font-size: 13.5px; line-height: 1.55; padding: 10px 14px; border-left: 2px solid var(--c-jev); background: var(--hl); border-radius: 0 6px 6px 0; }
+.ex-cols { display: grid; grid-template-columns: minmax(0, 58fr) minmax(0, 42fr); gap: 20px; align-items: start; }
 .ex-col { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px 12px; min-width: 0; }
 .ex-col-t { font-size: 13px; font-weight: 500; margin-bottom: 10px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
 .ex-col-s { color: var(--ink-3); font-size: 12px; font-weight: 400; }
+.ex-col-s b { color: var(--ink-2); font-weight: 500; }
+/* the Output header carries the document toggle (which of the two example documents the request and output are for) and the issue */
+.ex-out-t { margin-top: 18px; flex-direction: column; align-items: stretch; gap: 3px; }
+.ex-out-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.ex-out-row .seg { padding: 1.5px; }
+.ex-out-row .seg button { padding: 2px 8px; font-size: 11.5px; font-weight: 400; }
 
 .ex-obj { display: flex; flex-direction: column; gap: 2px; }
 .ex-row { display: grid; grid-template-columns: 118px minmax(0, 1fr); gap: 10px; padding: 4px 8px 4px 10px; margin-left: -10px; border-left: 2px solid transparent; border-radius: 0 4px 4px 0; }
@@ -434,8 +456,6 @@ svg text { user-select: none; font-family: var(--sans); }
 .ex-sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 .ex-sw.chg { background: color-mix(in srgb, var(--c-jev) 30%, transparent); border-left: 2px solid var(--c-jev); }
 @media (max-width: 980px) {
-  .ex-body { grid-template-columns: 1fr; }
-  .ex-rail { border-right: 0; border-bottom: 1px solid var(--line); flex-direction: row; flex-wrap: wrap; gap: 24px; }
   .ex-cols { grid-template-columns: 1fr; }
 }
 
@@ -461,7 +481,7 @@ svg text { user-select: none; font-family: var(--sans); }
 /* the headline figures (recall, precision): the --hl highlight with a hairline, on the value only */
 .ex-metric dd.hl { justify-self: end; background: var(--hl); border: 1px solid var(--hl-line); border-radius: 3px; padding: 0 5px; margin: -1px 0; color: var(--ink); }
 .ex-metric-note { margin: 8px 0 0; color: var(--ink-3); font-size: 11.5px; line-height: 1.45; }
-.ex-same { margin: -8px 0 18px; color: var(--ink-3); font-size: 12.5px; line-height: 1.5; max-width: 900px; }
+.ex-same { margin: 0 0 18px; color: var(--ink-3); font-size: 12.5px; line-height: 1.5; }
 
 /* advanced controls */
 .controls .more-wrap { margin-left: auto; display: inline-flex; align-items: center; gap: 14px; }

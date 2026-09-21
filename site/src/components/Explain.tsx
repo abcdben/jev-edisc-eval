@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { ABLATION_GROUPS, CORPORA, DATA, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER, fmtMs, fmtPct, isDecider, modelKind, variantDefinition } from "../data";
 import { EX, EX_GROUPS, exCorpus, groupOf, membersOf, type ExOutput } from "../examples";
-import { DeciderTag, Seg, type TipLine } from "./ui";
+import { DeciderTag, Seg, usePopDismiss, usePopPlace, type TipLine } from "./ui";
 
 /** The Metrics block: the full figures for one model on one corpus (what the chart tooltips used to carry), one fact list per card. */
 export type MetricSection = { title: string; lines: TipLine[]; notes?: string[] };
@@ -243,6 +243,86 @@ function Output({ o, gold, contended }: { o: ExOutput; gold: string; contended: 
 }
 
 // ------------------------------------------------------------------------------------------------
+// title menus: the h2 is two menu buttons, [family ▾] · [configuration ▾]
+
+type MenuItem = { id: string; label: string; def?: string; tags?: { text: string; title?: string }[] };
+/** `s` cut at a word boundary to about `n` characters, with an ellipsis; unchanged when it fits. The row's CSS ellipsis does the exact fit; this bounds the text. */
+const clip = (s: string, n = 120) => {
+  if (s.length <= n) return s;
+  const cut = s.lastIndexOf(" ", n);
+  return s.slice(0, cut > n - 30 ? cut : n).replace(/[,;:]$/, "") + "…";
+};
+
+/**
+ * One title menu: a button styled as the h2's text with a small chevron, opening a fixed-position menu below it (right-aligned or above at the
+ * viewport edge, the same rules as Hint). Rows are menuitemradios, the current one checked; ↑↓ move focus, Enter selects, Esc closes and returns
+ * focus to the button; a pointerdown outside closes it. The menu re-renders live while open, so ← → on the modal move the check mark.
+ */
+function TitleMenu({ label, value, items, onPick, muted, wide, ariaLabel, foot }: {
+  label: string; value: string; items: MenuItem[]; onPick: (id: string) => void; muted?: boolean; wide?: boolean; ariaLabel: string; foot?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLSpanElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  const pop = useRef<HTMLDivElement>(null);
+  const id = useId();
+  const place = usePopPlace(open, wrap, pop, "left");
+  usePopDismiss(open, wrap, () => setOpen(false));
+  // focus the checked row once the menu is placed (it is visibility: hidden until then, and cannot take focus); the keyboard handler below moves it
+  const placed = open && place !== null;
+  useEffect(() => {
+    if (!placed) return;
+    const el = pop.current?.querySelector<HTMLElement>('[role="menuitemradio"][aria-checked="true"]') ?? pop.current?.querySelector<HTMLElement>('[role="menuitemradio"]');
+    el?.focus();
+  }, [placed]);
+  const close = (refocus: boolean) => { setOpen(false); if (refocus) btn.current?.focus(); };
+  const onKey = (e: React.KeyboardEvent) => {
+    if (!open) return;
+    const rows = [...(pop.current?.querySelectorAll<HTMLElement>('[role="menuitemradio"]') ?? [])];
+    const i = rows.findIndex((r) => r === document.activeElement);
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault(); e.stopPropagation();
+      const n = rows.length;
+      rows[i < 0 ? (e.key === "ArrowDown" ? 0 : n - 1) : (i + (e.key === "ArrowDown" ? 1 : n - 1)) % n]?.focus();
+    } else if (e.key === "Home" || e.key === "End") {
+      e.preventDefault(); e.stopPropagation();
+      rows[e.key === "Home" ? 0 : rows.length - 1]?.focus();
+    } else if (e.key === "Escape") {
+      e.preventDefault(); e.stopPropagation(); close(true);
+    } else if (e.key === "Tab") close(false);
+  };
+  return (
+    <span ref={wrap} className={`ex-menu${open ? " open" : ""}`} onKeyDown={onKey}>
+      <button
+        ref={btn} type="button" className={`ex-menu-b${muted ? " muted" : ""}`} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? id : undefined} aria-label={`${ariaLabel}: ${label}`}
+        onClick={() => setOpen((o) => !o)}
+      >
+        {label}<svg className="ex-chev" aria-hidden="true" viewBox="0 0 10 10" width="10" height="10"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      </button>
+      {open && (
+        <div ref={pop} id={id} role="menu" aria-label={ariaLabel} className={`ex-menu-pop${wide ? " wide" : ""}`} style={{ left: place?.left ?? 0, top: place?.top ?? 0, visibility: place ? "visible" : "hidden" }}>
+          <div className="ex-menu-list">
+            {items.map((it) => (
+              <button
+                key={it.id} type="button" role="menuitemradio" aria-checked={it.id === value} className={`ex-mi${it.id === value ? " on" : ""}`}
+                onClick={() => { onPick(it.id); close(true); }}
+              >
+                <span className="ex-mi-chk" aria-hidden="true">{it.id === value ? "✓" : ""}</span>
+                <span className="ex-mi-body">
+                  <span className="ex-mi-l">{it.label}{it.tags?.map((t) => <span key={t.text} className="tag" title={t.title}>{t.text}</span>)}</span>
+                  {it.def && <span className="ex-mi-d" title={it.def}>{clip(it.def)}</span>}
+                </span>
+              </button>
+            ))}
+          </div>
+          {foot && <div className="ex-menu-foot">{foot}</div>}
+        </div>
+      )}
+    </span>
+  );
+}
+
+// ------------------------------------------------------------------------------------------------
 
 /** `metrics` supplies the Metrics block for the selected configuration on the modal's corpus; without it (or when it returns null) the block is omitted. */
 export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { initialKey: string; initialCorpus: string; onClose: () => void; metrics?: (key: string, corpus: string) => Metrics | null }) {
@@ -281,6 +361,21 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
   const m = metrics && active ? metrics(active, corpus) : null;
   const lead = active ? leadFor(group, active, corpus, G.label) : null;
   const recipe = ABLATION_GROUPS.find((g) => g.id === group)?.recipe;
+  const corpusLabel = CORPORA.find((c) => c.id === corpus)?.label ?? corpus;
+  // For Jev and the Laya checkpoints the lever callout (examples.py note) says what the lead's highlighted definition already says, so the
+  // lead replaces it. The LLM callout stays: the prompt's parts and the cache-friendly prefix are not in the lead or the request pane.
+  const showNote = !!note && note !== G.intro && (!lead || group === "llm");
+
+  const familyItems: MenuItem[] = EX_GROUPS.filter((g) => membersOf(corpus, g.id).length).map((g) => ({ id: g.id, label: g.label }));
+  // the configuration rows: label, tags, and the one-line definition (for the generative models, the roster note: their definition is shared)
+  const memberItems: MenuItem[] = members.map((k) => ({
+    id: k, label: memberLabel(k),
+    def: group === "llm" ? PRIMARY_BY_KEY[k]?.note ?? variantDefinition(k, corpusLabel) : variantDefinition(k, corpusLabel),
+    tags: [
+      ...(k.endsWith("@base") || (group === "tar" && k === baseKey) ? [{ text: "reference" }] : []),
+      ...(recipe && k.split("@")[1] === recipe ? [{ text: "★ selected", title: "selected on the Veridian dev split" }] : []),
+    ],
+  }));
 
   return (
     <div className="ex-back" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -288,7 +383,19 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
         <div className="ex-head">
           <div>
             <div className="ex-eyebrow">How each model is asked</div>
-            <h2>{G.label}{cfg && members.length > 1 ? <span className="ex-h-var"> · {memberLabel(active)}</span> : null}{active && isDecider(modelKind(active)) && <DeciderTag />}</h2>
+            <h2 className="ex-title">
+              <TitleMenu label={G.label} value={group} items={familyItems} ariaLabel="Family" onPick={(g) => { setGroup(g); setKey(membersOf(corpus, g)[0]); }} />
+              {cfg && members.length > 1 && (
+                <>
+                  <span className="ex-title-dot" aria-hidden="true">·</span>
+                  <TitleMenu
+                    label={memberLabel(active)} value={active} items={memberItems} muted wide ariaLabel={group === "llm" ? "Model" : "Configuration"}
+                    onPick={setKey} foot={`← → cycle ${group === "llm" ? "models" : "configurations"}`}
+                  />
+                </>
+              )}
+              {active && isDecider(modelKind(active)) && <DeciderTag />}
+            </h2>
           </div>
           <div className="ex-head-ctl">
             <Seg value={corpus} onChange={(c) => setCorpus(c)} options={CORPORA.filter((c) => EX.corpora[c.id]).map((c) => ({ id: c.id, label: c.label, title: c.short }))} />
@@ -297,45 +404,13 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
         </div>
 
         <div className="ex-body">
-          <aside className="ex-rail">
-            <div className="grp">
-              <div className="grp-t"><span>Family</span></div>
-              {EX_GROUPS.filter((g) => membersOf(corpus, g.id).length).map((g) => (
-                <button key={g.id} className={`pick${group === g.id ? "" : " off"}`} onClick={() => { setGroup(g.id); setKey(membersOf(corpus, g.id)[0]); }}>
-                  <span className="nm">{g.label}</span>
-                </button>
-              ))}
-            </div>
-            {members.length > 1 && (
-              <div className="grp">
-                <div className="grp-t"><span>{group === "llm" ? "Model" : "Configuration"}</span><span className="ex-kbd">← →</span></div>
-                {members.map((m) => (
-                  <button key={m} className={`pick${active === m ? "" : " off"}`} onClick={() => setKey(m)}>
-                    <span className="nm">{memberLabel(m)}</span>
-                    {(m.endsWith("@base") || (group === "tar" && m === baseKey)) && <span className="tag">reference</span>}
-                    {recipe && m.split("@")[1] === recipe && <span className="tag" title="selected on the Veridian dev split">★ selected</span>}
-                  </button>
-                ))}
-              </div>
-            )}
-            <div className="grp">
-              <div className="grp-t"><span>Document</span></div>
-              {C.documents.map((dd, i) => (
-                <button key={dd.id} className={`pick${docIdx === i ? "" : " off"}`} onClick={() => setDocIdx(i)} title={dd.id}>
-                  <span className="nm">{dd.gold === "responsive" ? "a gold-responsive document" : "a gold-not-responsive document"}</span>
-                </button>
-              ))}
-              <div className="ex-q">Issue: <b>{C.question.title}</b></div>
-            </div>
-          </aside>
-
           <div className="ex-main">
             {lead && <p className="ex-lead"><Rich s={lead.pre} /><mark>{lead.def}</mark><Rich s={lead.post} /></p>}
             {m && <MetricsBlock m={m} />}
             <p className="ex-intro"><Rich s={G.intro} /></p>
             {cfg && (
               <>
-                {note && note !== G.intro && <p className="ex-note"><Emph s={note} term={NOTE_KEY_TERM[noteFamily(group)]?.[group === "llm" ? "" : variant]} /></p>}
+                {showNote && <p className="ex-note"><Emph s={note} term={NOTE_KEY_TERM[noteFamily(group)]?.[group === "llm" ? "" : variant]} /></p>}
                 {base && d.changed.size === 0 && d.removed.length === 0 && (
                   <p className="ex-same">On this corpus and issue the request is identical to the default: the lever has nothing to act on here{variant === "decompose" ? " (this issue has no sub-questions in the task file; try CUAD or TREC)" : ""}. Any difference in the output is run-to-run variation.</p>
                 )}
@@ -350,7 +425,16 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
                   <div className="ex-col pin">
                     <div className="ex-col-t">Settings<span className="ex-col-s">fixed for the whole run</span></div>
                     <Node v={settingsFor(group, cfg.settings)} path="settings" changed={base ? diff(settingsFor(group, cfg.settings), settingsFor(group, base.settings)).changed : new Set()} doc="" ctx="" />
-                    <div className="ex-col-t" style={{ marginTop: 18 }}>Output<span className="ex-col-s">what the model actually returned</span></div>
+                    <div className="ex-col-t ex-out-t">
+                      <span className="ex-out-row">
+                        Output
+                        <Seg
+                          value={String(docIdx)} onChange={(v) => setDocIdx(Number(v))}
+                          options={C.documents.map((dd, i) => ({ id: String(i), label: dd.gold === "responsive" ? "gold-responsive" : "gold-not-responsive", title: `${dd.gold === "responsive" ? "a gold-responsive" : "a gold-not-responsive"} document (${dd.id})` }))}
+                        />
+                      </span>
+                      <span className="ex-col-s">Issue: <b>{C.question.title}</b> · what the model returned on this document</span>
+                    </div>
                     <Output o={ex?.output ?? null} gold={doc.gold} contended={group.startsWith("laya")} />
                   </div>
                 </div>
