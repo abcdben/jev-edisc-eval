@@ -5,25 +5,52 @@ import { Hint, Seg, TipBox, useTip, useWidth, type TipLine } from "./ui";
 
 const LABEL_W = 168, ROW = 20;
 
-/** The determinism cell for a record: matched on model key, arm follows the page. Ablation variants are not covered. */
-export function detFor(r: Rec, arm: "multi" | "single", setting: "default" | "t0"): DetCell | null {
+/**
+ * What the card plots for one record. `cell` is the measured cell (its `model` names the configuration it was measured on, which differs
+ * from the record's key when a row borrows a sibling's cell); it is null for the classical TAR rows, whose disagreement is zero by construction.
+ */
+export type DetEntry = { pairwise: [number, number, number]; setting: "default" | "t0"; cell: DetCell | null };
+
+const isTar = (r: Rec) => r.model_key.startsWith("tar@") || r.model.startsWith("tar@") || !!r.tar;
+
+/** The determinism entry for a record: matched on model key, arm follows the page. Ablation variants are not covered. */
+export function detFor(r: Rec, arm: "multi" | "single", setting: "default" | "t0"): DetEntry | null {
+  // A trained TF-IDF / logistic-regression classifier gives the identical score on every pass over the same document, and the simulated
+  // reviewer is deterministic too, so pairwise disagreement is exactly 0. There is no temperature to set; the t = 0 view falls back to this.
+  if (isTar(r)) return setting === "default" ? { pairwise: [0, 0, 0], setting, cell: null } : null;
   const det = DATA.determinism;
   if (!det) return null;
-  const key = r.model === "laya-ft" ? null : r.model_key;
-  if (!key) return null;
-  return det.cells.find((c) => c.model === key && c.arm === arm && c.setting === setting) ?? null;
+  const find = (key: string) => det.cells.find((c) => c.model === key && c.arm === arm && c.setting === setting) ?? null;
+  // The fine-tuned Laya checkpoint was not repeated. Laya has no sampling controls, so the zero-shot recipe (or base) cell stands in for it.
+  const cell = r.model === "laya-ft" ? find("laya@recipe") ?? find("laya@base") : find(r.model_key);
+  return cell ? { pairwise: cell.pairwise, setting: cell.setting, cell } : null;
 }
 
-function tipFor(c: DetCell, name: string): { lines: TipLine[]; notes: string[] } {
+const TAR_TIP: { lines: TipLine[]; notes: string[] } = {
+  lines: [["Pairwise disagreement", "0"]],
+  notes: [
+    "Deterministic given its training sample: the same trained classifier gives the same score on every pass, and the simulated reviewer is deterministic too.",
+    "The variation across random training samples is the seed range in the recall and precision tooltip, not a determinism effect.",
+  ],
+};
+
+function tipFor(x: DetEntry, r: Rec, name: string): { lines: TipLine[]; notes: string[] } {
+  const c = x.cell;
+  if (!c) return TAR_TIP;
   const lines: TipLine[] = [
     ["Runs", String(c.k)],
     ["Decisions compared", fmtInt(c.n_decisions)],
     ["Pairwise disagreement", fmtCI(c.pairwise, 2)],
     ["Decisions that flipped", fmtCI(c.decision_flip, 2)],
   ];
-  if (c.recall_range) lines.push(["Recall across runs", `${fmtPct(c.recall_range[0])} – ${fmtPct(c.recall_range[1])}`]);
-  if (c.precision_range) lines.push(["Precision across runs", `${fmtPct(c.precision_range[0])} – ${fmtPct(c.precision_range[1])}`]);
-  return { lines, notes: c.setting === "t0" ? [`${name} at temperature 0.`] : [] };
+  const borrowed = c.model !== r.model_key;
+  // A borrowed cell's flip rates carry over; its recall and precision levels belong to the configuration it was measured on, so they are left out.
+  if (c.recall_range && !borrowed) lines.push(["Recall across runs", `${fmtPct(c.recall_range[0])} – ${fmtPct(c.recall_range[1])}`]);
+  if (c.precision_range && !borrowed) lines.push(["Precision across runs", `${fmtPct(c.precision_range[0])} – ${fmtPct(c.precision_range[1])}`]);
+  const notes: string[] = [];
+  if (borrowed) notes.push(`Not repeated for the fine-tuned checkpoint; these are the zero-shot ${DATA.models[c.model]?.name ?? c.model} cell's numbers. Laya has no sampling controls, so the checkpoint behaves the same.`);
+  if (c.setting === "t0") notes.push(`${name} at temperature 0.`);
+  return { lines, notes };
 }
 
 export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single" }) {
@@ -37,6 +64,7 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
   const isLLM = (r: Rec) => r.kind === "llm" || r.kind === "local_llm";
   const shown = rows.map((x) => ({ r: x.r, c: setting === "t0" ? (x.t0 ?? (isLLM(x.r) ? null : x.d)) : x.d }));
   const measured = shown.filter((x) => x.c);
+  // Ascending by point estimate; rows without an entry sink to the bottom. The analytic TAR zeros tie with the other 0 rows (stable sort keeps picker order among ties).
   const sorted = [...shown].sort((a, b) => (a.c?.pairwise[0] ?? Infinity) - (b.c?.pairwise[0] ?? Infinity));
   const max = Math.max(0.01, ...measured.map((x) => x.c!.pairwise[2]));
   const plotW = Math.max(120, W - LABEL_W - 90);
@@ -47,10 +75,10 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
     <div className="card">
       <div className="card-t">
         <h3>Determinism</h3>
-        <span className="unit">{det ? `${fmtInt(det.sample.n_docs)} emails · ${rows.find((x) => x.d)?.d?.k ?? 5} runs` : "not measured"}</span>
+        <span className="unit">{det ? `${fmtInt(det.sample.n_docs)} emails · ${rows.find((x) => x.d?.cell)?.d?.cell?.k ?? 5} runs` : "not measured"}</span>
         <span className="right">
           {hasT0 && <Seg value={setting} onChange={setSetting} options={[{ id: "default", label: "default", title: "Vendor default sampling" }, { id: "t0", label: "t = 0", title: "Temperature 0 where the API accepts it" }]} />}
-          <Hint left text="Measured on Mallinckrodt only and shown for every corpus, since it is a property of the model rather than the documents. Each model scored the same fixed sample of 300 Mallinckrodt emails five times under identical settings (100 emails with a debatable gold label, 100 clear positives, 100 clear negatives; the benchmark run counts as the first repeat). The bar is pairwise disagreement: the probability that two independent runs give a different label for the same (document, issue) decision. The whisker is a 95% bootstrap interval over decisions. The t = 0 view shows the same models at temperature 0 where the API accepts it; Anthropic rejects sampling parameters on Sonnet 5, so it is marked not measured there. Jev and Laya expose no sampling controls, so their bars are intrinsic behaviour in both views. Hover for flip rates by stratum, issue and gold label, and for how much recall moved between runs." />
+          <Hint left text="Measured on Mallinckrodt only and shown for every corpus, since it is a property of the model rather than the documents. Each model scored the same fixed sample of 300 Mallinckrodt emails five times under identical settings (100 emails with a debatable gold label, 100 clear positives, 100 clear negatives; the benchmark run counts as the first repeat). The bar is pairwise disagreement: the probability that two independent runs give a different label for the same (document, issue) decision. The whisker is a 95% bootstrap interval over decisions. The t = 0 view shows the same models at temperature 0 where the API accepts it; Anthropic rejects sampling parameters on Sonnet 5, so it is marked not measured there. Jev and Laya expose no sampling controls, so their bars are intrinsic behaviour in both views. The classical TAR rows are 0 by construction: a trained classifier and the simulated reviewer make the same call on every pass, and their spread across random training samples is reported as a seed range elsewhere. Hover for flip rates by stratum, issue and gold label, and for how much recall moved between runs." />
         </span>
       </div>
       <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
@@ -70,7 +98,7 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
             const v = x.c.pairwise[0], lo = x.c.pairwise[1], hi = x.c.pairwise[2];
             const cy = y + ROW / 2;
             return (
-              <g key={x.r.model} onMouseMove={(e) => show(e, { title: `${nm}${x.c!.setting === "t0" ? " · temperature 0" : ""}`, color: c, ...tipFor(x.c!, nm) })} onMouseLeave={hide} style={{ cursor: "default" }}>
+              <g key={x.r.model} onMouseMove={(e) => show(e, { title: `${nm}${x.c!.setting === "t0" ? " · temperature 0" : ""}`, color: c, ...tipFor(x.c!, x.r, nm) })} onMouseLeave={hide} style={{ cursor: "default" }}>
                 <rect x={0} y={y} width={W} height={ROW} fill="transparent" />
                 <g color="var(--ink-2)"><LogoGlyph model={x.r.model} cx={8} cy={cy} /></g>
                 <text x={22} y={cy + 4} fontSize={12} fill="var(--ink-2)">{nm}</text>
