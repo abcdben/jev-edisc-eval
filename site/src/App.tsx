@@ -266,7 +266,6 @@ export default function App() {
   const v: View = { corpus, tag: corpus === "trec" ? tag : "", arm, gray, level, issue };
   const meta = DATA.corpora[corpusKey(v.corpus, v.tag)];
   const nModels = new Set(DATA.records.filter((r) => r.primary).map((r) => r.model)).size;
-  const nConfigs = new Set(DATA.records.map((r) => r.model)).size;
   const nDocs = Object.values(DATA.corpora).filter((c) => !c.tag).reduce((a, c) => a + c.n_docs, 0);
 
   const pickCorpus = (c: string) => { setCorpus(c); setIssue(null); };
@@ -278,10 +277,7 @@ export default function App() {
       <header className="masthead">
         <span className="eyebrow">Benchmark · document review · {new Date().getFullYear()}</span>
         <span className="theme"><Seg value={theme} onChange={setTheme} options={[{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }]} /></span>
-        <h1 className="title">System 1 decision models against <em>large language models</em> for relevance and issue review</h1>
-        <p className="lede">
-          Four labeled corpora, {nModels} classifiers, {nConfigs} configurations, one shared set of requests for production per corpus. Choose a corpus and the models you care about; every mark on the page can be hovered for the numbers behind it.
-        </p>
+        <h1 className="title">Decider Model v LLM Bakeoff</h1>
         <div className="stats">
           <span className="stat"><span className="n">{fmtInt(nDocs)}</span><span className="l">gold-labeled documents</span></span>
           <span className="stat"><span className="n">{Object.values(DATA.corpora).filter((c) => !c.tag).reduce((a, c) => a + c.n_issues, 0)}</span><span className="l">issues (RFPs)</span></span>
