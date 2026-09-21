@@ -272,9 +272,14 @@ svg text { user-select: none; font-family: var(--sans); }
 .disc-link:hover { color: var(--ink); }
 
 /* Disclaimer modal (Disclaimer.tsx): a narrow note in the shared modal chrome, shown once on first visit and again from the footer link */
-.ex-modal.disclaimer { width: min(520px, 100%); height: auto; max-height: 100%; }
-.disc-body { padding: 16px 24px 22px; overflow: auto; }
-.disc-body p { margin: 0 0 12px; font-size: 13.5px; line-height: 1.55; color: var(--ink-2); }
+.ex-modal.disclaimer { width: min(600px, 100%); height: auto; max-height: 100%; }
+.disc-body { padding: 14px 24px 22px; overflow: auto; }
+.disc-body p { margin: 0 0 12px; font-size: 13px; line-height: 1.55; color: var(--ink-2); }
+.disc-body h4 { margin: 14px 0 5px; font-size: 10px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.disc-body h4:first-child { margin-top: 2px; }
+.disc-body ul { margin: 0 0 12px; padding-left: 16px; }
+.disc-body li { margin: 0 0 5px; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
+.disc-body li b { font-weight: 500; color: var(--ink); }
 .disc-body a { color: var(--ink); text-decoration: underline; text-underline-offset: 2px; }
 .disc-ok {
   display: block; width: 100%; margin-top: 18px; padding: 8px 14px; border: 1px solid var(--ink); border-radius: 6px; background: var(--ink); color: var(--bg);

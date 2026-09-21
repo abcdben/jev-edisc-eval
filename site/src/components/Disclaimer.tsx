@@ -10,7 +10,7 @@ import { Modal } from "./ui";
 const CONTACT_HREF = "mailto:abcdben@gmail.com";
 const CONTACT_LABEL = "email";
 
-const ACK_KEY = "disclaimer_ack_v2";
+const ACK_KEY = "disclaimer_ack_v3";
 
 const read = () => { try { return localStorage.getItem(ACK_KEY) === "1"; } catch { return true; } };
 const write = () => { try { localStorage.setItem(ACK_KEY, "1"); } catch { /* private mode: show again next visit */ } };
@@ -32,21 +32,36 @@ export function useDisclaimer() {
 
 export function DisclaimerModal({ onClose }: { onClose: () => void }) {
   return (
-    <Modal className="disclaimer" eyebrow="Status of this work" title="Preliminary results" onClose={onClose}>
+    <Modal className="disclaimer" eyebrow="About this comparison" title="Decision models against LLMs on legal document review" onClose={onClose}>
       <div className="disc-body">
+        <h4>What was tested</h4>
         <p>
-          This is a working study. The evaluations were designed and run carefully, and the findings seemed important enough to share now,
-          but they have not been independently replicated or peer reviewed and should be read as preliminary.
+          Two new decision models, Jev (TypeSafe AI) and Laya (ConvAI), against seven commercially available language models: Haiku 4.5,
+          Sonnet 5, GPT‑5.6 Luna and Terra, Gemini 3.5 Flash‑Lite and 3.8 Flash, and a locally run Gemma 3 12B. Classical TAR is included
+          for reference: a simulated reviewer with TF‑IDF and logistic regression, as TAR 1.0 and as continuous active learning. The task is
+          the one review teams do in discovery: is this document responsive, and to which issues.
         </p>
+        <h4>Data sets</h4>
+        <ul>
+          <li><b>Mallinckrodt</b>: 1,840 emails from the opioid litigation archive; eight issues written for this study in broad and narrow pairs; gold labels from a three‑model panel.</li>
+          <li><b>CUAD</b>: 6,494 paragraphs from 102 commercial contracts; twelve clause types framed as requests; expert annotations as gold.</li>
+          <li><b>TREC 2016</b>: 3,116 emails drawn from the 286,000‑message Jeb Bush collection; twelve NIST topics; assessor judgments as gold.</li>
+        </ul>
+        <h4>Set‑up</h4>
         <p>
-          The figures describe how a set of decision models, language models and classical TAR workflows performed on three specific corpora
-          under specific conditions: particular issue criteria, gold labels, configurations, pricing modes and samples. Changing any of these
-          would change the results. They are a snapshot for orientation, not a forecast of what any model will do on your matter, and not a
-          claim of general superiority.
+          Every model saw the same document text, issue criteria and matter context, and returned a label with a probability. Reported: recall
+          and precision with 95% intervals, time and cost per 100,000 documents, and how often each model changes its answer across repeated
+          runs. The Method table has the specifics for each corpus.
         </p>
+        <h4>What this is</h4>
         <p>
-          Where a result looks surprising, assume there is a reason in the method before assuming it is a finding. The Method table lists
-          the main choices, and the details view on any row shows exactly what that model was asked.
+          A comparison done with care, meant to give a sense of what these new models can do on review tasks next to the models people already use.
+        </p>
+        <h4>What this is not</h4>
+        <p>
+          A peer‑reviewed study. It has not been independently replicated, the gold labels for one corpus are model‑generated, and every
+          figure rests on choices about criteria, configurations, pricing and sampling that would shift on another matter. Read the numbers
+          as a well‑built snapshot, not a forecast.
         </p>
         <p>
           Questions, corrections and requests for the underlying data are welcome: <a href={CONTACT_HREF}>{CONTACT_LABEL}</a>.
