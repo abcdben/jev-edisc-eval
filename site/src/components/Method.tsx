@@ -30,7 +30,7 @@ function subsets(id: string): ReactNode {
 
 function DocsCell({ id }: { id: string }) {
   const m = meta(id);
-  return <><N v={m.n_docs} /> · <N v={m.n_pos_docs_any} /> responsive to at least one issue (<N v={fmtPct(m.n_pos_docs_any / m.n_docs, 0)} />)</>;
+  return <><b><N v={m.n_docs} /></b> · <N v={m.n_pos_docs_any} /> responsive to at least one issue (<N v={fmtPct(m.n_pos_docs_any / m.n_docs, 0)} />)</>;
 }
 function GrayCount({ id }: { id: string }) {
   const m = meta(id);
@@ -41,9 +41,9 @@ const DATASET_ROWS: FactRow[] = [
   {
     k: "Source",
     cells: {
-      mnk: "UCSF / JHU Opioid Industry Documents Archive, Mallinckrodt litigation collection: emails of 23 key custodians.",
-      cuad: "CUAD v1 (Atticus Project, CC BY 4.0), official test split: 102 EDGAR commercial contracts.",
-      trec: "TREC 2016 Total Recall, athome4: Jeb Bush gubernatorial email, 290,099 messages.",
+      mnk: <><b>UCSF / JHU Opioid Industry Documents Archive</b>, Mallinckrodt litigation collection: emails of 23 key custodians.</>,
+      cuad: <><b>CUAD v1</b> (Atticus Project, CC BY 4.0), official test split: 102 EDGAR commercial contracts.</>,
+      trec: <><b>TREC 2016 Total Recall</b>, athome4: Jeb Bush gubernatorial email, 290,099 messages.</>,
     },
   },
   {
@@ -53,49 +53,49 @@ const DATASET_ROWS: FactRow[] = [
   {
     k: "Unit · length",
     cells: {
-      mnk: "One email with its headers; 300–12,000 characters (median ≈ 2,700).",
-      cuad: "One contract paragraph with a title / position header; ≤ 3,000 characters (median ≈ 520).",
-      trec: "One email with its headers; ≤ 12,000 characters (median ≈ 1,500).",
+      mnk: <><b>One email</b> with its headers; 300–12,000 characters (median ≈ 2,700).</>,
+      cuad: <><b>One contract paragraph</b> with a title / position header; ≤ 3,000 characters (median ≈ 520).</>,
+      trec: <><b>One email</b> with its headers; ≤ 12,000 characters (median ≈ 1,500).</>,
     },
   },
   {
     k: "Issues",
     cells: {
-      mnk: <><N v={8} />: four broad / narrow pairs (suspicious order monitoring, marketing, distribution data, DEA) written for this study from the opioid MDL record.</>,
-      cuad: <><N v={12} /> of CUAD's 41 clause categories, reframed as requests for production; license grant / non-transferable license form a broad / narrow pair.</>,
-      trec: <><N v={12} /> of the 34 NIST topics; the official topic sentence is the request, verbatim.</>,
+      mnk: <><b><N v={8} /></b>: four broad / narrow pairs (suspicious order monitoring, marketing, distribution data, DEA) written for this study from the opioid MDL record.</>,
+      cuad: <><b><N v={12} /></b> of CUAD's 41 clause categories, reframed as requests for production; license grant / non-transferable license form a broad / narrow pair.</>,
+      trec: <><b><N v={12} /></b> of the 34 NIST topics; the official topic sentence is the request, verbatim.</>,
     },
   },
   {
     k: "Criteria",
     cells: {
-      mnk: "RFP text, prose positive / negative descriptions, structured includes / excludes; identical for every model.",
-      cuad: "Same forms; the 'literal' phrasing is CUAD's own category definition.",
-      trec: "Refined once on a 668-email calibration set disjoint from evaluation (Jev and Gemini Flash-Lite on v0; shared misses read per topic). 'Bare topic' shows v0.",
+      mnk: <>RFP text, prose positive / negative descriptions, structured includes / excludes; <b>identical for every model</b>.</>,
+      cuad: <>Same forms; the 'literal' phrasing is <b>CUAD's own category definition</b>.</>,
+      trec: <>Refined once on a <b>668-email calibration set</b> disjoint from evaluation (Jev and Gemini Flash-Lite on v0; shared misses read per topic). 'Bare topic' shows v0.</>,
     },
   },
   {
     k: "Truth data",
     cells: {
-      mnk: "Provisional gold from a 3-LLM panel (Sonnet 5, GPT-5.6 Terra, Gemini 3.8 Flash), majority vote per decision; Jev and Laya never feed gold.",
-      cuad: "Expert-highlighted spans. A paragraph is positive when it carries ≥ 50% of a span, or a span covers ≥ 50% of it.",
-      trec: "NIST assessor judgments: rel 1 or 2 → responsive; judged non-relevant and unjudged → not responsive (TREC convention).",
+      mnk: <mark>Provisional gold from a <b>3-LLM panel</b> (Sonnet 5, GPT-5.6 Terra, Gemini 3.8 Flash), majority vote per decision; Jev and Laya never feed gold.</mark>,
+      cuad: <mark><b>Expert-highlighted spans</b>. A paragraph is positive when it carries ≥ 50% of a span, or a span covers ≥ 50% of it.</mark>,
+      trec: <mark><b>NIST assessor judgments</b>: rel 1 or 2 → responsive; judged non-relevant and unjudged → not responsive (TREC convention).</mark>,
     },
   },
   {
     k: "Gray (debatable)",
     cells: {
-      mnk: <>Panel split, or mean p(responsive) in 0.35–0.65: <GrayCount id="mnk" />.</>,
-      cuad: <>Overlaps a span below both 50% thresholds (a clause across a paragraph break): <GrayCount id="cuad" />.</>,
-      trec: <>None from NIST; <GrayCount id="trec" /> flagged where a facet's gold contradicts the topic text (NRA / non-resident aliens).</>,
+      mnk: <>Panel split, or mean p(responsive) in 0.35–0.65: <b><GrayCount id="mnk" /></b>.</>,
+      cuad: <>Overlaps a span below both 50% thresholds (a clause across a paragraph break): <b><GrayCount id="cuad" /></b>.</>,
+      trec: <>None from NIST; <b><GrayCount id="trec" /></b> flagged where a facet's gold contradicts the topic text (NRA / non-resident aliens).</>,
     },
   },
   {
     k: "Sampling",
     cells: {
-      mnk: "Stratified: keyword-doped strata per issue pair, adjacent-product hard negatives, 700 random; near-duplicate threads thinned. Keyword strata are not labels.",
-      cuad: "Every paragraph of the 102 test contracts.",
-      trec: "Stratified from the collection: 100 gold positives per topic, 1,000 judged non-relevant, 1,000 random; excludes the calibration set and 696 documents read while exploring.",
+      mnk: <><b>Stratified</b>: keyword-doped strata per issue pair, adjacent-product hard negatives, 700 random; near-duplicate threads thinned. Keyword strata are not labels.</>,
+      cuad: <><b>Every paragraph</b> of the 102 test contracts.</>,
+      trec: <><b>Stratified</b> from the collection: 100 gold positives per topic, 1,000 judged non-relevant, 1,000 random; excludes the calibration set and 696 documents read while exploring.</>,
     },
   },
   {
@@ -105,38 +105,38 @@ const DATASET_ROWS: FactRow[] = [
   {
     k: "What each model saw",
     cells: {
-      mnk: "The email text with headers, the issue criteria, and a matter-background paragraph; returned a label and a probability.",
-      cuad: "The excerpt with its header, the clause criteria, and a due-diligence background paragraph; label and probability.",
-      trec: "The email text with headers, the topic criteria, and a public-records background paragraph; label and probability.",
+      mnk: <>The email text with headers, the issue criteria, and a matter-background paragraph; returned <b>a label and a probability</b>.</>,
+      cuad: <>The excerpt with its header, the clause criteria, and a due-diligence background paragraph; <b>label and probability</b>.</>,
+      trec: <>The email text with headers, the topic criteria, and a public-records background paragraph; <b>label and probability</b>.</>,
     },
   },
   {
     k: "Runs",
     cells: {
-      mnk: "Both arms (all issues per call; one issue per call). 12 Jev and 11 Laya configurations; Laya fine-tuned. TAR 1.0 at 100 / 300 / 1,000 coded; 5 seeds.",
-      cuad: "Both arms. 12 Jev and 10 Laya configurations; Laya fine-tuned. TAR 1.0 at 100 / 1,000 / 5,000 coded; 5 seeds.",
-      trec: "Both arms, calibrated and bare-topic criteria. 12 Jev and 11 Laya configurations; Laya fine-tuned. TAR over the full 286,326-email collection: TAR 1.0 at 100 / 1,000 / 5,000; 5 seeds.",
+      mnk: <><b>Both arms</b> (all issues per call; one issue per call). 12 Jev and 11 Laya configurations; Laya fine-tuned. TAR 1.0 at 100 / 300 / 1,000 coded; 5 seeds.</>,
+      cuad: <><b>Both arms</b>. 12 Jev and 10 Laya configurations; Laya fine-tuned. TAR 1.0 at 100 / 1,000 / 5,000 coded; 5 seeds.</>,
+      trec: <><b>Both arms</b>, calibrated and bare-topic criteria. 12 Jev and 11 Laya configurations; Laya fine-tuned. TAR over the full 286,326-email collection: TAR 1.0 at 100 / 1,000 / 5,000; 5 seeds.</>,
     },
   },
 ];
 
 const MEASURE_ROWS: [string, ReactNode][] = [
-  ["Intervals", "95% Wilson score. Recall over the gold-positive set, precision over the flagged set; every document carries a gold label."],
-  ["Level", "Document: responsive if positive for any issue. Decision: every (document, issue) judgment pooled. Single issue: that issue alone."],
-  ["Label", "The model's own label (responsive when p ≥ 50%); no tuned threshold."],
-  ["Subsets (*)", "Rows scored on a stratified subset are marked *; intervals widen to match."],
-  ["Time", "Median wall-clock per document, one request at a time, × 100,000. All-issues arm: one call per document; one-issue arm: the sum over issues."],
-  ["Concurrency", "Every service accepts parallel requests, so hours shrink for all rows alike; compare ratios, not absolutes."],
-  ["Cost", "As paid: OpenAI on flex pricing (half of list); Anthropic with prompt caching on the all-issues arm; Google and TypeSafe at list."],
-  ["GPU rows", <>Laya and Gemma 3 12B ran on a rented {GPU_NAME}: ${GPU_USD_PER_HOUR.toFixed(2)}/h (Lambda list, September 2026) × single-stream review time, an upper bound. Gemma via Ollama on 400–600-document subsets.</>],
-  ["+ human time", <>{HUMAN_DEV_DOCS} documents at {HUMAN_DEV_DOCS_PER_HOUR}/h and ${HUMAN_DEV_USD_PER_HOUR}/h = {fmtHours(HUMAN_DEV_HOURS)} and {fmtUSD(HUMAN_DEV_USD)} of prompt or criteria development, once per 100k-document project, added to every non-TAR row.</>],
-  ["Determinism", "300 Mallinckrodt emails (100 gray, 100 clear positive, 100 clear negative) scored five times, both arms; the benchmark run is repeat one. Shown for every corpus."],
-  ["Determinism metric", "Probability that two runs disagree on a decision (pairwise), 95% bootstrap interval over decisions. Temperature 0 where the API accepts it; Sonnet 5 rejects sampling parameters; Jev and Laya expose none. TAR is 0 by construction."],
-  ["TAR reviewer", "Simulated from gold labels: 50 documents/hour, $65/hour; classifier compute not charged. A perfect reviewer in the TAR 1.0 rows; an imperfect one (misses 10% of relevant, over-codes 2% of non-relevant) is offered as a variant on the Configurations page."],
-  ["TAR classifier", "TF-IDF (word 1–2-grams) + logistic regression, one model per issue and one for any-issue relevance."],
-  ["TAR 1.0", "The reviewer codes a random sample; cutoff by 5-fold cross-validation on that sample alone, targeting 80% recall (or best F1). Median of 5 seeds."],
-  ["Laya fine-tuned", "RLCD recipe on a 30% document-level split of the same corpus (CUAD split by contract; TREC: the 668-email calibration set), scored on the held-out rest. Its labeled data is not counted in time or cost."],
-  ["Optimized configurations", "Jev flat-string state and Laya compact + chunk (★) were selected on the Veridian synthetic dev split before any other corpus was scored."],
+  ["Intervals", <mark><b>95% Wilson</b> score. Recall over the gold-positive set, precision over the flagged set; every document carries a gold label.</mark>],
+  ["Level", <><b>Document</b>: responsive if positive for any issue. Decision: every (document, issue) judgment pooled. Single issue: that issue alone.</>],
+  ["Label", <><b>The model's own label</b> (responsive when p ≥ 50%); no tuned threshold.</>],
+  ["Subsets (*)", <>Rows scored on a <b>stratified subset</b> are marked *; intervals widen to match.</>],
+  ["Time", <><b>Median</b> wall-clock per document, one request at a time, × 100,000. All-issues arm: one call per document; one-issue arm: the sum over issues.</>],
+  ["Concurrency", <>Every service accepts parallel requests, so hours shrink for all rows alike; <b>compare ratios, not absolutes</b>.</>],
+  ["Cost", <><b>As paid</b>: OpenAI on flex pricing (half of list); Anthropic with prompt caching on the all-issues arm; Google and TypeSafe at list.</>],
+  ["GPU rows", <>Laya and Gemma 3 12B ran on a rented {GPU_NAME}: ${GPU_USD_PER_HOUR.toFixed(2)}/h (Lambda list, September 2026) × single-stream review time, <b>an upper bound</b>. Gemma via Ollama on 400–600-document subsets.</>],
+  ["+ human time", <mark>{HUMAN_DEV_DOCS} documents at {HUMAN_DEV_DOCS_PER_HOUR}/h and ${HUMAN_DEV_USD_PER_HOUR}/h = <b>{fmtHours(HUMAN_DEV_HOURS)} and {fmtUSD(HUMAN_DEV_USD)}</b> of prompt or criteria development, once per 100k-document project, added to every non-TAR row.</mark>],
+  ["Determinism", <><b>300 Mallinckrodt emails</b> (100 gray, 100 clear positive, 100 clear negative) scored five times, both arms; the benchmark run is repeat one. Shown for every corpus.</>],
+  ["Determinism metric", <><b>Probability that two runs disagree</b> on a decision (pairwise), 95% bootstrap interval over decisions. Temperature 0 where the API accepts it; Sonnet 5 rejects sampling parameters; Jev and Laya expose none. TAR is 0 by construction.</>],
+  ["TAR reviewer", <>Simulated from gold labels: <b>50 documents/hour, $65/hour</b>; classifier compute not charged. A perfect reviewer in the TAR 1.0 rows; an imperfect one (misses 10% of relevant, over-codes 2% of non-relevant) is offered as a variant on the Configurations page.</>],
+  ["TAR classifier", <><b>TF-IDF (word 1–2-grams) + logistic regression</b>, one model per issue and one for any-issue relevance.</>],
+  ["TAR 1.0", <>The reviewer codes a random sample; cutoff by 5-fold cross-validation on that sample alone, targeting <b>80% recall</b> (or best F1). Median of 5 seeds.</>],
+  ["Laya fine-tuned", <>RLCD recipe on a 30% document-level split of the same corpus (CUAD split by contract; TREC: the 668-email calibration set), scored on the held-out rest. Its labeled data is <b>not counted in time or cost</b>.</>],
+  ["Optimized configurations", <mark>Jev flat-string state and Laya compact + chunk (★) were selected on the <b>Veridian synthetic dev split</b> before any other corpus was scored.</mark>],
   ["Absent cells", "Some one-issue-per-call Laya configurations stalled and are omitted from that view. The fine-tuned Laya checkpoint on CUAD collapsed to a constant negative and is shown as such."],
 ];
 

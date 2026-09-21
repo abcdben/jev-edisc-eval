@@ -19,6 +19,9 @@
   --axis: #c9cac2;
   --box-alpha: 0.14;
   --bar-alpha: 0.55;
+  /* key-section highlight: a very light chartreuse behind the details modal's definition, lever callout and headline figures */
+  --hl: #f2fbc4;
+  --hl-line: #d6e88f;
 
   /* model palette, light */
   --c-jev: #b52f8a;
@@ -57,6 +60,8 @@
   --axis: #464b50;
   --box-alpha: 0.2;
   --bar-alpha: 0.7;
+  --hl: rgba(206, 240, 60, .14);
+  --hl-line: rgba(206, 240, 60, .38);
 
   --c-jev: #ea5fbf;
   --c-jev-2: #f2a1d8;
@@ -339,6 +344,11 @@ svg text { user-select: none; font-family: var(--sans); }
 .fact tbody th, .fact tbody td { border-bottom: 1px solid var(--line); }
 .fact tbody tr:last-child th, .fact tbody tr:last-child td { border-bottom: 0; }
 .fact .n { color: var(--ink); font-variant-numeric: tabular-nums; font-feature-settings: "tnum", "cv11"; }
+/* Emphasis in dense text (fact tables, hint popovers), the disclaimer's treatment: one bold key fact per cell or item, a chartreuse highlight on the
+   few passages a reader most needs. The mark is an inline on the text, never a tint on the whole cell (that reads as zebra striping). */
+.fact b, .hint .pop b { font-weight: 500; color: var(--ink); }
+.fact mark, .hint .pop mark { display: inline; background: var(--hl, #f2fbc4); color: var(--ink); padding: 0 3px; border-radius: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+[data-theme="dark"] .fact mark, [data-theme="dark"] .hint .pop mark { background: var(--hl, rgba(206, 240, 60, .16)); }
 
 /* explainer modal ---------------------------------------------------------------- */
 .ex-btn {
@@ -382,8 +392,12 @@ svg text { user-select: none; font-family: var(--sans); }
 .ex-check input { margin: 2px 0 0; accent-color: var(--ink); }
 
 .ex-main { padding: 18px 24px 24px; overflow: auto; min-width: 0; }
+/* the opening sentence: what this configuration is; the bold name, the definition on the --hl highlight */
+.ex-lead { margin: 0 0 16px; color: var(--ink); font-size: 14px; line-height: 1.6; max-width: 900px; }
+.ex-lead b, .ex-intro b, .ex-note b { font-weight: 600; color: var(--ink); }
+.ex-lead mark { background: var(--hl); color: var(--ink); padding: 1px 3px; margin: 0 -1px; border-radius: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 .ex-intro { margin: 0 0 10px; color: var(--ink-2); font-size: 13.5px; line-height: 1.55; max-width: 900px; }
-.ex-note { margin: 0 0 18px; color: var(--ink); font-size: 13.5px; line-height: 1.55; max-width: 900px; padding: 10px 14px; border-left: 2px solid var(--c-jev); background: var(--panel); border-radius: 0 6px 6px 0; }
+.ex-note { margin: 0 0 18px; color: var(--ink); font-size: 13.5px; line-height: 1.55; max-width: 900px; padding: 10px 14px; border-left: 2px solid var(--c-jev); background: var(--hl); border-radius: 0 6px 6px 0; }
 .ex-cols { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 20px; align-items: start; }
 .ex-col { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px 12px; min-width: 0; }
 .ex-col-t { font-size: 13px; font-weight: 500; margin-bottom: 10px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
@@ -444,6 +458,8 @@ svg text { user-select: none; font-family: var(--sans); }
 .ex-metric dt { color: var(--ink-3); max-width: 200px; }
 .ex-metric dd { margin: 0; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; font-feature-settings: "tnum", "cv11"; overflow-wrap: anywhere; }
 .ex-metric dd.line { grid-column: 1 / -1; text-align: left; color: var(--ink-2); }
+/* the headline figures (recall, precision): the --hl highlight with a hairline, on the value only */
+.ex-metric dd.hl { justify-self: end; background: var(--hl); border: 1px solid var(--hl-line); border-radius: 3px; padding: 0 5px; margin: -1px 0; color: var(--ink); }
 .ex-metric-note { margin: 8px 0 0; color: var(--ink-3); font-size: 11.5px; line-height: 1.45; }
 .ex-same { margin: -8px 0 18px; color: var(--ink-3); font-size: 12.5px; line-height: 1.5; max-width: 900px; }
 

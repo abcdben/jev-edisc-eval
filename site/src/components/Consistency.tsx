@@ -6,13 +6,13 @@ import { hoverable } from "./hover";
 
 /** The Determinism card's "i" popover. */
 const DET_ITEMS: HintItem[] = [
-  { k: "Sample", v: "300 Mallinckrodt emails: 100 with a debatable gold label, 100 clear positives, 100 clear negatives; shown for every corpus." },
-  { k: "Runs", v: "Five under identical settings; the benchmark run is the first." },
-  { k: "Bar", v: "Pairwise disagreement: the probability that two runs give a different label for the same (document, issue) decision." },
-  { k: "Whisker", v: "95% bootstrap interval over decisions." },
-  { k: "t = 0", v: "The same models at temperature 0 where the API accepts it; Sonnet 5 rejects it and is marked not measured." },
-  { k: "Deciders", v: "Jev and Laya expose no sampling controls, so one bar serves both views." },
-  { k: "TAR rows", v: "0 by construction: the classifier and the simulated reviewer make the same call on every pass." },
+  { k: "Sample", v: <><b>300 Mallinckrodt emails</b>: 100 with a debatable gold label, 100 clear positives, 100 clear negatives; shown for every corpus.</> },
+  { k: "Runs", v: <><b>Five</b> under identical settings; the benchmark run is the first.</> },
+  { k: "Bar", v: <mark><b>Pairwise disagreement</b>: the probability that two runs give a different label for the same (document, issue) decision.</mark> },
+  { k: "Whisker", v: <><b>95% bootstrap</b> interval over decisions.</> },
+  { k: "t = 0", v: <>The same models at <b>temperature 0</b> where the API accepts it; Sonnet 5 rejects it and is marked not measured.</> },
+  { k: "Deciders", v: <>Jev and Laya <b>expose no sampling controls</b>, so one bar serves both views.</> },
+  { k: "TAR rows", v: <><b>0 by construction</b>: the classifier and the simulated reviewer make the same call on every pass.</> },
   { k: "Click a row", v: "The details modal lists the runs, decisions compared, flip rate and how much recall and precision moved between runs." },
 ];
 

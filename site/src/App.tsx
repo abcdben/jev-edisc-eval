@@ -52,22 +52,22 @@ type View = { corpus: string; tag: string; arm: "multi" | "single"; gray: Gray; 
 
 /** Recall and precision card, Compare models. */
 const PR_ITEMS: HintItem[] = [
-  { k: "Recall", v: "Gold-responsive items the model flagged, over all gold-responsive items." },
-  { k: "Precision", v: "Flagged items that were gold-responsive, over all flagged." },
-  { k: "Intervals", v: "95% Wilson score; recall over the gold-positive set, precision over the flagged set, since every document carries a gold label." },
-  { k: "Label", v: "The model's own label, not a tuned threshold." },
-  { k: "Scope", v: "Document level: responsive if positive for any issue. Decision level: every (document, issue) judgment pooled." },
-  { k: "Gray", v: "'Exclude gray' drops decisions whose gold label was flagged as debatable." },
-  { k: "*", v: "Scored on a stratified subset; hover a row for the count. Intervals widen to match." },
-  { k: "Deciders", v: "Jev and Laya carry an outlined name (tables) and a ringed mark (map)." },
+  { k: "Recall", v: <><b>Gold-responsive items the model flagged</b>, over all gold-responsive items.</> },
+  { k: "Precision", v: <><b>Flagged items that were gold-responsive</b>, over all flagged.</> },
+  { k: "Intervals", v: <mark><b>95% Wilson</b> score; recall over the gold-positive set, precision over the flagged set, since every document carries a gold label.</mark> },
+  { k: "Label", v: <><b>The model's own label</b>, not a tuned threshold.</> },
+  { k: "Scope", v: <><b>Document level</b>: responsive if positive for any issue. Decision level: every (document, issue) judgment pooled.</> },
+  { k: "Gray", v: <>'Exclude gray' <b>drops decisions whose gold label was flagged as debatable</b>.</> },
+  { k: "*", v: <><b>Scored on a stratified subset</b>; hover a row for the count. Intervals widen to match.</> },
+  { k: "Deciders", v: <><b>Jev and Laya</b> carry an outlined name (tables) and a ringed mark (map).</> },
 ];
 /** Recall and precision card, Configurations page. */
 const CONFIG_PR_ITEMS: HintItem[] = [
-  { k: "Measures", v: "The same recall and precision as on Compare models, for configurations of one model." },
-  { k: "Default view", v: "Ranked rows with axes fitted to the data, since configurations differ less than model families; switch to map and 0–100% for the Compare scale." },
-  { k: "Intervals", v: "95% Wilson score; * marks a stratified subset." },
-  { k: "Levers", v: "Hover a configuration for what its lever changes." },
-  { k: "★", v: "The optimized configuration, selected on the Veridian dev split." },
+  { k: "Measures", v: <><b>The same recall and precision</b> as on Compare models, for configurations of one model.</> },
+  { k: "Default view", v: <><b>Ranked rows with axes fitted to the data</b>, since configurations differ less than model families; switch to map and 0–100% for the Compare scale.</> },
+  { k: "Intervals", v: <><b>95% Wilson</b> score; * marks a stratified subset.</> },
+  { k: "Levers", v: <><b>Hover a configuration</b> for what its lever changes.</> },
+  { k: "★", v: <mark><b>The optimized configuration</b>, selected on the Veridian dev split.</mark> },
 ];
 
 // ------------------------------------------------------------------------------------------------
@@ -229,20 +229,20 @@ const OPS_MODE_OPTIONS = [
 ];
 /** The two rows shared by the Review time and Cost hints: what the '+ human time' toggle adds, and why TAR rows disappear without it. */
 const HUMAN_ITEMS: HintItem[] = [
-  { k: "+ human time", v: `Adds prompt or criteria development: ${HUMAN_DEV_DOCS} documents at ${HUMAN_DEV_DOCS_PER_HOUR}/h and $${HUMAN_DEV_USD_PER_HOUR}/h, ${fmtHours(HUMAN_DEV_HOURS)} and ${fmtUSD(HUMAN_DEV_USD)}, once per 100k-document project.` },
-  { k: "TAR rows", v: "Already human time, so they are hidden in machine-only." },
+  { k: "+ human time", v: <>Adds prompt or criteria development: {HUMAN_DEV_DOCS} documents at {HUMAN_DEV_DOCS_PER_HOUR}/h and ${HUMAN_DEV_USD_PER_HOUR}/h, <b>{fmtHours(HUMAN_DEV_HOURS)} and {fmtUSD(HUMAN_DEV_USD)}</b>, once per 100k-document project.</> },
+  { k: "TAR rows", v: <><b>Already human time</b>, so they are hidden in machine-only.</> },
 ];
 const TIME_ITEMS: HintItem[] = [
-  { k: "Measures", v: "Median wall-clock time per document for the model's own calls, one request at a time, scaled to 100,000 documents." },
-  { k: "Arms", v: "All issues per call: one call per document. One issue per call: the sum over issues." },
-  { k: "Parallelism", v: "Every service accepts parallel requests, so hours shrink for all models alike; compare the ratios, not the absolutes." },
-  { k: "GPU rows", v: "Laya and Gemma ran on one rented A100." },
+  { k: "Measures", v: <><b>Median</b> wall-clock time per document for the model's own calls, one request at a time, scaled to 100,000 documents.</> },
+  { k: "Arms", v: <><b>All issues per call</b>: one call per document. One issue per call: the sum over issues.</> },
+  { k: "Parallelism", v: <mark>Every service accepts parallel requests, so hours shrink for all models alike; <b>compare the ratios, not the absolutes</b>.</mark> },
+  { k: "GPU rows", v: <>Laya and Gemma ran on <b>one rented A100</b>.</> },
   ...HUMAN_ITEMS,
 ];
 const COST_ITEMS: HintItem[] = [
-  { k: "Measures", v: "What was actually paid to the vendor, summed over the model's decisions and scaled to 100,000 documents." },
-  { k: "Pricing", v: "OpenAI on flex pricing (half of list); Anthropic with prompt caching on the all-issues arm." },
-  { k: "GPU rows", v: `Laya and Gemma: a rented ${GPU_NAME} at $${GPU_USD_PER_HOUR.toFixed(2)}/h times the single-stream review time, so an upper bound.` },
+  { k: "Measures", v: <><b>What was actually paid</b> to the vendor, summed over the model's decisions and scaled to 100,000 documents.</> },
+  { k: "Pricing", v: <>OpenAI on <b>flex pricing (half of list)</b>; Anthropic with prompt caching on the all-issues arm.</> },
+  { k: "GPU rows", v: <mark>Laya and Gemma: a rented {GPU_NAME} at ${GPU_USD_PER_HOUR.toFixed(2)}/h times the single-stream review time, so <b>an upper bound</b>.</mark> },
   ...HUMAN_ITEMS,
 ];
 
@@ -513,9 +513,9 @@ export default function App() {
             </select>
           </span>
           <Hint title="Scope" items={[
-            { k: "Document", v: "A document is responsive if it is positive for any issue: the relevance call a review team makes." },
-            { k: "Decision", v: "Pools every (document, issue) judgment." },
-            { k: "Single issue", v: "That issue's recall and precision on its own, over all gold labels." },
+            { k: "Document", v: <mark>A document is <b>responsive if it is positive for any issue</b>: the relevance call a review team makes.</mark> },
+            { k: "Decision", v: <><b>Pools every (document, issue) judgment</b>.</> },
+            { k: "Single issue", v: <><b>That issue's recall and precision on its own</b>, over all gold labels.</> },
           ]} />
         </Control>
         <Control label="Gold">

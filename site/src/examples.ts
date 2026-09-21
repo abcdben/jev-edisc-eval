@@ -42,25 +42,25 @@ export const EX = raw as unknown as Examples;
 export const EX_GROUPS: { id: string; label: string; match: (k: string) => boolean; intro: string }[] = [
   {
     id: "jev", label: "Jev", match: (k) => k.startsWith("jev@"),
-    intro: "Jev is a decider model: it does not write text. Each call sends a state (the document, and usually the matter background) plus one or more typed questions; the answer to each is a probability, an option with probabilities, or a level on an ordinal scale. The twelve configurations below change one thing each from the default. Switch between them to see exactly what changes in the request, and what the model returned for the same document.",
+    intro: "Jev is a decider model: it does not write text. Each call sends a state (the document, and usually the matter background) plus one or more typed questions; the answer to each is a **probability**, an option with probabilities, or a level on an ordinal scale. Switch configurations to see exactly what changes in the request, and what the model returned for the same document.",
   },
   {
     id: "laya", label: "Laya", match: (k) => k.startsWith("laya@"),
-    intro: "Laya is a local decider model with the same three question types (Noul / Choice / Score). It reads at most 512 tokens: the question head takes up to 192, the rest is the document, truncated from the right. Two of its configurations (compact, chunked) exist only to work around that limit.",
+    intro: "Laya is a local decider model with the same three question types (Noul / Choice / Score). It reads at most **512 tokens**: the question head takes up to 192, the rest is the document, truncated from the right. Two of its configurations (compact, chunked) exist only to work around that limit.",
   },
   { id: "laya-typed", label: "Laya · typed", match: (k) => k.startsWith("laya-typed@"), intro: "The typed Laya checkpoint, same request shapes as Laya." },
   { id: "laya-multilingual", label: "Laya · multilingual", match: (k) => k.startsWith("laya-multilingual@"), intro: "The multilingual Laya checkpoint, same request shapes as Laya." },
   {
     id: "laya-ft", label: "Laya · fine-tuned", match: (k) => k === "laya-ft",
-    intro: "The Laya row on Compare models. The same Laya request, sent to a checkpoint fine-tuned (RLCD) on a 30% document-level dev split of this corpus's own gold labels and scored on the held-out 70%. The request does not change; the weights do. Not on equal footing with the zero-shot rows.",
+    intro: "Laya is a local decider model; its zero-shot configurations are under the Laya family. Here only the **weights** differ, and the labeled data the fine-tuning needed is not counted in the time and cost panels.",
   },
   {
     id: "llm", label: "Language models", match: (k) => !k.includes("@") && k !== "lexical" && k !== "laya-ft",
-    intro: "Every generative model received the same prompt: a system instruction, a user message with the matter background, the request with its responsive / not-responsive criteria, and the document, plus a JSON schema the vendor enforces on the reply. The reply is a label and a probability, nothing else. Switch models to see the settings that differ; the prompt does not.",
+    intro: "Every generative model received the **same prompt**, described below; the reply is a label and a probability, nothing else. Switch models to see the settings that differ; the prompt does not.",
   },
   {
     id: "tar", label: "Classical TAR", match: (k) => k.startsWith("tar@"),
-    intro: "No model reads the request. A reviewer codes documents by hand (simulated from the gold labels at 50 documents/hour, $65/hour) and a TF-IDF + logistic-regression classifier learns from those codes. The request shown is the workflow and the coded sample; the output is the median seed's call on this document. Switch rows to compare sample sizes, cutoff rules and reviewer accuracy.",
+    intro: "**No model reads the request.** A simulated reviewer codes documents by hand from the gold labels and a TF-IDF + logistic-regression classifier learns from those codes. The request shown is the workflow and the coded sample; the output is the median seed's call on this document. Switch rows to compare sample sizes, cutoff rules and reviewer accuracy.",
   },
 ];
 

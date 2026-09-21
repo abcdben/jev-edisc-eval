@@ -168,6 +168,58 @@ export const VARIANT_LABEL: Record<string, string> = {
   t1_5000: "TAR 1.0 · 5,000 coded", t1_5000_f1: "TAR 1.0 · 5,000 · F1 cutoff", t1_5000_noisy: "TAR 1.0 · 5,000 · 90% reviewer",
   cal: "TAR 2.0 · CAL (80% target)", cal_75: "TAR 2.0 · CAL · 75% target", cal_perfect: "TAR 2.0 · CAL · perfect reviewer", cal_knee: "TAR 2.0 · CAL · knee stop",
 };
+/**
+ * One-line definition of each configuration, the highlighted clause of the details modal's opening sentence
+ * ("<name> is the configuration in which <definition>."). Lower-case clauses, no trailing stop. Keyed by model key
+ * (family@variant); the typed and multilingual Laya checkpoints fall back to laya@<variant>. TAR 1.0 rows are templates
+ * with {n} for the coded-sample size. Text follows the lever notes in ediscovery_bench/examples.py and export.py.
+ */
+export const VARIANT_DEFINITION: Record<string, string> = {
+  // Jev 1.13
+  "jev@base": "one Noul (yes/no) question per issue whose answer is a probability; the RFP text is the instruction, the task file's positive and negative descriptions are the true/false criteria, and the state is a structured object with the matter background and the document",
+  "jev@choice": "the same instruction and criteria are asked as a Choice between the two labels rather than a yes/no Noul; the model returns a probability for each label and p(responsive) is what is scored",
+  "jev@score": "the question is asked as a Score on a five-point ordinal scale from 'clearly not responsive' to 'clearly responsive', with the criteria folded into the instruction; the scored probability is the level divided by four",
+  "jev@crit_none": "the Noul question is sent with no criteria at all, only the instruction, to test how much the true/false descriptions are doing",
+  "jev@crit_struct": "the criteria are supplied as the task file's structured object (what / includes / excludes / examples) instead of prose, falling back to prose where a question has no structured block",
+  "jev@literal": "the instruction is the task file's plain-language 'literal' phrasing (a reviewer's one-line version) instead of the verbatim RFP text",
+  "jev@no_context": "the matter background is dropped from the state, so the model sees only the document",
+  "jev@state_string": "the state is a single flat string ('MATTER BACKGROUND: … DOCUMENT: …') instead of a structured object with named fields",
+  "jev@gate": "an extra Noul first asks whether the document has anything to do with the matter at all, and each issue probability is multiplied by that gate probability",
+  "jev@ensemble": "three phrasings of the same question (RFP text, literal, title + positive description) are asked as three Nouls and their probabilities averaged",
+  "jev@decompose": "each issue is split into the atomic sub-questions the task file defines for it; each is asked as its own Noul and the issue probability is the maximum across them (logical OR)",
+  "jev@preview": "the request is identical to the default but is sent to the jev-preview model instead of jev-1.13.0",
+  // Laya, zero-shot (also the typed and multilingual checkpoints)
+  "laya@base": "the same request as Jev's default, run through the local Laya encoder, which packs the question head into at most 192 tokens and the whole input into 512, so the instruction and criteria are truncated and most documents are cut from the right",
+  "laya@choice": "the question is asked as a Choice over the two labels instead of a Noul",
+  "laya@score": "the question is asked as a five-level Score with the criteria folded into the instruction",
+  "laya@literal": "the instruction is the shorter literal phrasing, which fits more of the question into the 192-token head",
+  "laya@gate": "an extra matter-relevance Noul gates each issue probability",
+  "laya@ensemble": "three phrasings are asked and their probabilities averaged, each truncated the same way",
+  "laya@decompose": "sub-questions are asked separately and OR'd: the issue probability is the maximum across them",
+  "laya@compact": "a one-line instruction ('Is this document responsive to the request for production about: <title>?') and one-sentence criteria are sized to fit Laya's 192-token head, so nothing in the question is truncated",
+  "laya@chunk": "the document is split into overlapping windows sized to Laya's remaining context (about 300 tokens), each window is scored, and the per-question probability is the maximum over windows (up to 16)",
+  "laya@recipe": "the compact question and the chunked document are combined: the two levers that address Laya's 512-token context, changing how much of the request Laya can read rather than what is asked",
+  "laya@recipe_choice": "compact + chunk with the Choice question form",
+  // Laya, supervised (the Compare models row)
+  "laya-ft": "Laya's compact + chunk request is sent to a checkpoint fine-tuned (RLCD) on a 30% document-level dev split of {corpus}'s own gold labels and scored on the held-out 70%; the request does not change, the weights do",
+  // Generative models: one definition, the prompt is the same for every model
+  "llm": "one chat completion per document (all issues at once) or per issue, with a JSON schema the vendor enforces on the reply: a label and p(responsive), no free text",
+  // Classical TAR 1.0, templated on the coded-sample size
+  "tar@t1": "a simulated reviewer (50 documents/hour, $65/hour) codes {n} random documents and a TF-IDF + logistic-regression classifier learns from those codes and labels the rest, with a cutoff targeting 80% recall chosen by 5-fold cross-validation on the coded sample",
+  "tar@t1_f1": "the TAR 1.0 · {n} coded workflow with the classifier cutoff set to maximise F1 on the coded sample instead of targeting 80% recall",
+  "tar@t1_noisy": "the TAR 1.0 · {n} coded workflow with an imperfect reviewer, who misses 10% of relevant documents and over-codes 2% of non-relevant ones",
+};
+/** The definition for a model key on a corpus: resolves the Laya checkpoints, the TAR templates and the {corpus} placeholder. */
+export const variantDefinition = (key: string, corpusLabel: string): string | undefined => {
+  const [fam, v] = key.includes("@") ? key.split("@") : [key, ""];
+  let d = VARIANT_DEFINITION[key] ?? (fam.startsWith("laya") && v ? VARIANT_DEFINITION[`laya@${v}`] : undefined);
+  if (!d && fam === "tar") {
+    const m = /^t1_(\d+)(_f1|_noisy)?$/.exec(v);
+    if (m) d = VARIANT_DEFINITION[`tar@t1${m[2] ?? ""}`]?.replace("{n}", fmtInt(Number(m[1])));
+  }
+  if (!d && !key.includes("@") && key !== "lexical") d = VARIANT_DEFINITION.llm;
+  return d?.replace("{corpus}", corpusLabel);
+};
 /** TAR variants share a hue per coded-sample size so the three rows of one stage read as a family. */
 const TAR_VARIANT_COLOR: Record<string, string> = {
   t1_100: "var(--c-tar-1)", t1_100_f1: "var(--c-tar-1)", t1_100_noisy: "var(--c-tar-1)",

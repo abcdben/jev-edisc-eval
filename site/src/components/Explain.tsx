@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { CORPORA, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER, fmtMs, fmtPct, isDecider, modelKind } from "../data";
+import { ABLATION_GROUPS, CORPORA, DATA, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER, fmtMs, fmtPct, isDecider, modelKind, variantDefinition } from "../data";
 import { EX, EX_GROUPS, exCorpus, groupOf, membersOf, type ExOutput } from "../examples";
 import { DeciderTag, Seg, type TipLine } from "./ui";
 
@@ -7,18 +7,30 @@ import { DeciderTag, Seg, type TipLine } from "./ui";
 export type MetricSection = { title: string; lines: TipLine[]; notes?: string[] };
 export type Metrics = { name: string; color: string; context: string; sections: MetricSection[] };
 
+/** `**term**` in a string renders as <b>: the one bit of markup the group intros and lead sentences use. */
+function Rich({ s }: { s: string }) {
+  const parts = s.split(/\*\*(.+?)\*\*/);
+  return <>{parts.map((p, i) => (i % 2 ? <b key={i}>{p}</b> : p))}</>;
+}
+/** The first occurrence of `term` in `s`, in bold; the whole string untouched when the term is absent. */
+function Emph({ s, term }: { s: string; term?: string }) {
+  const i = term ? s.indexOf(term) : -1;
+  if (i < 0 || !term) return <>{s}</>;
+  return <>{s.slice(0, i)}<b>{term}</b>{s.slice(i + term.length)}</>;
+}
+
 function MetricsBlock({ m }: { m: Metrics }) {
   return (
     <section className="ex-metrics" aria-label="Metrics">
       <div className="ex-metrics-t"><span className="sw" style={{ background: m.color }} />Metrics<span className="ex-col-s">{m.name} · {m.context}</span></div>
       <div className="ex-metrics-grid">
-        {m.sections.map((s) => (
+        {m.sections.map((s, si) => (
           <div key={s.title} className="ex-metric">
             <div className="ex-metric-t">{s.title}</div>
             <dl>
               {s.lines.map((l, i) => (typeof l === "string"
                 ? <div key={i} className="row"><dd className="line">{l}</dd></div>
-                : <div key={i} className="row"><dt>{l[0]}</dt><dd>{l[1]}</dd></div>))}
+                : <div key={i} className="row"><dt>{l[0]}</dt><dd className={si === 0 && (l[0] === "Recall" || l[0] === "Precision") ? "hl" : undefined}>{l[1]}</dd></div>))}
             </dl>
             {s.notes?.filter(Boolean).map((n, i) => <p key={i} className="ex-metric-note">{n}</p>)}
           </div>
@@ -60,6 +72,54 @@ const settingsFor = (group: string, s: Record<string, unknown>) => {
   return o;
 };
 const sortMembers = (ks: string[]) => [...ks].sort((a, b) => VARIANT_ORDER.indexOf(a.split("@")[1]) - VARIANT_ORDER.indexOf(b.split("@")[1]));
+
+/** The term set in bold inside the lever callout (the note from examples.py), one per variant; the callout is plain when a variant has none. */
+const NOTE_KEY_TERM: Record<string, Record<string, string>> = {
+  jev: {
+    base: "probability", choice: "Choice", score: "Score", crit_none: "no criteria", crit_struct: "structured object", literal: "'literal' phrasing",
+    no_context: "only the document", state_string: "single flat string", gate: "gate probability", ensemble: "averaged", decompose: "logical OR", preview: "jev-preview",
+  },
+  laya: {
+    base: "512", choice: "Choice", score: "Score", literal: "literal phrasing", gate: "gates", ensemble: "averaged", decompose: "OR'd",
+    compact: "192-token head", chunk: "max over windows", recipe: "compact + chunk", recipe_choice: "Choice form",
+  },
+  llm: { "": "JSON schema" },
+};
+const noteFamily = (group: string) => (group === "jev" ? "jev" : group.startsWith("laya") && group !== "laya-ft" ? "laya" : group);
+
+/**
+ * The opening sentence of the modal: what this configuration is, in plain words, with the definition
+ * (data.ts VARIANT_DEFINITION) highlighted. `**…**` marks the bold configuration name.
+ */
+function leadFor(group: string, key: string, corpus: string, groupLabel: string): { pre: string; def: string; post: string } | null {
+  const corpusLabel = CORPORA.find((c) => c.id === corpus)?.label ?? corpus;
+  const def = variantDefinition(key, corpusLabel);
+  if (!def) return null;
+  const v = key.includes("@") ? key.split("@")[1] : "";
+  const name = `**${groupLabel}${v ? ` · ${VARIANT_LABEL[v] ?? v}` : ""}**`;
+  if (group === "jev") {
+    if (v === "base") return { pre: `${name} is the baseline configuration of TypeSafe Jev 1.13, a decider model: `, def, post: ". Every other Jev configuration changes one lever from this one." };
+    const star = v === "state_string" ? " It is the configuration selected on the Veridian dev split and carried into Compare models as Jev · optimized." : "";
+    return { pre: `${name} is the Jev 1.13 configuration in which `, def, post: `. Everything else matches the default.${star}` };
+  }
+  if (group === "laya-ft") return { pre: `${name} is the Laya row on Compare models: `, def, post: ". Not on equal footing with the zero-shot rows." };
+  if (group.startsWith("laya")) {
+    const ckpt = group === "laya-typed" ? "the typed Laya checkpoint" : group === "laya-multilingual" ? "the multilingual Laya checkpoint" : "ConvAI Laya (English checkpoint), a local decider model";
+    if (v === "base") return { pre: `${name} is the baseline configuration of ${ckpt}: `, def, post: `. Every other ${groupLabel} configuration changes one lever from this one.` };
+    const star = v === "recipe" ? " It is the configuration selected on the Veridian dev split." : "";
+    return { pre: `${name} is the ${groupLabel} configuration in which `, def, post: `. Everything else matches the ${groupLabel} default.${star}` };
+  }
+  if (group === "llm") {
+    const p = PRIMARY_BY_KEY[key];
+    return { pre: `**${p?.short ?? DATA.models[key]?.name ?? key}** is a generative model asked with `, def, post: `.${p?.note ? ` ${p.note}` : ""}` };
+  }
+  if (group === "tar") {
+    const label = VARIANT_LABEL[v] ?? v;
+    const plain = /^t1_\d+$/.test(v);
+    return { pre: `**${label}** is ${plain ? "the classical TAR row in which " : ""}`, def, post: ". No model reads the request; every figure is the median of the random seeds." };
+  }
+  return null;
+}
 
 // ------------------------------------------------------------------------------------------------
 // JSON renderer with {{document}} / {{context}} chips and change highlighting
@@ -217,8 +277,10 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
   const d = diff(ex?.request, base ? base.examples[docIdx]?.request : ex?.request);
   const doc = C.documents[docIdx];
   const variant = cfg?.variant ?? "";
-  const note = group === "jev" ? EX.notes.jev[variant] : group.startsWith("laya") && group !== "laya-ft" ? EX.notes.laya[variant] : group === "llm" ? `${PRIMARY_BY_KEY[active]?.note ?? ""} ${EX.notes.llm}` : G.intro;
+  const note = group === "jev" ? EX.notes.jev[variant] : group.startsWith("laya") && group !== "laya-ft" ? EX.notes.laya[variant] : group === "llm" ? EX.notes.llm : G.intro;
   const m = metrics && active ? metrics(active, corpus) : null;
+  const lead = active ? leadFor(group, active, corpus, G.label) : null;
+  const recipe = ABLATION_GROUPS.find((g) => g.id === group)?.recipe;
 
   return (
     <div className="ex-back" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -251,6 +313,7 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
                   <button key={m} className={`pick${active === m ? "" : " off"}`} onClick={() => setKey(m)}>
                     <span className="nm">{memberLabel(m)}</span>
                     {(m.endsWith("@base") || (group === "tar" && m === baseKey)) && <span className="tag">reference</span>}
+                    {recipe && m.split("@")[1] === recipe && <span className="tag" title="selected on the Veridian dev split">★ selected</span>}
                   </button>
                 ))}
               </div>
@@ -267,11 +330,12 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
           </aside>
 
           <div className="ex-main">
+            {lead && <p className="ex-lead"><Rich s={lead.pre} /><mark>{lead.def}</mark><Rich s={lead.post} /></p>}
             {m && <MetricsBlock m={m} />}
-            <p className="ex-intro">{G.intro}</p>
+            <p className="ex-intro"><Rich s={G.intro} /></p>
             {cfg && (
               <>
-                {note && note !== G.intro && <p className="ex-note">{note}</p>}
+                {note && note !== G.intro && <p className="ex-note"><Emph s={note} term={NOTE_KEY_TERM[noteFamily(group)]?.[group === "llm" ? "" : variant]} /></p>}
                 {base && d.changed.size === 0 && d.removed.length === 0 && (
                   <p className="ex-same">On this corpus and issue the request is identical to the default: the lever has nothing to act on here{variant === "decompose" ? " (this issue has no sub-questions in the task file; try CUAD or TREC)" : ""}. Any difference in the output is run-to-run variation.</p>
                 )}
