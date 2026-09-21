@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { CORPORA, DATA, GPU_NAME, GPU_USD_PER_HOUR, HUMAN_DEV_DOCS, HUMAN_DEV_DOCS_PER_HOUR, HUMAN_DEV_HOURS, HUMAN_DEV_USD, HUMAN_DEV_USD_PER_HOUR, PRIMARY_BY_KEY, fmtHours, fmtInt, fmtPct, fmtUSD } from "../data";
-import { Modal } from "./ui";
+import { CORPORA, DATA, GPU_NAME, GPU_USD_PER_HOUR, HUMAN_DEV_DOCS, HUMAN_DEV_DOCS_PER_HOUR, HUMAN_DEV_HOURS, HUMAN_DEV_USD, HUMAN_DEV_USD_PER_HOUR, PRIMARY_BY_KEY, fmtHours, fmtInt, fmtPct, fmtUSD, isDecider } from "../data";
+import { DeciderTag, Modal } from "./ui";
 
 /**
  * "Method": how each experiment was run, as two fact tables. Section A has one column per corpus the site offers;
@@ -17,13 +17,13 @@ const N = ({ v }: { v: number | string }) => <span className="n">{typeof v === "
 
 /** Why a headline row was scored on fewer documents than the corpus. */
 const SUBSET_WHY: Record<string, string> = { "laya-ft": "held-out split", "gemma3-12b": "stratified subsample", "tar@cal": "10%-rich pool" };
-/** "Laya 1,288 (held-out split)" for every headline row of a corpus that was scored on a subset (all-issues arm), then the corpus size. */
+/** "Laya 1,288 (held-out split)" for every headline row of a corpus that was scored on a subset (all-issues arm), then the corpus size. A decider's name carries the DECIDER tag (data.ts isDecider). */
 function subsets(id: string): ReactNode {
   const rows = DATA.records.filter((r) => r.corpus === id && r.tag === "" && r.arm === "multi" && r.primary && r.subset && PRIMARY_BY_KEY[r.model]);
   if (!rows.length) return "—";
   const parts = rows.map((r) => {
     const n = Number(r.subset!.match(/^(\d+) of/)?.[1] ?? NaN);
-    return <span key={r.model}>{PRIMARY_BY_KEY[r.model].short} <N v={Number.isNaN(n) ? r.subset! : n} />{SUBSET_WHY[r.model] ? ` (${SUBSET_WHY[r.model]})` : ""}</span>;
+    return <span key={r.model}>{PRIMARY_BY_KEY[r.model].short}{isDecider(r.kind) && <DeciderTag />} <N v={Number.isNaN(n) ? r.subset! : n} />{SUBSET_WHY[r.model] ? ` (${SUBSET_WHY[r.model]})` : ""}</span>;
   });
   return <>{parts.map((p, i) => <span key={i}>{i > 0 && " · "}{p}</span>)}; of <N v={meta(id).n_docs} /> documents.</>;
 }

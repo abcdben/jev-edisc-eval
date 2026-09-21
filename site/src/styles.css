@@ -1,6 +1,8 @@
 /* One typeface. Numbers use tabular figures via .num / .mono (same face). */
 :root {
   --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* the one ease for every transition on the site: ease-out, no overshoot */
+  --ease: cubic-bezier(.2, .7, .2, 1);
 
   /* light theme (Lambda console) */
   --bg: #f3f2ee;
@@ -259,6 +261,33 @@ svg text { user-select: none; font-family: var(--sans); }
 .hl .hit { fill: var(--ink); fill-opacity: 0.05; transition: fill-opacity 0.12s; }
 .hl text[fill="var(--ink-2)"] { fill: var(--ink); }
 
+/* motion (components/ui.tsx): chart rows and marks slide to a new place over 320 ms (.mv, a CSS transform), items fade in and out over 150 ms (.fd);
+   tooltips and hint popovers rise 2px over 120 ms, modals 4px over 180 ms. Geometry CSS cannot transition (bar widths, box sizes) is eased by useTween. */
+.mv { transition: transform 320ms var(--ease); }
+.fd { transition: opacity 150ms var(--ease); }
+.mv.fd { transition: transform 320ms var(--ease), opacity 150ms var(--ease); }
+.tip, .hint .pop { animation: rise-2 120ms var(--ease); }
+.ex-back { animation: fade-in 180ms var(--ease); }
+.ex-modal { animation: rise-4 180ms var(--ease); }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes rise-2 { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
+@keyframes rise-4 { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+/* reduced motion: every CSS transition and animation on the page completes at once (the hooks snap on the same media query) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
+}
+
+/* decider marker (data.ts isDecider): a 2px rule in the model colour down the left edge of a picker row; the charts draw the same rule in SVG */
+.pick-row { position: relative; }
+.pick-row .rule { position: absolute; left: 1px; top: 3px; bottom: 3px; width: 2px; border-radius: 1px; pointer-events: none; }
+.pick-row:not(.on) .rule { opacity: 0.45; }
+/* the small muted tag after a decider's name in the details and Method modals */
+.decider-tag {
+  display: inline-block; vertical-align: 0.15em; margin-left: 8px; padding: 0 5px; border: 1px solid var(--line-2); border-radius: 2px;
+  color: var(--ink-2); font-size: 10px; line-height: 1.5; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;
+}
+.fact .decider-tag { margin-left: 5px; vertical-align: 0.1em; }
+
 .legend-note { color: var(--ink-3); font-size: 12px; margin-top: 8px; display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
 .legend-note .k { display: inline-flex; align-items: center; gap: 6px; }
 
@@ -287,10 +316,7 @@ svg text { user-select: none; font-family: var(--sans); }
 }
 .disc-ok:hover { background: var(--ink-2); border-color: var(--ink-2); }
 .disc-note { margin-top: 10px; text-align: center; color: var(--ink-4); font-size: 11.5px; }
-@media (prefers-reduced-motion: no-preference) {
-  .ex-modal.disclaimer { animation: disc-in 0.18s ease-out; }
-  @keyframes disc-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-}
+/* entrance: the shared .ex-modal rise (motion block below) */
 
 /* Method modal: fact tables. The body scrolls both ways, so the corpus table keeps its columns and scrolls sideways on narrow screens. */
 .ex-modal.method { width: min(1120px, 100%); height: auto; max-height: min(900px, 100%); }

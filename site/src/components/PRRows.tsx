@@ -1,14 +1,19 @@
+import { useRef } from "react";
 import type { CI } from "../data";
 import { fmtPct } from "../data";
 import type { PRItem } from "./PRScatter";
 import { Logo, LogoGlyph } from "../logos";
-import { CLICK_HINT, TipBox, selectable, useTip, useWidth } from "./ui";
+import { CLICK_HINT, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth } from "./ui";
 import { prTip } from "./PRScatter";
 import { hoverable } from "./hover";
 
 const ROW = 26, NUM_W = 54;
 
+/** The decider marker on a chart row (data.ts isDecider): a 2px rule in the model colour down the left edge of the label area, the row's height less 4px. */
+export const DeciderRule = ({ color, row }: { color: string; row: number }) => <rect x={0} y={2} width={2} height={row - 4} rx={1} fill={color} style={{ pointerEvents: "none" }} />;
+
 /** Ranked rows: recall and precision side by side, dot at the point estimate, whisker across the 95% interval. `onSelect` makes each row a button (click, Enter, Space). `highlight` tints the row with that id (cross-chart hover, see hover.tsx); `onHover` reports the row under the pointer or keyboard focus. */
+/** Motion (ui.tsx): rows slide to their new rank over 320 ms (a CSS transform on the keyed group), whiskers and dots ease along the axis; rows fade in and out over 150 ms. */
 export function PRRows({ items, zoom, sortBy, logos = true, onSelect, highlight, onHover }: { items: PRItem[]; zoom: boolean; sortBy: "recall" | "precision" | "f1"; logos?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickRow = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
@@ -36,6 +41,16 @@ export function PRRows({ items, zoom, sortBy, logos = true, onSelect, highlight,
   const ticks: number[] = [];
   for (let t = Math.ceil(lo / step) * step; t <= hi + 1e-9; t += step) ticks.push(Math.round(t * 1000) / 1000);
   const h = rows.length * ROW + 44;
+  // Drawn in the order rows first appeared (ui.tsx usePresence), placed by rank with a transform, so a re-sort slides rows instead of moving
+  // DOM nodes; rows that just left fade out where they last stood. The whisker ends and dots ease along the axis (useTween).
+  const presence = usePresence(items, (it) => it.id);
+  const lastTop = useRef(new Map<string, number>());
+  rows.forEach((r, i) => lastTop.current.set(r.id, 20 + i * ROW));
+  const drawn = presence.map((p) => ({ r: p.item, state: p.state }));
+  const target: Record<string, number> = {};
+  for (const { r } of drawn) ([r.recall, r.precision] as CI[]).forEach((ci, col) => { if (ci) { target[`${r.id}:${col}:lo`] = sx(col, ci[1]); target[`${r.id}:${col}:hi`] = sx(col, ci[2]); target[`${r.id}:${col}:v`] = sx(col, ci[0]); } });
+  const geo = useTween(target, undefined, undefined, W);
+  const g = (k: string) => geo[k] ?? target[k];
   return (
     <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
       <svg viewBox={`0 0 ${W} ${h}`} width={W} height={h} style={{ display: "block", overflow: "visible" }}>
@@ -50,12 +65,14 @@ export function PRRows({ items, zoom, sortBy, logos = true, onSelect, highlight,
             ))}
           </g>
         ))}
-        {rows.map((r, i) => {
-          const y = 20 + i * ROW + ROW / 2;
+        {drawn.map(({ r, state }) => {
+          // the row's group is translated to its rank (CSS transition on transform); everything inside is drawn at y = 0..ROW
+          const top = lastTop.current.get(r.id) ?? 20, y = ROW / 2;
           return (
-            <g key={r.id} className={highlight === r.id ? "hl" : undefined} {...hoverable(onHover, r.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
-            <g key={r.id} onMouseMove={(e) => show(e, { kind: "row", top: y - ROW / 2, height: ROW, clearX: W }, prTip(r, logos ? <Logo model={r.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
-              <rect className="hit" x={0} y={y - ROW / 2} width={W} height={ROW} fill="transparent" />
+            <g key={r.id} className={`mv fd${highlight === r.id ? " hl" : ""}`} style={{ transform: `translate(0px, ${top}px)`, ...fadeStyle(state) }} {...hoverable(onHover, r.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
+            <g onMouseMove={(e) => show(e, { kind: "row", top, height: ROW, clearX: W }, prTip(r, logos ? <Logo model={r.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
+              <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
+              {r.decider && <DeciderRule color={r.color} row={ROW} />}
               {logos ? (
                 <>
                   <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={8} cy={y} /></g>
@@ -67,8 +84,8 @@ export function PRRows({ items, zoom, sortBy, logos = true, onSelect, highlight,
               {([r.recall, r.precision] as CI[]).map((ci, col) =>
                 ci ? (
                   <g key={col}>
-                    <line x1={sx(col, ci[1])} x2={sx(col, ci[2])} y1={y} y2={y} stroke={r.color} strokeWidth={1.5} strokeLinecap="butt" />
-                    <circle cx={sx(col, ci[0])} cy={y} r={3.2} fill={r.color} />
+                    <line x1={g(`${r.id}:${col}:lo`)} x2={g(`${r.id}:${col}:hi`)} y1={y} y2={y} stroke={r.color} strokeWidth={1.5} strokeLinecap="butt" />
+                    <circle cx={g(`${r.id}:${col}:v`)} cy={y} r={3.2} fill={r.color} />
                     <text x={x0[col] + colW + 8} y={y + 4} fontSize={11.5} fill="var(--ink)" className="mono">{fmtPct(ci[0])}</text>
                   </g>
                 ) : (

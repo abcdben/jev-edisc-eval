@@ -52,6 +52,161 @@ export function useTip() {
   return { tip, show, hide, hostRef };
 }
 
+// ------------------------------------------------------------------------------------------------
+// Motion. Every animation on the site is either a CSS transition/animation (styles.css, `.mv` and `.fd`, tooltip, popover and modal
+// entrances) or one of the two hooks below, and all of it is off under prefers-reduced-motion: the stylesheet zeroes CSS durations, the
+// hooks snap.
+
+/** Whether the user asked for reduced motion; follows the media query live (CDP emulation and OS changes included). */
+export function useReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(() => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  useEffect(() => {
+    const mq = matchMedia("(prefers-reduced-motion: reduce)");
+    const on = () => setReduced(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return reduced;
+}
+
+/** Duration of a chart move, and the ease used for every transition on the site (cubic-bezier(.2,.7,.2,1) in styles.css). */
+export const MOVE_MS = 320;
+const bezier = (p1: number, p2: number, t: number) => 3 * (1 - t) * (1 - t) * t * p1 + 3 * (1 - t) * t * t * p2 + t * t * t;
+export function ease(u: number): number {
+  if (u <= 0) return 0;
+  if (u >= 1) return 1;
+  // solve x(t) = u for the curve's x control points (.2, .2), then read y at t (control points .7, 1)
+  let t = u;
+  for (let i = 0; i < 8; i++) {
+    const x = bezier(0.2, 0.2, t) - u;
+    const dx = 3 * (1 - t) * (1 - t) * 0.2 + 3 * t * t * 0.8; // x'(t); the middle term vanishes since both x control points are .2
+    if (Math.abs(x) < 1e-5 || dx === 0) break;
+    t -= x / dx;
+  }
+  return bezier(0.7, 1, Math.min(1, Math.max(0, t)));
+}
+
+type Tween = { from: Record<string, number>; to: Record<string, number>; t0: number };
+const tweenAt = (tw: Tween, now: number, ms: number): Record<string, number> => {
+  const e = ms <= 0 ? 1 : ease((now - tw.t0) / ms);
+  if (e >= 1) return tw.to;
+  const out: Record<string, number> = {};
+  for (const k in tw.to) out[k] = tw.from[k] + (tw.to[k] - tw.from[k]) * e;
+  return out;
+};
+const sameValues = (a: Record<string, number>, b: Record<string, number>) => {
+  const ka = Object.keys(a), kb = Object.keys(b);
+  return ka.length === kb.length && ka.every((k) => a[k] === b[k]);
+};
+
+/**
+ * SVG geometry that CSS cannot transition (rect width and height, whisker ends, x/y attributes): eases every field of `target` from its
+ * displayed value to its new value over `ms`, re-rendering each frame while anything moves. A key that is new (including every key on first
+ * paint) starts at `enter(key, value)` when given, so bars can grow from 0; otherwise it appears in place. Retargeting mid-move continues
+ * from the current position. A change of `layout` (the chart's measured size) is a re-layout, not a move: the values jump to their
+ * entry-or-target positions at the move's current progress, so a chart never slides in from its pre-measurement fallback size and a
+ * bar still growing on first paint simply grows toward the corrected width. Snaps under prefers-reduced-motion.
+ */
+export function useTween(target: Record<string, number>, ms = MOVE_MS, enter?: (key: string, v: number) => number, layout?: unknown): Record<string, number> {
+  const reduced = useReducedMotion();
+  const [, tick] = useState(0);
+  const ref = useRef<Tween | null>(null);
+  const lastLayout = useRef(layout);
+  const now = performance.now();
+  const dur = reduced ? 0 : ms;
+  const entry = (k: string) => (enter ? enter(k, target[k]) : target[k]);
+  if (!ref.current) {
+    const from: Record<string, number> = {};
+    for (const k in target) from[k] = entry(k);
+    ref.current = { from, to: target, t0: now };
+  } else if (lastLayout.current !== layout) {
+    const from: Record<string, number> = {};
+    for (const k in target) from[k] = entry(k);
+    ref.current = { from, to: target, t0: ref.current.t0 };
+  } else if (!sameValues(ref.current.to, target)) {
+    const { from: f0, to: t0 } = ref.current;
+    if (Object.keys(target).every((k) => t0[k] === target[k])) {
+      // only keys left (a faded-out item was dropped): prune without restarting the clock, so a move in flight keeps its pace
+      const from: Record<string, number> = {}, to: Record<string, number> = {};
+      for (const k in target) { from[k] = f0[k]; to[k] = t0[k]; }
+      ref.current = { from, to, t0: ref.current.t0 };
+    } else {
+      const cur = tweenAt(ref.current, now, dur);
+      const from: Record<string, number> = {};
+      for (const k in target) from[k] = k in cur ? cur[k] : entry(k);
+      ref.current = { from, to: target, t0: now };
+    }
+  }
+  lastLayout.current = layout;
+  const tw = ref.current;
+  const moving = dur > 0 && now - tw.t0 < dur;
+  useEffect(() => {
+    if (!moving) return;
+    const id = requestAnimationFrame(() => tick((n) => n + 1));
+    return () => cancelAnimationFrame(id);
+  });
+  return tweenAt(tw, now, dur);
+}
+
+export type Presence<T> = { item: T; key: string; state: "enter" | "present" | "exit" };
+/**
+ * Keeps items in the render for `ms` after they leave (state "exit", for a fade-out) and marks items on their first frame "enter" (so a
+ * fade-in has an opacity-0 frame to start from). The order is the order items first appeared, not the order given: a keyed element must keep
+ * its place in the DOM for its CSS transitions to run (React moves a node whose index changes, which resets them), so callers draw in this
+ * order and place rows by transform. Under prefers-reduced-motion everything is simply "present" and leavers are dropped at once.
+ */
+export function usePresence<T>(items: T[], keyOf: (t: T) => string, ms = 150): Presence<T>[] {
+  const reduced = useReducedMotion();
+  const [, tick] = useState(0);
+  const reg = useRef(new Map<string, { item: T; fresh: boolean; exitAt: number | null }>());
+  const now = performance.now();
+  const live = new Set<string>();
+  for (const item of items) {
+    const k = keyOf(item);
+    live.add(k);
+    const e = reg.current.get(k);
+    if (!e) reg.current.set(k, { item, fresh: !reduced, exitAt: null });
+    else { e.item = item; e.exitAt = null; }
+  }
+  for (const [k, e] of reg.current) {
+    if (live.has(k)) continue;
+    if (e.exitAt == null) e.exitAt = now;
+    if (reduced || now - e.exitAt >= ms) reg.current.delete(k);
+  }
+  const out: Presence<T>[] = [];
+  let lastExit = 0;
+  for (const [k, e] of reg.current) {
+    out.push({ item: e.item, key: k, state: e.exitAt != null ? "exit" : e.fresh ? "enter" : "present" });
+    if (e.exitAt != null) lastExit = Math.max(lastExit, e.exitAt);
+  }
+  const hasFresh = out.some((o) => o.state === "enter");
+  // "enter" flips to "present" once the browser has painted the opacity-0 frame: two frames, or 60 ms if frames are throttled. Keyed on the
+  // flag, not every render, so a tween re-rendering each frame cannot keep postponing it.
+  useEffect(() => {
+    if (!hasFresh) return;
+    const flip = () => { for (const e of reg.current.values()) e.fresh = false; tick((n) => n + 1); };
+    let f2 = 0;
+    const f1 = requestAnimationFrame(() => { f2 = requestAnimationFrame(flip); });
+    const t = window.setTimeout(flip, 60);
+    return () => { cancelAnimationFrame(f1); cancelAnimationFrame(f2); clearTimeout(t); };
+  }, [hasFresh]);
+  // leavers are dropped on the render after their fade; one timer per departure
+  useEffect(() => {
+    if (!lastExit) return;
+    const t = window.setTimeout(() => tick((n) => n + 1), Math.max(0, ms - (performance.now() - lastExit)) + 5);
+    return () => clearTimeout(t);
+  }, [lastExit, ms]);
+  return out;
+}
+
+/** Inline style for a presence state: the `.fd` class transitions opacity over 150 ms (styles.css). */
+export const fadeStyle = (state: Presence<unknown>["state"]): React.CSSProperties => ({ opacity: state === "present" ? 1 : 0, pointerEvents: state === "exit" ? "none" : undefined });
+
+/** The small muted "DECIDER" tag after a decider's name in the modals (data.ts isDecider). */
+export function DeciderTag() {
+  return <span className="decider-tag" title="A decider model (Jev, Laya): answers typed questions with probabilities, writes no text">decider</span>;
+}
+
 /** Measured content box of the host element. */
 export function useSize(hostRef: React.RefObject<HTMLDivElement | null>, fallback: { w: number; h: number }): { w: number; h: number } {
   const [sz, setSz] = useState(fallback);

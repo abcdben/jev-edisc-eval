@@ -1,11 +1,11 @@
 import { useMemo, type ReactNode } from "react";
 import { fmtCI, type CI } from "../data";
 import { Logo, LogoGlyph, logoFor } from "../logos";
-import { CLICK_HINT, TipBox, selectable, useSize, useTip, type TipContent } from "./ui";
+import { CLICK_HINT, TipBox, fadeStyle, selectable, usePresence, useSize, useTip, useTween, type TipContent } from "./ui";
 import { hoverable } from "./hover";
 
-/** `sub` is the one secondary line of the hover tooltip (what the point was scored on); the full figures live in the details modal. */
-export type PRItem = { id: string; name: string; color: string; recall: CI; precision: CI; dashed?: boolean; subset?: string | null; sub?: string };
+/** `sub` is the one secondary line of the hover tooltip (what the point was scored on); the full figures live in the details modal. `decider` (data.ts isDecider) outlines the interval box and rings the mark. */
+export type PRItem = { id: string; name: string; color: string; recall: CI; precision: CI; dashed?: boolean; subset?: string | null; sub?: string; decider?: boolean };
 
 /** The compact hover tooltip of a recall/precision mark or row: both intervals and the scoring line. */
 export const prTip = (p: PRItem, icon?: ReactNode): TipContent => ({ title: p.name, color: p.color, icon, lines: [["Recall", fmtCI(p.recall)], ["Precision", fmtCI(p.precision)]], sub: p.sub });
@@ -24,16 +24,23 @@ function niceTicks(lo: number, hi: number): number[] {
 /** `fill`: size to the host's box (host must be positioned, e.g. an absolutely-filled flex child) instead of a fixed height. */
 /** `onSelect` makes each mark (dot, label and interval box) a button: click, Enter or Space. */
 /** `highlight` (cross-chart hover, see hover.tsx) rings that item's mark, deepens its box, forces its label and draws it on top while the rest fade; `onHover` reports the mark or box under the pointer or keyboard focus. */
+/** Motion (ui.tsx): marks, boxes and labels ease to their new place over 320 ms when the corpus, scope, gold or zoom changes; items fade in and out over 150 ms. */
 export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover }: { items: PRItem[]; zoom: boolean; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickMark = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const sz = useSize(hostRef, { w: 760, h: height });
   const W = sz.w, H = fill ? Math.max(300, sz.h) : height;
-  const pts = items.filter((it) => it.recall && it.precision) as (PRItem & { recall: NonNullable<CI>; precision: NonNullable<CI> })[];
+  type Pt = PRItem & { recall: NonNullable<CI>; precision: NonNullable<CI> };
+  const hasPt = (it: PRItem): it is Pt => !!it.recall && !!it.precision;
+  const pts = items.filter(hasPt);
   const undefinedOnes = items.filter((it) => !it.recall || !it.precision);
+  // Items that just left stay for their fade-out; the axes, label placement and highlight consider only the present ones.
+  const presence = usePresence(items, (it) => it.id);
+  const stateOf = Object.fromEntries(presence.map((p) => [p.key, p.state]));
+  const shownPts = presence.map((p) => p.item).filter(hasPt);
   // Cross-chart highlight: only when the highlighted id is plotted here. It is drawn last (on top); every other box and mark fades.
   const hl = highlight != null && pts.some((p) => p.id === highlight) ? highlight : null;
-  const drawn = hl == null ? pts : [...pts.filter((p) => p.id !== hl), ...pts.filter((p) => p.id === hl)];
+  const drawn = hl == null ? shownPts : [...shownPts.filter((p) => p.id !== hl), ...shownPts.filter((p) => p.id === hl)];
   const fade = (id: string) => ({ opacity: hl != null && id !== hl ? 0.35 : 1, transition: "opacity 120ms" });
 
   const dom = useMemo(() => {
@@ -76,6 +83,21 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pts, dom, W]);
 
+  // Where everything is heading, keyed by item so a move is continuous across re-sorts; `geo` is where it is drawn this frame.
+  const target: Record<string, number> = {};
+  for (const p of drawn) {
+    const x0 = X(p.recall[1]), x1 = X(p.recall[2]), y0 = Y(p.precision[2]), y1 = Y(p.precision[1]);
+    target[`${p.id}:x`] = X(p.recall[0]); target[`${p.id}:y`] = Y(p.precision[0]);
+    target[`${p.id}:x0`] = x0; target[`${p.id}:y0`] = y0; target[`${p.id}:w`] = Math.max(1, x1 - x0); target[`${p.id}:h`] = Math.max(1, y1 - y0);
+  }
+  const geo = useTween(target, undefined, undefined, `${W}x${H}`);
+  const g = (id: string, k: string) => geo[`${id}:${k}`] ?? target[`${id}:${k}`];
+
+  // Mark sizes: deciders (data.ts isDecider) draw 15% larger with a thin ring in their colour; the cross-chart highlight ring is ink, outside it.
+  const glyph = (p: PRItem) => (p.decider ? 14 : 12);
+  const ringR = (p: PRItem) => (logos && logoFor(p.id) ? 9.5 : 6.5);
+  const hlR = (p: PRItem) => (logos && logoFor(p.id) ? (p.decider ? 11.5 : 9) : p.decider ? 8.5 : 6.5);
+
   return (
     <div ref={hostRef} data-tip-host style={fill ? { position: "absolute", inset: 0 } : { position: "relative" }}>
       <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ display: "block", overflow: "visible" }}>
@@ -103,14 +125,15 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
         <text x={(PL + W - PR) / 2} y={H - 10} fontSize={12} textAnchor="middle" fill="var(--ink-2)">{xLabel}</text>
         <text x={14} y={(PT + H - PB) / 2} fontSize={12} textAnchor="middle" fill="var(--ink-2)" transform={`rotate(-90 14 ${(PT + H - PB) / 2})`}>{yLabel}</text>
 
-        {/* CI boxes first so dots sit on top */}
+        {/* CI boxes first so dots sit on top; a decider's box carries a 1px stroke in its colour, the others none */}
         {drawn.map((p) => {
-          const x0 = X(p.recall[1]), x1 = X(p.recall[2]), y0 = Y(p.precision[2]), y1 = Y(p.precision[1]);
           const mark = { kind: "mark" as const, x: X(p.recall[0]), y: Y(p.precision[0]), r: 9 };
           return (
-            <g key={`b${p.id}`} style={fade(p.id)} {...hoverable(onHover, p.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
-            <g key={`b${p.id}`} onMouseMove={(e) => show(e, mark, prTip(p, logos ? <Logo model={p.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)} tabIndex={-1}>
-              <rect x={x0} y={y0} width={Math.max(1, x1 - x0)} height={Math.max(1, y1 - y0)} fill={p.color} stroke={hl === p.id ? p.color : undefined} strokeWidth={1} style={{ fillOpacity: hl === p.id ? 0.45 : "var(--box-alpha)", transition: "fill-opacity 120ms" }} rx={1} />
+            <g key={`b${p.id}`} className="fd" style={fadeStyle(stateOf[p.id] ?? "exit")}>{/* fade in / out (ui.tsx usePresence) */}
+            <g style={fade(p.id)} {...hoverable(onHover, p.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
+            <g onMouseMove={(e) => show(e, mark, prTip(p, logos ? <Logo model={p.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)} tabIndex={-1}>
+              <rect x={g(p.id, "x0")} y={g(p.id, "y0")} width={g(p.id, "w")} height={g(p.id, "h")} fill={p.color} stroke={p.decider || hl === p.id ? p.color : undefined} strokeWidth={1} style={{ fillOpacity: hl === p.id ? 0.45 : "var(--box-alpha)", transition: "fill-opacity 120ms" }} rx={1} />
+            </g>
             </g>
             </g>
           );
@@ -118,22 +141,28 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
         {/* the mark and its label share one group so both hover, click and focus as a unit; labels have a panel-coloured halo so they read over the boxes */}
         {drawn.map((p) => {
           // a highlighted mark whose label found no room gets one anyway, at the first candidate position
-          const x = X(p.recall[0]), y = Y(p.precision[0]), l = labels[pts.indexOf(p)] ?? (hl === p.id ? { x: x + 9, y: y - 6.5, w: 0, text: p.name + (p.subset ? " *" : "") } : null);
+          const tx = X(p.recall[0]), ty = Y(p.precision[0]), x = g(p.id, "x"), y = g(p.id, "y");
+          const li = pts.indexOf(p), l0 = li >= 0 ? labels[li] : null;
+          const l = l0 ? { x: l0.x - tx, y: l0.y - ty, text: l0.text } : hl === p.id ? { x: 9, y: -6.5, text: p.name + (p.subset ? " *" : "") } : null;
+          const hasLogo = logos && logoFor(p.id);
           return (
-            <g key={`d${p.id}`} style={fade(p.id)} {...hoverable(onHover, p.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
-            <g key={`d${p.id}`} onMouseMove={(e) => show(e, { kind: "mark", x, y, r: 9 }, prTip(p, logos ? <Logo model={p.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)}>
-              <circle className="hit" cx={x} cy={y} r={9} fill="transparent" />
-              {hl === p.id && <circle cx={x} cy={y} r={logos && logoFor(p.id) ? 9 : 6.5} fill="none" stroke={p.color} strokeWidth={1.5} />}
-              {logos && logoFor(p.id) ? (
-                <g color={p.color}><LogoGlyph model={p.id} cx={x} cy={y} size={12} /></g>
+            <g key={`d${p.id}`} className="fd" style={fadeStyle(stateOf[p.id] ?? "exit")}>{/* fade in / out (ui.tsx usePresence) */}
+            <g style={fade(p.id)} {...hoverable(onHover, p.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
+            <g transform={`translate(${x} ${y})`} onMouseMove={(e) => show(e, { kind: "mark", x: tx, y: ty, r: 9 }, prTip(p, logos ? <Logo model={p.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)}>
+              <circle className="hit" r={p.decider ? 11 : 9} fill="transparent" />
+              {hl === p.id && <circle r={hlR(p)} fill="none" stroke="var(--ink)" strokeWidth={1.5} />}
+              {p.decider && <circle r={ringR(p)} fill="none" stroke={p.color} strokeWidth={1} />}
+              {hasLogo ? (
+                <g color={p.color}><LogoGlyph model={p.id} cx={0} cy={0} size={glyph(p)} /></g>
               ) : (
-                <circle cx={x} cy={y} r={3.2} fill={p.color} />
+                <circle r={p.decider ? 3.7 : 3.2} fill={p.color} />
               )}
               {l && (
                 <text x={l.x} y={l.y + 10} fontSize={11} fill="var(--ink)" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round", pointerEvents: onSelect ? "auto" : "none" }}>
                   {l.text}
                 </text>
               )}
+            </g>
             </g>
             </g>
           );

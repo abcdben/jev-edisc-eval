@@ -1,13 +1,16 @@
+import { useRef } from "react";
 import { Logo, LogoGlyph } from "../logos";
-import { CLICK_HINT, TipBox, selectable, useTip, useWidth } from "./ui";
+import { CLICK_HINT, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth } from "./ui";
 import { hoverable } from "./hover";
+import { DeciderRule } from "./PRRows";
 
-/** `sub` is the one secondary line of the row's hover tooltip. `empty` replaces the "not measured" text when `value` is null for a reason other than missing data. */
-export type BarItem = { id: string; name: string; color: string; value: number | null; label: string; sub?: string; subset?: string | null; empty?: string };
+/** `sub` is the one secondary line of the row's hover tooltip. `empty` replaces the "not measured" text when `value` is null for a reason other than missing data. `decider` (data.ts isDecider) draws the accent rule at the row's left edge. */
+export type BarItem = { id: string; name: string; color: string; value: number | null; label: string; sub?: string; subset?: string | null; empty?: string; decider?: boolean };
 
 const ROW = 20;
 
 /** Horizontal bars with the number written at the end of each bar. Zero-valued items are drawn as a hairline. `unit` follows the value in the tooltip. `onSelect` makes each row a button (click, Enter, Space). `highlight` tints the row with that id (cross-chart hover, see hover.tsx); `onHover` reports the row under the pointer or keyboard focus. */
+/** Motion (ui.tsx): bars grow from 0 on first paint and ease to a new length over 320 ms; rows slide to their new order (CSS transform on the keyed group) and fade in and out over 150 ms. */
 export function OpsBars({ items, axis, unit, sort = true, logos = true, onSelect, highlight, onHover }: { items: BarItem[]; axis: string; unit?: string; sort?: boolean; logos?: boolean; onSelect?: (item: BarItem) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickRow = onSelect && ((it: BarItem) => { hide(); onSelect(it); });
@@ -20,28 +23,37 @@ export function OpsBars({ items, axis, unit, sort = true, logos = true, onSelect
   const barW = (v: number | null) => (v == null ? 0 : v === 0 ? 1.5 : Math.max(2, (v / max) * plotW));
   // where the longest bar's figure ends: a tooltip beside the pointer may only sit right of this
   const clearX = Math.max(LABEL_W, ...rows.map((r) => LABEL_W + barW(r.value) + 7 + (r.value == null ? r.empty ?? "not measured" : r.label).length * 6.6));
+  // Drawn in the order rows first appeared (ui.tsx usePresence), placed by rank with a transform, so a re-sort slides rows instead of moving
+  // DOM nodes; rows that just left fade out where they last stood. Bar lengths ease, from 0 when a bar first appears (useTween).
+  const presence = usePresence(items, (it) => it.id);
+  const lastTop = useRef(new Map<string, number>());
+  rows.forEach((r, i) => lastTop.current.set(r.id, i * ROW));
+  const drawn = presence.map((p) => ({ r: p.item, state: p.state }));
+  const widths = useTween(Object.fromEntries(drawn.map(({ r }) => [r.id, barW(r.value)])), 320, () => 0, W);
   return (
     <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
       <svg viewBox={`0 0 ${W} ${h}`} width={W} height={h} style={{ display: "block", overflow: "visible" }}>
-        {rows.map((r, i) => {
-          const y = i * ROW;
+        {drawn.map(({ r, state }) => {
+          // the row's group is translated to its rank (CSS transition on transform); everything inside is drawn at y = 0..ROW
+          const top = lastTop.current.get(r.id) ?? 0;
           const v = r.value;
-          const bw = barW(v);
+          const bw = widths[r.id] ?? barW(v);
           const content = { title: r.name, color: r.color, icon: logos ? <Logo model={r.id} size={12} /> : undefined, value: v == null ? r.empty ?? "not measured" : r.label, unit: v == null ? undefined : unit, sub: r.sub };
           return (
-            <g key={r.id} className={highlight === r.id ? "hl" : undefined} {...hoverable(onHover, r.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
-            <g key={r.id} onMouseMove={(e) => show(e, { kind: "row", top: y, height: ROW, clearX }, content)} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
-              <rect className="hit" x={0} y={y} width={W} height={ROW} fill="transparent" />
+            <g key={r.id} className={`mv fd${highlight === r.id ? " hl" : ""}`} style={{ transform: `translate(0px, ${top}px)`, ...fadeStyle(state) }} {...hoverable(onHover, r.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
+            <g onMouseMove={(e) => show(e, { kind: "row", top, height: ROW, clearX }, content)} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
+              <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
+              {r.decider && <DeciderRule color={r.color} row={ROW} />}
               {logos ? (
                 <>
-                  <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={8} cy={y + ROW / 2} /></g>
-                  <text x={22} y={y + ROW / 2 + 4} fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
+                  <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={8} cy={ROW / 2} /></g>
+                  <text x={22} y={ROW / 2 + 4} fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
                 </>
               ) : (
-                <text x={LABEL_W - 10} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
+                <text x={LABEL_W - 10} y={ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
               )}
-              <rect x={LABEL_W} y={y + 6} width={bw} height={ROW - 12} fill={r.color} rx={1.5} style={{ fillOpacity: v === 0 ? "calc(var(--bar-alpha) * 0.5)" : "var(--bar-alpha)" }} />
-              <text x={LABEL_W + bw + 7} y={y + ROW / 2 + 4} fontSize={11.5} fill={v == null ? "var(--ink-4)" : "var(--ink)"} className="mono">{v == null ? r.empty ?? "not measured" : r.label}</text>
+              <rect x={LABEL_W} y={6} width={bw} height={ROW - 12} fill={r.color} rx={1.5} style={{ fillOpacity: v === 0 ? "calc(var(--bar-alpha) * 0.5)" : "var(--bar-alpha)" }} />
+              <text x={LABEL_W + bw + 7} y={ROW / 2 + 4} fontSize={11.5} fill={v == null ? "var(--ink-4)" : "var(--ink)"} className="mono">{v == null ? r.empty ?? "not measured" : r.label}</text>
             </g>
             </g>
           );

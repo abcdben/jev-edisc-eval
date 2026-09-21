@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-export type PickItem = { id: string; label: string; mark?: ReactNode; title?: string; suffix?: ReactNode; detail?: () => void };
+/** `accent` draws a 2px rule in that colour down the row's left edge (the decider marker, data.ts isDecider). */
+export type PickItem = { id: string; label: string; mark?: ReactNode; title?: string; suffix?: ReactNode; detail?: () => void; accent?: string };
 export type PickGroup = { id: string; label: string; items: PickItem[] };
 
 /**
@@ -58,6 +59,7 @@ export function Picker({ label, summary, groups, on, onChange, onReset, footer }
                   const isOn = on.has(it.id);
                   return (
                     <div className={`pick-row${isOn ? " on" : ""}`} key={it.id} role="option" aria-selected={isOn}>
+                      {it.accent && <span className="rule" style={{ background: it.accent }} aria-hidden />}
                       <button className="pick-main" onClick={() => set([it.id], !isOn)} title={it.title}>
                         <span className={`box${isOn ? " on" : ""}`} />
                         {it.mark && <span className="mark">{it.mark}</span>}

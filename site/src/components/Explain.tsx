@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { CORPORA, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER, fmtMs, fmtPct } from "../data";
+import { CORPORA, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER, fmtMs, fmtPct, isDecider, modelKind } from "../data";
 import { EX, EX_GROUPS, exCorpus, groupOf, membersOf, type ExOutput } from "../examples";
-import { Seg, type TipLine } from "./ui";
+import { DeciderTag, Seg, type TipLine } from "./ui";
 
 /** The Metrics block: the full figures for one model on one corpus (what the chart tooltips used to carry), one fact list per card. */
 export type MetricSection = { title: string; lines: TipLine[]; notes?: string[] };
@@ -226,7 +226,7 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
         <div className="ex-head">
           <div>
             <div className="ex-eyebrow">How each model is asked</div>
-            <h2>{G.label}{cfg && members.length > 1 ? <span className="ex-h-var"> · {memberLabel(active)}</span> : null}</h2>
+            <h2>{G.label}{cfg && members.length > 1 ? <span className="ex-h-var"> · {memberLabel(active)}</span> : null}{active && isDecider(modelKind(active)) && <DeciderTag />}</h2>
           </div>
           <div className="ex-head-ctl">
             <Seg value={corpus} onChange={(c) => setCorpus(c)} options={CORPORA.filter((c) => EX.corpora[c.id]).map((c) => ({ id: c.id, label: c.label, title: c.short }))} />
