@@ -321,6 +321,8 @@ def export(out: Path = Path("results"), dest: Path = Path("results/findings.json
                 "doc": {"flagged": len(any_doc), "relevant": len(rel_any), "recall": _ci(tp_any, len(rel_any)),
                         "precision_lb": _ci(tp_any, len(any_doc)), "review_share": len(any_doc) / n_full},
             }
-    payload = {"corpora": corpora_meta, "models": MODELS, "records": records, "trec_full": full}
+    det_path = out / "determinism.json"
+    determinism = json.loads(det_path.read_text()) if det_path.exists() else None
+    payload = {"corpora": corpora_meta, "models": MODELS, "records": records, "trec_full": full, "determinism": determinism}
     dest.write_text(json.dumps(payload, separators=(",", ":")))
     return dest

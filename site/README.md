@@ -18,3 +18,5 @@ Two sections, both driven by the sticky control bar (corpus, TREC criteria, prom
 - **Configurations of one model**: pick Jev or a Laya checkpoint and compare its ablation variants the same way. The recipe carried into the headline comparison is starred.
 
 Every mark carries a hover tooltip with the counts and intervals behind it; every panel title has an (i) explaining the measurement.
+
+**Consistency** (third card under each section): run-to-run disagreement from the determinism study, `bench determinism` → `results/determinism.json`, merged into `findings.json` by `bench export-findings`. Repeat runs are produced by `scripts/det_run.sh <arm>` (API models, this machine) and `scripts/gpu_box.sh det` (Laya, Gemma on a GPU box).

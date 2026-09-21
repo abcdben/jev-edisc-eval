@@ -8,6 +8,7 @@ import { Control, Hint, Seg, type TipLine } from "./components/ui";
 import { PRScatter, type PRItem } from "./components/PRScatter";
 import { PRRows } from "./components/PRRows";
 import { OpsBars, type BarItem } from "./components/OpsBars";
+import { Consistency } from "./components/Consistency";
 
 type Chart = "map" | "ranked";
 
@@ -89,7 +90,7 @@ function useRows(v: View) {
   return useMemo(() => DATA.records.filter((r) => r.corpus === v.corpus && r.tag === v.tag && r.arm === v.arm), [v.corpus, v.tag, v.arm]);
 }
 
-function OpsPair({ recs, colorOf, nameOf }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string }) {
+function OpsPair({ recs, colorOf, nameOf, arm }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single" }) {
   const time: BarItem[] = recs.map((r) => ({
     id: r.model, name: nameOf(r), color: colorOf(r), value: r.ops.hours_per_100k_docs, label: fmtHours(r.ops.hours_per_100k_docs), tip: opsLines(r), subset: r.subset,
   }));
@@ -98,6 +99,7 @@ function OpsPair({ recs, colorOf, nameOf }: { recs: Rec[]; colorOf: (r: Rec) => 
     label: r.ops.cost_per_doc == null ? "—" : fmtUSD(r.ops.cost_per_doc * 1e5), tip: opsLines(r), subset: r.subset,
   }));
   return (
+    <>
     <div className="ops-grid">
       <div className="card">
         <div className="card-t">
@@ -114,6 +116,8 @@ function OpsPair({ recs, colorOf, nameOf }: { recs: Rec[]; colorOf: (r: Rec) => 
         <OpsBars items={cost} axis="US dollars" />
       </div>
     </div>
+    <Consistency recs={recs} colorOf={colorOf} nameOf={nameOf} arm={arm} />
+    </>
   );
 }
 
@@ -169,7 +173,7 @@ function CompareSection({ v }: { v: View }) {
             items={items} v={v} defaultChart="map" defaultZoom={false}
             hint="Recall: gold-responsive items the model flagged, over all gold-responsive items. Precision: flagged items that were gold-responsive, over all flagged. Intervals are 95% Wilson score intervals. Because every document in each test set carries a gold label, the recall interval is computed over the gold-positive set and the precision interval over the model's flagged set, rather than from a review sample. All metrics use the model's own label, not a tuned threshold."
           />
-          <OpsPair recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} />
+          <OpsPair recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} arm={v.arm} />
         </div>
       </div>
     </section>
@@ -236,7 +240,7 @@ function AblationSection({ v }: { v: View }) {
             emptyText={variants.length ? "Select at least one configuration." : "No configurations available for this view."}
             hint="Same measurement as above. Differences between configurations are usually smaller than between model families, so this card defaults to ranked rows with the axes fitted to the data; switch to map and 0–100% to see the same points on the scale used above. Hover a configuration for what the lever changes."
           />
-          <OpsPair recs={sel} colorOf={color} nameOf={name} />
+          <OpsPair recs={sel} colorOf={color} nameOf={name} arm={v.arm} />
         </div>
       </div>
     </section>
@@ -343,6 +347,10 @@ export default function App() {
         <div>
           <h4>TREC criteria</h4>
           <p>Issue criteria were refined once on a 668-email calibration set that is disjoint from the evaluation set shown. The bare-topic toggle shows the NIST topic sentence with no iteration.</p>
+        </div>
+        <div>
+          <h4>Consistency</h4>
+          <p>Each model re-scored the same 300 Mallinckrodt emails five times (all eight issues per call, and the two narrow issues one per call). Bars are the probability that two runs disagree on a decision; the benchmark run is repeat one. Temperature 0 was run where the API accepts it.</p>
         </div>
         <div>
           <h4>Absent cells</h4>

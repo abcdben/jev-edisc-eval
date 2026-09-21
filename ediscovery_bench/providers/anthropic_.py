@@ -48,7 +48,12 @@ class AnthropicProvider(Provider):
         )
         if self.spec.effort:
             kwargs["output_config"]["effort"] = self.spec.effort
-        kwargs.update(self.spec.extra)
+        extra = dict(self.spec.extra)
+        if "temperature" in extra:
+            # SDK 1.7 dropped the typed field; Claude 4.x models still accept it on the wire.
+            # Sonnet 5 / Opus 4.7+ reject any non-default value with a 400.
+            kwargs["extra_body"] = {"temperature": extra.pop("temperature")}
+        kwargs.update(extra)
         return kwargs
 
     def _parse(self, ts: TaskSet, qids: list[str], resp) -> RawResult:

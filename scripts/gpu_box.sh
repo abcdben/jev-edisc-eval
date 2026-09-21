@@ -39,6 +39,7 @@ setup() {
 # and only a couple of jobs at a time (POOL) share the GPU.
 job() {
   local extra=(); [ -n "${7:-}" ] && extra=(--tag "$7")
+  [ -n "${OUT:-}" ] && extra+=(-o "$OUT")   # per-GPU result dirs when several jobs share a box
   .venv/bin/bench run -t "$1" -d "$2" --corpus "$3" -m "$4" -a "$5" -c "${6:-64}" "${extra[@]}" -y 2>&1 | grep "new rows" || true
 }
 export -f job
@@ -114,18 +115,25 @@ trec() {
 trec_full() {
   # Sharded full-collection pass: trec_full K N runs shard K of N (1-based) of data/trec/full.jsonl.
   # Each box writes results/trec_full/multi/*.jsonl for its shard; shards are concatenated locally.
-  K=${1:-1}; N=${2:-1}
-  .venv/bin/python - "$K" "$N" <<'PY'
-import sys, itertools
-k, n = int(sys.argv[1]), int(sys.argv[2])
-src = open("data/trec/full.jsonl"); out = open(f"data/trec/full_{k}of{n}.jsonl", "w")
+  # Optional sub-split for rebalancing: trec_full K N PARTS M takes only rows j of shard K/N with
+  # (j % M)+1 in PARTS (comma list), e.g. `trec_full 1 3 1,2,3 5` = 60% of shard 1/3.
+  K=${1:-1}; N=${2:-1}; PARTS=${3:-}; M=${4:-1}
+  SUF=""; [ -n "$PARTS" ] && SUF="_p${PARTS//,/-}of${M}"
+  .venv/bin/python - "$K" "$N" "$PARTS" "$M" "$SUF" <<'PY'
+import sys
+k, n, parts, m, suf = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3], int(sys.argv[4]), sys.argv[5]
+keep = {int(p) for p in parts.split(",")} if parts else None
+src = open("data/trec/full.jsonl"); out = open(f"data/trec/full_{k}of{n}{suf}.jsonl", "w")
+j = 0
 for i, line in enumerate(src):
-    if i % n == k - 1: out.write(line)
+    if i % n != k - 1: continue
+    if keep is None or (j % m) + 1 in keep: out.write(line)
+    j += 1
 PY
-  echo "== Laya full collection shard $K/$N, multi arm"
-  job tasks/trec.yaml data/trec/full_${K}of${N}.jsonl trec_full laya@recipe multi 128
-  job tasks/trec.yaml data/trec/full_${K}of${N}.jsonl trec_full lexical multi 128
-  echo "TREC_FULL_DONE $K/$N"
+  echo "== Laya full collection shard $K/$N$SUF, multi arm"
+  job tasks/trec.yaml data/trec/full_${K}of${N}${SUF}.jsonl trec_full laya@recipe multi 128
+  job tasks/trec.yaml data/trec/full_${K}of${N}${SUF}.jsonl trec_full lexical multi 128
+  echo "TREC_FULL_DONE $K/$N$SUF"
 }
 
 trec_gemma() {
@@ -133,6 +141,29 @@ trec_gemma() {
   job tasks/trec.yaml data/trec/local_subset.jsonl trec gemma3-12b multi 4
   job tasks/trec.yaml data/trec/local_subset.jsonl trec gemma3-12b single 4
   echo TREC_GEMMA_DONE
+}
+
+# 8-GPU box: GPUs 0-5 each take one sixth of full-collection shard 1/3 (results in results_gpuK/),
+# GPU 6 runs Gemma on the TREC subset, GPU 7 runs Gemma on Veridian + Mallinckrodt, each on its own
+# Ollama server. Everything runs concurrently; the function returns when all of it is done.
+octo() {
+  # the installer's systemd service sees all GPUs and owns :11434; stop it and run pinned servers as ubuntu
+  sudo systemctl stop ollama 2>/dev/null || true; sudo systemctl disable ollama 2>/dev/null || true
+  pkill -x ollama 2>/dev/null || true; sleep 2
+  for k in 0 1 2 3 4 5; do
+    ( export CUDA_VISIBLE_DEVICES=$k OUT=results_gpu$k
+      bash scripts/gpu_box.sh trec_full 1 3 $((k+1)) 6 > octo_gpu$k.log 2>&1 ) &
+  done
+  ( export CUDA_VISIBLE_DEVICES=6 OLLAMA_HOST=http://127.0.0.1:11434 OUT=results_gpu6
+    OLLAMA_NUM_PARALLEL=4 nohup ollama serve > ollama6.log 2>&1 &
+    sleep 5; ollama pull gemma3:12b >/dev/null 2>&1
+    bash scripts/gpu_box.sh trec_gemma > octo_gpu6.log 2>&1 ) &
+  ( export CUDA_VISIBLE_DEVICES=7 OLLAMA_HOST=http://127.0.0.1:11435 OUT=results_gpu7
+    OLLAMA_NUM_PARALLEL=4 nohup ollama serve > ollama7.log 2>&1 &
+    sleep 5; until ollama list 2>/dev/null | grep -q gemma3; do sleep 10; done   # shared weight store
+    bash scripts/gpu_box.sh gemma > octo_gpu7.log 2>&1 ) &
+  wait
+  echo OCTO_DONE
 }
 
 gemma() {
@@ -144,13 +175,30 @@ gemma() {
   echo GEMMA_DONE
 }
 
+# Determinism repeats on the 300-doc Mallinckrodt sample: Gemma (ollama) and Laya, in parallel.
+det() {
+  (pgrep -x ollama >/dev/null || (OLLAMA_NUM_PARALLEL=4 nohup ollama serve >ollama.log 2>&1 &)); sleep 3
+  local T=tasks/mallinckrodt.yaml D=data/mallinckrodt/det300.jsonl C=mnk_det N=som_narrow,dea_narrow
+  ( for k in 2 3 4 5; do
+      job $T $D $C gemma3-12b multi 4 rep$k
+      .venv/bin/bench run -t $T -d $D --corpus $C -m gemma3-12b -a single -q $N -c 4 --tag rep$k -y 2>&1 | grep "new rows" || true
+    done; echo GEMMA_DONE ) &
+  ( for k in 2 3 4 5; do
+      .venv/bin/bench run -t $T -d $D --corpus $C -m laya@base -m laya@recipe -a multi -c 64 --tag rep$k -y 2>&1 | grep "new rows" || true
+      .venv/bin/bench run -t $T -d $D --corpus $C -m laya@base -m laya@recipe -a single -q $N -c 64 --tag rep$k -y 2>&1 | grep "new rows" || true
+    done; echo LAYA_DONE ) &
+  wait; echo DET_DONE
+}
+
 case "${1:-}" in
   setup) setup ;;
   run) run 2>&1 | tee -a gpu_run.log ;;
   gemma) gemma 2>&1 | tee -a gpu_run.log ;;
   cuad) cuad 2>&1 | tee -a gpu_run.log ;;
   trec) trec 2>&1 | tee -a gpu_run.log ;;
-  trec_full) trec_full "${2:-1}" "${3:-1}" 2>&1 | tee -a gpu_run.log ;;
+  trec_full) trec_full "${2:-1}" "${3:-1}" "${4:-}" "${5:-1}" 2>&1 | tee -a gpu_run.log ;;
   trec_gemma) trec_gemma 2>&1 | tee -a gpu_run.log ;;
-  *) echo "usage: $0 setup|run|gemma|cuad|trec|trec_full K N|trec_gemma"; exit 1 ;;
+  octo) octo 2>&1 | tee -a gpu_run.log ;;
+  det) det 2>&1 | tee -a gpu_run.log ;;
+  *) echo "usage: $0 setup|run|gemma|cuad|trec|trec_full K N [PARTS M]|trec_gemma|octo|det"; exit 1 ;;
 esac

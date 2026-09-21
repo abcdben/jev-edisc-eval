@@ -20,7 +20,25 @@ export type CorpusMeta = {
   corpus: string; tag: string; display: string; gold: string; n_docs: number; n_issues: number;
   issues: Record<string, string>; n_pos_docs_any: number; n_pos_by_issue: Record<string, number>; n_gray_by_issue: Record<string, number>;
 };
-export type Findings = { corpora: Record<string, CorpusMeta>; models: Record<string, { name: string; family: string; kind: string }>; records: Rec[] };
+export type DetSub = { n: number; flip: CI; pairwise: number | null };
+export type DetCell = {
+  arm: "multi" | "single"; setting: "default" | "t0"; model: string; k: number; runs: string[];
+  n_decisions: number; n_docs: number;
+  decision_flip: CI; decision_flip_weighted: number; pairwise: [number, number, number];
+  identical_prob: CI; prob_spread_median: number; prob_spread_p95: number;
+  confident_flip: CI; confident_share_of_flips: number | null;
+  by_issue: Record<string, DetSub>; by_stratum: Record<string, DetSub>; by_gold: Record<string, DetSub>;
+  recall_range: [number, number] | null; precision_range: [number, number] | null;
+  majority: { recall: number | null; precision: number | null };
+  doc_flip?: CI; doc_pairwise?: number;
+};
+export type Determinism = {
+  sample: { n_docs: number; strata: Record<string, number>; corpus_strata: Record<string, number>; focus_issues: string[] };
+  cells: DetCell[];
+} | null;
+export type Findings = {
+  corpora: Record<string, CorpusMeta>; models: Record<string, { name: string; family: string; kind: string }>; records: Rec[]; determinism: Determinism;
+};
 
 export const DATA = raw as unknown as Findings;
 

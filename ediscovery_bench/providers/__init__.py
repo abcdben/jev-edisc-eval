@@ -20,6 +20,7 @@ def make_provider(
     phrasing: str = "rfp",
     batch: bool = False,
     flex: bool = True,
+    temperature: float | None = None,
 ) -> Provider:
     spec, variant = parse_model_key(key)
     if effort_override and spec.provider not in ("typesafe", "laya", "ollama", "lexical", "mock"):
@@ -27,6 +28,9 @@ def make_provider(
             spec = replace(spec, effort=VENDOR_DEFAULT_EFFORT.get(spec.key), extra={})
         else:
             spec = replace(spec, effort=effort_override, extra={})
+    if temperature is not None and spec.provider in ("anthropic", "openai", "gemini"):
+        # all three providers splat spec.extra into the request
+        spec = replace(spec, extra={**spec.extra, "temperature": temperature})
 
     if spec.provider == "typesafe":
         from .typesafe import TypeSafeProvider

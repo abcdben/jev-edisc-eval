@@ -67,6 +67,7 @@ async def run_job(
     phrasing: str = "rfp",
     batch: bool = False,
     flex: bool = True,
+    temperature: float | None = None,
     tag: str = "",
     progress: Progress | None = None,
     log: Callable[[str], None] = console.print,
@@ -87,7 +88,7 @@ async def run_job(
     total = len(docs) * (1 if arm == "multi" else len(qids))
     task_id = progress.add_task(f"{model_key:<24} {arm:<6}", total=total, completed=len(done)) if progress else None
 
-    provider = make_provider(model_key, effort_override=effort, phrasing=phrasing, batch=batch, flex=flex)
+    provider = make_provider(model_key, effort_override=effort, phrasing=phrasing, batch=batch, flex=flex, temperature=temperature)
     lock = asyncio.Lock()
     new: list[Prediction] = []
 

@@ -114,6 +114,7 @@ def run(
     phrasing: str = typer.Option("rfp", "--phrasing", help="rfp | literal (LLM prompt phrasing)"),
     batch: bool = typer.Option(False, "--batch", help="Use Anthropic Message Batches (50% off, no latency)"),
     no_flex: bool = typer.Option(False, "--no-flex", help="Disable OpenAI flex tier"),
+    temperature: Optional[float] = typer.Option(None, "--temperature", help="LLM sampling temperature override (vendor default if unset)"),
     tag: str = typer.Option("", "--tag", help="Suffix for the results file (e.g. effort_default)"),
     unlabeled: bool = typer.Option(False, "--unlabeled", help="Corpus has no gold labels"),
     yes: bool = typer.Option(False, "--yes", "-y"),
@@ -130,7 +131,7 @@ def run(
     if not yes and not typer.confirm("Proceed?", default=False):
         raise typer.Exit(1)
     asyncio.run(
-        run_jobs(ts, docs, keys, arm, out, corpus, concurrency=concurrency, effort=effort, phrasing=phrasing, batch=batch, flex=not no_flex, tag=tag)
+        run_jobs(ts, docs, keys, arm, out, corpus, concurrency=concurrency, effort=effort, phrasing=phrasing, batch=batch, flex=not no_flex, temperature=temperature, tag=tag)
     )
     _report(ts, out, corpus, arm, keys, tag)
 
@@ -407,6 +408,67 @@ def writeup(
 
     p = write_report(task, data, out, corpus, tuple(arm), tuple(tag), title)
     console.print(f"wrote {p}")
+
+
+@app.command("jev-recipe")
+def jev_recipe(
+    out: Path = typer.Option(Path("results"), "--out", "-o"),
+    dest: Path = typer.Option(Path("design/05_jev_recipe.md"), "--dest"),
+):
+    """Jev ablation across all corpora; pick the recipe on the Veridian dev split and confirm elsewhere."""
+    from .recipe import write_recipe
+
+    console.print(f"wrote {write_recipe(out, dest)}")
+
+
+@app.command("export-findings")
+def export_findings(
+    out: Path = typer.Option(Path("results"), "--out", "-o"),
+    dest: Path = typer.Option(Path("results/findings.json"), "--dest"),
+):
+    """Speed, cost, recall/precision (Wilson CIs) per corpus/arm/model -> findings.json."""
+    from .export import export
+
+    console.print(f"wrote {export(out, dest)}")
+
+
+@app.command("det-sample")
+def det_sample(
+    src: Path = typer.Option(Path("data/mallinckrodt/mnk.jsonl"), "--src"),
+    dst: Path = typer.Option(Path("data/mallinckrodt/det300.jsonl"), "--dst"),
+    per_stratum: int = typer.Option(100, "--per-stratum"),
+):
+    """Stratified (gray / clear positive / clear negative) sample for the determinism study."""
+    from .determinism import build_sample
+
+    console.print_json(json.dumps(build_sample(src, dst, per_stratum=per_stratum)))
+
+
+@app.command("determinism")
+def determinism(
+    out: Path = typer.Option(Path("results"), "--out", "-o"),
+    sample: Path = typer.Option(Path("data/mallinckrodt/det300.jsonl"), "--sample"),
+    corpus: Path = typer.Option(Path("data/mallinckrodt/mnk.jsonl"), "--corpus"),
+    dest: Path = typer.Option(Path("results/determinism.json"), "--dest"),
+):
+    """Run-to-run flip rates per model from the repeat runs in results/mnk_det -> determinism.json."""
+    from .determinism import analyze
+
+    res = analyze(out, sample, corpus)
+    dest.write_text(json.dumps(res, indent=1))
+    t = Table(title="Determinism: label disagreement across repeat runs")
+    for c in ["arm", "setting", "model", "K", "decisions", "flip %", "pairwise %", "doc flip %", "identical p %", "conf. flip %", "recall range"]:
+        t.add_column(c, justify="right" if c not in ("arm", "setting", "model") else "left")
+    for c in res["cells"]:
+        t.add_row(
+            c["arm"], c["setting"], c["model"], str(c["k"]), str(c["n_decisions"]),
+            _fmt(c["decision_flip"][0], pct=True), _fmt(c["pairwise"][0], pct=True),
+            _fmt(c.get("doc_flip", [None])[0], pct=True) if c.get("doc_flip") else "—",
+            _fmt(c["identical_prob"][0], pct=True), _fmt(c["confident_flip"][0], pct=True),
+            f"{c['recall_range'][0]*100:.1f}–{c['recall_range'][1]*100:.1f}" if c["recall_range"] else "—",
+        )
+    console.print(t)
+    console.print(f"wrote {dest}")
 
 
 def _fmt(v, pct=False, nd=3):

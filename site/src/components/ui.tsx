@@ -12,7 +12,7 @@ export function useTip() {
     const r = host ? host.getBoundingClientRect() : { left: 0, top: 0, width: 0 };
     let x = e.clientX - r.left + 14;
     const y = e.clientY - r.top + 12;
-    if (host && x + 300 > r.width) x = Math.max(0, e.clientX - r.left - 314);
+    if (host && x + 380 > r.width) x = Math.max(0, e.clientX - r.left - 384);
     setTip({ x, y, ...t });
   };
   return { tip, show, hide: () => setTip(null), hostRef };
