@@ -9,3 +9,7 @@ data/private/
 Screenshot*.png
 .DS_Store
 models/
+
+# results site
+site/node_modules/
+site/dist/
