@@ -214,18 +214,30 @@ svg text { user-select: none; font-family: var(--sans); }
 .card-t .right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
 .card [data-tip-host] { min-width: 0; }
 
-/* hint (i) */
+/* hint (i): click opens a small popover below the icon, right-aligned to it; .l flips it to left-aligned, .up puts it above */
 .hint { position: relative; display: inline-flex; }
-.hint > span.i {
-  display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; border: 1px solid var(--line-2);
-  color: var(--ink-3); font-size: 9.5px; cursor: help; line-height: 1; background: var(--panel);
+.hint > .i {
+  display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; padding: 0; border-radius: 50%; border: 1px solid var(--line-2);
+  color: var(--ink-3); font: inherit; font-size: 9.5px; cursor: pointer; line-height: 1; background: var(--panel);
 }
-.hint:hover > span.i { border-color: var(--ink-3); color: var(--ink); }
+.hint > .i:hover, .hint.open > .i { border-color: var(--ink-3); color: var(--ink); }
+.hint > .i:focus-visible { outline: 1.5px solid var(--ink-3); outline-offset: 1px; }
 .hint .pop {
-  position: absolute; left: 22px; top: -6px; z-index: 40; width: 340px; background: var(--tip-bg); color: var(--tip-fg); border-radius: 6px; padding: 10px 12px;
-  font-size: 12px; line-height: 1.5; box-shadow: 0 8px 28px rgba(0,0,0,0.25); pointer-events: none; border: 1px solid var(--tip-line);
+  position: absolute; top: calc(100% + 7px); right: 0; z-index: 45; width: 360px; max-width: calc(100vw - 24px); background: var(--panel); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px 11px; font-size: 12px; line-height: 1.45; font-weight: 400; text-align: left; white-space: normal;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.14);
 }
-.hint .pop.left { left: auto; right: 22px; }
+[data-theme="dark"] .hint .pop { box-shadow: 0 8px 24px rgba(0,0,0,0.4); border-color: var(--line-2); }
+.hint .pop.l { right: auto; left: 0; }
+.hint .pop.up { top: auto; bottom: calc(100% + 7px); }
+.hint .pop .t { font-size: 12.5px; font-weight: 500; color: var(--ink); margin-bottom: 8px; }
+.hint .pop dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 12px; margin: 0; }
+.hint .pop dl .row { display: contents; }
+.hint .pop dt { font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; padding-top: 2px; max-width: 92px; }
+.hint .pop dd { margin: 0; font-size: 12px; color: var(--ink-2); }
+.hint .pop p { margin: 0; font-size: 12px; color: var(--ink-2); }
+.hint .pop .more { display: inline-block; margin-top: 10px; padding: 0; border: 0; background: none; font: inherit; font-size: 11.5px; color: var(--ink-3); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.hint .pop .more:hover { color: var(--ink); }
 
 /* tooltip */
 .tip {

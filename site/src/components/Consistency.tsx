@@ -1,7 +1,19 @@
 import { DATA, fmtCI, fmtInt, fmtPct, type DetCell, type Rec } from "../data";
 import { LogoGlyph } from "../logos";
 import { useState } from "react";
-import { CLICK_HINT, Hint, Seg, TipBox, selectable, useTip, useWidth, type TipLine } from "./ui";
+import { CLICK_HINT, Hint, Seg, TipBox, selectable, useTip, useWidth, type HintItem, type TipLine } from "./ui";
+
+/** The Determinism card's "i" popover. */
+const DET_ITEMS: HintItem[] = [
+  { k: "Sample", v: "300 Mallinckrodt emails: 100 with a debatable gold label, 100 clear positives, 100 clear negatives; shown for every corpus." },
+  { k: "Runs", v: "Five under identical settings; the benchmark run is the first." },
+  { k: "Bar", v: "Pairwise disagreement: the probability that two runs give a different label for the same (document, issue) decision." },
+  { k: "Whisker", v: "95% bootstrap interval over decisions." },
+  { k: "t = 0", v: "The same models at temperature 0 where the API accepts it; Sonnet 5 rejects it and is marked not measured." },
+  { k: "Deciders", v: "Jev and Laya expose no sampling controls, so one bar serves both views." },
+  { k: "TAR rows", v: "0 by construction: the classifier and the simulated reviewer make the same call on every pass." },
+  { k: "Hover", v: "Flip rates by stratum, issue and gold label, and how much recall moved between runs." },
+];
 
 const LABEL_W = 168, ROW = 20;
 
@@ -80,7 +92,7 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect }: { recs: Re
         <span className="unit">{det ? `${fmtInt(det.sample.n_docs)} emails · ${rows.find((x) => x.d?.cell)?.d?.cell?.k ?? 5} runs` : "not measured"}</span>
         <span className="right">
           {hasT0 && <Seg value={setting} onChange={setSetting} options={[{ id: "default", label: "default", title: "Vendor default sampling" }, { id: "t0", label: "t = 0", title: "Temperature 0 where the API accepts it" }]} />}
-          <Hint left text="Measured on Mallinckrodt only and shown for every corpus, since it is a property of the model rather than the documents. Each model scored the same fixed sample of 300 Mallinckrodt emails five times under identical settings (100 emails with a debatable gold label, 100 clear positives, 100 clear negatives; the benchmark run counts as the first repeat). The bar is pairwise disagreement: the probability that two independent runs give a different label for the same (document, issue) decision. The whisker is a 95% bootstrap interval over decisions. The t = 0 view shows the same models at temperature 0 where the API accepts it; Anthropic rejects sampling parameters on Sonnet 5, so it is marked not measured there. Jev and Laya expose no sampling controls, so their bars are intrinsic behaviour in both views. The classical TAR rows are 0 by construction: a trained classifier and the simulated reviewer make the same call on every pass, and their spread across random training samples is reported as a seed range elsewhere. Hover for flip rates by stratum, issue and gold label, and for how much recall moved between runs." />
+          <Hint items={DET_ITEMS} more="Notes on method" />
         </span>
       </div>
       <div ref={hostRef} data-tip-host style={{ position: "relative" }}>

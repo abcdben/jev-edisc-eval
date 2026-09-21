@@ -4,7 +4,7 @@ import {
   corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isGpuRow, pick, variantColor,
   type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
-import { Control, Hint, Seg, type TipLine } from "./components/ui";
+import { Control, Hint, NOTES_ID, Seg, type HintItem, type TipLine } from "./components/ui";
 import { PRScatter, type PRItem } from "./components/PRScatter";
 import { PRRows } from "./components/PRRows";
 import { OpsBars, type BarItem } from "./components/OpsBars";
@@ -21,7 +21,7 @@ const PICK_ORDER: Kind[] = ["system1", "system1_ft", "baseline", "llm", "local_l
 const KIND_SHORT: Record<Kind, string> = { system1: "Deciders", system1_ft: "Supervised", llm: "LLM", local_llm: "Local LLM", tar: "Classical TAR", baseline: "Floor" };
 
 /** Recall/precision card with a map (scatter with interval boxes) or ranked (rows with whiskers) view. The chart mode is owned by the section so it can switch the dashboard layout. `explain` opens the details modal for a clicked mark or row (item ids are model keys). */
-function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain }: { items: PRItem[]; hint: string; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void }) {
+function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain }: { items: PRItem[]; hint: HintItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void }) {
   const setChart = onChart;
   const [zoom, setZoom] = useState(defaultZoom);
   const onSelect = explain && ((it: PRItem) => explain(it.id));
@@ -32,7 +32,7 @@ function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = t
         <span className="right">
           <Seg value={chart} onChange={setChart} options={[{ id: "map", label: "map", title: "Recall against precision, one box per model" }, { id: "ranked", label: "ranked", title: "Rows sorted by F1, whiskers for the intervals" }]} />
           <Seg value={zoom ? "zoom" : "full"} onChange={(z) => setZoom(z === "zoom")} options={[{ id: "full", label: "0–100%" }, { id: "zoom", label: "fit to data" }]} />
-          <Hint left text={hint} />
+          <Hint items={hint} more="Notes on method" />
         </span>
       </div>
       {chart === "map" ? <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill onSelect={onSelect} /></div> : <PRRows items={items} zoom={zoom} sortBy="f1" logos={logos} onSelect={onSelect} />}
@@ -45,6 +45,25 @@ function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = t
 }
 
 type View = { corpus: string; tag: string; arm: "multi" | "single"; gray: Gray; level: Level; issue: string | null };
+
+/** Recall and precision card, Compare models. */
+const PR_ITEMS: HintItem[] = [
+  { k: "Recall", v: "Gold-responsive items the model flagged, over all gold-responsive items." },
+  { k: "Precision", v: "Flagged items that were gold-responsive, over all flagged." },
+  { k: "Intervals", v: "95% Wilson score; recall over the gold-positive set, precision over the flagged set, since every document carries a gold label." },
+  { k: "Label", v: "The model's own label, not a tuned threshold." },
+  { k: "Scope", v: "Document level: responsive if positive for any issue. Decision level: every (document, issue) judgment pooled." },
+  { k: "Gray", v: "'Exclude gray' drops decisions whose gold label was flagged as debatable." },
+  { k: "*", v: "Scored on a stratified subset; hover a row for the count. Intervals widen to match." },
+];
+/** Recall and precision card, Configurations page. */
+const CONFIG_PR_ITEMS: HintItem[] = [
+  { k: "Measures", v: "The same recall and precision as on Compare models, for configurations of one model." },
+  { k: "Default view", v: "Ranked rows with axes fitted to the data, since configurations differ less than model families; switch to map and 0–100% for the Compare scale." },
+  { k: "Intervals", v: "95% Wilson score; * marks a stratified subset." },
+  { k: "Levers", v: "Hover a configuration for what its lever changes." },
+  { k: "★", v: "The optimized configuration, selected on the Veridian dev split." },
+];
 
 // ------------------------------------------------------------------------------------------------
 // tooltip content
@@ -133,7 +152,24 @@ const OPS_MODE_OPTIONS = [
   { id: "machine" as const, label: "machine only", title: "The model's own time and bill" },
   { id: "human" as const, label: "+ human time", title: `Adds ${fmtHours(HUMAN_DEV_HOURS)} and ${fmtUSD(HUMAN_DEV_USD)} of prompt development to every non-TAR row` },
 ];
-const HUMAN_SENTENCE = `The '+ human time' view adds the prompt or criteria development a person does for every non-TAR row: ${HUMAN_DEV_DOCS} documents reviewed at ${HUMAN_DEV_DOCS_PER_HOUR}/hour and $${HUMAN_DEV_USD_PER_HOUR}/hour, ${fmtHours(HUMAN_DEV_HOURS)} and ${fmtUSD(HUMAN_DEV_USD)}, counted once per 100k-document project; TAR rows are already human time, so in 'machine only' they show none.`;
+/** The two rows shared by the Review time and Cost hints: what the '+ human time' toggle adds, and why TAR rows disappear without it. */
+const HUMAN_ITEMS: HintItem[] = [
+  { k: "+ human time", v: `Adds prompt or criteria development: ${HUMAN_DEV_DOCS} documents at ${HUMAN_DEV_DOCS_PER_HOUR}/h and $${HUMAN_DEV_USD_PER_HOUR}/h, ${fmtHours(HUMAN_DEV_HOURS)} and ${fmtUSD(HUMAN_DEV_USD)}, once per 100k-document project.` },
+  { k: "TAR rows", v: "Already human time, so they are hidden in machine-only." },
+];
+const TIME_ITEMS: HintItem[] = [
+  { k: "Measures", v: "Median wall-clock time per document for the model's own calls, one request at a time, scaled to 100,000 documents." },
+  { k: "Arms", v: "All issues per call: one call per document. One issue per call: the sum over issues." },
+  { k: "Parallelism", v: "Every service accepts parallel requests, so hours shrink for all models alike; compare the ratios, not the absolutes." },
+  { k: "GPU rows", v: "Laya and Gemma ran on one rented A100." },
+  ...HUMAN_ITEMS,
+];
+const COST_ITEMS: HintItem[] = [
+  { k: "Measures", v: "What was actually paid to the vendor, summed over the model's decisions and scaled to 100,000 documents." },
+  { k: "Pricing", v: "OpenAI on flex pricing (half of list); Anthropic with prompt caching on the all-issues arm." },
+  { k: "GPU rows", v: `Laya and Gemma: a rented ${GPU_NAME} at $${GPU_USD_PER_HOUR.toFixed(2)}/h times the single-stream review time, so an upper bound.` },
+  ...HUMAN_ITEMS,
+];
 
 function OpsCards({ recs, colorOf, nameOf, logos = true, explain }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean; explain?: (k: string) => void }) {
   const [mode, setMode] = useState<OpsMode>(() => (localStorage.getItem(OPS_MODE_KEY) === "human" ? "human" : "machine"));
@@ -154,14 +190,14 @@ function OpsCards({ recs, colorOf, nameOf, logos = true, explain }: { recs: Rec[
       <div className="card">
         <div className="card-t">
           <h3>Review time</h3><span className="unit">per 100k documents, single stream</span>
-          <span className="right">{seg}<Hint left text={`Median wall-clock time of the model's own calls per document, one request at a time, scaled to 100,000 documents. In the 'all issues per call' arm that is one call per document; in 'one issue per call' it is the sum over issues. Every service accepts parallel requests, so absolute hours shrink with concurrency for all models alike; the ratios are the comparison. Laya and Gemma ran on one A100. ${HUMAN_SENTENCE}`} /></span>
+          <span className="right">{seg}<Hint items={TIME_ITEMS} more="Notes on method" /></span>
         </div>
         <OpsBars items={time} axis="hours" logos={logos} onSelect={onSelect} />
       </div>
       <div className="card">
         <div className="card-t">
           <h3>Cost</h3><span className="unit">per 100k documents, as paid</span>
-          <span className="right">{seg}<Hint left text={`What was actually paid to the vendor, summed over the model's decisions and scaled to 100,000 documents. OpenAI ran on flex pricing (half of list); Anthropic used prompt caching on the all-issues arm. Laya and Gemma ran on a rented ${GPU_NAME} ($${GPU_USD_PER_HOUR.toFixed(2)}/hour), so their cost is that GPU time for the single-stream review time shown; serving many documents concurrently would lower it. ${HUMAN_SENTENCE}`} /></span>
+          <span className="right">{seg}<Hint items={COST_ITEMS} more="Notes on method" /></span>
         </div>
         <OpsBars items={cost} axis="US dollars" logos={logos} onSelect={onSelect} />
       </div>
@@ -205,7 +241,7 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
       <div className={`dash${chart === "ranked" ? " ranked" : ""}`}>
         <PRCard
           items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
-          hint="Recall: gold-responsive items the model flagged, over all gold-responsive items. Precision: flagged items that were gold-responsive, over all flagged. Intervals are 95% Wilson score intervals. Because every document in each test set carries a gold label, the recall interval is computed over the gold-positive set and the precision interval over the model's flagged set, rather than from a review sample. All metrics use the model's own label, not a tuned threshold."
+          hint={PR_ITEMS}
         />
         <div className="stack">
           <OpsCards recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} explain={explain} />
@@ -279,7 +315,7 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
           items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
           emptyText={variants.length ? "Select at least one configuration." : "No configurations of this model were run on this corpus and arm."}
           logos={false}
-          hint="Same measurement as on Compare models. Differences between configurations are usually smaller than between model families, so this card defaults to ranked rows with the axes fitted to the data; switch to map and 0–100% to see the same points on the scale used there. Hover a configuration for what the lever changes. ★ marks the optimized configuration, the one selected on the Veridian dev split."
+          hint={CONFIG_PR_ITEMS}
         />
         <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} explain={explain} /></div>
       </div>
@@ -339,7 +375,7 @@ export default function App() {
       <div className="controls">
         <Control label="Corpus">
           <Seg value={corpus} onChange={pickCorpus} options={CORPORA.map((c) => ({ id: c.id, label: c.label, title: c.id === corpus ? corpusTitle : c.short }))} />
-          <Hint text={`${meta.display}. ${corpusTitle}.`} />
+          <Hint title={meta.display} text={corpusTitle} />
         </Control>
         {pageId === "compare"
           ? <ModelPicker v={v} on={on} setOn={setOn} explain={setExplain} />
@@ -378,7 +414,11 @@ export default function App() {
               </optgroup>
             </select>
           </span>
-          <Hint text="Document level: a document counts as responsive if it is positive for any issue, which is the relevance call a review team makes. Decision level pools every (document, issue) judgment. A single issue shows that issue's recall and precision on its own (all gold labels)." />
+          <Hint title="Scope" items={[
+            { k: "Document", v: "A document is responsive if it is positive for any issue: the relevance call a review team makes." },
+            { k: "Decision", v: "Pools every (document, issue) judgment." },
+            { k: "Single issue", v: "That issue's recall and precision on its own, over all gold labels." },
+          ]} />
         </Control>
         <Control label="Gold">
           <Seg value={issue ? "all" : gray} onChange={setGray} options={[
@@ -392,7 +432,7 @@ export default function App() {
       {pageId === "compare" ? <CompareSection v={v} on={on} explain={setExplain} /> : <AblationSection v={v} grp={grp} off={off} explain={setExplain} />}
       {explain && <ExplainModal initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)} />}
 
-      <details className="notes">
+      <details className="notes" id={NOTES_ID}>
         <summary>Notes on method<span className="chev" /></summary>
         <footer className="foot">
         <div>
@@ -421,7 +461,7 @@ export default function App() {
         </div>
         <div>
           <h4>Determinism</h4>
-          <p>Each model re-scored the same 300 Mallinckrodt emails five times (all eight issues per call, and the two narrow issues one per call). Bars are the probability that two runs disagree on a decision; the benchmark run is repeat one. Temperature 0 was run where the API accepts it.</p>
+          <p>Measured on Mallinckrodt only and shown for every corpus, since it is a property of the model rather than the documents. Each model re-scored the same 300 Mallinckrodt emails (100 with a debatable gold label, 100 clear positives, 100 clear negatives) five times (all eight issues per call, and the two narrow issues one per call). Bars are the probability that two runs disagree on a decision, with a 95% bootstrap interval over decisions; the benchmark run is repeat one. Temperature 0 was run where the API accepts it; Anthropic rejects sampling parameters on Sonnet 5. Jev and Laya expose no sampling controls. Classical TAR rows are 0 by construction; their spread across random training samples is the seed range in the row tooltips.</p>
         </div>
         <div>
           <h4>Classical TAR</h4>

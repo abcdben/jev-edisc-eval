@@ -97,12 +97,72 @@ export function TipBox({ tip, hint }: { tip: Tip; hint?: string }) {
   );
 }
 
-export function Hint({ text, left }: { text: string; left?: boolean }) {
+/** id of the "Notes on method" <details> at the foot of the page; `Hint`'s `more` link opens and scrolls to it. */
+export const NOTES_ID = "method";
+
+export function scrollToNotes() {
+  const el = document.getElementById(NOTES_ID);
+  if (!el) return;
+  if (el instanceof HTMLDetailsElement) el.open = true;
+  // leave room for the sticky control bar
+  const bar = document.querySelector<HTMLElement>(".controls");
+  window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - (bar?.offsetHeight ?? 0) - 12, behavior: "smooth" });
+}
+
+export type HintItem = { k: string; v: ReactNode };
+
+/**
+ * The "i" control in card headers and the control bar. Click opens a small anchored popover (no hover behaviour) that closes on outside click,
+ * Esc, or clicking the icon again. Content is either structured `items` (a compact label/value list, one short sentence per value) or a legacy
+ * `text` paragraph. `title` defaults to the enclosing card's title. `more` is the label of a link that opens and scrolls to the notes on method.
+ * The popover hangs below the icon, right-aligned to it, and flips to left-aligned (or above) when that would leave the viewport.
+ */
+export function Hint({ text, items, more, title }: { text?: string; items?: HintItem[]; more?: string; title?: string }) {
   const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLSpanElement>(null);
+  const pop = useRef<HTMLDivElement>(null);
+  const [place, setPlace] = useState<{ l: boolean; up: boolean } | null>(null);
+  const [cardTitle, setCardTitle] = useState<string | undefined>(undefined);
+  useLayoutEffect(() => {
+    if (!open) { setPlace(null); return; }
+    const w = wrap.current, p = pop.current;
+    if (!w || !p) return;
+    const a = w.getBoundingClientRect();
+    const pw = p.offsetWidth, ph = p.offsetHeight;
+    const M = 8;
+    // right-aligned to the icon unless that would leave the viewport; then left-aligned if that fits, or if the icon is in the left half
+    const l = a.right - pw < M && (a.left + pw <= window.innerWidth - M || a.left + a.right < window.innerWidth);
+    // below unless it would leave the viewport; then above if that fits, or whichever side has more room
+    const up = a.bottom + 8 + ph > window.innerHeight - M && (a.top - 8 - ph >= M || a.top > window.innerHeight - a.bottom);
+    setPlace({ l, up });
+  }, [open]);
+  useLayoutEffect(() => {
+    if (title === undefined) setCardTitle(wrap.current?.closest(".card-t")?.querySelector("h3")?.textContent ?? undefined);
+  }, [title]);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("pointerdown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+  const t = title ?? cardTitle;
   return (
-    <span className="hint" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-      <span className="i">i</span>
-      {open && <span className={`pop${left ? " left" : ""}`}>{text}</span>}
+    <span ref={wrap} className={`hint${open ? " open" : ""}`}>
+      <button type="button" className="i" aria-label={t ? `About ${t}` : "About this"} aria-expanded={open} onClick={() => setOpen((o) => !o)}>i</button>
+      {open && (
+        <div ref={pop} role="dialog" aria-label={t} className={`pop${place?.l ? " l" : ""}${place?.up ? " up" : ""}`} style={{ visibility: place ? "visible" : "hidden" }}>
+          {t && <div className="t">{t}</div>}
+          {items && (
+            <dl>
+              {items.map((it, i) => <div key={i} className="row"><dt>{it.k}</dt><dd>{it.v}</dd></div>)}
+            </dl>
+          )}
+          {text && <p>{text}</p>}
+          {more && <button type="button" className="more" onClick={() => { setOpen(false); scrollToNotes(); }}>{more}</button>}
+        </div>
+      )}
     </span>
   );
 }
