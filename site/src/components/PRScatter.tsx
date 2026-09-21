@@ -67,7 +67,13 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
   return (
     <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
       <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ display: "block", overflow: "visible" }}>
-        {/* grid */}
+        {/* dot-matrix plot background, then the tick grid on top */}
+        <defs>
+          <pattern id="dotgrid" width={8} height={8} patternUnits="userSpaceOnUse">
+            <circle cx={1} cy={1} r={0.7} fill="var(--dots)" />
+          </pattern>
+        </defs>
+        <rect x={PL} y={PT} width={W - PR - PL} height={H - PB - PT} fill="url(#dotgrid)" />
         {xt.map((t) => (
           <g key={`x${t}`}>
             <line x1={X(t)} x2={X(t)} y1={PT} y2={H - PB} stroke="var(--grid)" />

@@ -160,7 +160,7 @@ function CompareSection({ v, explain }: { v: View; explain: (k: string) => void 
         </aside>
         <div>
           <PRCard
-            items={items} v={v} defaultChart="map" defaultZoom={false}
+            items={items} v={v} defaultChart="map" defaultZoom={true}
             hint="Recall: gold-responsive items the model flagged, over all gold-responsive items. Precision: flagged items that were gold-responsive, over all flagged. Intervals are 95% Wilson score intervals. Because every document in each test set carries a gold label, the recall interval is computed over the gold-positive set and the precision interval over the model's flagged set, rather than from a review sample. All metrics use the model's own label, not a tuned threshold."
           />
           <OpsPair recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} arm={v.arm} />
