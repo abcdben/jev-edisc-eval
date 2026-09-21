@@ -16,6 +16,21 @@ export function useTip() {
   return { tip, show, hide: () => setTip(null), hostRef };
 }
 
+/** Measured content box of the host element. */
+export function useSize(hostRef: React.RefObject<HTMLDivElement | null>, fallback: { w: number; h: number }): { w: number; h: number } {
+  const [sz, setSz] = useState(fallback);
+  useEffect(() => {
+    const el = hostRef.current;
+    if (!el) return;
+    const upd = (w: number, h: number) => { if (w && h) setSz((p) => (p.w === w && p.h === h ? p : { w, h })); };
+    const ro = new ResizeObserver((es) => { const r = es[0]?.contentRect; if (r) upd(r.width, r.height); });
+    ro.observe(el);
+    const r = el.getBoundingClientRect(); upd(r.width, r.height);
+    return () => ro.disconnect();
+  }, [hostRef]);
+  return sz;
+}
+
 /** Measured content width of the host element, so SVG charts can draw at native pixel scale instead of stretching a viewBox. */
 export function useWidth(hostRef: React.RefObject<HTMLDivElement | null>, fallback: number): number {
   const [w, setW] = useState(fallback);

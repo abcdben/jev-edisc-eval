@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ABLATION_GROUPS, CORPORA, DATA, DEFAULT_ON, KIND_LABEL, KIND_ORDER, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
+  ABLATION_GROUPS, CORPORA, DATA, DEFAULT_ON, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
   corpusKey, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, pick, variantColor,
   type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
@@ -14,12 +14,17 @@ import { Logo } from "./logos";
 
 type Chart = "map" | "ranked";
 
+/** Short group names for the one-line picker. */
+/** Picker order: the floor sits with the deciders so the first line reads small → keyword, then the LLMs, then TAR. */
+const PICK_ORDER: Kind[] = ["system1", "system1_ft", "baseline", "llm", "local_llm", "tar"];
+const KIND_SHORT: Record<Kind, string> = { system1: "Deciders", system1_ft: "Supervised", llm: "LLM (API)", local_llm: "Local LLM", tar: "Classical TAR", baseline: "Floor" };
+
 /** Recall/precision card with a map (scatter with interval boxes) or ranked (rows with whiskers) view. */
-function PRCard({ items, hint, defaultChart, defaultZoom, emptyText, logos = true }: { items: PRItem[]; hint: string; defaultChart: Chart; defaultZoom: boolean; emptyText?: string; logos?: boolean }) {
+function PRCard({ items, hint, defaultChart, defaultZoom, emptyText, logos = true, height = 380 }: { items: PRItem[]; hint: string; defaultChart: Chart; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number }) {
   const [chart, setChart] = useState<Chart>(defaultChart);
   const [zoom, setZoom] = useState(defaultZoom);
   return (
-    <div className="card">
+    <div className={`card${chart === "map" ? " fill" : ""}`}>
       <div className="card-t">
         <h3>Recall and precision</h3>
         <span className="right">
@@ -28,7 +33,7 @@ function PRCard({ items, hint, defaultChart, defaultZoom, emptyText, logos = tru
           <Hint left text={hint} />
         </span>
       </div>
-      {chart === "map" ? <PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} /> : <PRRows items={items} zoom={zoom} sortBy="f1" logos={logos} />}
+      {chart === "map" ? <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill /></div> : <PRRows items={items} zoom={zoom} sortBy="f1" logos={logos} />}
       <div className="legend-note">
         {chart === "map" ? <span>Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span> : <span>Sorted by F1. Dot: point estimate. Whisker: 95% interval.</span>}
         {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
@@ -126,7 +131,7 @@ function CompareSection({ v, explain }: { v: View; explain: (k: string) => void 
   const rows = useRows(v);
   const [on, setOn] = useState<Set<string>>(new Set(DEFAULT_ON));
   const primary = rows.filter((r) => r.primary);
-  const byKind = KIND_ORDER.map((k) => ({ kind: k, recs: PRIMARY.map((p) => primary.find((r) => r.model === p.key)).filter((r): r is Rec => !!r && r.kind === k) })).filter((g) => g.recs.length);
+  const byKind = PICK_ORDER.map((k) => ({ kind: k, recs: PRIMARY.map((p) => primary.find((r) => r.model === p.key)).filter((r): r is Rec => !!r && r.kind === k) })).filter((g) => g.recs.length);
   const sel = PRIMARY.map((p) => primary.find((r) => r.model === p.key)).filter((r): r is Rec => !!r && on.has(r.model));
   const toggle = (k: string) => setOn((s) => { const n = new Set(s); n.has(k) ? n.delete(k) : n.add(k); return n; });
   const setGroup = (recs: Rec[], val: boolean) => setOn((s) => { const n = new Set(s); recs.forEach((r) => (val ? n.add(r.model) : n.delete(r.model))); return n; });
@@ -139,29 +144,29 @@ function CompareSection({ v, explain }: { v: View; explain: (k: string) => void 
 
   return (
     <section className="section">
-      <div className="sec-head">
-        <span className="sub">Each dot is a model's recall and precision; the box around it is the 95% interval on both.</span>
-        <ExplainButton label="how each model is asked" onClick={() => explain("jev@base")} />
-      </div>
       <div className="pbar">
-        {byKind.map((g) => (
-          <div className="prow" key={g.kind}>
-            <span className="plabel">
-              <span>{KIND_LABEL[g.kind as Kind]}</span>
-              <span className="an"><button onClick={() => setGroup(g.recs, true)}>all</button> · <button onClick={() => setGroup(g.recs, false)}>none</button></span>
+        {byKind.map((g) => {
+          const allOn = g.recs.every((r) => on.has(r.model));
+          return (
+            <span className="pgrp" key={g.kind}>
+              <button className="plabel" onClick={() => setGroup(g.recs, !allOn)} title={allOn ? "Turn this group off" : "Turn this group on"}>{KIND_SHORT[g.kind as Kind]}</button>
+              {g.recs.map((r) => {
+                const m = PRIMARY_BY_KEY[r.model];
+                return (
+                  <button key={r.model} className={`chip${on.has(r.model) ? "" : " off"}`} onClick={() => toggle(r.model)} title={m.note} aria-pressed={on.has(r.model)}>
+                    <span className="mark" style={{ color: m.color }}><Logo model={r.model} /></span>
+                    <span className="nm" title={r.subset ? `scored on ${r.subset}` : undefined}>{m.short}{r.subset ? " *" : ""}</span>
+                    <ExplainButton compact onClick={() => explain(r.model)} />
+                  </button>
+                );
+              })}
             </span>
-            {g.recs.map((r) => {
-              const m = PRIMARY_BY_KEY[r.model];
-              return (
-                <button key={r.model} className={`chip${on.has(r.model) ? "" : " off"}`} onClick={() => toggle(r.model)} title={m.note} aria-pressed={on.has(r.model)}>
-                  <span className="mark" style={{ color: m.color }}><Logo model={r.model} /></span>
-                  <span className="nm" title={r.subset ? `scored on ${r.subset}` : undefined}>{m.short}{r.subset ? " *" : ""}</span>
-                  <ExplainButton compact onClick={() => explain(r.model)} />
-                </button>
-              );
-            })}
-          </div>
-        ))}
+          );
+        })}
+        <span className="pend">
+          <button className="preset" onClick={() => setOn(new Set(DEFAULT_ON))}>reset</button>
+          <ExplainButton label="how each model is asked" onClick={() => explain("jev@base")} />
+        </span>
       </div>
       <div className="dash">
         <PRCard
@@ -200,25 +205,17 @@ function AblationSection({ v, explain }: { v: View; explain: (k: string) => void
 
   return (
     <section className="section">
-      <div className="sec-head">
-        <span className="sub">Each variant changes a single lever from the default. The recipe is the configuration carried into Compare models.</span>
-        <ExplainButton label="see the requests side by side" onClick={() => explain(`${grp}@base`)} />
-      </div>
       <div className="pbar">
-        <div className="prow">
-          <span className="plabel"><span>Model</span></span>
+        <span className="pgrp">
+          <span className="plabel static">Model</span>
           <span className="select">
             <select value={grp} onChange={(e) => { setGrp(e.target.value); setOff(new Set()); }}>
               {ABLATION_GROUPS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
             </select>
           </span>
-          <span className="pnote">{G.note}</span>
-        </div>
-        <div className="prow">
-          <span className="plabel">
-            <span>Configurations</span>
-            <span className="an"><button onClick={() => setOff(new Set())}>all</button> · <button onClick={() => setOff(new Set(variants.map((r) => r.variant!)))}>none</button></span>
-          </span>
+        </span>
+        <span className="pgrp">
+          <button className="plabel" onClick={() => setOff(off.size ? new Set() : new Set(variants.map((r) => r.variant!)))} title={off.size ? "Turn all on" : "Turn all off"}>Configurations</button>
           {variants.map((r) => (
             <button key={r.model} className={`chip${off.has(r.variant!) ? " off" : ""}`} onClick={() => toggle(r.variant!)} title={r.lever ?? undefined} aria-pressed={!off.has(r.variant!)}>
               <span className="sw" style={{ background: color(r) }} />
@@ -228,8 +225,10 @@ function AblationSection({ v, explain }: { v: View; explain: (k: string) => void
             </button>
           ))}
           {variants.length === 0 && <span className="empty">No configurations of this model were run on this corpus and arm.</span>}
-        </div>
+        </span>
+        <span className="pend"><ExplainButton label="see the requests side by side" onClick={() => explain(`${grp}@base`)} /></span>
       </div>
+      <div className="pnote">{G.note} ★ marks the recipe carried into Compare models.</div>
       <div className="dash">
         <PRCard
           items={items} defaultChart="ranked" defaultZoom={true}
@@ -336,7 +335,7 @@ export default function App() {
       </div>
       )}
 
-      <div style={{ marginTop: 18, color: "var(--ink-2)", fontSize: 13, display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
+      <div style={{ marginTop: 14, color: "var(--ink-2)", fontSize: 13, display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
         <span style={{ fontSize: 16, fontWeight: 500, color: "var(--ink)" }}>{meta.display}</span>
         <span style={{ color: "var(--ink-3)" }}>
           {fmtInt(meta.n_docs)} documents · {meta.n_issues} issues · {fmtInt(meta.n_pos_docs_any)} responsive to at least one ({fmtPct(meta.n_pos_docs_any / meta.n_docs, 0)}) · gold: {meta.gold}

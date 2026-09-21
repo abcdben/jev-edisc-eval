@@ -2,7 +2,7 @@ import { DATA, fmtCI, fmtInt, fmtPct, type DetCell, type Rec } from "../data";
 import { LogoGlyph } from "../logos";
 import { Hint, TipBox, useTip, useWidth, type TipLine } from "./ui";
 
-const LABEL_W = 168, ROW = 24;
+const LABEL_W = 168, ROW = 20;
 
 /** The determinism cell for a record: matched on model key, arm follows the page. Ablation variants are not covered. */
 export function detFor(r: Rec, arm: "multi" | "single", setting: "default" | "t0"): DetCell | null {
@@ -35,13 +35,13 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
   const max = Math.max(0.01, ...measured.flatMap((x) => [x.d!.pairwise[2], x.t0?.pairwise[2] ?? 0]));
   const plotW = Math.max(120, W - LABEL_W - 130);
   const X = (v: number) => LABEL_W + (v / max) * plotW;
-  const h = sorted.length * ROW + 24;
+  const h = sorted.length * ROW + 20;
   const hasT0 = sorted.some((x) => x.t0);
   return (
     <div className="card">
       <div className="card-t">
         <h3>Determinism</h3>
-        <span className="unit">run-to-run disagreement · {det ? `${fmtInt(det.sample.n_docs)} Mallinckrodt emails` : "not measured"} · {measured[0]?.d?.k ?? 5} runs</span>
+        <span className="unit">run-to-run disagreement · {det ? `${fmtInt(det.sample.n_docs)} emails` : "not measured"} · {measured[0]?.d?.k ?? 5} runs</span>
         <span className="right">
           <Hint left text="Measured on Mallinckrodt only and shown for every corpus, since it is a property of the model rather than the documents. Each model scored the same fixed sample of 300 Mallinckrodt emails five times under identical settings (100 emails with a debatable gold label, 100 clear positives, 100 clear negatives; the benchmark run counts as the first repeat). The bar is pairwise disagreement: the probability that two independent runs give a different label for the same (document, issue) decision. The whisker is a 95% bootstrap interval over decisions. Lighter bars are the same models at temperature 0 where the API accepts it; Anthropic rejects sampling parameters on Sonnet 5, so it has no temperature-0 bar. Jev and Laya expose no sampling controls, so their bars are intrinsic behavior. Hover for flip rates by stratum, issue and gold label, and for how much recall moved between runs." />
         </span>
@@ -60,7 +60,9 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
                 </g>
               );
             }
-            const bars = [{ c: x.d, op: 1, dy: x.t0 ? -4 : 0, bh: x.t0 ? 6 : 10 }, ...(x.t0 ? [{ c: x.t0, op: 0.45, dy: 4, bh: 6 }] : [])];
+            const bars = [{ c: x.d, op: 1, dy: x.t0 ? -3 : 0, bh: x.t0 ? 5 : 9 }, ...(x.t0 ? [{ c: x.t0, op: 0.45, dy: 3, bh: 5 }] : [])];
+            const end = Math.max(...bars.map((b) => X(b.c.pairwise[2])));
+            const lbl = (v: number) => (v === 0 ? "0" : fmtPct(v, v < 0.001 ? 2 : 1));
             return (
               <g key={x.r.model}>
                 <g color="var(--ink-2)"><LogoGlyph model={x.r.model} cx={8} cy={y + ROW / 2} /></g>
@@ -73,12 +75,13 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
                       <rect x={LABEL_W - 4} y={cy - b.bh / 2 - 2} width={W - LABEL_W + 4} height={b.bh + 4} fill="transparent" />
                       <rect x={LABEL_W} y={cy - b.bh / 2} width={Math.max(1.5, X(v) - LABEL_W)} height={b.bh} fill={c} rx={1.5} style={{ fillOpacity: `calc(var(--bar-alpha) * ${b.op})` }} />
                       <line x1={X(lo)} x2={X(hi)} y1={cy} y2={cy} stroke="var(--ink)" strokeWidth={1} opacity={0.6} />
-                      <text x={X(hi) + 7} y={cy + 4} fontSize={11} fill={b.op < 1 ? "var(--ink-3)" : "var(--ink)"} className="mono">
-                        {v === 0 ? "0" : fmtPct(v, v < 0.001 ? 2 : 1)}{b.c.setting === "t0" ? "  t=0" : ""}
-                      </text>
                     </g>
                   );
                 })}
+                <text x={end + 7} y={y + ROW / 2 + 4} fontSize={11} fill="var(--ink)" className="mono" style={{ pointerEvents: "none" }}>
+                  {lbl(x.d.pairwise[0])}
+                  {x.t0 && <tspan fill="var(--ink-3)">{`  ${lbl(x.t0.pairwise[0])} t=0`}</tspan>}
+                </text>
               </g>
             );
           })}

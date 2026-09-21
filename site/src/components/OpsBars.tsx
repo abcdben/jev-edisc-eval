@@ -3,7 +3,7 @@ import { TipBox, useTip, useWidth, type TipLine } from "./ui";
 
 export type BarItem = { id: string; name: string; color: string; value: number | null; label: string; tip: { lines: TipLine[]; notes?: string[] }; subset?: string | null };
 
-const ROW = 24;
+const ROW = 20;
 
 /** Horizontal bars with the number written at the end of each bar. Zero-valued items are drawn as a hairline. */
 export function OpsBars({ items, axis, sort = true, logos = true }: { items: BarItem[]; axis: string; sort?: boolean; logos?: boolean }) {
@@ -13,7 +13,7 @@ export function OpsBars({ items, axis, sort = true, logos = true }: { items: Bar
   const rows = sort ? [...items].sort((a, b) => (a.value ?? Infinity) - (b.value ?? Infinity)) : items;
   const max = Math.max(1e-9, ...rows.map((r) => r.value ?? 0));
   const plotW = W - LABEL_W - 80;
-  const h = rows.length * ROW + 22;
+  const h = rows.length * ROW + 20;
   const best = rows.find((r) => (r.value ?? 0) > 0)?.value ?? null;
   return (
     <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
@@ -34,7 +34,7 @@ export function OpsBars({ items, axis, sort = true, logos = true }: { items: Bar
               ) : (
                 <text x={LABEL_W - 10} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
               )}
-              <rect x={LABEL_W} y={y + 7} width={bw} height={ROW - 14} fill={r.color} rx={1.5} style={{ fillOpacity: v === 0 ? "calc(var(--bar-alpha) * 0.5)" : "var(--bar-alpha)" }} />
+              <rect x={LABEL_W} y={y + 6} width={bw} height={ROW - 12} fill={r.color} rx={1.5} style={{ fillOpacity: v === 0 ? "calc(var(--bar-alpha) * 0.5)" : "var(--bar-alpha)" }} />
               <text x={LABEL_W + bw + 7} y={y + ROW / 2 + 4} fontSize={11.5} fill={v == null ? "var(--ink-4)" : "var(--ink)"} className="mono">{v == null ? "not measured" : r.label}</text>
             </g>
           );
