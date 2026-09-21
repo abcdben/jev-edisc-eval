@@ -92,9 +92,10 @@ LAYA_LEVERS = {
 TAR_LEVERS = {
     "t1": "TAR 1.0: the reviewer codes {n} random documents; classifier cutoff targets 80% recall (5-fold CV on the sample)",
     "t1_f1": "TAR 1.0, {n} reviewed: cutoff maximises F1 on the sample instead of targeting 80% recall",
-    "t1_noisy": "TAR 1.0, {n} reviewed: reviewer miscodes 10% of documents (90% agreement)",
-    "cal": "TAR 2.0: continuous active learning; stop after two consecutive batches under 5% relevant",
-    "cal_noisy": "TAR 2.0 with a reviewer who miscodes 10% of documents",
+    "t1_noisy": "TAR 1.0, {n} reviewed: imperfect reviewer (misses 10% of relevant documents, over-codes 2% of non-relevant)",
+    "cal": "TAR 2.0: continuous active learning, knee-method stop (Cormack & Grossman 2016); plotted as the review set the classifier queued",
+    "cal_noisy": "TAR 2.0, knee-method stop, imperfect reviewer (misses 10% of relevant, over-codes 2% of non-relevant)",
+    "cal_mp": "TAR 2.0 with the marginal-precision stop instead of the knee: two consecutive batches under 5% relevant",
 }
 LAYA_CHECKPOINTS = {"laya": "English checkpoint", "laya-typed": "Typed checkpoint", "laya-multilingual": "Multilingual checkpoint"}
 
@@ -113,6 +114,7 @@ def _variant_models() -> dict[str, dict]:
         out[f"tar@t1_{n}_noisy"] = dict(name=f"TAR 1.0 · {n:,} · 90% reviewer", family="TAR", kind="tar", group="tar", variant=f"t1_{n}_noisy", lever=TAR_LEVERS["t1_noisy"].format(n=f"{n:,}"))
     out["tar@cal"] = dict(name="TAR 2.0 · CAL", family="TAR", kind="tar", group="tar", variant="cal", lever=TAR_LEVERS["cal"])
     out["tar@cal_noisy"] = dict(name="TAR 2.0 · CAL · 90% reviewer", family="TAR", kind="tar", group="tar", variant="cal_noisy", lever=TAR_LEVERS["cal_noisy"])
+    out["tar@cal_mp"] = dict(name="TAR 2.0 · CAL · 5% stop", family="TAR", kind="tar", group="tar", variant="cal_mp", lever=TAR_LEVERS["cal_mp"])
     for corpus in FT_KEYS:
         for v in ("compact", "recipe"):
             out[f"laya-ft-{corpus}@{v}"] = dict(name=f"Laya fine-tuned · {v}", family="Laya", kind="system1_ft", group="laya-ft", variant=v,
@@ -212,8 +214,29 @@ def _tar_block(side: dict) -> dict:
         "reviewer": side["reviewer"], "seeds": len(seeds), "median_seed": side["median_seed"],
         "recall_range": [min(rec), max(rec)] if rec else None, "precision_range": [min(prec), max(prec)] if prec else None,
         "cutoff_rule": side["spec"].get("rule"), "issue_models": med.get("issue_models"), "train_positives_any": med.get("train_positives_any"),
-        "batches": med.get("batches"), "batch": med.get("batch"), "stop": med.get("stop"), "curve": med.get("curve"),
+        "batches": med.get("batches"), "batch": med.get("batch"), "stop": med.get("stop"), "stop_rule": med.get("stop_rule"), "curve": med.get("curve"),
+        "pool_richness": med.get("pool_richness"), "relevant_in_pool": med.get("relevant_in_pool"), "found_gold": med.get("found_gold"),
+        "downsampled": bool(med.get("pool_ids")),
     }
+
+
+def _cal_review_set(rec: dict, side: dict, ids: set[str], docs_by_id, ts) -> None:
+    """CAL's production set is hand-coded, so its precision is the reviewer's, not the classifier's. Plot the
+    review set instead (every document the classifier queued for the reviewer): that is the analogue of a
+    model's flagged set. The production-set figures move into rec["tar"]["production"]."""
+    pos = ts.positive_label
+    reviewed = set(side["median"].get("reviewed_ids") or [])
+    rec["tar"]["production"] = {"recall": rec["all"]["doc"]["recall"], "precision": rec["all"]["doc"]["precision"]}
+    for view in ("all", "nogray"):
+        pool = [d for d in ids if view == "all" or not docs_by_id[d].gray]
+        goldpos = {d for d in pool if any(docs_by_id[d].labels.get(q) == pos for q in ts.qids)}
+        flagged = reviewed & set(pool)
+        tp = len(flagged & goldpos); fp = len(flagged) - tp; fn = len(goldpos) - tp; tn = len(pool) - tp - fp - fn
+        prf = _prf(tp, fp, fn, tn)
+        rec[view]["doc"] = prf
+        rec[view]["decision"] = prf  # CAL is a document-level workflow; the decision view shows the same figure
+        rec[view].pop("per_issue", None)
+    rec["tar"]["plotted"] = "review set"
 
 
 def _tar_ops(t: dict) -> dict:
@@ -279,8 +302,8 @@ def export(out: Path = Path("results"), dest: Path = Path("results/findings.json
                 preds = _rebind(load_predictions(f), docs_by_id, ts)
                 if not preds:
                     continue
-                if not primary and len({p.doc_id for p in preds}) < 0.98 * len(docs):
-                    continue  # stalled single-arm cells: partial files are not comparable
+                if not primary and not mk.startswith("tar@") and len({p.doc_id for p in preds}) < 0.98 * len(docs):
+                    continue  # stalled single-arm cells: partial files are not comparable (TAR/CAL pools are subsets by design)
                 lat = files.get((mk, "latency"))
                 lat_preds = _rebind(load_predictions(lat), docs_by_id, ts) if lat else None
                 lat_note = None
@@ -330,8 +353,11 @@ def export(out: Path = Path("results"), dest: Path = Path("results/findings.json
                 }
                 side = f.with_suffix(".tar.json")
                 if mk.startswith("tar@") and side.exists():
-                    rec["tar"] = _tar_block(json.loads(side.read_text()))
+                    sj = json.loads(side.read_text())
+                    rec["tar"] = _tar_block(sj)
                     rec["ops"].update(_tar_ops(rec["tar"]))
+                    if sj["spec"]["kind"] == "cal":
+                        _cal_review_set(rec, sj, ids, docs_by_id, ts)
                 rec["nogray"].pop("per_issue", None)  # keep the payload small; per-issue drill-down uses all gold
                 for k in ("cost_per_doc", "list_cost_per_doc", "tokens_in_per_doc", "tokens_out_per_doc", "doc_latency_p50_ms", "doc_latency_p95_ms", "hours_per_100k_docs"):
                     if rec["ops"][k] is not None:

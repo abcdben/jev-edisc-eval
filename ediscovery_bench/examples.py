@@ -186,11 +186,11 @@ TAR_WORKFLOW = {
         "5. Score the rest of the collection. A document is produced on an issue when it clears the relevance cutoff and that issue's cutoff; the coded documents keep the reviewer's codes.",
     ],
     "cal": [
-        "1. Seed: 100 random documents plus the 100 strongest keyword-floor hits, coded by the reviewer.",
+        "1. Seed: random documents plus the same number of the strongest keyword-floor hits, coded by the reviewer (50 + 50 on the 800-document Mallinckrodt pool, 100 + 100 elsewhere).",
         "2. Fit TF-IDF + balanced logistic regression on everything coded so far for any-issue relevance.",
-        "3. Rank the uncoded collection; the reviewer codes the top batch (100 documents; 1,000 on the 286k TREC collection), tagging issues as they go.",
-        "4. Repeat 2-3. Stop after two consecutive batches come back under 5% relevant.",
-        "5. The production set is what the reviewer coded relevant; nothing uncoded is produced.",
+        "3. Rank the uncoded collection; the reviewer codes the top batch (50 / 100 / 1,000 documents by collection size), tagging issues as they go.",
+        "4. Repeat 2-3. Stop by the knee method: once the gain curve's slope before its knee is at least 6x the slope after it, having reviewed at least 10% of the collection. (The '5% stop' variant stops after two consecutive batches under 5% relevant instead.)",
+        "5. The review set is everything the reviewer read; the production set is what they coded relevant. The site plots the review set.",
     ],
 }
 
@@ -204,7 +204,9 @@ def _tar_request(side: dict) -> dict:
         req["training_sample"] = {"documents_coded": med["docs_reviewed"], "positives_any_issue": med["train_positives_any"], "issues_with_own_model": med["issue_models"],
                                   "cutoff_rule": "80% recall (5-fold CV on the sample)" if spec["rule"] == "recall80" else "max F1 (5-fold CV on the sample)"}
     else:
-        req["review"] = {"documents_coded": med["docs_reviewed"], "batch": med["batch"], "batches": med["batches"], "stop": med["stop"]}
+        req["review"] = {"documents_coded": med["docs_reviewed"], "batch": med["batch"], "batches": med["batches"], "stop": med["stop"],
+                         "relevant_found": med.get("found_gold"), "relevant_in_pool": med.get("relevant_in_pool"),
+                         "pool": f"{side['n_corpus']:,} documents, {med.get('pool_richness', 0):.0%} relevant" + (" (downsampled from the 61%-rich benchmark sample)" if med.get("pool_ids") else "")}
     req["effort"] = {"hours": round(med["hours"], 1), "usd": round(med["cost_usd"]), "share_of_collection": round(med["docs_reviewed"] / side["n_corpus"], 3)}
     return req
 
