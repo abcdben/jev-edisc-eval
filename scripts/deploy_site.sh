@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../site"
 npm run build
 cd dist
-echo "tarcalc.com" > CNAME
+echo "decider.tarcalc.com" > CNAME
 touch .nojekyll
 rm -rf .git
 git init -q -b main
@@ -13,4 +13,4 @@ git add -A
 git -c user.name="deploy" -c user.email="deploy@tarcalc.com" commit -q -m "deploy $(date -u +%Y-%m-%dT%H:%MZ)"
 git push -q -f https://github.com/abcdben/tarcalc.git main
 rm -rf .git
-echo "published: https://tarcalc.com  (also https://abcdben.github.io/tarcalc/)"
+echo "published: https://decider.tarcalc.com  (also https://abcdben.github.io/tarcalc/)"
