@@ -29,7 +29,7 @@ function PRCard({ items, v, hint, defaultChart, defaultZoom, emptyText, logos = 
           <Hint left text={hint} />
         </span>
       </div>
-      {chart === "map" ? <PRScatter items={items} zoom={zoom} emptyText={emptyText} /> : <PRRows items={items} zoom={zoom} sortBy="f1" logos={logos} />}
+      {chart === "map" ? <PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} /> : <PRRows items={items} zoom={zoom} sortBy="f1" logos={logos} />}
       <div className="legend-note">
         {chart === "map" ? <span>Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span> : <span>Sorted by F1. Dot: point estimate. Whisker: 95% interval.</span>}
         {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}

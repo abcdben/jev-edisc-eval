@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { CI } from "../data";
+import { LogoGlyph, logoFor } from "../logos";
 import { TipBox, useTip, useWidth, type TipLine } from "./ui";
 
 export type PRItem = {
@@ -18,7 +19,7 @@ function niceTicks(lo: number, hi: number): number[] {
 }
 
 /** Recall (x) against precision (y). Each item is a dot at the point estimate inside a box spanning both 95% intervals. */
-export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision", emptyText }: { items: PRItem[]; zoom: boolean; xLabel?: string; yLabel?: string; emptyText?: string }) {
+export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false }: { items: PRItem[]; zoom: boolean; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean }) {
   const { tip, show, hide, hostRef } = useTip();
   const W = useWidth(hostRef, 760);
   const pts = items.filter((it) => it.recall && it.precision) as (PRItem & { recall: NonNullable<CI>; precision: NonNullable<CI> })[];
@@ -104,8 +105,15 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
           const x = X(p.recall[0]), y = Y(p.precision[0]);
           return (
             <g key={`d${p.id}`} onMouseMove={(e) => show(e, { title: p.name, color: p.color, ...p.tip })} onMouseLeave={hide} style={{ cursor: "default" }}>
-              <circle cx={x} cy={y} r={8} fill="transparent" />
-              <circle cx={x} cy={y} r={3.2} fill={p.color} />
+              <circle cx={x} cy={y} r={9} fill="transparent" />
+              {logos && logoFor(p.id) ? (
+                <g color={p.color}>
+                  <circle cx={x} cy={y} r={8.5} fill="var(--panel)" fillOpacity={0.92} />
+                  <LogoGlyph model={p.id} cx={x} cy={y} size={12} />
+                </g>
+              ) : (
+                <circle cx={x} cy={y} r={3.2} fill={p.color} />
+              )}
             </g>
           );
         })}
