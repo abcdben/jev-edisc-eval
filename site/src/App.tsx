@@ -130,7 +130,6 @@ function CompareSection({ v, explain }: { v: View; explain: (k: string) => void 
   return (
     <section className="section">
       <div className="sec-head">
-        <h2>Compare models</h2>
         <span className="sub">Each dot is a model's recall and precision; the box around it is the 95% interval on both.</span>
         <ExplainButton label="how each model is asked" onClick={() => explain("jev@base")} />
       </div>
@@ -194,8 +193,7 @@ function AblationSection({ v, explain }: { v: View; explain: (k: string) => void
   return (
     <section className="section">
       <div className="sec-head">
-        <h2>Configurations of one model</h2>
-        <span className="sub">Each variant changes a single lever from the default. The recipe is the configuration carried into the comparison above.</span>
+        <span className="sub">Each variant changes a single lever from the default. The recipe is the configuration carried into Compare models.</span>
         <ExplainButton label="see the requests side by side" onClick={() => explain(`${grp}@base`)} />
       </div>
       <div className="sec-body">
@@ -248,6 +246,9 @@ function describe(v: View): string {
   return `${issue} · ${gold} · ${v.arm === "multi" ? "all issues per call" : "one issue per call"}`;
 }
 
+type Page = "compare" | "configurations";
+const PAGES: { id: Page; label: string }[] = [{ id: "compare", label: "Compare models" }, { id: "configurations", label: "Configurations of one model" }];
+
 export default function App() {
   const [corpus, setCorpus] = useState("mnk");
   const [tag, setTag] = useState<"" | "v0">("");
@@ -268,11 +269,23 @@ export default function App() {
   ].filter((x): x is string => !!x);
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "dark");
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
+  const [pageId, setPageId] = useState<Page>(() => (location.hash === "#configurations" ? "configurations" : "compare"));
+  useEffect(() => {
+    const onHash = () => setPageId(location.hash === "#configurations" ? "configurations" : "compare");
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  const goPage = (p: Page) => { history.replaceState(null, "", p === "compare" ? "#compare" : "#configurations"); setPageId(p); window.scrollTo(0, 0); };
 
   return (
     <div className="page">
       <header className="masthead">
         <h1 className="title">Decider Model v LLM Bakeoff</h1>
+        <nav className="tabs" aria-label="Pages">
+          {PAGES.map((p) => (
+            <button key={p.id} className={pageId === p.id ? "on" : ""} onClick={() => goPage(p.id)} aria-current={pageId === p.id ? "page" : undefined}>{p.label}</button>
+          ))}
+        </nav>
         <span className="theme"><Seg value={theme} onChange={setTheme} options={[{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }]} /></span>
       </header>
 
@@ -331,8 +344,7 @@ export default function App() {
         </span>
       </div>
 
-      <CompareSection v={v} explain={setExplain} />
-      <AblationSection v={v} explain={setExplain} />
+      {pageId === "compare" ? <CompareSection v={v} explain={setExplain} /> : <AblationSection v={v} explain={setExplain} />}
       {explain && <ExplainModal initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)} />}
 
       <details className="notes">
