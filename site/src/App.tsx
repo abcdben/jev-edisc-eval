@@ -347,7 +347,9 @@ export default function App() {
       <AblationSection v={v} explain={setExplain} />
       {explain && <ExplainModal initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)} />}
 
-      <footer className="foot">
+      <details className="notes">
+        <summary>Notes on method<span className="chev" /></summary>
+        <footer className="foot">
         <div>
           <h4>What every model saw</h4>
           <p>The same document text, the same issue criteria and matter context, and returned a label plus a probability. Metrics use the model's own label. Jev and Laya rows are the default configuration unless marked recipe.</p>
@@ -368,7 +370,8 @@ export default function App() {
           <h4>Absent cells</h4>
           <p>A few one-issue-per-call Laya configurations stalled and are omitted from that view. The fine-tuned Laya checkpoint on CUAD collapsed to a constant negative and is shown as such.</p>
         </div>
-      </footer>
+        </footer>
+      </details>
     </div>
   );
 }

@@ -204,7 +204,13 @@ svg text { user-select: none; font-family: var(--sans); }
 .empty { color: var(--ink-4); font-size: 13px; padding: 40px 0; text-align: center; }
 
 /* footnotes */
-.foot { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 12.5px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+.notes { margin-top: 56px; border-top: 1px solid var(--line); }
+.notes summary { list-style: none; cursor: pointer; padding: 18px 0; color: var(--ink-3); font-size: 12.5px; display: inline-flex; align-items: center; gap: 8px; user-select: none; }
+.notes summary::-webkit-details-marker { display: none; }
+.notes summary:hover { color: var(--ink); }
+.notes summary .chev { width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: translateY(-2px) rotate(45deg); transition: transform 0.15s; }
+.notes[open] summary .chev { transform: translateY(1px) rotate(-135deg); }
+.foot { padding: 4px 0 24px; color: var(--ink-3); font-size: 12.5px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
 .foot h4 { margin: 0 0 6px; font-size: 12px; color: var(--ink-2); font-weight: 500; }
 .foot p { margin: 0; }
 
