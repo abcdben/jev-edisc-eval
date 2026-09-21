@@ -54,8 +54,8 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
             if (!x.d) {
               return (
                 <g key={x.r.model}>
-                  <text x={LABEL_W - 30} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-4)">{nm}</text>
-                  <g color="var(--ink-4)"><LogoGlyph model={x.r.model} cx={LABEL_W - 16} cy={y + ROW / 2} opacity={0.5} /></g>
+                  <g color="var(--ink-4)"><LogoGlyph model={x.r.model} cx={8} cy={y + ROW / 2} opacity={0.5} /></g>
+                  <text x={22} y={y + ROW / 2 + 4} fontSize={12} fill="var(--ink-4)">{nm}</text>
                   <text x={LABEL_W + 7} y={y + ROW / 2 + 4} fontSize={11} fill="var(--ink-4)">not measured</text>
                 </g>
               );
@@ -63,8 +63,8 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
             const bars = [{ c: x.d, op: 1, dy: x.t0 ? -4.5 : 0, bh: x.t0 ? 7 : 12 }, ...(x.t0 ? [{ c: x.t0, op: 0.45, dy: 4.5, bh: 7 }] : [])];
             return (
               <g key={x.r.model}>
-                <text x={LABEL_W - 30} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{nm}</text>
-                <g color="var(--ink-2)"><LogoGlyph model={x.r.model} cx={LABEL_W - 16} cy={y + ROW / 2} /></g>
+                <g color="var(--ink-2)"><LogoGlyph model={x.r.model} cx={8} cy={y + ROW / 2} /></g>
+                <text x={22} y={y + ROW / 2 + 4} fontSize={12} fill="var(--ink-2)">{nm}</text>
                 {bars.map((b, j) => {
                   const v = b.c.pairwise[0], lo = b.c.pairwise[1], hi = b.c.pairwise[2];
                   const cy = y + ROW / 2 + b.dy;

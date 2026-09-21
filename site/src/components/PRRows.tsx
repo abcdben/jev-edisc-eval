@@ -49,8 +49,14 @@ export function PRRows({ items, zoom, sortBy, logos = true }: { items: PRItem[];
           return (
             <g key={r.id} onMouseMove={(e) => show(e, { title: r.name, color: r.color, ...r.tip })} onMouseLeave={hide} style={{ cursor: "default" }}>
               <rect x={0} y={y - ROW / 2} width={W} height={ROW} fill="transparent" />
-              <text x={LABEL_W - (logos ? 32 : 12)} y={y + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
-              {logos && <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={LABEL_W - 18} cy={y} /></g>}
+              {logos ? (
+                <>
+                  <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={8} cy={y} /></g>
+                  <text x={22} y={y + 4} fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
+                </>
+              ) : (
+                <text x={LABEL_W - 12} y={y + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
+              )}
               {([r.recall, r.precision] as CI[]).map((ci, col) =>
                 ci ? (
                   <g key={col}>

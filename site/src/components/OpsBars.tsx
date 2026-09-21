@@ -26,8 +26,14 @@ export function OpsBars({ items, axis, sort = true, logos = true }: { items: Bar
           return (
             <g key={r.id} onMouseMove={(e) => show(e, { title: r.name, color: r.color, lines: [...r.tip.lines, ...(ratio && ratio > 1.05 ? [[`vs. lowest shown`, `${ratio >= 10 ? Math.round(ratio) : ratio.toFixed(1)}×`] as TipLine] : [])], notes: r.tip.notes })} onMouseLeave={hide} style={{ cursor: "default" }}>
               <rect x={0} y={y} width={W} height={ROW} fill="transparent" />
-              <text x={LABEL_W - (logos ? 30 : 10)} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
-              {logos && <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={LABEL_W - 16} cy={y + ROW / 2} /></g>}
+              {logos ? (
+                <>
+                  <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={8} cy={y + ROW / 2} /></g>
+                  <text x={22} y={y + ROW / 2 + 4} fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
+                </>
+              ) : (
+                <text x={LABEL_W - 10} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
+              )}
               <rect x={LABEL_W} y={y + 6} width={bw} height={ROW - 12} fill={r.color} rx={2} opacity={v === 0 ? 0.5 : 1} />
               <text x={LABEL_W + bw + 7} y={y + ROW / 2 + 4} fontSize={11.5} fill={v == null ? "var(--ink-4)" : "var(--ink)"} className="mono">{v == null ? "not measured" : r.label}</text>
             </g>
