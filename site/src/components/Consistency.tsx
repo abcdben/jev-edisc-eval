@@ -1,11 +1,8 @@
 import { DATA, fmtCI, fmtInt, fmtPct, type DetCell, type Rec } from "../data";
+import { LogoGlyph } from "../logos";
 import { Hint, TipBox, useTip, useWidth, type TipLine } from "./ui";
 
-const LABEL_W = 170, ROW = 24;
-const ISSUE_SHORT: Record<string, string> = {
-  som_broad: "SOM broad", som_narrow: "SOM narrow", mktg_broad: "Marketing broad", mktg_narrow: "Marketing narrow",
-  data_broad: "Data broad", data_narrow: "Data narrow", dea_broad: "DEA broad", dea_narrow: "DEA narrow",
-};
+const LABEL_W = 196, ROW = 24;
 
 /** The determinism cell for a record: matched on model key, arm follows the page. Ablation variants are not covered. */
 export function detFor(r: Rec, arm: "multi" | "single", setting: "default" | "t0"): DetCell | null {
@@ -18,31 +15,14 @@ export function detFor(r: Rec, arm: "multi" | "single", setting: "default" | "t0
 
 function tipFor(c: DetCell, name: string): { lines: TipLine[]; notes: string[] } {
   const lines: TipLine[] = [
-    ["Runs", `${c.k} (${c.runs.join(", ")})`],
-    ["Decisions compared", `${fmtInt(c.n_decisions)} on ${fmtInt(c.n_docs)} docs`],
+    ["Runs", String(c.k)],
+    ["Decisions compared", fmtInt(c.n_decisions)],
     ["Pairwise disagreement", fmtCI(c.pairwise, 2)],
-    ["Decisions that flipped in any run", fmtCI(c.decision_flip, 2)],
-    ["  reweighted to corpus mix", fmtPct(c.decision_flip_weighted, 2)],
+    ["Decisions that flipped", fmtCI(c.decision_flip, 2)],
   ];
-  if (c.doc_flip) lines.push(["Documents whose any-issue call flipped", fmtCI(c.doc_flip, 2)]);
-  lines.push(["Confident flips (p swung past 0.3 and 0.7)", fmtCI(c.confident_flip, 2)]);
-  lines.push(["Probability byte-identical across runs", fmtCI(c.identical_prob, 1)]);
-  lines.push(["Probability spread, median / p95", `${c.prob_spread_median.toFixed(3)} / ${c.prob_spread_p95.toFixed(3)}`]);
   if (c.recall_range) lines.push(["Recall across runs", `${fmtPct(c.recall_range[0])} – ${fmtPct(c.recall_range[1])}`]);
   if (c.precision_range) lines.push(["Precision across runs", `${fmtPct(c.precision_range[0])} – ${fmtPct(c.precision_range[1])}`]);
-  if (c.majority.recall != null) lines.push(["Majority vote of runs, recall / precision", `${fmtPct(c.majority.recall)} / ${fmtPct(c.majority.precision)}`]);
-  const strat = Object.entries(c.by_stratum).filter(([, s]) => s.n > 0).map(([k, s]) => `${k} ${fmtPct(s.flip?.[0] ?? null, 1)}`).join(" · ");
-  const gold = Object.entries(c.by_gold).filter(([, s]) => s.n > 0).map(([k, s]) => `${k} ${fmtPct(s.flip?.[0] ?? null, 1)}`).join(" · ");
-  const issues = Object.entries(c.by_issue).map(([k, s]) => `${ISSUE_SHORT[k] ?? k} ${fmtPct(s.flip?.[0] ?? null, 1)}`).join(" · ");
-  return {
-    lines,
-    notes: [
-      `Flip rate by document stratum: ${strat}.`,
-      `By gold label of the decision: ${gold}.`,
-      `By issue: ${issues}.`,
-      c.setting === "t0" ? `${name} at temperature 0.` : `${name} at the settings the benchmark ran under.`,
-    ],
-  };
+  return { lines, notes: c.setting === "t0" ? [`${name} at temperature 0.`] : [] };
 }
 
 export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single" }) {
@@ -77,7 +57,8 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
             if (!x.d) {
               return (
                 <g key={x.r.model}>
-                  <text x={LABEL_W - 10} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-4)">{nm}</text>
+                  <text x={LABEL_W - 30} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-4)">{nm}</text>
+                  <g color="var(--ink-4)"><LogoGlyph model={x.r.model} cx={LABEL_W - 16} cy={y + ROW / 2} opacity={0.5} /></g>
                   <text x={LABEL_W + 7} y={y + ROW / 2 + 4} fontSize={11} fill="var(--ink-4)">not measured</text>
                 </g>
               );
@@ -85,7 +66,8 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
             const bars = [{ c: x.d, op: 1, dy: x.t0 ? -4.5 : 0, bh: x.t0 ? 7 : 12 }, ...(x.t0 ? [{ c: x.t0, op: 0.45, dy: 4.5, bh: 7 }] : [])];
             return (
               <g key={x.r.model}>
-                <text x={LABEL_W - 10} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{nm}</text>
+                <text x={LABEL_W - 30} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{nm}</text>
+                <g color="var(--ink-2)"><LogoGlyph model={x.r.model} cx={LABEL_W - 16} cy={y + ROW / 2} /></g>
                 {bars.map((b, j) => {
                   const v = b.c.pairwise[0], lo = b.c.pairwise[1], hi = b.c.pairwise[2];
                   const cy = y + ROW / 2 + b.dy;

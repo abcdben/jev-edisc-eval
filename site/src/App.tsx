@@ -10,11 +10,12 @@ import { PRRows } from "./components/PRRows";
 import { OpsBars, type BarItem } from "./components/OpsBars";
 import { Consistency } from "./components/Consistency";
 import { ExplainButton, ExplainModal } from "./components/Explain";
+import { Logo } from "./logos";
 
 type Chart = "map" | "ranked";
 
 /** Recall/precision card with a map (scatter with interval boxes) or ranked (rows with whiskers) view. */
-function PRCard({ items, v, hint, defaultChart, defaultZoom, emptyText }: { items: PRItem[]; v: View; hint: string; defaultChart: Chart; defaultZoom: boolean; emptyText?: string }) {
+function PRCard({ items, v, hint, defaultChart, defaultZoom, emptyText, logos = true }: { items: PRItem[]; v: View; hint: string; defaultChart: Chart; defaultZoom: boolean; emptyText?: string; logos?: boolean }) {
   const [chart, setChart] = useState<Chart>(defaultChart);
   const [zoom, setZoom] = useState(defaultZoom);
   return (
@@ -28,7 +29,7 @@ function PRCard({ items, v, hint, defaultChart, defaultZoom, emptyText }: { item
           <Hint left text={hint} />
         </span>
       </div>
-      {chart === "map" ? <PRScatter items={items} zoom={zoom} emptyText={emptyText} /> : <PRRows items={items} zoom={zoom} sortBy="f1" />}
+      {chart === "map" ? <PRScatter items={items} zoom={zoom} emptyText={emptyText} /> : <PRRows items={items} zoom={zoom} sortBy="f1" logos={logos} />}
       <div className="legend-note">
         {chart === "map" ? <span>Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span> : <span>Sorted by F1. Dot: point estimate. Whisker: 95% interval.</span>}
         {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
@@ -45,23 +46,17 @@ type View = { corpus: string; tag: string; arm: "multi" | "single"; gray: Gray; 
 function qualityLines(r: Rec, v: View): { lines: TipLine[]; notes: string[] } {
   const p = pick(r, v.level, v.gray, v.issue);
   const lines: TipLine[] = [["Recall", fmtCI(p.recall)], ["Precision", fmtCI(p.precision)]];
-  const notes: string[] = [];
   if (p.detail && "tp" in p.detail) {
     const m = p.detail as PRF;
     lines.push(["F1", m.f1 == null ? "—" : fmtPct(m.f1)]);
-    lines.push(["Elusion", fmtCI(m.elusion)]);
-    lines.push(["TP / FP / FN / TN", `${fmtInt(m.tp)} / ${fmtInt(m.fp)} / ${fmtInt(m.fn)} / ${fmtInt(m.tn)}`]);
-    lines.push(["Gold positives", fmtInt(m.tp + m.fn)]);
-    if (m.tp + m.fp === 0) notes.push("Flagged nothing: precision is undefined.");
+    lines.push(["Documents", fmtInt(m.tp + m.fp + m.fn + m.tn)]);
   } else if (p.detail) {
     const s = p.detail as IssueScore;
-    lines.push(["Gold positives for this issue", fmtInt(s.n_pos)]);
     lines.push(["Documents", fmtInt(s.n)]);
   }
-  if (r.subset) notes.push(`Scored on ${r.subset}; intervals are wider accordingly.`);
+  if (r.subset) lines.push(["Scored on", r.subset]);
+  const notes: string[] = [];
   if (r.lever && !r.primary) notes.push(r.lever);
-  const meta = PRIMARY_BY_KEY[r.model];
-  if (meta) notes.push(meta.note);
   return { lines, notes };
 }
 
@@ -69,18 +64,12 @@ function opsLines(r: Rec): { lines: TipLine[]; notes: string[] } {
   const o = r.ops;
   return {
     lines: [
-      ["Documents scored", fmtInt(o.n_docs)],
-      ["Decisions", fmtInt(o.n_decisions)],
-      ["Median time per document", fmtMs(o.doc_latency_p50_ms)],
-      ["p95 time per document", fmtMs(o.doc_latency_p95_ms)],
-      ["Hours per 100k docs, 1 stream", fmtHours(o.hours_per_100k_docs)],
-      ["Paid cost per document", o.cost_per_doc == null ? "—" : `$${o.cost_per_doc.toFixed(5)}`],
-      ["Cost per 100k documents", o.cost_per_doc == null ? "—" : fmtUSD(o.cost_per_doc * 1e5)],
+      ["Time per 100k docs", fmtHours(o.hours_per_100k_docs)],
+      ["Cost per 100k docs", o.cost_per_doc == null ? "—" : fmtUSD(o.cost_per_doc * 1e5)],
+      ["Median time per doc", fmtMs(o.doc_latency_p50_ms)],
       ["Tokens in / out per doc", o.tokens_in_per_doc == null ? "—" : `${fmtInt(Math.round(o.tokens_in_per_doc))} / ${fmtInt(Math.round(o.tokens_out_per_doc ?? 0))}`],
-      ["Pricing", o.pricing_modes.join(", ") || "rented GPU"],
-      ["Resolved model", o.model_resolved.join(", ")],
     ],
-    notes: [`Latency: ${o.latency_source}.`],
+    notes: [],
   };
 }
 
@@ -90,7 +79,7 @@ function useRows(v: View) {
   return useMemo(() => DATA.records.filter((r) => r.corpus === v.corpus && r.tag === v.tag && r.arm === v.arm), [v.corpus, v.tag, v.arm]);
 }
 
-function OpsPair({ recs, colorOf, nameOf, arm, determinism = true }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single"; determinism?: boolean }) {
+function OpsPair({ recs, colorOf, nameOf, arm, determinism = true, logos = true }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single"; determinism?: boolean; logos?: boolean }) {
   const time: BarItem[] = recs.map((r) => ({
     id: r.model, name: nameOf(r), color: colorOf(r), value: r.ops.hours_per_100k_docs, label: fmtHours(r.ops.hours_per_100k_docs), tip: opsLines(r), subset: r.subset,
   }));
@@ -106,14 +95,14 @@ function OpsPair({ recs, colorOf, nameOf, arm, determinism = true }: { recs: Rec
           <h3>Review time</h3><span className="unit">per 100,000 documents, single stream</span>
           <span className="right"><Hint left text="Median wall-clock time of the model's own calls per document, one request at a time, scaled to 100,000 documents. In the 'all issues per call' arm that is one call per document; in 'one issue per call' it is the sum over issues. Every service accepts parallel requests, so absolute hours shrink with concurrency for all models alike; the ratios are the comparison. Laya and Gemma ran on one A100." /></span>
         </div>
-        <OpsBars items={time} axis="hours" />
+        <OpsBars items={time} axis="hours" logos={logos} />
       </div>
       <div className="card">
         <div className="card-t">
           <h3>Cost</h3><span className="unit">per 100,000 documents, as paid</span>
           <span className="right"><Hint left text="What was actually paid to the vendor, summed over the model's decisions and scaled to 100,000 documents. OpenAI ran on flex pricing (half of list); Anthropic used prompt caching on the all-issues arm. Laya, Gemma and the keyword floor ran on rented hardware (about $2 per A100-hour) and show $0 here; their cost is the review-time panel." /></span>
         </div>
-        <OpsBars items={cost} axis="US dollars" />
+        <OpsBars items={cost} axis="US dollars" logos={logos} />
       </div>
     </div>
     {determinism && <Consistency recs={recs} colorOf={colorOf} nameOf={nameOf} arm={arm} />}
@@ -160,9 +149,8 @@ function CompareSection({ v, explain }: { v: View; explain: (k: string) => void 
                 return (
                   <button key={r.model} className={`pick${on.has(r.model) ? "" : " off"}`} onClick={() => toggle(r.model)} title={m.note}>
                     <span className="sw" style={{ background: m.color }} />
-                    <span className="nm">{m.short}</span>
-                    {r.subset && <span className="tag" title={`scored on ${r.subset}`}>subset</span>}
-                    {r.kind === "system1_ft" && <span className="tag">supervised</span>}
+                    <Logo model={r.model} />
+                    <span className="nm" title={r.subset ? `scored on ${r.subset}` : undefined}>{m.short}{r.subset ? " *" : ""}</span>
                     <ExplainButton onClick={() => explain(r.model)} />
                   </button>
                 );
@@ -229,9 +217,8 @@ function AblationSection({ v, explain }: { v: View; explain: (k: string) => void
             {variants.map((r) => (
               <button key={r.model} className={`pick${off.has(r.variant!) ? " off" : ""}`} onClick={() => toggle(r.variant!)} title={r.lever ?? undefined}>
                 <span className="sw" style={{ background: color(r) }} />
-                <span className="nm">{name(r)}</span>
+                <span className="nm" title={r.subset ? `scored on ${r.subset}` : undefined}>{name(r)}{r.subset ? " *" : ""}</span>
                 {r.variant === G.recipe && <span className="star" title="recipe">★</span>}
-                {r.subset && <span className="tag">subset</span>}
                 <ExplainButton onClick={() => explain(r.model)} />
               </button>
             ))}
@@ -242,9 +229,10 @@ function AblationSection({ v, explain }: { v: View; explain: (k: string) => void
           <PRCard
             items={items} v={v} defaultChart="ranked" defaultZoom={true}
             emptyText={variants.length ? "Select at least one configuration." : "No configurations available for this view."}
+            logos={false}
             hint="Same measurement as above. Differences between configurations are usually smaller than between model families, so this card defaults to ranked rows with the axes fitted to the data; switch to map and 0–100% to see the same points on the scale used above. Hover a configuration for what the lever changes."
           />
-          <OpsPair recs={sel} colorOf={color} nameOf={name} arm={v.arm} determinism={false} />
+          <OpsPair recs={sel} colorOf={color} nameOf={name} arm={v.arm} determinism={false} logos={false} />
         </div>
       </div>
     </section>

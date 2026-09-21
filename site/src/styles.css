@@ -310,3 +310,7 @@ svg text { user-select: none; font-family: var(--sans); }
 .controls .more.on .chev { transform: translateY(1px) rotate(-135deg); }
 .controls .more-summary { color: var(--ink-4); font-size: 12px; }
 .controls-more { position: static; z-index: auto; backdrop-filter: none; background: var(--panel); border-bottom: 1px solid var(--line); padding-top: 10px; padding-bottom: 10px; }
+
+.logo { border-radius: 3px; object-fit: contain; display: inline-block; }
+.pick .logo { color: var(--ink-2); }
+.pick.off .logo { opacity: 0.35; filter: grayscale(1); }

@@ -1,13 +1,15 @@
+import { LogoGlyph } from "../logos";
 import { TipBox, useTip, useWidth, type TipLine } from "./ui";
 
 export type BarItem = { id: string; name: string; color: string; value: number | null; label: string; tip: { lines: TipLine[]; notes?: string[] }; subset?: string | null };
 
-const LABEL_W = 150, ROW = 24;
+const ROW = 24;
 
 /** Horizontal bars with the number written at the end of each bar. Zero-valued items are drawn as a hairline. */
-export function OpsBars({ items, axis, sort = true }: { items: BarItem[]; axis: string; sort?: boolean }) {
+export function OpsBars({ items, axis, sort = true, logos = true }: { items: BarItem[]; axis: string; sort?: boolean; logos?: boolean }) {
   const { tip, show, hide, hostRef } = useTip();
   const W = useWidth(hostRef, 560);
+  const LABEL_W = logos ? 176 : 150;
   const rows = sort ? [...items].sort((a, b) => (a.value ?? Infinity) - (b.value ?? Infinity)) : items;
   const max = Math.max(1e-9, ...rows.map((r) => r.value ?? 0));
   const plotW = W - LABEL_W - 80;
@@ -24,7 +26,8 @@ export function OpsBars({ items, axis, sort = true }: { items: BarItem[]; axis: 
           return (
             <g key={r.id} onMouseMove={(e) => show(e, { title: r.name, color: r.color, lines: [...r.tip.lines, ...(ratio && ratio > 1.05 ? [[`vs. lowest shown`, `${ratio >= 10 ? Math.round(ratio) : ratio.toFixed(1)}×`] as TipLine] : [])], notes: r.tip.notes })} onMouseLeave={hide} style={{ cursor: "default" }}>
               <rect x={0} y={y} width={W} height={ROW} fill="transparent" />
-              <text x={LABEL_W - 10} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
+              <text x={LABEL_W - (logos ? 30 : 10)} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
+              {logos && <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={LABEL_W - 16} cy={y + ROW / 2} /></g>}
               <rect x={LABEL_W} y={y + 6} width={bw} height={ROW - 12} fill={r.color} rx={2} opacity={v === 0 ? 0.5 : 1} />
               <text x={LABEL_W + bw + 7} y={y + ROW / 2 + 4} fontSize={11.5} fill={v == null ? "var(--ink-4)" : "var(--ink)"} className="mono">{v == null ? "not measured" : r.label}</text>
             </g>

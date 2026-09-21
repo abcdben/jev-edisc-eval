@@ -1,14 +1,16 @@
 import type { CI } from "../data";
 import { fmtPct } from "../data";
 import type { PRItem } from "./PRScatter";
+import { LogoGlyph } from "../logos";
 import { TipBox, useTip, useWidth } from "./ui";
 
-const LABEL_W = 170, ROW = 26, GAP = 26, NUM_W = 54;
+const ROW = 26, GAP = 26, NUM_W = 54;
 
 /** Ranked rows: recall and precision side by side, dot at the point estimate, whisker across the 95% interval. */
-export function PRRows({ items, zoom, sortBy }: { items: PRItem[]; zoom: boolean; sortBy: "recall" | "precision" | "f1" }) {
+export function PRRows({ items, zoom, sortBy, logos = true }: { items: PRItem[]; zoom: boolean; sortBy: "recall" | "precision" | "f1"; logos?: boolean }) {
   const { tip, show, hide, hostRef } = useTip();
   const W = useWidth(hostRef, 760);
+  const LABEL_W = logos ? 196 : 170;
   const f1 = (it: PRItem) => (it.recall && it.precision ? (2 * it.recall[0] * it.precision[0]) / (it.recall[0] + it.precision[0] || 1) : -1);
   const rows = [...items].sort((a, b) => {
     const va = sortBy === "f1" ? f1(a) : (a[sortBy]?.[0] ?? -1), vb = sortBy === "f1" ? f1(b) : (b[sortBy]?.[0] ?? -1);
@@ -47,7 +49,8 @@ export function PRRows({ items, zoom, sortBy }: { items: PRItem[]; zoom: boolean
           return (
             <g key={r.id} onMouseMove={(e) => show(e, { title: r.name, color: r.color, ...r.tip })} onMouseLeave={hide} style={{ cursor: "default" }}>
               <rect x={0} y={y - ROW / 2} width={W} height={ROW} fill="transparent" />
-              <text x={LABEL_W - 12} y={y + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
+              <text x={LABEL_W - (logos ? 32 : 12)} y={y + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
+              {logos && <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={LABEL_W - 18} cy={y} /></g>}
               {([r.recall, r.precision] as CI[]).map((ci, col) =>
                 ci ? (
                   <g key={col}>
