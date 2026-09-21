@@ -98,10 +98,7 @@ svg text { user-select: none; font-family: var(--sans); }
 .page { max-width: 1240px; margin: 0 auto; padding: 40px 32px 96px; }
 
 /* header */
-.masthead { display: grid; grid-template-columns: 1fr auto; gap: 10px 24px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
-.masthead > .eyebrow { grid-column: 1; }
-.masthead > .theme { grid-column: 2; grid-row: 1; justify-self: end; }
-.masthead > .title, .masthead > .lede, .masthead > .stats { grid-column: 1 / -1; }
+.masthead { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
 .eyebrow { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
 .title { font-weight: 500; font-size: 24px; line-height: 1.2; letter-spacing: -0.015em; margin: 0; }
 .title em { font-style: normal; color: var(--ink-3); }

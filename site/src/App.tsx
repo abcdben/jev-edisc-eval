@@ -265,8 +265,6 @@ export default function App() {
   const [issue, setIssue] = useState<string | null>(null);
   const v: View = { corpus, tag: corpus === "trec" ? tag : "", arm, gray, level, issue };
   const meta = DATA.corpora[corpusKey(v.corpus, v.tag)];
-  const nModels = new Set(DATA.records.filter((r) => r.primary).map((r) => r.model)).size;
-  const nDocs = Object.values(DATA.corpora).filter((c) => !c.tag).reduce((a, c) => a + c.n_docs, 0);
 
   const pickCorpus = (c: string) => { setCorpus(c); setIssue(null); };
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "dark");
@@ -275,15 +273,8 @@ export default function App() {
   return (
     <div className="page">
       <header className="masthead">
-        <span className="eyebrow">Benchmark · document review · {new Date().getFullYear()}</span>
         <span className="theme"><Seg value={theme} onChange={setTheme} options={[{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }]} /></span>
         <h1 className="title">Decider Model v LLM Bakeoff</h1>
-        <div className="stats">
-          <span className="stat"><span className="n">{fmtInt(nDocs)}</span><span className="l">gold-labeled documents</span></span>
-          <span className="stat"><span className="n">{Object.values(DATA.corpora).filter((c) => !c.tag).reduce((a, c) => a + c.n_issues, 0)}</span><span className="l">issues (RFPs)</span></span>
-          <span className="stat"><span className="n">{nModels}</span><span className="l">classifiers compared</span></span>
-          <span className="stat"><span className="n">{fmtInt(DATA.records.filter((r) => r.primary).reduce((a, r) => a + r.ops.n_decisions, 0))}</span><span className="l">decisions scored (headline roster)</span></span>
-        </div>
       </header>
 
       <div className="controls">
