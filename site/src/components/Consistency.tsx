@@ -2,7 +2,7 @@ import { DATA, fmtCI, fmtInt, fmtPct, type DetCell, type Rec } from "../data";
 import { LogoGlyph } from "../logos";
 import { Hint, TipBox, useTip, useWidth, type TipLine } from "./ui";
 
-const LABEL_W = 196, ROW = 24;
+const LABEL_W = 168, ROW = 24;
 
 /** The determinism cell for a record: matched on model key, arm follows the page. Ablation variants are not covered. */
 export function detFor(r: Rec, arm: "multi" | "single", setting: "default" | "t0"): DetCell | null {
@@ -38,7 +38,7 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
   const h = sorted.length * ROW + 24;
   const hasT0 = sorted.some((x) => x.t0);
   return (
-    <div className="card" style={{ marginTop: 20 }}>
+    <div className="card">
       <div className="card-t">
         <h3>Determinism</h3>
         <span className="unit">run-to-run disagreement · {det ? `${fmtInt(det.sample.n_docs)} Mallinckrodt emails` : "not measured"} · {measured[0]?.d?.k ?? 5} runs</span>

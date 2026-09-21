@@ -140,17 +140,19 @@ function Output({ o, gold, contended }: { o: ExOutput; gold: string; contended: 
     ["confidence", o.confidence == null ? "—" : `${o.confidence.toFixed(2)}  (|2p − 1|)`],
     ["latency", o.latency_ms == null ? "—" : contended ? `${fmtMs(o.latency_ms)} (queued behind 64 concurrent requests on one A100; the site's review-time panel uses a one-at-a-time sample)` : fmtMs(o.latency_ms)],
     ["tokens", o.input_tokens == null ? "—" : `${o.input_tokens.toLocaleString()} in · ${(o.output_tokens ?? 0).toLocaleString()} out`],
-    ["cost", o.cost_usd == null ? "—" : o.cost_usd === 0 ? "$0 (local)" : `$${o.cost_usd.toFixed(6)}`],
+    ["cost", o.cost_usd == null ? "—" : o.cost_usd === 0 ? (o.model_resolved === "tfidf-logreg" ? "$0 compute; the reviewer's time is in the request" : "$0 (local)") : `$${o.cost_usd.toFixed(6)}`],
     ["served by", o.model_resolved ?? "—"],
   ];
-  if (o.error) rows.push(["error", <code className="ex-lit">{o.error}</code>]);
+  const isTar = o.model_resolved === "tfidf-logreg";
+  const shown = isTar ? rows.filter(([k]) => k !== "latency" && k !== "tokens" && k !== "confidence") : rows;
+  if (o.error) shown.push(["error", <code className="ex-lit">{o.error}</code>]);
   return (
     <div className="ex-obj">
-      {rows.map(([k, v]) => <div key={k} className="ex-row"><div className="ex-k">{k}</div><div className="ex-v">{v}</div></div>)}
+      {shown.map(([k, v]) => <div key={k} className="ex-row"><div className="ex-k">{k}</div><div className="ex-v">{v}</div></div>)}
       {o.raw && Object.keys(o.raw).length > 0 && (
         <div className="ex-row"><div className="ex-k">raw</div><div className="ex-v"><Node v={o.raw} path="raw" changed={new Set()} doc="" ctx="" /></div></div>
       )}
-      <div className="ex-foot">Recorded in the {o.arm === "single" ? "one-issue-per-call" : "all-issues-per-call"} run; the request shown is the one-issue form.</div>
+      <div className="ex-foot">{isTar ? "The median seed's call on this document. p(responsive) is the classifier's probability, or 1 / 0 when the reviewer coded the document by hand." : `Recorded in the ${o.arm === "single" ? "one-issue-per-call" : "all-issues-per-call"} run; the request shown is the one-issue form.`}</div>
     </div>
   );
 }
@@ -169,7 +171,7 @@ export function ExplainModal({ initialKey, initialCorpus, onClose }: { initialKe
   const G = EX_GROUPS.find((g) => g.id === group)!;
   const active = members.includes(key) ? key : members[0];
   const cfg = active ? C.configs[active] : null;
-  const baseKey = group === "llm" ? null : members.find((m) => m.endsWith("@base")) ?? null;
+  const baseKey = group === "llm" ? null : group === "tar" ? (members.includes("tar@t1_1000") ? "tar@t1_1000" : members.find((m) => m.includes("@t1_")) ?? null) : members.find((m) => m.endsWith("@base")) ?? null;
   const base = baseKey && baseKey !== active ? C.configs[baseKey] : null;
 
   useEffect(() => {
@@ -222,7 +224,7 @@ export function ExplainModal({ initialKey, initialCorpus, onClose }: { initialKe
                 {members.map((m) => (
                   <button key={m} className={`pick${active === m ? "" : " off"}`} onClick={() => setKey(m)}>
                     <span className="nm">{memberLabel(m)}</span>
-                    {m.endsWith("@base") && <span className="tag">reference</span>}
+                    {(m.endsWith("@base") || (group === "tar" && m === baseKey)) && <span className="tag">reference</span>}
                   </button>
                 ))}
               </div>
@@ -253,7 +255,7 @@ export function ExplainModal({ initialKey, initialCorpus, onClose }: { initialKe
                 )}
                 <div className="ex-cols">
                   <div className="ex-col">
-                    <div className="ex-col-t">Request<span className="ex-col-s">what was sent, with the document and background folded</span></div>
+                    <div className="ex-col-t">{group === "tar" ? "Workflow" : "Request"}<span className="ex-col-s">{group === "tar" ? "how the coded sample and classifier were produced" : "what was sent, with the document and background folded"}</span></div>
                     {ex && <Node v={ex.request} path="" changed={d.changed} doc={doc.text} ctx={C.context} />}
                     {showDiff && base && d.removed.length > 0 && (
                       <div className="ex-removed">Not present in this configuration (present in the default): {d.removed.map((p) => p.replace(/^questions\.[^.]+\./, "question.")).join(", ")}</div>
@@ -281,16 +283,16 @@ export function ExplainModal({ initialKey, initialCorpus, onClose }: { initialKe
 }
 
 /** Small "how it works" affordance used next to picker rows and section heads. */
-export function ExplainButton({ onClick, label = "details" }: { onClick: () => void; label?: string }) {
+export function ExplainButton({ onClick, label = "details", compact = false }: { onClick: () => void; label?: string; compact?: boolean }) {
   // a span, not a button: it lives inside picker rows that are themselves <button>s
   return (
     <span
-      className="ex-btn" role="button" tabIndex={0}
+      className={compact ? "ex-btn ex-i" : "ex-btn"} role="button" tabIndex={0} aria-label={compact ? "details" : undefined}
       onClick={(e) => { e.stopPropagation(); e.preventDefault(); onClick(); }}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); e.preventDefault(); onClick(); } }}
       title="Configuration details: the request sent and the answer returned"
     >
-      {label}
+      {compact ? "i" : label}
     </span>
   );
 }

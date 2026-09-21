@@ -9,7 +9,7 @@ const ROW = 24;
 export function OpsBars({ items, axis, sort = true, logos = true }: { items: BarItem[]; axis: string; sort?: boolean; logos?: boolean }) {
   const { tip, show, hide, hostRef } = useTip();
   const W = useWidth(hostRef, 560);
-  const LABEL_W = logos ? 176 : 150;
+  const LABEL_W = logos ? 168 : 150;
   const rows = sort ? [...items].sort((a, b) => (a.value ?? Infinity) - (b.value ?? Infinity)) : items;
   const max = Math.max(1e-9, ...rows.map((r) => r.value ?? 0));
   const plotW = W - LABEL_W - 80;

@@ -32,7 +32,7 @@ def job_path(out: Path, corpus: str, arm: str, model_key: str, tag: str = "") ->
     return out / corpus / arm / f"{name}.jsonl"
 
 
-VARIANT_FAMILIES = ("jev", "laya")
+VARIANT_FAMILIES = ("jev", "laya", "tar")
 
 
 def parse_job_stem(stem: str) -> tuple[str, str]:

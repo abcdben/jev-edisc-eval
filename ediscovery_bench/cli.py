@@ -563,5 +563,19 @@ def _report(ts, out: Path, corpus: str, arms, keys, tag="", exclude_gray=False, 
         console.print(tbl)
 
 
+
+@app.command("tar")
+def tar_cmd(
+    corpus: str = typer.Argument(..., help="mnk | cuad | trec"),
+    out: Path = typer.Option(Path("results"), "--out", "-o"),
+    only: str = typer.Option(None, "--only", help="variant name or prefix, e.g. t1_100 or cal"),
+    seeds: int = typer.Option(5, "--seeds"),
+):
+    """Classical TAR baselines (TF-IDF + logistic regression, simulated reviewer) -> results/<corpus>/multi/tar__*.jsonl."""
+    from .tar import run_corpus
+
+    run_corpus(corpus, out, only, seeds)
+
+
 if __name__ == "__main__":
     app()

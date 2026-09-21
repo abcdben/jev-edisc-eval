@@ -177,6 +177,38 @@ def _lexical_request(ts: TaskSet, qid: str, doc: Document) -> dict:
     return {"terms": terms, "rule": "score saturates with the number of distinct terms present (~3 hits → 0.5, ~8 → 0.9); label = responsive if score ≥ 0.5"}
 
 
+TAR_WORKFLOW = {
+    "t1": [
+        "1. Draw a random sample of N documents from the collection.",
+        "2. A reviewer reads each and codes it for every issue (simulated here from the gold labels; 50 documents/hour, $65/hour).",
+        "3. Fit TF-IDF (word 1-2 grams, sublinear tf) and balanced logistic regression: one model for any-issue relevance and one per issue with at least 5 coded positives.",
+        "4. Choose each model's cutoff by 5-fold cross-validation on the coded sample only: the score that keeps 80% of the sample's positives (or, in the F1 variant, the score that maximises F1).",
+        "5. Score the rest of the collection. A document is produced on an issue when it clears the relevance cutoff and that issue's cutoff; the coded documents keep the reviewer's codes.",
+    ],
+    "cal": [
+        "1. Seed: 100 random documents plus the 100 strongest keyword-floor hits, coded by the reviewer.",
+        "2. Fit TF-IDF + balanced logistic regression on everything coded so far for any-issue relevance.",
+        "3. Rank the uncoded collection; the reviewer codes the top batch (100 documents; 1,000 on the 286k TREC collection), tagging issues as they go.",
+        "4. Repeat 2-3. Stop after two consecutive batches come back under 5% relevant.",
+        "5. The production set is what the reviewer coded relevant; nothing uncoded is produced.",
+    ],
+}
+
+
+def _tar_request(side: dict) -> dict:
+    spec = side["spec"]; med = side["median"]
+    req = {"workflow": TAR_WORKFLOW[spec["kind"]], "reviewer": {"docs_per_hour": side["reviewer"]["docs_per_hour"], "usd_per_hour": side["reviewer"]["usd_per_hour"],
+                                                              "miscode_rate": side["reviewer"]["miscode_rate"]},
+           "classifier": {"features": "tf-idf, word 1-2 grams, min_df 2, sublinear tf, ≤300k features", "model": "logistic regression, liblinear, class_weight balanced, C=1"}}
+    if spec["kind"] == "t1":
+        req["training_sample"] = {"documents_coded": med["docs_reviewed"], "positives_any_issue": med["train_positives_any"], "issues_with_own_model": med["issue_models"],
+                                  "cutoff_rule": "80% recall (5-fold CV on the sample)" if spec["rule"] == "recall80" else "max F1 (5-fold CV on the sample)"}
+    else:
+        req["review"] = {"documents_coded": med["docs_reviewed"], "batch": med["batch"], "batches": med["batches"], "stop": med["stop"]}
+    req["effort"] = {"hours": round(med["hours"], 1), "usd": round(med["cost_usd"]), "share_of_collection": round(med["docs_reviewed"] / side["n_corpus"], 3)}
+    return req
+
+
 def _template(obj, doc_text: str, context: str):
     """Replace the document text and matter context with placeholders so the payload stays small."""
     if isinstance(obj, str):
@@ -249,6 +281,12 @@ def export(out: Path = Path("results"), dest: Path = Path("results/examples.json
             }
         exs = [{"request": _lexical_request(ts, qid, d), "output": _output(out, corpus, "lexical", d.id, qid)} for d in ex_docs]
         c["configs"]["lexical"] = {"group": "lexical", "variant": "lexical", "settings": {"threshold": 0.5}, "examples": exs}
+        # classical TAR (no API: the request is the workflow and the coded sample; the output is the median seed's call)
+        for side_path in sorted((out / corpus / "multi").glob("tar__*.tar.json")):
+            side = json.loads(side_path.read_text()); name = side["variant"]
+            exs = [{"request": _tar_request(side), "output": _output(out, corpus, f"tar__{name}", d.id, qid)} for d in ex_docs]
+            if any(e["output"] is not None for e in exs):
+                c["configs"][f"tar@{name}"] = {"group": "tar", "variant": name, "settings": {"seeds": len(side["seeds"]), "median_seed": side["median_seed"], "miscode_rate": side["spec"]["noise"]}, "examples": exs}
         for cfg in c["configs"].values():
             for i, ex in enumerate(cfg["examples"]):
                 ex["request"] = _template(ex["request"], ex_docs[i].text, ts.context)

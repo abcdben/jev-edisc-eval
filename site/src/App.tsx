@@ -51,12 +51,30 @@ function qualityLines(r: Rec, v: View): { lines: TipLine[]; notes: string[] } {
   }
   if (r.subset) lines.push(["Scored on", r.subset]);
   const notes: string[] = [];
+  if (r.tar) {
+    const t = r.tar;
+    lines.push([t.kind === "cal" ? "Reviewed by hand" : "Coded for training", `${fmtInt(t.docs_reviewed)} of ${fmtInt(t.n_corpus)} (${fmtPct(t.review_share, 0)})`]);
+    if (t.recall_range) lines.push([`Recall across ${t.seeds} seeds`, `${fmtPct(t.recall_range[0])} – ${fmtPct(t.recall_range[1])}`]);
+    if (t.kind === "cal") notes.push("Precision is of the produced set, which the reviewer coded by hand; the review effort is in the time and cost panels.");
+  }
   if (r.lever && !r.primary) notes.push(r.lever);
   return { lines, notes };
 }
 
 function opsLines(r: Rec): { lines: TipLine[]; notes: string[] } {
   const o = r.ops;
+  if (r.tar) {
+    const t = r.tar;
+    return {
+      lines: [
+        ["Documents reviewed by hand", `${fmtInt(t.docs_reviewed)} of ${fmtInt(t.n_corpus)}`],
+        ["Reviewer hours", fmtHours(t.hours)],
+        ["Reviewer cost", fmtUSD(t.cost_usd)],
+        ["Per 100k docs, scaled from this corpus", `${fmtHours(o.hours_per_100k_docs)} · ${o.cost_per_doc == null ? "—" : fmtUSD(o.cost_per_doc * 1e5)}`],
+      ],
+      notes: [`${t.reviewer.docs_per_hour} docs/hour at $${t.reviewer.usd_per_hour}/hour; classifier compute not charged. A fixed coded sample does not scale with corpus size, so the per-100k figure is specific to a ${fmtInt(t.n_corpus)}-document collection.`],
+    };
+  }
   return {
     lines: [
       ["Time per 100k docs", fmtHours(o.hours_per_100k_docs)],
@@ -74,7 +92,7 @@ function useRows(v: View) {
   return useMemo(() => DATA.records.filter((r) => r.corpus === v.corpus && r.tag === v.tag && r.arm === v.arm), [v.corpus, v.tag, v.arm]);
 }
 
-function OpsPair({ recs, colorOf, nameOf, arm, determinism = true, logos = true }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single"; determinism?: boolean; logos?: boolean }) {
+function OpsCards({ recs, colorOf, nameOf, logos = true }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean }) {
   const time: BarItem[] = recs.map((r) => ({
     id: r.model, name: nameOf(r), color: colorOf(r), value: r.ops.hours_per_100k_docs, label: fmtHours(r.ops.hours_per_100k_docs), tip: opsLines(r), subset: r.subset,
   }));
@@ -84,23 +102,20 @@ function OpsPair({ recs, colorOf, nameOf, arm, determinism = true, logos = true 
   }));
   return (
     <>
-    <div className="ops-grid">
       <div className="card">
         <div className="card-t">
-          <h3>Review time</h3><span className="unit">per 100,000 documents, single stream</span>
+          <h3>Review time</h3><span className="unit">per 100k documents, single stream</span>
           <span className="right"><Hint left text="Median wall-clock time of the model's own calls per document, one request at a time, scaled to 100,000 documents. In the 'all issues per call' arm that is one call per document; in 'one issue per call' it is the sum over issues. Every service accepts parallel requests, so absolute hours shrink with concurrency for all models alike; the ratios are the comparison. Laya and Gemma ran on one A100." /></span>
         </div>
         <OpsBars items={time} axis="hours" logos={logos} />
       </div>
       <div className="card">
         <div className="card-t">
-          <h3>Cost</h3><span className="unit">per 100,000 documents, as paid</span>
+          <h3>Cost</h3><span className="unit">per 100k documents, as paid</span>
           <span className="right"><Hint left text="What was actually paid to the vendor, summed over the model's decisions and scaled to 100,000 documents. OpenAI ran on flex pricing (half of list); Anthropic used prompt caching on the all-issues arm. Laya, Gemma and the keyword floor ran on rented hardware (about $2 per A100-hour) and show $0 here; their cost is the review-time panel." /></span>
         </div>
         <OpsBars items={cost} axis="US dollars" logos={logos} />
       </div>
-    </div>
-    {determinism && <Consistency recs={recs} colorOf={colorOf} nameOf={nameOf} arm={arm} />}
     </>
   );
 }
@@ -128,35 +143,34 @@ function CompareSection({ v, explain }: { v: View; explain: (k: string) => void 
         <span className="sub">Each dot is a model's recall and precision; the box around it is the 95% interval on both.</span>
         <ExplainButton label="how each model is asked" onClick={() => explain("jev@base")} />
       </div>
-      <div className="sec-body">
-        <aside className="picker">
-          {byKind.map((g) => (
-            <div className="grp" key={g.kind}>
-              <div className="grp-t">
-                <span>{KIND_LABEL[g.kind as Kind]}</span>
-                <span>
-                  <button onClick={() => setGroup(g.recs, true)}>all</button>&nbsp;·&nbsp;<button onClick={() => setGroup(g.recs, false)}>none</button>
-                </span>
-              </div>
-              {g.recs.map((r) => {
-                const m = PRIMARY_BY_KEY[r.model];
-                return (
-                  <button key={r.model} className={`pick${on.has(r.model) ? "" : " off"}`} onClick={() => toggle(r.model)} title={m.note}>
-                    <span className="mark" style={{ color: m.color }}><Logo model={r.model} /></span>
-                    <span className="nm" title={r.subset ? `scored on ${r.subset}` : undefined}>{m.short}{r.subset ? " *" : ""}</span>
-                    <ExplainButton onClick={() => explain(r.model)} />
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </aside>
-        <div>
-          <PRCard
-            items={items} defaultChart="map" defaultZoom={true}
-            hint="Recall: gold-responsive items the model flagged, over all gold-responsive items. Precision: flagged items that were gold-responsive, over all flagged. Intervals are 95% Wilson score intervals. Because every document in each test set carries a gold label, the recall interval is computed over the gold-positive set and the precision interval over the model's flagged set, rather than from a review sample. All metrics use the model's own label, not a tuned threshold."
-          />
-          <OpsPair recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} arm={v.arm} />
+      <div className="pbar">
+        {byKind.map((g) => (
+          <div className="prow" key={g.kind}>
+            <span className="plabel">
+              <span>{KIND_LABEL[g.kind as Kind]}</span>
+              <span className="an"><button onClick={() => setGroup(g.recs, true)}>all</button> · <button onClick={() => setGroup(g.recs, false)}>none</button></span>
+            </span>
+            {g.recs.map((r) => {
+              const m = PRIMARY_BY_KEY[r.model];
+              return (
+                <button key={r.model} className={`chip${on.has(r.model) ? "" : " off"}`} onClick={() => toggle(r.model)} title={m.note} aria-pressed={on.has(r.model)}>
+                  <span className="mark" style={{ color: m.color }}><Logo model={r.model} /></span>
+                  <span className="nm" title={r.subset ? `scored on ${r.subset}` : undefined}>{m.short}{r.subset ? " *" : ""}</span>
+                  <ExplainButton compact onClick={() => explain(r.model)} />
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      <div className="dash">
+        <PRCard
+          items={items} defaultChart="map" defaultZoom={true}
+          hint="Recall: gold-responsive items the model flagged, over all gold-responsive items. Precision: flagged items that were gold-responsive, over all flagged. Intervals are 95% Wilson score intervals. Because every document in each test set carries a gold label, the recall interval is computed over the gold-positive set and the precision interval over the model's flagged set, rather than from a review sample. All metrics use the model's own label, not a tuned threshold."
+        />
+        <div className="stack">
+          <OpsCards recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} />
+          <Consistency recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} arm={v.arm} />
         </div>
       </div>
     </section>
@@ -190,42 +204,40 @@ function AblationSection({ v, explain }: { v: View; explain: (k: string) => void
         <span className="sub">Each variant changes a single lever from the default. The recipe is the configuration carried into Compare models.</span>
         <ExplainButton label="see the requests side by side" onClick={() => explain(`${grp}@base`)} />
       </div>
-      <div className="sec-body">
-        <aside className="picker">
-          <div className="grp">
-            <div className="grp-t"><span>Model</span></div>
-            <span className="select" style={{ display: "block" }}>
-              <select value={grp} onChange={(e) => { setGrp(e.target.value); setOff(new Set()); }} style={{ width: "100%" }}>
-                {ABLATION_GROUPS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
-              </select>
-            </span>
-            <div style={{ color: "var(--ink-3)", fontSize: 12, marginTop: 8, lineHeight: 1.45 }}>{G.note}</div>
-          </div>
-          <div className="grp">
-            <div className="grp-t">
-              <span>Configurations</span>
-              <span><button onClick={() => setOff(new Set())}>all</button>&nbsp;·&nbsp;<button onClick={() => setOff(new Set(variants.map((r) => r.variant!)))}>none</button></span>
-            </div>
-            {variants.map((r) => (
-              <button key={r.model} className={`pick${off.has(r.variant!) ? " off" : ""}`} onClick={() => toggle(r.variant!)} title={r.lever ?? undefined}>
-                <span className="sw" style={{ background: color(r) }} />
-                <span className="nm" title={r.subset ? `scored on ${r.subset}` : undefined}>{name(r)}{r.subset ? " *" : ""}</span>
-                {r.variant === G.recipe && <span className="star" title="recipe">★</span>}
-                <ExplainButton onClick={() => explain(r.model)} />
-              </button>
-            ))}
-            {variants.length === 0 && <div className="empty">No configurations of this model were run on this corpus and arm.</div>}
-          </div>
-        </aside>
-        <div>
-          <PRCard
-            items={items} defaultChart="ranked" defaultZoom={true}
-            emptyText={variants.length ? "Select at least one configuration." : "No configurations available for this view."}
-            logos={false}
-            hint="Same measurement as above. Differences between configurations are usually smaller than between model families, so this card defaults to ranked rows with the axes fitted to the data; switch to map and 0–100% to see the same points on the scale used above. Hover a configuration for what the lever changes."
-          />
-          <OpsPair recs={sel} colorOf={color} nameOf={name} arm={v.arm} determinism={false} logos={false} />
+      <div className="pbar">
+        <div className="prow">
+          <span className="plabel"><span>Model</span></span>
+          <span className="select">
+            <select value={grp} onChange={(e) => { setGrp(e.target.value); setOff(new Set()); }}>
+              {ABLATION_GROUPS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
+            </select>
+          </span>
+          <span className="pnote">{G.note}</span>
         </div>
+        <div className="prow">
+          <span className="plabel">
+            <span>Configurations</span>
+            <span className="an"><button onClick={() => setOff(new Set())}>all</button> · <button onClick={() => setOff(new Set(variants.map((r) => r.variant!)))}>none</button></span>
+          </span>
+          {variants.map((r) => (
+            <button key={r.model} className={`chip${off.has(r.variant!) ? " off" : ""}`} onClick={() => toggle(r.variant!)} title={r.lever ?? undefined} aria-pressed={!off.has(r.variant!)}>
+              <span className="sw" style={{ background: color(r) }} />
+              <span className="nm" title={r.subset ? `scored on ${r.subset}` : undefined}>{name(r)}{r.subset ? " *" : ""}</span>
+              {r.variant === G.recipe && <span className="star" title="recipe">★</span>}
+              <ExplainButton compact onClick={() => explain(r.model)} />
+            </button>
+          ))}
+          {variants.length === 0 && <span className="empty">No configurations of this model were run on this corpus and arm.</span>}
+        </div>
+      </div>
+      <div className="dash">
+        <PRCard
+          items={items} defaultChart="ranked" defaultZoom={true}
+          emptyText={variants.length ? "Select at least one configuration." : "No configurations available for this view."}
+          logos={false}
+          hint="Same measurement as on Compare models. Differences between configurations are usually smaller than between model families, so this card defaults to ranked rows with the axes fitted to the data; switch to map and 0–100% to see the same points on the scale used there. Hover a configuration for what the lever changes."
+        />
+        <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} /></div>
       </div>
     </section>
   );
@@ -352,6 +364,10 @@ export default function App() {
         <div>
           <h4>Determinism</h4>
           <p>Each model re-scored the same 300 Mallinckrodt emails five times (all eight issues per call, and the two narrow issues one per call). Bars are the probability that two runs disagree on a decision; the benchmark run is repeat one. Temperature 0 was run where the API accepts it.</p>
+        </div>
+        <div>
+          <h4>Classical TAR</h4>
+          <p>A simulated reviewer (gold labels; 50 documents/hour at $65/hour) plus TF‑IDF and logistic regression, one model per issue and one for any‑issue relevance. TAR 1.0 codes a random sample and picks its cutoff by cross‑validation on that sample alone; TAR 2.0 is continuous active learning stopped after two consecutive batches under 5% relevant. Rows are the median of five random seeds (three for TREC). TREC rows are trained and reviewed over the full 286k collection and scored on the same evaluation set as the other models. The 90%‑reviewer variants miscode 10% of documents at random.</p>
         </div>
         <div>
           <h4>Absent cells</h4>

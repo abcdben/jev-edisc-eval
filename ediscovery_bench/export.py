@@ -51,6 +51,12 @@ MODELS: dict[str, dict] = {
     "gemini-3.8-flash":     dict(name="Gemini 3.8 Flash", family="Google", kind="llm"),
     "gemma3-12b":           dict(name="Gemma 3 12B (local)", family="Google", kind="local_llm"),
     "lexical":              dict(name="Keyword baseline", family="baseline", kind="baseline"),
+    # classical TAR: simulated reviewer (50 docs/h, $65/h) + TF-IDF / logistic regression, see tar.py
+    "tar@t1_100":           dict(name="TAR 1.0 · 100 reviewed", family="TAR", kind="tar"),
+    "tar@t1_300":           dict(name="TAR 1.0 · 300 reviewed", family="TAR", kind="tar"),
+    "tar@t1_1000":          dict(name="TAR 1.0 · 1,000 reviewed", family="TAR", kind="tar"),
+    "tar@t1_5000":          dict(name="TAR 1.0 · 5,000 reviewed", family="TAR", kind="tar"),
+    "tar@cal":              dict(name="TAR 2.0 · CAL", family="TAR", kind="tar"),
 }
 FT_KEYS = {"veridian": "laya-ft-veridian@recipe", "mnk": "laya-ft-mnk@recipe", "cuad": "laya-ft-cuad@recipe", "trec": "laya-ft-trec@recipe"}
 
@@ -83,6 +89,13 @@ LAYA_LEVERS = {
     "recipe": "Compact + chunk",
     "recipe_choice": "Compact + chunk, Choice form",
 }
+TAR_LEVERS = {
+    "t1": "TAR 1.0: the reviewer codes {n} random documents; classifier cutoff targets 80% recall (5-fold CV on the sample)",
+    "t1_f1": "TAR 1.0, {n} reviewed: cutoff maximises F1 on the sample instead of targeting 80% recall",
+    "t1_noisy": "TAR 1.0, {n} reviewed: reviewer miscodes 10% of documents (90% agreement)",
+    "cal": "TAR 2.0: continuous active learning; stop after two consecutive batches under 5% relevant",
+    "cal_noisy": "TAR 2.0 with a reviewer who miscodes 10% of documents",
+}
 LAYA_CHECKPOINTS = {"laya": "English checkpoint", "laya-typed": "Typed checkpoint", "laya-multilingual": "Multilingual checkpoint"}
 
 
@@ -94,6 +107,12 @@ def _variant_models() -> dict[str, dict]:
         for v, desc in LAYA_LEVERS.items():
             out[f"{ck}@{v}"] = dict(name=f"Laya {ckname.split()[0].lower()} · {v}" if ck != "laya" else f"Laya · {v}",
                                     family="Laya", kind="system1", group=ck, variant=v, lever=f"{ckname}. {desc}")
+    for n in (100, 300, 1000, 5000):
+        out[f"tar@t1_{n}"] = dict(name=f"TAR 1.0 · {n:,} reviewed", family="TAR", kind="tar", group="tar", variant=f"t1_{n}", lever=TAR_LEVERS["t1"].format(n=f"{n:,}"))
+        out[f"tar@t1_{n}_f1"] = dict(name=f"TAR 1.0 · {n:,} · F1 cutoff", family="TAR", kind="tar", group="tar", variant=f"t1_{n}_f1", lever=TAR_LEVERS["t1_f1"].format(n=f"{n:,}"))
+        out[f"tar@t1_{n}_noisy"] = dict(name=f"TAR 1.0 · {n:,} · 90% reviewer", family="TAR", kind="tar", group="tar", variant=f"t1_{n}_noisy", lever=TAR_LEVERS["t1_noisy"].format(n=f"{n:,}"))
+    out["tar@cal"] = dict(name="TAR 2.0 · CAL", family="TAR", kind="tar", group="tar", variant="cal", lever=TAR_LEVERS["cal"])
+    out["tar@cal_noisy"] = dict(name="TAR 2.0 · CAL · 90% reviewer", family="TAR", kind="tar", group="tar", variant="cal_noisy", lever=TAR_LEVERS["cal_noisy"])
     for corpus in FT_KEYS:
         for v in ("compact", "recipe"):
             out[f"laya-ft-{corpus}@{v}"] = dict(name=f"Laya fine-tuned · {v}", family="Laya", kind="system1_ft", group="laya-ft", variant=v,
@@ -179,6 +198,36 @@ def _ops(preds, arm: str, latency_preds=None, latency_note: str | None = None, l
         "latency_source": latency_note or ("dedicated concurrency-1 run" if latency_preds else "per-call latency from the main run"),
         "pricing_modes": sorted({p.pricing_mode for p in ok if p.pricing_mode}),
         "model_resolved": sorted({p.model_resolved for p in ok if p.model_resolved}),
+    }
+
+
+def _tar_block(side: dict) -> dict:
+    """What the site needs from a TAR sidecar: the reviewer's effort on this corpus and the spread across seeds."""
+    med = side["median"]; seeds = side["seeds"]
+    rec = [x["recall"] for x in seeds if x["recall"] is not None]; prec = [x["precision"] for x in seeds if x["precision"] is not None]
+    return {
+        "variant": side["variant"], "kind": side["spec"]["kind"], "n_corpus": side["n_corpus"], "n_eval": side["n_eval"],
+        "docs_reviewed": med["docs_reviewed"], "hours": med["hours"], "cost_usd": med["cost_usd"],
+        "review_share": med["docs_reviewed"] / side["n_corpus"],
+        "reviewer": side["reviewer"], "seeds": len(seeds), "median_seed": side["median_seed"],
+        "recall_range": [min(rec), max(rec)] if rec else None, "precision_range": [min(prec), max(prec)] if prec else None,
+        "cutoff_rule": side["spec"].get("rule"), "issue_models": med.get("issue_models"), "train_positives_any": med.get("train_positives_any"),
+        "batches": med.get("batches"), "batch": med.get("batch"), "stop": med.get("stop"), "curve": med.get("curve"),
+    }
+
+
+def _tar_ops(t: dict) -> dict:
+    """Human review is the whole cost of a TAR workflow: hours and dollars scale with documents reviewed on
+    THIS corpus, amortised over the corpus the workflow ran on (the 286k collection for TREC)."""
+    n = t["n_corpus"]
+    return {
+        "cost_per_doc": t["cost_usd"] / n, "list_cost_per_doc": t["cost_usd"] / n,
+        "tokens_in_per_doc": None, "tokens_out_per_doc": None,
+        "doc_latency_p50_ms": t["hours"] * 3.6e6 / n, "doc_latency_p95_ms": None,
+        "hours_per_100k_docs": t["hours"] * 1e5 / n,
+        "latency_source": f"simulated reviewer at {t['reviewer']['docs_per_hour']:.0f} docs/hour, ${t['reviewer']['usd_per_hour']:.0f}/hour: "
+                          f"{t['docs_reviewed']:,} of {n:,} documents reviewed ({t['hours']:.1f} h); compute not charged",
+        "pricing_modes": ["human review"],
     }
 
 
@@ -279,6 +328,10 @@ def export(out: Path = Path("results"), dest: Path = Path("results/findings.json
                     "all": _score(preds, ts, docs_by_id, False),
                     "nogray": _score(preds, ts, docs_by_id, True),
                 }
+                side = f.with_suffix(".tar.json")
+                if mk.startswith("tar@") and side.exists():
+                    rec["tar"] = _tar_block(json.loads(side.read_text()))
+                    rec["ops"].update(_tar_ops(rec["tar"]))
                 rec["nogray"].pop("per_issue", None)  # keep the payload small; per-issue drill-down uses all gold
                 for k in ("cost_per_doc", "list_cost_per_doc", "tokens_in_per_doc", "tokens_out_per_doc", "doc_latency_p50_ms", "doc_latency_p95_ms", "hours_per_100k_docs"):
                     if rec["ops"][k] is not None:
