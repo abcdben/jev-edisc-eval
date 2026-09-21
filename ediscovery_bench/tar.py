@@ -9,13 +9,23 @@ gold labels, optionally with a miscoding rate):
            either targeting 80% recall or maximising F1. Output over the whole corpus = the reviewer's
            codes on the N training documents + the classifier's calls on the remainder.
 
-  TAR 2.0  (continuous active learning)   Seed = random documents + the highest keyword-floor scores.
-           Loop: train on everything coded, rank the uncoded, the reviewer codes the top batch, repeat.
-           Stop by the knee method (Cormack & Grossman 2016): once the slope of the gain curve before its
-           knee is >= 6x the slope after it, with a minimum effort of 10% of the collection. The `cal_mp`
-           variant stops after two consecutive batches under 5% relevant instead. The review set (what
-           the classifier queued) is what the site plots; the production set (what the reviewer coded
-           relevant) is reported alongside.
+  TAR 2.0  (continuous active learning)   Before learning starts the reviewer codes a simple random
+           control set drawn from the pool (10% of the pool, capped at 500, and at least enough for ~30
+           relevant documents; a fixed 2,000 on TREC's 286k collection). Control documents never enter the
+           review queue and are not trained on; their coding counts as review effort and their codes are
+           part of the production set. Seed = random documents + the highest keyword-floor scores. Loop:
+           train on everything queued and coded, rank the pool, the reviewer codes the top batch, repeat.
+           The control documents ride along virtually: whenever a batch is picked, every control document
+           scoring at or above the batch's lowest queued score counts as reached from then on, and recall
+           is estimated as the share of control-set documents the reviewer coded relevant that have been
+           reached. Stop when the estimate is at or above the target (80%; `cal_75` uses 75%) for two
+           consecutive batches, or when the pool is exhausted.
+           The `cal_knee` variant stops by the knee method instead (Cormack & Grossman 2016: pre-knee slope
+           >= 6x post-knee, after 10% of the collection) and draws no control set.
+           What the site plots is the production set: every document the (imperfect, by default) reviewer
+           coded relevant, control set included, scored against gold on the pool CAL ran over. The sidecar
+           also records review-set precision, the recall estimate at stop against the true figure, and
+           the final classifier applied on its own to the evaluation set at the control-set cutoff.
            Mallinckrodt's benchmark sample is 61% rich by design; CAL there runs on a 10%-rich pool (all
            gold-negative emails plus a per-seed random draw of positives).
 
@@ -27,7 +37,8 @@ Layout mirrors the API runs so export.py can pick the rows up:
   results/trec_full/multi/tar__<variant>.jsonl       TREC: positive rows only over the 286k collection
 
 Variants: t1_<N> (80%-recall cutoff, perfect reviewer), t1_<N>_f1 (F1 cutoff), t1_<N>_noisy (imperfect
-reviewer: misses 10% of relevant, over-codes 2% of non-relevant), cal, cal_noisy, cal_mp.
+reviewer: misses 10% of relevant, over-codes 2% of non-relevant), cal (imperfect reviewer, 80% target),
+cal_75 (75% target), cal_perfect (perfect reviewer, 80% target), cal_knee (imperfect reviewer, knee stop).
 """
 
 from __future__ import annotations
@@ -55,8 +66,11 @@ DOCS_PER_HOUR = 50.0
 USD_PER_HOUR = 65.0
 SEEDS = 5
 MIN_POS_FOR_ISSUE_MODEL = 5
-CAL_STOP_RATE = 0.05
-CAL_STOP_PATIENCE = 2
+CAL_TARGET = 0.80  # recall target for the control-set stopping rule
+CAL_PATIENCE = 2  # consecutive batches at or above the target before stopping
+CONTROL_SHARE = 0.10  # control set: this share of the pool ...
+CONTROL_CAP = 500  # ... capped here ...
+CONTROL_MIN_RELEVANT = 30  # ... but at least enough documents to expect this many relevant ones
 KNEE_SLOPE_RATIO = 6.0
 KNEE_MIN_EFFORT = 0.10
 CAL_RICHNESS_CAP = 0.15  # pools richer than this are downsampled to CAL_TARGET_RICHNESS for the CAL rows
@@ -64,11 +78,12 @@ CAL_TARGET_RICHNESS = 0.10
 NOISE_RATE = 0.10  # imperfect reviewer: misses 10% of relevant documents ...
 NOISE_FP_RATIO = 0.2  # ... and over-codes 2% of non-relevant ones
 
-# corpus key -> (task yaml, evaluation corpus, training/CAL pool, keyword-floor results, cal batch, cal seeds)
+# corpus key -> (task yaml, evaluation corpus, training/CAL pool, keyword-floor results, cal batch, cal seeds,
+#                control-set size: None = CONTROL_SHARE / CONTROL_CAP / CONTROL_MIN_RELEVANT rule, else fixed)
 CORPORA = {
-    "mnk": dict(task="tasks/mallinckrodt.yaml", eval="data/mallinckrodt/mnk.jsonl", pool=None, lexical="results/mnk/multi/lexical.jsonl", batch=50, seed_n=50, cal_seeds=SEEDS, stages=[100, 300, 1000]),
-    "cuad": dict(task="tasks/cuad.yaml", eval="data/cuad/cuad.jsonl", pool=None, lexical="results/cuad/multi/lexical.jsonl", batch=100, seed_n=100, cal_seeds=SEEDS, stages=[100, 1000, 5000]),
-    "trec": dict(task="tasks/trec.yaml", eval="data/trec/eval.jsonl", pool="data/trec/full.jsonl", lexical="results/trec_full/multi/lexical.jsonl", batch=1000, seed_n=100, cal_seeds=3, stages=[100, 1000, 5000]),
+    "mnk": dict(task="tasks/mallinckrodt.yaml", eval="data/mallinckrodt/mnk.jsonl", pool=None, lexical="results/mnk/multi/lexical.jsonl", batch=50, seed_n=50, cal_seeds=SEEDS, stages=[100, 300, 1000], control=None),
+    "cuad": dict(task="tasks/cuad.yaml", eval="data/cuad/cuad.jsonl", pool=None, lexical="results/cuad/multi/lexical.jsonl", batch=100, seed_n=100, cal_seeds=SEEDS, stages=[100, 1000, 5000], control=None),
+    "trec": dict(task="tasks/trec.yaml", eval="data/trec/eval.jsonl", pool="data/trec/full.jsonl", lexical="results/trec_full/multi/lexical.jsonl", batch=1000, seed_n=100, cal_seeds=3, stages=[100, 1000, 5000], control=2000),
 }
 
 
@@ -288,58 +303,129 @@ def cal_pool(ts: TaskSet, docs: list[Document], seed: int) -> list[int]:
     return keep
 
 
+def control_size(n: int, richness: float, fixed: int | None) -> int:
+    """Control-set size: CONTROL_SHARE of the pool, capped at CONTROL_CAP, but at least enough documents to
+    expect CONTROL_MIN_RELEVANT relevant ones at the pool's richness (never more than half the pool)."""
+    if fixed is not None:
+        return min(fixed, n)
+    want = max(CONTROL_SHARE * n, CONTROL_MIN_RELEVANT / max(richness, 1e-6))
+    return int(min(CONTROL_CAP, want, n // 2))
+
+
+def _prf(flag: np.ndarray, gold: np.ndarray) -> dict:
+    tp = int((flag & gold).sum()); fp = int((flag & ~gold).sum()); fn = int((~flag & gold).sum())
+    return {"recall": tp / (tp + fn) if tp + fn else None, "precision": tp / (tp + fp) if tp + fp else None,
+            "flagged": tp + fp, "relevant": tp + fn, "n": int(len(flag))}
+
+
 def run_cal(ts: TaskSet, pool: list[Document], X, kw_score: np.ndarray, batch: int, seed_n: int, noise: float, seed: int,
-            stop: str) -> tuple[Reviewer, np.ndarray, dict]:
+            stop: str, target: float | None, control_n: int | None, X_eval, gold_eval: np.ndarray, eval_ids: list[str]) -> tuple[Reviewer, np.ndarray, dict]:
     """Continuous active learning over the pool. Returns the reviewer (its codes are the production set),
-    the final relevance scores over the pool, and run meta. `stop` is "knee" or "mp" (marginal precision)."""
+    the final relevance scores over the pool, and run meta.
+
+    stop = "target": a random control set of `control_n` documents is coded first (effort counted, never
+    queued, never trained on). The control documents ride along in the queue virtually: whenever the model
+    picks a batch, every control document scoring at or above that batch's lowest queued score counts as
+    reached from then on (it would have been in the batch had it not been held out), and likewise for the
+    keyword seed. Recall is estimated as the share of the control documents the reviewer coded relevant
+    that have been reached. Stop once the estimate is >= `target` for CAL_PATIENCE consecutive batches.
+    (Ranking the pool with the *current* model and counting control documents above the review depth is
+    biased low once the training positives crowd the top of the ranking; the virtual queue mirrors what
+    actually happened to the reviewed documents.) stop = "knee": Cormack & Grossman's knee method, no
+    control set.
+
+    At stop the final classifier is also applied on its own, at the score that reaches `target` recall on
+    the control set, to the pool and to the evaluation set (X_eval / gold_eval), for a like-for-like view
+    of the classifier's quality without the reviewer."""
     rng = np.random.default_rng(seed)
     n = len(pool)
     gold_any = np.array([any(d.labels.get(q) == ts.positive_label for q in ts.qids) for d in pool])
     rev = Reviewer(ts, {d.id: d for d in pool}, noise, seed)
-    coded = np.zeros(n, dtype=bool)
-    seed_idx = list(rng.choice(n, size=min(seed_n, n), replace=False))
-    kw_order = np.argsort(-kw_score)
-    for i in kw_order:
+    coded = np.zeros(n, dtype=bool)  # queued and coded: the training set
+    ctrl = np.zeros(n, dtype=bool)
+    ctrl_rel_idx = np.zeros(0, dtype=int)
+    if stop == "target" and control_n:
+        ctrl_idx = rng.choice(n, size=min(control_n, n), replace=False)
+        ctrl[ctrl_idx] = True
+        ctrl_rel_idx = np.array([i for i in ctrl_idx if any(rev.code(pool[i].id).values())], dtype=int)
+    ctrl_reached = np.zeros(n, dtype=bool)  # control documents that would have been queued by now
+    avail = np.flatnonzero(~ctrl)
+    seed_idx = [int(i) for i in rng.choice(avail, size=min(seed_n, len(avail)), replace=False)]
+    kw_floor = None
+    for i in np.argsort(-kw_score):
         if len(seed_idx) >= 2 * seed_n:
             break
-        if i not in seed_idx:
-            seed_idx.append(int(i))
-    for i in seed_idx:
-        rev.code(pool[i].id); coded[i] = True
+        if not ctrl[i] and i not in seed_idx:
+            seed_idx.append(int(i)); kw_floor = kw_score[i]
+    if kw_floor is not None and kw_floor > 0:
+        ctrl_reached |= ctrl & (kw_score >= kw_floor)
     y = np.zeros(n, dtype=int)
     for i in seed_idx:
-        y[i] = any(rev.codes[pool[i].id].values())
+        c = rev.code(pool[i].id); coded[i] = True; y[i] = any(c.values())
     # a seed with no positives cannot train: keep drawing random batches (what a team would do)
-    while y[coded].sum() == 0 and coded.sum() < n:
-        more = rng.choice(np.flatnonzero(~coded), size=min(batch, int((~coded).sum())), replace=False)
-        for i in more:
-            rev.code(pool[i].id); coded[i] = True; y[i] = any(rev.codes[pool[i].id].values())
-    curve = [{"reviewed": int(coded.sum()), "found": int(y[coded].sum()), "found_gold": int(gold_any[coded].sum())}]
-    lean = 0
+    while y[coded].sum() == 0 and (coded | ctrl).sum() < n:
+        rest = np.flatnonzero(~(coded | ctrl))
+        for i in rng.choice(rest, size=min(batch, len(rest)), replace=False):
+            c = rev.code(pool[i].id); coded[i] = True; y[i] = any(c.values())
+
+    def est_recall() -> float | None:
+        """Share of reviewer-relevant control documents that would have been queued by now."""
+        return float(ctrl_reached[ctrl_rel_idx].mean()) if len(ctrl_rel_idx) else None
+
+    curve = [{"reviewed": int(coded.sum()), "found": int(y[coded].sum()), "found_gold": int(gold_any[coded].sum()), "est_recall": None}]
     why = "pool exhausted"
-    s = np.full(n, -10.0, dtype=np.float32)
+    streak = 0
+    est: float | None = None
+    s_raw = np.full(n, -10.0, dtype=np.float32)
     t0 = time.time()
-    while coded.sum() < n:
+    while True:
         clf = fit(X[coded], y[coded])
-        s = scores(clf, X)
-        s[coded] = -np.inf
-        take = np.argsort(-s)[: min(batch, int((~coded).sum()))]
-        hits = 0
-        for i in take:
-            c = rev.code(pool[i].id); coded[i] = True; y[i] = any(c.values()); hits += y[i]
-        curve.append({"reviewed": int(coded.sum()), "found": int(y[coded].sum()), "found_gold": int(gold_any[coded].sum())})
-        if stop == "mp":
-            lean = lean + 1 if hits / len(take) < CAL_STOP_RATE else 0
-            if lean >= CAL_STOP_PATIENCE:
-                why = "two consecutive batches under 5% relevant"; break
+        s_raw = scores(clf, X)
+        if stop == "target":
+            est = est_recall()
+            curve[-1]["est_recall"] = None if est is None else round(est, 4)
+            streak = streak + 1 if est is not None and target is not None and est >= target else 0
+            if streak >= CAL_PATIENCE:
+                why = f"control-set recall estimate ≥ {target:.0%} for {CAL_PATIENCE} consecutive batches"; break
         elif knee_stop(curve, n):
             why = f"knee method: pre-knee slope ≥ {KNEE_SLOPE_RATIO:g}× post-knee slope, after ≥ {KNEE_MIN_EFFORT:.0%} of the collection"; break
+        if (coded | ctrl).sum() >= n:
+            break
+        s_rank = s_raw.copy(); s_rank[coded | ctrl] = -np.inf
+        take = np.argsort(-s_rank)[: min(batch, int((~(coded | ctrl)).sum()))]
+        ctrl_reached |= ctrl & (s_raw >= s_raw[take].min())
+        for i in take:
+            c = rev.code(pool[i].id); coded[i] = True; y[i] = any(c.values())
+        curve.append({"reviewed": int(coded.sum()), "found": int(y[coded].sum()), "found_gold": int(gold_any[coded].sum()), "est_recall": None})
+
+    # production set (what the reviewer coded relevant) and review set (everything read), against gold on the pool
+    produced = np.array([any(rev.codes[d.id].values()) if d.id in rev.codes else False for d in pool])
+    reviewed = coded | ctrl
+    production = _prf(produced, gold_any)
+    review_set = {"n": int(reviewed.sum()), "precision": float(gold_any[reviewed].mean()) if reviewed.any() else None,
+                  "recall": float(gold_any[reviewed].sum() / max(1, gold_any.sum()))}
+    # the classifier on its own, cut at the score that reaches the target on the control set
+    classifier = None
+    if len(ctrl_rel_idx) and target is not None:
+        pos = np.sort(s_raw[ctrl_rel_idx])[::-1]
+        tau_star = float(pos[max(0, int(math.ceil(target * len(pos))) - 1)])
+        s_eval = scores(clf, X_eval)
+        n_eval_reviewed = int(sum(1 for d in eval_ids if d in rev.codes))
+        classifier = {"cutoff": round(tau_star, 4), "target": target,
+                      "pool": _prf(s_raw >= tau_star, gold_any),
+                      "eval": {**_prf(s_eval >= tau_star, gold_eval), "n_reviewed_in_eval": n_eval_reviewed}}
     meta = {"noise": noise, "seed": seed, "batch": batch, "seed_docs": len(seed_idx), "docs_reviewed": rev.n_reviewed,
-            "hours": rev.hours, "cost_usd": rev.cost, "batches": len(curve) - 1, "stop_rule": stop, "stop": why,
-            "found_gold": int(gold_any[coded].sum()), "relevant_in_pool": int(gold_any.sum()), "pool_richness": float(gold_any.mean()),
+            "docs_queued": int(coded.sum()), "hours": rev.hours, "cost_usd": rev.cost, "batches": len(curve) - 1,
+            "stop_rule": stop, "target": target, "stop": why,
+            "recall_estimator": "control set: a held-out document counts as reached once it would have been queued (its score under the model that picked a batch is at or above the batch's lowest queued score)" if ctrl.any() else None,
+            "control_set": {"n": int(ctrl.sum()), "relevant_coded": int(len(ctrl_rel_idx)), "relevant_gold": int(gold_any[ctrl].sum())} if ctrl.any() else None,
+            "est_recall_at_stop": None if est is None else round(est, 4),
+            "reached_recall": review_set["recall"], "review_set_precision": review_set["precision"],
+            "production": production, "classifier": classifier, "plotted": "production set on pool",
+            "found_gold": int(gold_any[reviewed].sum()), "relevant_in_pool": int(gold_any.sum()), "pool_richness": float(gold_any.mean()),
             "curve": [curve[i] for i in sorted(set(list(range(0, len(curve), max(1, len(curve) // 60))) + [len(curve) - 1]))],
             "fit_seconds": round(time.time() - t0, 1)}
-    return rev, s, meta
+    return rev, s_raw, meta
 
 
 # ------------------------------------------------------------------------------------------------ driver
@@ -386,11 +472,14 @@ def run_corpus(corpus: str, out: Path = Path("results"), only: str | None = None
         variants += [(f"t1_{n}", dict(kind="t1", n=n, rule="recall80", noise=0.0)),
                      (f"t1_{n}_f1", dict(kind="t1", n=n, rule="f1", noise=0.0)),
                      (f"t1_{n}_noisy", dict(kind="t1", n=n, rule="recall80", noise=NOISE_RATE))]
-    variants += [("cal", dict(kind="cal", noise=0.0, stop="knee")), ("cal_noisy", dict(kind="cal", noise=NOISE_RATE, stop="knee")),
-                 ("cal_mp", dict(kind="cal", noise=0.0, stop="mp"))]
+    variants += [("cal", dict(kind="cal", noise=NOISE_RATE, stop="target", target=CAL_TARGET)),
+                 ("cal_75", dict(kind="cal", noise=NOISE_RATE, stop="target", target=0.75)),
+                 ("cal_perfect", dict(kind="cal", noise=0.0, stop="target", target=CAL_TARGET)),
+                 ("cal_knee", dict(kind="cal", noise=NOISE_RATE, stop="knee", target=None))]
     if only:
         variants = [v for v in variants if v[0] == only or v[0].startswith(only + "_")]
     kw = _keyword_scores(Path(cfg["lexical"]), [d.id for d in pool]) if any(v[1]["kind"] == "cal" for v in variants) else None
+    gold_eval_any = np.array([any(g.values()) for g in gold_eval.values()])
 
     for name, spec in variants:
         key = f"tar@{name}"
@@ -411,24 +500,32 @@ def run_corpus(corpus: str, out: Path = Path("results"), only: str | None = None
             else:
                 keep = cal_pool(ts, pool, seed)
                 sub = [pool[i] for i in keep]
-                rev, s, meta = run_cal(ts, sub, X[keep], kw[keep], cfg["batch"], cfg["seed_n"], spec["noise"], seed, spec["stop"])
+                richness = sum(1 for d in sub if any(d.labels.get(q) == ts.positive_label for q in ts.qids)) / len(sub)
+                n_ctrl = control_size(len(sub), richness, cfg["control"]) if spec["stop"] == "target" else None
+                rev, s, meta = run_cal(ts, sub, X[keep], kw[keep], cfg["batch"], cfg["seed_n"], spec["noise"], seed, spec["stop"], spec["target"],
+                                       n_ctrl, X[eval_idx], gold_eval_any, [d.id for d in eval_docs])
                 sub_idx = {d.id: i for i, d in enumerate(sub)}
                 ev = [d for d in eval_docs if d.id in sub_idx]  # on a downsampled pool the CAL rows cover the pool only
                 dec = {}
                 probs = {q: np.zeros(len(ev), dtype=np.float32) for q in ts.qids}
-                p_all = sigmoid(np.where(np.isfinite(s), s, 10.0))
+                p_all = sigmoid(s)
                 for j, d in enumerate(ev):
                     c = rev.codes.get(d.id)
                     dec[d.id] = dict(c) if c else {q: False for q in ts.qids}
                     for q in ts.qids:
                         probs[q][j] = (1.0 if c[q] else 0.0) if c else p_all[sub_idx[d.id]] * 0.5
-                meta["reviewed_ids"] = sorted(rev.codes)
                 meta["pool_ids"] = [d.id for d in sub] if len(sub) < len(pool) else None
                 full_pos = [(d, q) for d, c in rev.codes.items() for q, v in c.items() if v] if full_out is not None else None
             m = doc_level(dec, {d: g for d, g in gold_eval.items() if d in dec})
             runs.append(dict(seed=seed, dec=dec, probs=probs, meta=meta, doc=m, full_pos=full_pos, docs=[d for d in eval_docs if d.id in dec]))
+            extra = ""
+            if spec["kind"] == "cal":
+                cl = meta.get("classifier") or {}
+                ev_cl = cl.get("eval") or {}
+                extra = (f" est {meta['est_recall_at_stop']} reached {meta['reached_recall']:.3f} review-prec {meta['review_set_precision']:.3f}"
+                         f" clf-eval r/p {ev_cl.get('recall')}/{ev_cl.get('precision')} ctrl {(meta.get('control_set') or {}).get('n')} | {meta['stop']}")
             console.print(f"  {key} seed {seed}: recall {m['recall'] if m['recall'] is None else round(m['recall'], 3)} precision {m['precision'] if m['precision'] is None else round(m['precision'], 3)} "
-                          f"reviewed {meta['docs_reviewed']:,} ({meta['hours']:.1f} h, ${meta['cost_usd']:,.0f}) [{time.time() - t1:.0f}s]")
+                          f"reviewed {meta['docs_reviewed']:,} ({meta['hours']:.1f} h, ${meta['cost_usd']:,.0f}) [{time.time() - t1:.0f}s]{extra}")
         runs.sort(key=lambda r: r["doc"]["f1"] or 0.0)
         med = runs[len(runs) // 2]
         rows = []
@@ -444,7 +541,12 @@ def run_corpus(corpus: str, out: Path = Path("results"), only: str | None = None
             "reviewer": {"docs_per_hour": DOCS_PER_HOUR, "usd_per_hour": USD_PER_HOUR, "miscode_rate": spec["noise"]},
             "median_seed": med["seed"], "median": med["meta"],
             "seeds": [{"seed": r["seed"], "recall": r["doc"]["recall"], "precision": r["doc"]["precision"], "f1": r["doc"]["f1"],
-                       "docs_reviewed": r["meta"]["docs_reviewed"], "hours": r["meta"]["hours"], "cost_usd": r["meta"]["cost_usd"]} for r in runs],
+                       "docs_reviewed": r["meta"]["docs_reviewed"], "hours": r["meta"]["hours"], "cost_usd": r["meta"]["cost_usd"],
+                       **({"est_recall_at_stop": r["meta"].get("est_recall_at_stop"), "reached_recall": r["meta"].get("reached_recall"),
+                           "review_set_precision": r["meta"].get("review_set_precision")} if spec["kind"] == "cal" else {})} for r in runs],
         }
+        if spec["kind"] == "cal":
+            side["plotted"] = "production set on pool"
+            side["control_set"] = med["meta"].get("control_set")
         (out / corpus / "multi" / f"tar__{name}.tar.json").write_text(json.dumps(side, indent=1))
         console.print(f"[{corpus}] wrote {key} (median seed {med['seed']})")

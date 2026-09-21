@@ -92,10 +92,18 @@ function qualityLines(r: Rec, v: View): { lines: TipLine[]; notes: string[] } {
   if (r.tar) {
     const t = r.tar;
     lines.push([t.kind === "cal" ? "Reviewed by hand" : "Coded for training", `${fmtInt(t.docs_reviewed)} of ${fmtInt(t.n_corpus)} (${fmtPct(t.review_share, 0)})`]);
-    if (t.kind === "cal" && t.production) lines.push(["Produced set (hand-coded)", `recall ${fmtPct(t.production.recall?.[0] ?? null)} · precision ${fmtPct(t.production.precision?.[0] ?? null)}`]);
+    if (t.kind === "cal") {
+      if (t.control_set) lines.push(["Control set", `${fmtInt(t.control_set.n)} random documents, coded first (${fmtInt(t.control_set.relevant_coded)} coded relevant)`]);
+      const trueRecall = t.production?.recall ?? null;
+      if (t.est_recall_at_stop != null) lines.push(["Estimated recall at stop", `${fmtPct(t.est_recall_at_stop)} · true ${fmtPct(trueRecall)} on the pool${t.reached_recall != null ? ` (reviewer read ${fmtPct(t.reached_recall)} of relevant)` : ""}`]);
+      else if (t.stop) lines.push(["Stop", `${t.stop}${trueRecall != null ? ` · true recall ${fmtPct(trueRecall)} on the pool` : ""}`]);
+      if (t.review_set_precision != null) lines.push(["Review-set precision", `${fmtPct(t.review_set_precision)} of documents read were relevant`]);
+      if (t.classifier) lines.push(["Classifier alone on eval set", `recall ${fmtPct(t.classifier.eval.recall)} · precision ${fmtPct(t.classifier.eval.precision)} (cutoff set on the control set)`]);
+    }
     if (t.recall_range) lines.push([`Recall across ${t.seeds} seeds`, `${fmtPct(t.recall_range[0])} – ${fmtPct(t.recall_range[1])}`]);
     if (t.kind === "cal") {
-      notes.push("Plotted: the review set the classifier queued for the reviewer (recall = relevant documents reached, precision = share of reviewed documents that were relevant), the analogue of a model's flagged set.");
+      notes.push("Plotted: the production set, every document the reviewer coded relevant (control set included), scored against gold on the pool CAL ran over. Its precision is the reviewer's, so the classifier's own quality is the 'classifier alone' line.");
+      if (t.control_set && t.reviewer.miscode_rate > 0) notes.push("The recall estimate is against the reviewer's coding of the control set: documents the reviewer over-coded as relevant are never found by the classifier and hold the estimate below the true figure, so review runs past the target.");
       if (t.downsampled) notes.push(`Run on a ${fmtPct(t.pool_richness ?? 0, 0)}-rich pool of ${fmtInt(t.n_corpus)} documents (all gold-negatives plus a random draw of positives); the benchmark sample itself is 61% rich by design.`);
     }
   }

@@ -186,11 +186,12 @@ TAR_WORKFLOW = {
         "5. Score the rest of the collection. A document is produced on an issue when it clears the relevance cutoff and that issue's cutoff; the coded documents keep the reviewer's codes.",
     ],
     "cal": [
-        "1. Seed: random documents plus the same number of the strongest keyword-floor hits, coded by the reviewer (50 + 50 on the 800-document Mallinckrodt pool, 100 + 100 elsewhere).",
-        "2. Fit TF-IDF + balanced logistic regression on everything coded so far for any-issue relevance.",
-        "3. Rank the uncoded collection; the reviewer codes the top batch (50 / 100 / 1,000 documents by collection size), tagging issues as they go.",
-        "4. Repeat 2-3. Stop by the knee method: once the gain curve's slope before its knee is at least 6x the slope after it, having reviewed at least 10% of the collection. (The '5% stop' variant stops after two consecutive batches under 5% relevant instead.)",
-        "5. The review set is everything the reviewer read; the production set is what they coded relevant. The site plots the review set.",
+        "1. Control set: the reviewer codes a simple random sample of the collection first (10% of the pool, capped at 500 and sized for at least ~30 relevant documents; a fixed 2,000 on TREC's 286k collection). These documents never enter the review queue and are not trained on; their coding counts as review effort and their codes are part of the production set.",
+        "2. Seed: random documents plus the same number of the strongest keyword-floor hits, coded by the reviewer (50 + 50 on the 800-document Mallinckrodt pool, 100 + 100 elsewhere).",
+        "3. Fit TF-IDF + balanced logistic regression on everything queued and coded so far for any-issue relevance.",
+        "4. Rank the collection; the reviewer codes the top uncoded batch (50 / 100 / 1,000 documents by collection size), tagging issues as they go.",
+        "5. Estimate recall from the control set: whenever a batch is picked, every control document scoring at or above the batch's lowest queued score counts as reached from then on (it would have been in the batch had it not been held out); recall is the share of control-set documents coded relevant that have been reached. Repeat 3-5 and stop once the estimate is at or above the target (80%; 75% in the 'cal_75' variant) for two consecutive batches, or when the pool is exhausted. (The 'knee stop' variant uses Cormack & Grossman's knee method and no control set.)",
+        "6. The production set is everything the reviewer coded relevant, control set included; that is what the site plots, scored against gold on the pool CAL ran over. The review set (everything read), the recall estimate at stop against the true figure, and the classifier applied on its own to the evaluation set at the control-set cutoff are reported alongside.",
     ],
 }
 
@@ -204,9 +205,16 @@ def _tar_request(side: dict) -> dict:
         req["training_sample"] = {"documents_coded": med["docs_reviewed"], "positives_any_issue": med["train_positives_any"], "issues_with_own_model": med["issue_models"],
                                   "cutoff_rule": "80% recall (5-fold CV on the sample)" if spec["rule"] == "recall80" else "max F1 (5-fold CV on the sample)"}
     else:
-        req["review"] = {"documents_coded": med["docs_reviewed"], "batch": med["batch"], "batches": med["batches"], "stop": med["stop"],
-                         "relevant_found": med.get("found_gold"), "relevant_in_pool": med.get("relevant_in_pool"),
+        ctrl = med.get("control_set") or {}
+        req["review"] = {"documents_coded": med["docs_reviewed"], "control_set": ctrl.get("n", 0), "queued": med.get("docs_queued"),
+                         "batch": med["batch"], "batches": med["batches"], "recall_target": med.get("target"), "stop": med["stop"],
+                         "estimated_recall_at_stop": med.get("est_recall_at_stop"), "relevant_reached": med.get("found_gold"), "relevant_in_pool": med.get("relevant_in_pool"),
+                         "review_set_precision": med.get("review_set_precision"), "plotted": med.get("plotted", "production set on pool"),
                          "pool": f"{side['n_corpus']:,} documents, {med.get('pool_richness', 0):.0%} relevant" + (" (downsampled from the 61%-rich benchmark sample)" if med.get("pool_ids") else "")}
+        if med.get("classifier"):
+            cl = med["classifier"]
+            req["classifier_alone"] = {"cutoff": "score reaching the recall target on the control set",
+                                       "eval_set": {k: cl["eval"].get(k) for k in ("recall", "precision", "flagged", "relevant", "n")}}
     req["effort"] = {"hours": round(med["hours"], 1), "usd": round(med["cost_usd"]), "share_of_collection": round(med["docs_reviewed"] / side["n_corpus"], 3)}
     return req
 

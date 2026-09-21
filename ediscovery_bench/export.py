@@ -56,7 +56,7 @@ MODELS: dict[str, dict] = {
     "tar@t1_300":           dict(name="TAR 1.0 · 300 reviewed", family="TAR", kind="tar"),
     "tar@t1_1000":          dict(name="TAR 1.0 · 1,000 reviewed", family="TAR", kind="tar"),
     "tar@t1_5000":          dict(name="TAR 1.0 · 5,000 reviewed", family="TAR", kind="tar"),
-    "tar@cal":              dict(name="TAR 2.0 · CAL", family="TAR", kind="tar"),
+    "tar@cal":              dict(name="TAR 2.0 · CAL (80% target)", family="TAR", kind="tar"),
 }
 FT_KEYS = {"veridian": "laya-ft-veridian@recipe", "mnk": "laya-ft-mnk@recipe", "cuad": "laya-ft-cuad@recipe", "trec": "laya-ft-trec@recipe"}
 
@@ -93,9 +93,10 @@ TAR_LEVERS = {
     "t1": "TAR 1.0: the reviewer codes {n} random documents; classifier cutoff targets 80% recall (5-fold CV on the sample)",
     "t1_f1": "TAR 1.0, {n} reviewed: cutoff maximises F1 on the sample instead of targeting 80% recall",
     "t1_noisy": "TAR 1.0, {n} reviewed: imperfect reviewer (misses 10% of relevant documents, over-codes 2% of non-relevant)",
-    "cal": "TAR 2.0: continuous active learning, knee-method stop (Cormack & Grossman 2016); plotted as the review set the classifier queued",
-    "cal_noisy": "TAR 2.0, knee-method stop, imperfect reviewer (misses 10% of relevant, over-codes 2% of non-relevant)",
-    "cal_mp": "TAR 2.0 with the marginal-precision stop instead of the knee: two consecutive batches under 5% relevant",
+    "cal": "TAR 2.0: continuous active learning with an imperfect reviewer (misses 10% of relevant, over-codes 2% of non-relevant); stops when a random control set estimates 80% recall for two consecutive batches; plotted as the production set the reviewer coded relevant",
+    "cal_75": "TAR 2.0, control-set stop at a 75% recall target instead of 80%",
+    "cal_perfect": "TAR 2.0, 80% target, perfect reviewer (codes every document exactly as the gold labels)",
+    "cal_knee": "TAR 2.0, imperfect reviewer, knee-method stop (Cormack & Grossman 2016) instead of the control-set recall target; no control set",
 }
 LAYA_CHECKPOINTS = {"laya": "English checkpoint", "laya-typed": "Typed checkpoint", "laya-multilingual": "Multilingual checkpoint"}
 
@@ -112,9 +113,10 @@ def _variant_models() -> dict[str, dict]:
         out[f"tar@t1_{n}"] = dict(name=f"TAR 1.0 · {n:,} reviewed", family="TAR", kind="tar", group="tar", variant=f"t1_{n}", lever=TAR_LEVERS["t1"].format(n=f"{n:,}"))
         out[f"tar@t1_{n}_f1"] = dict(name=f"TAR 1.0 · {n:,} · F1 cutoff", family="TAR", kind="tar", group="tar", variant=f"t1_{n}_f1", lever=TAR_LEVERS["t1_f1"].format(n=f"{n:,}"))
         out[f"tar@t1_{n}_noisy"] = dict(name=f"TAR 1.0 · {n:,} · 90% reviewer", family="TAR", kind="tar", group="tar", variant=f"t1_{n}_noisy", lever=TAR_LEVERS["t1_noisy"].format(n=f"{n:,}"))
-    out["tar@cal"] = dict(name="TAR 2.0 · CAL", family="TAR", kind="tar", group="tar", variant="cal", lever=TAR_LEVERS["cal"])
-    out["tar@cal_noisy"] = dict(name="TAR 2.0 · CAL · 90% reviewer", family="TAR", kind="tar", group="tar", variant="cal_noisy", lever=TAR_LEVERS["cal_noisy"])
-    out["tar@cal_mp"] = dict(name="TAR 2.0 · CAL · 5% stop", family="TAR", kind="tar", group="tar", variant="cal_mp", lever=TAR_LEVERS["cal_mp"])
+    out["tar@cal"] = dict(name="TAR 2.0 · CAL (80% target)", family="TAR", kind="tar", group="tar", variant="cal", lever=TAR_LEVERS["cal"])
+    out["tar@cal_75"] = dict(name="TAR 2.0 · CAL · 75% target", family="TAR", kind="tar", group="tar", variant="cal_75", lever=TAR_LEVERS["cal_75"])
+    out["tar@cal_perfect"] = dict(name="TAR 2.0 · CAL · perfect reviewer", family="TAR", kind="tar", group="tar", variant="cal_perfect", lever=TAR_LEVERS["cal_perfect"])
+    out["tar@cal_knee"] = dict(name="TAR 2.0 · CAL · knee stop", family="TAR", kind="tar", group="tar", variant="cal_knee", lever=TAR_LEVERS["cal_knee"])
     for corpus in FT_KEYS:
         for v in ("compact", "recipe"):
             out[f"laya-ft-{corpus}@{v}"] = dict(name=f"Laya fine-tuned · {v}", family="Laya", kind="system1_ft", group="laya-ft", variant=v,
@@ -207,7 +209,7 @@ def _tar_block(side: dict) -> dict:
     """What the site needs from a TAR sidecar: the reviewer's effort on this corpus and the spread across seeds."""
     med = side["median"]; seeds = side["seeds"]
     rec = [x["recall"] for x in seeds if x["recall"] is not None]; prec = [x["precision"] for x in seeds if x["precision"] is not None]
-    return {
+    out = {
         "variant": side["variant"], "kind": side["spec"]["kind"], "n_corpus": side["n_corpus"], "n_eval": side["n_eval"],
         "docs_reviewed": med["docs_reviewed"], "hours": med["hours"], "cost_usd": med["cost_usd"],
         "review_share": med["docs_reviewed"] / side["n_corpus"],
@@ -218,25 +220,17 @@ def _tar_block(side: dict) -> dict:
         "pool_richness": med.get("pool_richness"), "relevant_in_pool": med.get("relevant_in_pool"), "found_gold": med.get("found_gold"),
         "downsampled": bool(med.get("pool_ids")),
     }
-
-
-def _cal_review_set(rec: dict, side: dict, ids: set[str], docs_by_id, ts) -> None:
-    """CAL's production set is hand-coded, so its precision is the reviewer's, not the classifier's. Plot the
-    review set instead (every document the classifier queued for the reviewer): that is the analogue of a
-    model's flagged set. The production-set figures move into rec["tar"]["production"]."""
-    pos = ts.positive_label
-    reviewed = set(side["median"].get("reviewed_ids") or [])
-    rec["tar"]["production"] = {"recall": rec["all"]["doc"]["recall"], "precision": rec["all"]["doc"]["precision"]}
-    for view in ("all", "nogray"):
-        pool = [d for d in ids if view == "all" or not docs_by_id[d].gray]
-        goldpos = {d for d in pool if any(docs_by_id[d].labels.get(q) == pos for q in ts.qids)}
-        flagged = reviewed & set(pool)
-        tp = len(flagged & goldpos); fp = len(flagged) - tp; fn = len(goldpos) - tp; tn = len(pool) - tp - fp - fn
-        prf = _prf(tp, fp, fn, tn)
-        rec[view]["doc"] = prf
-        rec[view]["decision"] = prf  # CAL is a document-level workflow; the decision view shows the same figure
-        rec[view].pop("per_issue", None)
-    rec["tar"]["plotted"] = "review set"
+    if side["spec"]["kind"] == "cal":
+        # CAL: the plotted set is the production set (what the reviewer coded relevant, control set included) on the
+        # pool CAL ran over. The sidecar carries the process figures the tooltip shows next to it.
+        out.update({
+            "plotted": med.get("plotted", "production set on pool"), "target": med.get("target"),
+            "docs_queued": med.get("docs_queued"), "control_set": med.get("control_set"),
+            "est_recall_at_stop": med.get("est_recall_at_stop"), "reached_recall": med.get("reached_recall"),
+            "review_set_precision": med.get("review_set_precision"), "production": med.get("production"),
+            "classifier": med.get("classifier"),
+        })
+    return out
 
 
 def _tar_ops(t: dict) -> dict:
@@ -356,8 +350,6 @@ def export(out: Path = Path("results"), dest: Path = Path("results/findings.json
                     sj = json.loads(side.read_text())
                     rec["tar"] = _tar_block(sj)
                     rec["ops"].update(_tar_ops(rec["tar"]))
-                    if sj["spec"]["kind"] == "cal":
-                        _cal_review_set(rec, sj, ids, docs_by_id, ts)
                 rec["nogray"].pop("per_issue", None)  # keep the payload small; per-issue drill-down uses all gold
                 for k in ("cost_per_doc", "list_cost_per_doc", "tokens_in_per_doc", "tokens_out_per_doc", "doc_latency_p50_ms", "doc_latency_p95_ms", "hours_per_100k_docs"):
                     if rec["ops"][k] is not None:
