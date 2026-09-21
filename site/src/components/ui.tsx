@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 export type TipLine = string | [string, string];
 export type Tip = { x: number; y: number; title: string; color?: string; lines: TipLine[]; notes?: string[] } | null;
@@ -10,10 +10,8 @@ export function useTip() {
   const show = (e: { clientX: number; clientY: number }, t: Omit<NonNullable<Tip>, "x" | "y">) => {
     const host = hostRef.current;
     const r = host ? host.getBoundingClientRect() : { left: 0, top: 0, width: 0 };
-    let x = e.clientX - r.left + 14;
-    const y = e.clientY - r.top + 12;
-    if (host && x + 380 > r.width) x = Math.max(0, e.clientX - r.left - 384);
-    setTip({ x, y, ...t });
+    // cursor position relative to the host; TipBox measures itself and flips left when it would overflow
+    setTip({ x: e.clientX - r.left, y: e.clientY - r.top, ...t });
   };
   return { tip, show, hide: () => setTip(null), hostRef };
 }
@@ -34,9 +32,23 @@ export function useWidth(hostRef: React.RefObject<HTMLDivElement | null>, fallba
 }
 
 export function TipBox({ tip }: { tip: Tip }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!tip || !el) { setPos(null); return; }
+    const host = el.parentElement!.getBoundingClientRect();
+    const w = el.offsetWidth, h = el.offsetHeight;
+    const GAP = 10;
+    let left = tip.x + GAP;
+    if (left + w > host.width) left = Math.max(0, tip.x - GAP - w);
+    let top = tip.y + GAP;
+    if (host.top + top + h > window.innerHeight - 8) top = Math.max(0, tip.y - GAP - h);
+    setPos({ left, top });
+  }, [tip]);
   if (!tip) return null;
   return (
-    <div className="tip" style={{ left: tip.x, top: tip.y }}>
+    <div ref={ref} className="tip" style={{ left: pos?.left ?? tip.x + 10, top: pos?.top ?? tip.y + 10, visibility: pos ? "visible" : "hidden" }}>
       <div className="t">
         {tip.color && <span className="sw" style={{ background: tip.color }} />}
         {tip.title}
