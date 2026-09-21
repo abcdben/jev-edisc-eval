@@ -273,8 +273,8 @@ export default function App() {
   return (
     <div className="page">
       <header className="masthead">
-        <span className="theme"><Seg value={theme} onChange={setTheme} options={[{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }]} /></span>
         <h1 className="title">Decider Model v LLM Bakeoff</h1>
+        <span className="theme"><Seg value={theme} onChange={setTheme} options={[{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }]} /></span>
       </header>
 
       <div className="controls">
