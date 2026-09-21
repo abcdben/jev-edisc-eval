@@ -55,12 +55,18 @@ export const DATA = raw as unknown as Findings;
 
 // ------------------------------------------------------------------------------------------------
 
-export const CORPORA: { id: string; label: string; short: string }[] = [
+/** Corpora offered on the site, in display order. Veridian (synthetic) stays in findings.json and examples.json but is not listed; add "veridian" here to bring it back. */
+export const SITE_CORPORA = ["mnk", "cuad", "trec"];
+const ALL_CORPORA: { id: string; label: string; short: string }[] = [
   { id: "veridian", label: "Veridian", short: "synthetic medical-device MDL" },
   { id: "mnk", label: "Mallinckrodt", short: "real opioid-litigation emails" },
   { id: "cuad", label: "CUAD", short: "commercial contracts, expert labels" },
   { id: "trec", label: "TREC 2016", short: "Jeb Bush emails, NIST labels" },
 ];
+export const CORPORA = SITE_CORPORA.map((id) => ALL_CORPORA.find((c) => c.id === id)!);
+export const DEFAULT_CORPUS = CORPORA[0].id;
+/** Coerce a corpus id (state, hash, storage) to one the site offers, falling back to the first. */
+export const siteCorpus = (id: string | null | undefined) => (id && SITE_CORPORA.includes(id) ? id : DEFAULT_CORPUS);
 
 export type Kind = "system1" | "system1_ft" | "llm" | "local_llm" | "tar" | "baseline";
 export const KIND_LABEL: Record<Kind, string> = {

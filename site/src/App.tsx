@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ABLATION_GROUPS, CORPORA, DATA, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, HUMAN_DEV_DOCS, HUMAN_DEV_DOCS_PER_HOUR, HUMAN_DEV_HOURS, HUMAN_DEV_USD, HUMAN_DEV_USD_PER_HOUR, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
-  corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isGpuRow, pick, variantColor,
+  ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, HUMAN_DEV_DOCS, HUMAN_DEV_DOCS_PER_HOUR, HUMAN_DEV_HOURS, HUMAN_DEV_USD, HUMAN_DEV_USD_PER_HOUR, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
+  corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isGpuRow, pick, siteCorpus, variantColor,
   type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
 import { Control, Hint, NOTES_ID, Seg, type HintItem, type TipLine } from "./components/ui";
@@ -333,7 +333,9 @@ type Page = "compare" | "configurations";
 const PAGES: { id: Page; label: string }[] = [{ id: "compare", label: "Compare models" }, { id: "configurations", label: "Configurations of one model" }];
 
 export default function App() {
-  const [corpus, setCorpus] = useState("mnk");
+  // The corpus is not persisted (hash or storage); siteCorpus still guards the state so an unlisted id (e.g. "veridian") can never render.
+  const [corpus, setCorpusRaw] = useState(DEFAULT_CORPUS);
+  const setCorpus = (c: string) => setCorpusRaw(siteCorpus(c));
   const [tag, setTag] = useState<"" | "v0">("");
   const [arm, setArm] = useState<"multi" | "single">("multi");
   const [gray, setGray] = useState<Gray>("all");

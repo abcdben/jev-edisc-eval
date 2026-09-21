@@ -1,4 +1,5 @@
 import raw from "../../results/examples.json";
+import { SITE_CORPORA } from "./data";
 
 export type ExOutput = {
   arm: "single" | "multi";
@@ -71,5 +72,5 @@ export const membersOf = (corpus: string, group: string): string[] => {
   return Object.keys(c.configs).filter(g.match);
 };
 
-/** Corpus key used by the site view -> corpus key in examples.json. */
-export const exCorpus = (viewCorpus: string) => (EX.corpora[viewCorpus] ? viewCorpus : "veridian");
+/** Corpus key used by the site view -> corpus key in examples.json; only site corpora are eligible, first one with examples as fallback. */
+export const exCorpus = (viewCorpus: string) => (SITE_CORPORA.includes(viewCorpus) && EX.corpora[viewCorpus] ? viewCorpus : SITE_CORPORA.find((c) => EX.corpora[c]) ?? viewCorpus);
