@@ -23,7 +23,9 @@ export type TarBlock = {
   reviewer: { docs_per_hour: number; usd_per_hour: number; miscode_rate: number };
   seeds: number; median_seed: number; recall_range: [number, number] | null; precision_range: [number, number] | null;
   cutoff_rule: string | null; issue_models: string[] | null; train_positives_any: number | null;
-  batches: number | null; batch: number | null; stop: string | null; curve: { reviewed: number; found: number }[] | null;
+  batches: number | null; batch: number | null; stop: string | null; stop_rule: string | null; curve: { reviewed: number; found: number }[] | null;
+  pool_richness: number | null; relevant_in_pool: number | null; found_gold: number | null; downsampled: boolean;
+  production?: { recall: CI; precision: CI }; plotted?: string;
 };
 export type CorpusMeta = {
   corpus: string; tag: string; display: string; gold: string; n_docs: number; n_issues: number;
@@ -87,7 +89,7 @@ export const PRIMARY: { key: string; color: string; short: string; note: string;
   { key: "tar@t1_300", color: "var(--c-tar-2)", short: "TAR 1.0 · 300", note: "As above with 300 documents coded." },
   { key: "tar@t1_1000", color: "var(--c-tar-3)", short: "TAR 1.0 · 1,000", note: "As above with 1,000 documents coded." },
   { key: "tar@t1_5000", color: "var(--c-tar-4)", short: "TAR 1.0 · 5,000", note: "As above with 5,000 documents coded." },
-  { key: "tar@cal", color: "var(--c-cal)", short: "TAR 2.0 · CAL", note: "Continuous active learning. Seeded with 100 random documents and the 100 strongest keyword hits, then the reviewer codes the classifier's top-ranked batch and it retrains, until two consecutive batches come back under 5% relevant. The production set is what the reviewer coded relevant." },
+  { key: "tar@cal", color: "var(--c-cal)", short: "TAR 2.0 · CAL", note: "Continuous active learning. Seeded with random documents and the strongest keyword hits; the reviewer codes the classifier's top-ranked batch, it retrains, repeat. Stops by the knee method (Cormack & Grossman 2016). Plotted as the review set the classifier queued, the analogue of a model's flagged set; the hand-coded production set is in the tooltip. On Mallinckrodt, whose benchmark sample is 61% rich by design, CAL runs on a 10%-rich pool." },
 ];
 export const PRIMARY_BY_KEY = Object.fromEntries(PRIMARY.map((p) => [p.key, p]));
 export const DEFAULT_ON = new Set(["jev@base", "laya-ft", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash", "gemma3-12b", "tar@t1_100", "tar@t1_300", "tar@t1_1000", "tar@t1_5000", "tar@cal"]);
@@ -127,10 +129,10 @@ export const ABLATION_GROUPS: { id: string; label: string; recipe: string; note:
   { id: "laya", label: "Laya", recipe: "recipe", note: "ConvAI Laya, English checkpoint, zero-shot. Two levers (compact, chunk) exist only to fit its 512-token context; ★ marks the configuration that combines them, selected on the Veridian dev split." },
   { id: "laya-typed", label: "Laya · typed", recipe: "recipe", note: "Laya typed checkpoint, zero-shot." },
   { id: "laya-multilingual", label: "Laya · multilingual", recipe: "recipe", note: "Laya multilingual checkpoint, zero-shot." },
-  { id: "tar", label: "Classical TAR", recipe: "", note: "A simulated reviewer (50 docs/h, $65/h) plus TF-IDF + logistic regression. TAR 1.0 rows vary the size of the coded sample, the cutoff rule (80% recall vs. F1) and reviewer accuracy; TAR 2.0 is continuous active learning. Every row is the median of the random seeds." },
+  { id: "tar", label: "Classical TAR", recipe: "", note: "A simulated reviewer (50 docs/h, $65/h) plus TF-IDF + logistic regression. TAR 1.0 rows vary the size of the coded sample, the cutoff rule (80% recall vs. F1) and reviewer accuracy; TAR 2.0 rows are continuous active learning with the knee or the 5% marginal-precision stop, plotted as the review set. Every row is the median of the random seeds." },
 ];
 export const VARIANT_ORDER = ["base", "choice", "score", "crit_none", "crit_struct", "literal", "no_context", "state_string", "gate", "ensemble", "decompose", "preview", "compact", "chunk", "recipe", "recipe_choice",
-  "t1_100", "t1_100_f1", "t1_100_noisy", "t1_300", "t1_300_f1", "t1_300_noisy", "t1_1000", "t1_1000_f1", "t1_1000_noisy", "t1_5000", "t1_5000_f1", "t1_5000_noisy", "cal", "cal_noisy"];
+  "t1_100", "t1_100_f1", "t1_100_noisy", "t1_300", "t1_300_f1", "t1_300_noisy", "t1_1000", "t1_1000_f1", "t1_1000_noisy", "t1_5000", "t1_5000_f1", "t1_5000_noisy", "cal", "cal_noisy", "cal_mp"];
 export const VARIANT_LABEL: Record<string, string> = {
   base: "default", choice: "Choice form", score: "Score form", crit_none: "no criteria", crit_struct: "structured criteria", literal: "literal phrasing",
   no_context: "no matter context", state_string: "flat-string state", gate: "gated", ensemble: "3-phrasing ensemble", decompose: "decomposed",
@@ -139,7 +141,7 @@ export const VARIANT_LABEL: Record<string, string> = {
   t1_300: "TAR 1.0 · 300 coded", t1_300_f1: "TAR 1.0 · 300 · F1 cutoff", t1_300_noisy: "TAR 1.0 · 300 · 90% reviewer",
   t1_1000: "TAR 1.0 · 1,000 coded", t1_1000_f1: "TAR 1.0 · 1,000 · F1 cutoff", t1_1000_noisy: "TAR 1.0 · 1,000 · 90% reviewer",
   t1_5000: "TAR 1.0 · 5,000 coded", t1_5000_f1: "TAR 1.0 · 5,000 · F1 cutoff", t1_5000_noisy: "TAR 1.0 · 5,000 · 90% reviewer",
-  cal: "TAR 2.0 · CAL", cal_noisy: "TAR 2.0 · CAL · 90% reviewer",
+  cal: "TAR 2.0 · CAL", cal_noisy: "TAR 2.0 · CAL · 90% reviewer", cal_mp: "TAR 2.0 · CAL · 5% stop",
 };
 /** TAR variants share a hue per coded-sample size so the three rows of one stage read as a family. */
 const TAR_VARIANT_COLOR: Record<string, string> = {
@@ -147,7 +149,7 @@ const TAR_VARIANT_COLOR: Record<string, string> = {
   t1_300: "var(--c-tar-2)", t1_300_f1: "var(--c-tar-2)", t1_300_noisy: "var(--c-tar-2)",
   t1_1000: "var(--c-tar-3)", t1_1000_f1: "var(--c-tar-3)", t1_1000_noisy: "var(--c-tar-3)",
   t1_5000: "var(--c-tar-4)", t1_5000_f1: "var(--c-tar-4)", t1_5000_noisy: "var(--c-tar-4)",
-  cal: "var(--c-cal)", cal_noisy: "var(--c-cal)",
+  cal: "var(--c-cal)", cal_noisy: "var(--c-cal)", cal_mp: "var(--c-cal)",
 };
 const VARIANT_PALETTE = Array.from({ length: 16 }, (_, i) => `var(--v${i})`);
 export const variantColor = (v: string, recipe: string) => TAR_VARIANT_COLOR[v] ?? (v === recipe ? "var(--c-jev)" : v === "base" ? "var(--c-base)" : VARIANT_PALETTE[(VARIANT_ORDER.indexOf(v) + 1) % VARIANT_PALETTE.length]);

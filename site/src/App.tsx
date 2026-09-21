@@ -80,8 +80,12 @@ function qualityLines(r: Rec, v: View): { lines: TipLine[]; notes: string[] } {
   if (r.tar) {
     const t = r.tar;
     lines.push([t.kind === "cal" ? "Reviewed by hand" : "Coded for training", `${fmtInt(t.docs_reviewed)} of ${fmtInt(t.n_corpus)} (${fmtPct(t.review_share, 0)})`]);
+    if (t.kind === "cal" && t.production) lines.push(["Produced set (hand-coded)", `recall ${fmtPct(t.production.recall?.[0] ?? null)} · precision ${fmtPct(t.production.precision?.[0] ?? null)}`]);
     if (t.recall_range) lines.push([`Recall across ${t.seeds} seeds`, `${fmtPct(t.recall_range[0])} – ${fmtPct(t.recall_range[1])}`]);
-    if (t.kind === "cal") notes.push("Precision is of the produced set, which the reviewer coded by hand; the review effort is in the time and cost panels.");
+    if (t.kind === "cal") {
+      notes.push("Plotted: the review set the classifier queued for the reviewer (recall = relevant documents reached, precision = share of reviewed documents that were relevant), the analogue of a model's flagged set.");
+      if (t.downsampled) notes.push(`Run on a ${fmtPct(t.pool_richness ?? 0, 0)}-rich pool of ${fmtInt(t.n_corpus)} documents (all gold-negatives plus a random draw of positives); the benchmark sample itself is 61% rich by design.`);
+    }
   }
   if (r.lever && !r.primary) notes.push(r.lever);
   return { lines, notes };
@@ -465,7 +469,7 @@ export default function App() {
         </div>
         <div>
           <h4>Classical TAR</h4>
-          <p>A simulated reviewer (gold labels; 50 documents/hour at $65/hour) plus TF‑IDF and logistic regression, one model per issue and one for any‑issue relevance. TAR 1.0 codes a random sample and picks its cutoff by cross‑validation on that sample alone; TAR 2.0 is continuous active learning stopped after two consecutive batches under 5% relevant. Rows are the median of five random seeds (three for TREC). TREC rows are trained and reviewed over the full 286k collection and scored on the same evaluation set as the other models. The 90%‑reviewer variants miscode 10% of documents at random; with that reviewer the CAL stopping rule can never fire (every batch comes back at least ~9% "relevant"), so those rows reviewed the whole collection on Mallinckrodt and CUAD and were not run on TREC.</p>
+          <p>A simulated reviewer (gold labels; 50 documents/hour at $65/hour) plus TF‑IDF and logistic regression, one model per issue and one for any‑issue relevance. TAR 1.0 codes a random sample and picks its cutoff by cross‑validation on that sample alone. TAR 2.0 is continuous active learning stopped by the knee method (Cormack & Grossman 2016: pre‑knee slope at least 6× post‑knee, after 10% of the collection); it is plotted as the review set the classifier queued, since the hand‑coded production set has the reviewer's precision rather than the classifier's. Mallinckrodt's benchmark sample is 61% rich by design, so CAL there runs on a 10%‑rich pool (all gold‑negative emails plus a random draw of positives per seed). Rows are the median of five random seeds (three for TREC). TREC rows are trained and reviewed over the full 286k collection and scored on the same evaluation set as the other models. The imperfect‑reviewer variants miss 10% of relevant documents and over‑code 2% of non‑relevant ones.</p>
         </div>
         <div>
           <h4>Absent cells</h4>
