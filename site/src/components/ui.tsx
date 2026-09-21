@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 export type TipLine = string | [string, string];
 export type Tip = { x: number; y: number; title: string; color?: string; lines: TipLine[]; notes?: string[] } | null;
@@ -16,6 +16,21 @@ export function useTip() {
     setTip({ x, y, ...t });
   };
   return { tip, show, hide: () => setTip(null), hostRef };
+}
+
+/** Measured content width of the host element, so SVG charts can draw at native pixel scale instead of stretching a viewBox. */
+export function useWidth(hostRef: React.RefObject<HTMLDivElement | null>, fallback: number): number {
+  const [w, setW] = useState(fallback);
+  useEffect(() => {
+    const el = hostRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((es) => { const cw = es[0]?.contentRect.width; if (cw) setW(cw); });
+    ro.observe(el);
+    const cw = el.getBoundingClientRect().width;
+    if (cw) setW(cw);
+    return () => ro.disconnect();
+  }, [hostRef]);
+  return w;
 }
 
 export function TipBox({ tip }: { tip: Tip }) {

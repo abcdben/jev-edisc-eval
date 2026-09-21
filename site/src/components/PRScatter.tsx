@@ -1,13 +1,13 @@
 import { useMemo } from "react";
 import type { CI } from "../data";
-import { TipBox, useTip, type TipLine } from "./ui";
+import { TipBox, useTip, useWidth, type TipLine } from "./ui";
 
 export type PRItem = {
   id: string; name: string; color: string; recall: CI; precision: CI; dashed?: boolean; subset?: string | null;
   tip: { lines: TipLine[]; notes?: string[] };
 };
 
-const W = 760, H = 520, PL = 56, PR = 20, PT = 18, PB = 48;
+const H = 520, PL = 56, PR = 20, PT = 18, PB = 48;
 
 function niceTicks(lo: number, hi: number): number[] {
   const span = hi - lo;
@@ -20,6 +20,7 @@ function niceTicks(lo: number, hi: number): number[] {
 /** Recall (x) against precision (y). Each item is a dot at the point estimate inside a box spanning both 95% intervals. */
 export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision", emptyText }: { items: PRItem[]; zoom: boolean; xLabel?: string; yLabel?: string; emptyText?: string }) {
   const { tip, show, hide, hostRef } = useTip();
+  const W = useWidth(hostRef, 760);
   const pts = items.filter((it) => it.recall && it.precision) as (PRItem & { recall: NonNullable<CI>; precision: NonNullable<CI> })[];
   const undefinedOnes = items.filter((it) => !it.recall || !it.precision);
 
@@ -61,11 +62,11 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
       return { ...c, w, text: p.name + (p.subset ? " *" : "") };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pts, dom]);
+  }, [pts, dom, W]);
 
   return (
     <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block", overflow: "visible" }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ display: "block", overflow: "visible" }}>
         {/* grid */}
         {xt.map((t) => (
           <g key={`x${t}`}>

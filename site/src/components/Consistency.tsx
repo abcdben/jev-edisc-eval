@@ -1,7 +1,7 @@
 import { DATA, fmtCI, fmtInt, fmtPct, type DetCell, type Rec } from "../data";
-import { Hint, TipBox, useTip, type TipLine } from "./ui";
+import { Hint, TipBox, useTip, useWidth, type TipLine } from "./ui";
 
-const LABEL_W = 170, W = 760, ROW = 28;
+const LABEL_W = 170, ROW = 24;
 const ISSUE_SHORT: Record<string, string> = {
   som_broad: "SOM broad", som_narrow: "SOM narrow", mktg_broad: "Marketing broad", mktg_narrow: "Marketing narrow",
   data_broad: "Data broad", data_narrow: "Data narrow", dea_broad: "DEA broad", dea_narrow: "DEA narrow",
@@ -47,12 +47,13 @@ function tipFor(c: DetCell, name: string): { lines: TipLine[]; notes: string[] }
 
 export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single" }) {
   const { tip, show, hide, hostRef } = useTip();
+  const W = useWidth(hostRef, 760);
   const det = DATA.determinism;
   const rows = recs.map((r) => ({ r, d: detFor(r, arm, "default"), t0: detFor(r, arm, "t0") }));
   const measured = rows.filter((x) => x.d);
   const sorted = [...rows].sort((a, b) => (a.d?.pairwise[0] ?? Infinity) - (b.d?.pairwise[0] ?? Infinity));
   const max = Math.max(0.01, ...measured.flatMap((x) => [x.d!.pairwise[2], x.t0?.pairwise[2] ?? 0]));
-  const plotW = W - LABEL_W - 120;
+  const plotW = Math.max(120, W - LABEL_W - 130);
   const X = (v: number) => LABEL_W + (v / max) * plotW;
   const h = sorted.length * ROW + 26;
   const hasT0 = sorted.some((x) => x.t0);
@@ -69,7 +70,7 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
         </span>
       </div>
       <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
-        <svg viewBox={`0 0 ${W} ${h}`} width="100%" style={{ display: "block", overflow: "visible" }}>
+        <svg viewBox={`0 0 ${W} ${h}`} width={W} height={h} style={{ display: "block", overflow: "visible" }}>
           {sorted.map((x, i) => {
             const y = i * ROW;
             const c = colorOf(x.r), nm = nameOf(x.r);
@@ -81,7 +82,7 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
                 </g>
               );
             }
-            const bars = [{ c: x.d, op: 1, dy: x.t0 ? -5 : 0, bh: x.t0 ? 9 : 14 }, ...(x.t0 ? [{ c: x.t0, op: 0.45, dy: 5, bh: 9 }] : [])];
+            const bars = [{ c: x.d, op: 1, dy: x.t0 ? -4.5 : 0, bh: x.t0 ? 7 : 12 }, ...(x.t0 ? [{ c: x.t0, op: 0.45, dy: 4.5, bh: 7 }] : [])];
             return (
               <g key={x.r.model}>
                 <text x={LABEL_W - 10} y={y + ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{nm}</text>

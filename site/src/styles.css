@@ -168,7 +168,8 @@ svg text { user-select: none; font-family: var(--sans); }
 .card-t h3 { margin: 0; font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; }
 .card-t .unit { color: var(--ink-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
 .card-t .right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
-.ops-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+.ops-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; margin-top: 20px; }
+.ops-grid .card, .card [data-tip-host] { min-width: 0; }
 @media (max-width: 900px) { .ops-grid { grid-template-columns: 1fr; } }
 
 /* hint (i) */

@@ -1,13 +1,14 @@
 import type { CI } from "../data";
 import { fmtPct } from "../data";
 import type { PRItem } from "./PRScatter";
-import { TipBox, useTip } from "./ui";
+import { TipBox, useTip, useWidth } from "./ui";
 
-const LABEL_W = 170, W = 760, ROW = 26, GAP = 26, NUM_W = 54;
+const LABEL_W = 170, ROW = 26, GAP = 26, NUM_W = 54;
 
 /** Ranked rows: recall and precision side by side, dot at the point estimate, whisker across the 95% interval. */
 export function PRRows({ items, zoom, sortBy }: { items: PRItem[]; zoom: boolean; sortBy: "recall" | "precision" | "f1" }) {
   const { tip, show, hide, hostRef } = useTip();
+  const W = useWidth(hostRef, 760);
   const f1 = (it: PRItem) => (it.recall && it.precision ? (2 * it.recall[0] * it.precision[0]) / (it.recall[0] + it.precision[0] || 1) : -1);
   const rows = [...items].sort((a, b) => {
     const va = sortBy === "f1" ? f1(a) : (a[sortBy]?.[0] ?? -1), vb = sortBy === "f1" ? f1(b) : (b[sortBy]?.[0] ?? -1);
@@ -29,7 +30,7 @@ export function PRRows({ items, zoom, sortBy }: { items: PRItem[]; zoom: boolean
   const h = rows.length * ROW + 44;
   return (
     <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
-      <svg viewBox={`0 0 ${W} ${h}`} width="100%" style={{ display: "block", overflow: "visible" }}>
+      <svg viewBox={`0 0 ${W} ${h}`} width={W} height={h} style={{ display: "block", overflow: "visible" }}>
         {[0, 1].map((col) => (
           <g key={col}>
             <text x={x0[col]} y={12} fontSize={12} fontWeight={500} fill="var(--ink)">{col === 0 ? "Recall" : "Precision"}</text>
