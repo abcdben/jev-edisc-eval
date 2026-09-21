@@ -1,6 +1,7 @@
 import { DATA, fmtCI, fmtInt, fmtPct, type DetCell, type Rec } from "../data";
 import { LogoGlyph } from "../logos";
-import { Hint, TipBox, useTip, useWidth, type TipLine } from "./ui";
+import { useState } from "react";
+import { Hint, Seg, TipBox, useTip, useWidth, type TipLine } from "./ui";
 
 const LABEL_W = 168, ROW = 20;
 
@@ -29,21 +30,27 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
   const { tip, show, hide, hostRef } = useTip();
   const W = useWidth(hostRef, 760);
   const det = DATA.determinism;
+  const [setting, setSetting] = useState<"default" | "t0">("default");
   const rows = recs.map((r) => ({ r, d: detFor(r, arm, "default"), t0: detFor(r, arm, "t0") }));
-  const measured = rows.filter((x) => x.d);
-  const sorted = [...rows].sort((a, b) => (a.d?.pairwise[0] ?? Infinity) - (b.d?.pairwise[0] ?? Infinity));
-  const max = Math.max(0.01, ...measured.flatMap((x) => [x.d!.pairwise[2], x.t0?.pairwise[2] ?? 0]));
-  const plotW = Math.max(120, W - LABEL_W - 130);
+  const hasT0 = rows.some((x) => x.t0);
+  // At temperature 0, deciders and the floor expose no sampling control, so their default cell is their behaviour in both views; an LLM without a t=0 cell (Sonnet 5) rejected the parameter.
+  const isLLM = (r: Rec) => r.kind === "llm" || r.kind === "local_llm";
+  const shown = rows.map((x) => ({ r: x.r, c: setting === "t0" ? (x.t0 ?? (isLLM(x.r) ? null : x.d)) : x.d }));
+  const measured = shown.filter((x) => x.c);
+  const sorted = [...shown].sort((a, b) => (a.c?.pairwise[0] ?? Infinity) - (b.c?.pairwise[0] ?? Infinity));
+  const max = Math.max(0.01, ...measured.map((x) => x.c!.pairwise[2]));
+  const plotW = Math.max(120, W - LABEL_W - 90);
   const X = (v: number) => LABEL_W + (v / max) * plotW;
   const h = sorted.length * ROW + 20;
-  const hasT0 = sorted.some((x) => x.t0);
+  const lbl = (v: number) => (v === 0 ? "0" : fmtPct(v, v < 0.001 ? 2 : 1));
   return (
     <div className="card">
       <div className="card-t">
         <h3>Determinism</h3>
-        <span className="unit">run-to-run disagreement · {det ? `${fmtInt(det.sample.n_docs)} emails` : "not measured"} · {measured[0]?.d?.k ?? 5} runs</span>
+        <span className="unit">{det ? `${fmtInt(det.sample.n_docs)} emails · ${rows.find((x) => x.d)?.d?.k ?? 5} runs` : "not measured"}</span>
         <span className="right">
-          <Hint left text="Measured on Mallinckrodt only and shown for every corpus, since it is a property of the model rather than the documents. Each model scored the same fixed sample of 300 Mallinckrodt emails five times under identical settings (100 emails with a debatable gold label, 100 clear positives, 100 clear negatives; the benchmark run counts as the first repeat). The bar is pairwise disagreement: the probability that two independent runs give a different label for the same (document, issue) decision. The whisker is a 95% bootstrap interval over decisions. Lighter bars are the same models at temperature 0 where the API accepts it; Anthropic rejects sampling parameters on Sonnet 5, so it has no temperature-0 bar. Jev and Laya expose no sampling controls, so their bars are intrinsic behavior. Hover for flip rates by stratum, issue and gold label, and for how much recall moved between runs." />
+          {hasT0 && <Seg value={setting} onChange={setSetting} options={[{ id: "default", label: "default", title: "Vendor default sampling" }, { id: "t0", label: "t = 0", title: "Temperature 0 where the API accepts it" }]} />}
+          <Hint left text="Measured on Mallinckrodt only and shown for every corpus, since it is a property of the model rather than the documents. Each model scored the same fixed sample of 300 Mallinckrodt emails five times under identical settings (100 emails with a debatable gold label, 100 clear positives, 100 clear negatives; the benchmark run counts as the first repeat). The bar is pairwise disagreement: the probability that two independent runs give a different label for the same (document, issue) decision. The whisker is a 95% bootstrap interval over decisions. The t = 0 view shows the same models at temperature 0 where the API accepts it; Anthropic rejects sampling parameters on Sonnet 5, so it is marked not measured there. Jev and Laya expose no sampling controls, so their bars are intrinsic behaviour in both views. Hover for flip rates by stratum, issue and gold label, and for how much recall moved between runs." />
         </span>
       </div>
       <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
@@ -51,42 +58,30 @@ export function Consistency({ recs, colorOf, nameOf, arm }: { recs: Rec[]; color
           {sorted.map((x, i) => {
             const y = i * ROW;
             const c = colorOf(x.r), nm = nameOf(x.r);
-            if (!x.d) {
+            if (!x.c) {
               return (
                 <g key={x.r.model}>
                   <g color="var(--ink-4)"><LogoGlyph model={x.r.model} cx={8} cy={y + ROW / 2} opacity={0.5} /></g>
                   <text x={22} y={y + ROW / 2 + 4} fontSize={12} fill="var(--ink-4)">{nm}</text>
-                  <text x={LABEL_W + 7} y={y + ROW / 2 + 4} fontSize={11} fill="var(--ink-4)">not measured</text>
+                  <text x={LABEL_W + 7} y={y + ROW / 2 + 4} fontSize={11} fill="var(--ink-4)">{setting === "t0" ? "API rejects temperature" : "not measured"}</text>
                 </g>
               );
             }
-            const bars = [{ c: x.d, op: 1, dy: x.t0 ? -3 : 0, bh: x.t0 ? 5 : 9 }, ...(x.t0 ? [{ c: x.t0, op: 0.45, dy: 3, bh: 5 }] : [])];
-            const end = Math.max(...bars.map((b) => X(b.c.pairwise[2])));
-            const lbl = (v: number) => (v === 0 ? "0" : fmtPct(v, v < 0.001 ? 2 : 1));
+            const v = x.c.pairwise[0], lo = x.c.pairwise[1], hi = x.c.pairwise[2];
+            const cy = y + ROW / 2;
             return (
-              <g key={x.r.model}>
-                <g color="var(--ink-2)"><LogoGlyph model={x.r.model} cx={8} cy={y + ROW / 2} /></g>
-                <text x={22} y={y + ROW / 2 + 4} fontSize={12} fill="var(--ink-2)">{nm}</text>
-                {bars.map((b, j) => {
-                  const v = b.c.pairwise[0], lo = b.c.pairwise[1], hi = b.c.pairwise[2];
-                  const cy = y + ROW / 2 + b.dy;
-                  return (
-                    <g key={j} onMouseMove={(e) => show(e, { title: `${nm}${b.c.setting === "t0" ? " · temperature 0" : ""}`, color: c, ...tipFor(b.c, nm) })} onMouseLeave={hide} style={{ cursor: "default" }}>
-                      <rect x={LABEL_W - 4} y={cy - b.bh / 2 - 2} width={W - LABEL_W + 4} height={b.bh + 4} fill="transparent" />
-                      <rect x={LABEL_W} y={cy - b.bh / 2} width={Math.max(1.5, X(v) - LABEL_W)} height={b.bh} fill={c} rx={1.5} style={{ fillOpacity: `calc(var(--bar-alpha) * ${b.op})` }} />
-                      <line x1={X(lo)} x2={X(hi)} y1={cy} y2={cy} stroke="var(--ink)" strokeWidth={1} opacity={0.6} />
-                    </g>
-                  );
-                })}
-                <text x={end + 7} y={y + ROW / 2 + 4} fontSize={11} fill="var(--ink)" className="mono" style={{ pointerEvents: "none" }}>
-                  {lbl(x.d.pairwise[0])}
-                  {x.t0 && <tspan fill="var(--ink-3)">{`  ${lbl(x.t0.pairwise[0])} t=0`}</tspan>}
-                </text>
+              <g key={x.r.model} onMouseMove={(e) => show(e, { title: `${nm}${x.c!.setting === "t0" ? " · temperature 0" : ""}`, color: c, ...tipFor(x.c!, nm) })} onMouseLeave={hide} style={{ cursor: "default" }}>
+                <rect x={0} y={y} width={W} height={ROW} fill="transparent" />
+                <g color="var(--ink-2)"><LogoGlyph model={x.r.model} cx={8} cy={cy} /></g>
+                <text x={22} y={cy + 4} fontSize={12} fill="var(--ink-2)">{nm}</text>
+                <rect x={LABEL_W} y={cy - 4} width={Math.max(1.5, X(v) - LABEL_W)} height={8} fill={c} rx={1.5} style={{ fillOpacity: "var(--bar-alpha)" }} />
+                <line x1={X(lo)} x2={X(hi)} y1={cy} y2={cy} stroke="var(--ink)" strokeWidth={1} opacity={0.6} />
+                <text x={X(hi) + 7} y={cy + 4} fontSize={11} fill="var(--ink)" className="mono">{lbl(v)}</text>
               </g>
             );
           })}
           <line x1={LABEL_W} x2={LABEL_W} y1={0} y2={sorted.length * ROW} stroke="var(--axis)" />
-          <text x={LABEL_W} y={sorted.length * ROW + 17} fontSize={10.5} fill="var(--ink-3)">probability two runs disagree{hasT0 ? " · lighter bar: temperature 0" : ""}</text>
+          <text x={LABEL_W} y={sorted.length * ROW + 17} fontSize={10.5} fill="var(--ink-3)">probability two runs disagree{setting === "t0" ? " · temperature 0" : ""}</text>
         </svg>
         <TipBox tip={tip} />
       </div>

@@ -10,6 +10,7 @@ import { PRRows } from "./components/PRRows";
 import { OpsBars, type BarItem } from "./components/OpsBars";
 import { Consistency } from "./components/Consistency";
 import { ExplainButton, ExplainModal } from "./components/Explain";
+import { Picker, type PickGroup } from "./components/Picker";
 import { Logo } from "./logos";
 
 type Chart = "map" | "ranked";
@@ -127,14 +128,27 @@ function OpsCards({ recs, colorOf, nameOf, logos = true }: { recs: Rec[]; colorO
 
 // ------------------------------------------------------------------------------------------------
 
-function CompareSection({ v, explain }: { v: View; explain: (k: string) => void }) {
+/** The model multi-select for Compare models, rendered in the control bar. */
+function ModelPicker({ v, on, setOn, explain }: { v: View; on: Set<string>; setOn: (s: Set<string>) => void; explain: (k: string) => void }) {
   const rows = useRows(v);
-  const [on, setOn] = useState<Set<string>>(new Set(DEFAULT_ON));
   const primary = rows.filter((r) => r.primary);
   const byKind = PICK_ORDER.map((k) => ({ kind: k, recs: PRIMARY.map((p) => primary.find((r) => r.model === p.key)).filter((r): r is Rec => !!r && r.kind === k) })).filter((g) => g.recs.length);
+  const avail = primary.filter((r) => on.has(r.model)).length;
+  const groups: PickGroup[] = byKind.map((g) => ({
+    id: g.kind, label: KIND_SHORT[g.kind as Kind],
+    items: g.recs.map((r) => {
+      const m = PRIMARY_BY_KEY[r.model];
+      return { id: r.model, label: m.short, title: m.note, mark: <span style={{ color: m.color }}><Logo model={r.model} /></span>, suffix: r.subset ? <span className="sub" title={`scored on ${r.subset}`}>*</span> : undefined, detail: () => explain(r.model) };
+    }),
+  }));
+  return <Picker label="Models" summary={`${avail} of ${primary.length}`} groups={groups} on={on} onChange={setOn} onReset={() => setOn(new Set(DEFAULT_ON))} />;
+}
+
+function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain: (k: string) => void }) {
+  const rows = useRows(v);
+  const primary = rows.filter((r) => r.primary);
   const sel = PRIMARY.map((p) => primary.find((r) => r.model === p.key)).filter((r): r is Rec => !!r && on.has(r.model));
-  const toggle = (k: string) => setOn((s) => { const n = new Set(s); n.has(k) ? n.delete(k) : n.add(k); return n; });
-  const setGroup = (recs: Rec[], val: boolean) => setOn((s) => { const n = new Set(s); recs.forEach((r) => (val ? n.add(r.model) : n.delete(r.model))); return n; });
+  void explain;
 
   const items: PRItem[] = sel.map((r) => {
     const p = pick(r, v.level, v.gray, v.issue);
@@ -144,30 +158,6 @@ function CompareSection({ v, explain }: { v: View; explain: (k: string) => void 
 
   return (
     <section className="section">
-      <div className="pbar">
-        {byKind.map((g) => {
-          const allOn = g.recs.every((r) => on.has(r.model));
-          return (
-            <span className="pgrp" key={g.kind}>
-              <button className="plabel" onClick={() => setGroup(g.recs, !allOn)} title={allOn ? "Turn this group off" : "Turn this group on"}>{KIND_SHORT[g.kind as Kind]}</button>
-              {g.recs.map((r) => {
-                const m = PRIMARY_BY_KEY[r.model];
-                return (
-                  <button key={r.model} className={`chip${on.has(r.model) ? "" : " off"}`} onClick={() => toggle(r.model)} title={m.note} aria-pressed={on.has(r.model)}>
-                    <span className="mark" style={{ color: m.color }}><Logo model={r.model} /></span>
-                    <span className="nm" title={r.subset ? `scored on ${r.subset}` : undefined}>{m.short}{r.subset ? " *" : ""}</span>
-                    <ExplainButton compact onClick={() => explain(r.model)} />
-                  </button>
-                );
-              })}
-            </span>
-          );
-        })}
-        <span className="pend">
-          <button className="preset" onClick={() => setOn(new Set(DEFAULT_ON))}>reset</button>
-          <ExplainButton label="how each model is asked" onClick={() => explain("jev@base")} />
-        </span>
-      </div>
       <div className="dash">
         <PRCard
           items={items} defaultChart="map" defaultZoom={true}
@@ -184,19 +174,53 @@ function CompareSection({ v, explain }: { v: View; explain: (k: string) => void 
 
 // ------------------------------------------------------------------------------------------------
 
-function AblationSection({ v, explain }: { v: View; explain: (k: string) => void }) {
+function useVariants(v: View, grp: string) {
   const rows = useRows(v);
-  const [grp, setGrp] = useState("jev");
-  const [off, setOff] = useState<Set<string>>(new Set());
-  const G = ABLATION_GROUPS.find((g) => g.id === grp)!;
-  const variants = useMemo(() => {
+  return useMemo(() => {
     const recs = rows.filter((r) => r.group === grp && r.variant);
     return VARIANT_ORDER.map((vv) => recs.find((r) => r.variant === vv)).filter((r): r is Rec => !!r);
   }, [rows, grp]);
+}
+
+/** Model select + configuration multi-select for the Configurations page, rendered in the control bar. */
+function VariantPicker({ v, grp, setGrp, off, setOff, explain }: { v: View; grp: string; setGrp: (g: string) => void; off: Set<string>; setOff: (s: Set<string>) => void; explain: (k: string) => void }) {
+  const G = ABLATION_GROUPS.find((g) => g.id === grp)!;
+  const variants = useVariants(v, grp);
+  const on = new Set(variants.filter((r) => !off.has(r.variant!)).map((r) => r.variant!));
+  const groups: PickGroup[] = [{
+    id: grp, label: G.label,
+    items: variants.map((r) => ({
+      id: r.variant!, label: VARIANT_LABEL[r.variant!] ?? r.variant!, title: r.lever ?? undefined,
+      mark: <span className="sw" style={{ background: variantColor(r.variant!, G.recipe) }} />,
+      suffix: <>{r.variant === G.recipe && <span className="star" title="recipe carried into Compare models">★</span>}{r.subset && <span className="sub" title={`scored on ${r.subset}`}>*</span>}</>,
+      detail: () => explain(r.model),
+    })),
+  }];
+  return (
+    <>
+      <Control label="Model">
+        <span className="select">
+          <select value={grp} onChange={(e) => { setGrp(e.target.value); setOff(new Set()); }}>
+            {ABLATION_GROUPS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
+          </select>
+        </span>
+      </Control>
+      <Picker
+        label="Configurations" summary={`${on.size} of ${variants.length}`} groups={groups} on={on}
+        onChange={(next) => setOff(new Set(variants.map((r) => r.variant!).filter((vv) => !next.has(vv))))}
+        onReset={() => setOff(new Set())}
+        footer={<span className="pick-note">{G.note}</span>}
+      />
+    </>
+  );
+}
+
+function AblationSection({ v, grp, off }: { v: View; grp: string; off: Set<string> }) {
+  const G = ABLATION_GROUPS.find((g) => g.id === grp)!;
+  const variants = useVariants(v, grp);
   const sel = variants.filter((r) => !off.has(r.variant!));
   const color = (r: Rec) => variantColor(r.variant!, G.recipe);
   const name = (r: Rec) => VARIANT_LABEL[r.variant!] ?? r.variant!;
-  const toggle = (vv: string) => setOff((s) => { const n = new Set(s); n.has(vv) ? n.delete(vv) : n.add(vv); return n; });
 
   const items: PRItem[] = sel.map((r) => {
     const p = pick(r, v.level, v.gray, v.issue);
@@ -205,36 +229,12 @@ function AblationSection({ v, explain }: { v: View; explain: (k: string) => void
 
   return (
     <section className="section">
-      <div className="pbar">
-        <span className="pgrp">
-          <span className="plabel static">Model</span>
-          <span className="select">
-            <select value={grp} onChange={(e) => { setGrp(e.target.value); setOff(new Set()); }}>
-              {ABLATION_GROUPS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
-            </select>
-          </span>
-        </span>
-        <span className="pgrp">
-          <button className="plabel" onClick={() => setOff(off.size ? new Set() : new Set(variants.map((r) => r.variant!)))} title={off.size ? "Turn all on" : "Turn all off"}>Configurations</button>
-          {variants.map((r) => (
-            <button key={r.model} className={`chip${off.has(r.variant!) ? " off" : ""}`} onClick={() => toggle(r.variant!)} title={r.lever ?? undefined} aria-pressed={!off.has(r.variant!)}>
-              <span className="sw" style={{ background: color(r) }} />
-              <span className="nm" title={r.subset ? `scored on ${r.subset}` : undefined}>{name(r)}{r.subset ? " *" : ""}</span>
-              {r.variant === G.recipe && <span className="star" title="recipe">★</span>}
-              <ExplainButton compact onClick={() => explain(r.model)} />
-            </button>
-          ))}
-          {variants.length === 0 && <span className="empty">No configurations of this model were run on this corpus and arm.</span>}
-        </span>
-        <span className="pend"><ExplainButton label="see the requests side by side" onClick={() => explain(`${grp}@base`)} /></span>
-      </div>
-      <div className="pnote">{G.note} ★ marks the recipe carried into Compare models.</div>
       <div className="dash">
         <PRCard
           items={items} defaultChart="ranked" defaultZoom={true}
-          emptyText={variants.length ? "Select at least one configuration." : "No configurations available for this view."}
+          emptyText={variants.length ? "Select at least one configuration." : "No configurations of this model were run on this corpus and arm."}
           logos={false}
-          hint="Same measurement as on Compare models. Differences between configurations are usually smaller than between model families, so this card defaults to ranked rows with the axes fitted to the data; switch to map and 0–100% to see the same points on the scale used there. Hover a configuration for what the lever changes."
+          hint="Same measurement as on Compare models. Differences between configurations are usually smaller than between model families, so this card defaults to ranked rows with the axes fitted to the data; switch to map and 0–100% to see the same points on the scale used there. Hover a configuration for what the lever changes. ★ marks the recipe carried into Compare models."
         />
         <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} /></div>
       </div>
@@ -259,6 +259,10 @@ export default function App() {
 
   const pickCorpus = (c: string) => { setCorpus(c); setIssue(null); };
   const [explain, setExplain] = useState<string | null>(null);
+  const [on, setOn] = useState<Set<string>>(new Set(DEFAULT_ON));
+  const [grp, setGrp] = useState("jev");
+  const [off, setOff] = useState<Set<string>>(new Set());
+  const corpusTitle = `${fmtInt(meta.n_docs)} documents · ${meta.n_issues} issues · ${fmtInt(meta.n_pos_docs_any)} responsive to at least one (${fmtPct(meta.n_pos_docs_any / meta.n_docs, 0)}) · gold: ${meta.gold}`;
   const [more, setMore] = useState(false);
   const nonDefault = [
     arm === "single" ? "one issue per call" : null,
@@ -289,8 +293,12 @@ export default function App() {
 
       <div className="controls">
         <Control label="Corpus">
-          <Seg value={corpus} onChange={pickCorpus} options={CORPORA.map((c) => ({ id: c.id, label: c.label, title: c.short }))} />
+          <Seg value={corpus} onChange={pickCorpus} options={CORPORA.map((c) => ({ id: c.id, label: c.label, title: c.id === corpus ? corpusTitle : c.short }))} />
+          <Hint text={`${meta.display}. ${corpusTitle}.`} />
         </Control>
+        {pageId === "compare"
+          ? <ModelPicker v={v} on={on} setOn={setOn} explain={setExplain} />
+          : <VariantPicker v={v} grp={grp} setGrp={setGrp} off={off} setOff={setOff} explain={setExplain} />}
         {corpus === "trec" && (
           <Control label="Criteria">
             <Seg value={tag} onChange={setTag} options={[
@@ -301,6 +309,7 @@ export default function App() {
         )}
         <span className="more-wrap">
           {!more && nonDefault.length > 0 && <span className="more-summary">{nonDefault.join(" · ")}</span>}
+          <ExplainButton label={pageId === "compare" ? "how each model is asked" : "requests side by side"} onClick={() => setExplain(pageId === "compare" ? "jev@base" : `${grp}@base`)} />
           <button className={`more${more ? " on" : ""}`} onClick={() => setMore((m) => !m)} aria-expanded={more}>
             {more ? "Fewer options" : "More options"}<span className="chev" />
           </button>
@@ -335,14 +344,7 @@ export default function App() {
       </div>
       )}
 
-      <div style={{ marginTop: 14, color: "var(--ink-2)", fontSize: 13, display: "flex", gap: 8, alignItems: "baseline", flexWrap: "wrap" }}>
-        <span style={{ fontSize: 16, fontWeight: 500, color: "var(--ink)" }}>{meta.display}</span>
-        <span style={{ color: "var(--ink-3)" }}>
-          {fmtInt(meta.n_docs)} documents · {meta.n_issues} issues · {fmtInt(meta.n_pos_docs_any)} responsive to at least one ({fmtPct(meta.n_pos_docs_any / meta.n_docs, 0)}) · gold: {meta.gold}
-        </span>
-      </div>
-
-      {pageId === "compare" ? <CompareSection v={v} explain={setExplain} /> : <AblationSection v={v} explain={setExplain} />}
+      {pageId === "compare" ? <CompareSection v={v} on={on} explain={setExplain} /> : <AblationSection v={v} grp={grp} off={off} />}
       {explain && <ExplainModal initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)} />}
 
       <details className="notes">
