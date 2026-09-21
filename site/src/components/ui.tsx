@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 export type TipLine = string | [string, string];
 export type Tip = { x: number; y: number; title: string; color?: string; lines: TipLine[]; notes?: string[] } | null;
@@ -97,16 +97,38 @@ export function TipBox({ tip, hint }: { tip: Tip; hint?: string }) {
   );
 }
 
-/** id of the "Notes on method" <details> at the foot of the page; `Hint`'s `more` link opens and scrolls to it. */
-export const NOTES_ID = "method";
+/** Opens the Method modal (App owns its state); `Hint`'s `more` link calls it. */
+export const MethodContext = createContext<() => void>(() => {});
 
-export function scrollToNotes() {
-  const el = document.getElementById(NOTES_ID);
-  if (!el) return;
-  if (el instanceof HTMLDetailsElement) el.open = true;
-  // leave room for the sticky control bar
-  const bar = document.querySelector<HTMLElement>(".controls");
-  window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - (bar?.offsetHeight ?? 0) - 12, behavior: "smooth" });
+/**
+ * The modal chrome shared with the details modal (Explain.tsx, which still renders it inline): dimmed backdrop that closes on an
+ * outside mousedown, Esc to close, body scroll locked while open, and a header with eyebrow, title, optional controls and ×.
+ * `className` is added to the box (e.g. to change its size); the children fill the rest of the box.
+ */
+export function Modal({ eyebrow, title, controls, onClose, className, children }: { eyebrow?: string; title: string; controls?: ReactNode; onClose: () => void; className?: string; children: ReactNode }) {
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [onClose]);
+  useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
+  return (
+    <div className="ex-back" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className={`ex-modal${className ? ` ${className}` : ""}`} role="dialog" aria-modal="true" aria-label={title}>
+        <div className="ex-head">
+          <div>
+            {eyebrow && <div className="ex-eyebrow">{eyebrow}</div>}
+            <h2>{title}</h2>
+          </div>
+          <div className="ex-head-ctl">
+            {controls}
+            <button className="ex-close" onClick={onClose} aria-label="close">×</button>
+          </div>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export type HintItem = { k: string; v: ReactNode };
@@ -114,7 +136,7 @@ export type HintItem = { k: string; v: ReactNode };
 /**
  * The "i" control in card headers and the control bar. Click opens a small anchored popover (no hover behaviour) that closes on outside click,
  * Esc, or clicking the icon again. Content is either structured `items` (a compact label/value list, one short sentence per value) or a legacy
- * `text` paragraph. `title` defaults to the enclosing card's title. `more` is the label of a link that opens and scrolls to the notes on method.
+ * `text` paragraph. `title` defaults to the enclosing card's title. `more` is the label of a link that opens the Method modal.
  * The popover hangs below the icon, right-aligned to it, and flips to left-aligned (or above) when that would leave the viewport.
  */
 export function Hint({ text, items, more, title }: { text?: string; items?: HintItem[]; more?: string; title?: string }) {
@@ -123,6 +145,7 @@ export function Hint({ text, items, more, title }: { text?: string; items?: Hint
   const pop = useRef<HTMLDivElement>(null);
   const [place, setPlace] = useState<{ l: boolean; up: boolean } | null>(null);
   const [cardTitle, setCardTitle] = useState<string | undefined>(undefined);
+  const openMethod = useContext(MethodContext);
   useLayoutEffect(() => {
     if (!open) { setPlace(null); return; }
     const w = wrap.current, p = pop.current;
@@ -160,7 +183,7 @@ export function Hint({ text, items, more, title }: { text?: string; items?: Hint
             </dl>
           )}
           {text && <p>{text}</p>}
-          {more && <button type="button" className="more" onClick={() => { setOpen(false); scrollToNotes(); }}>{more}</button>}
+          {more && <button type="button" className="more" onClick={() => { setOpen(false); openMethod(); }}>{more}</button>}
         </div>
       )}
     </span>

@@ -1,16 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, HUMAN_DEV_DOCS, HUMAN_DEV_DOCS_PER_HOUR, HUMAN_DEV_HOURS, HUMAN_DEV_USD, HUMAN_DEV_USD_PER_HOUR, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
   corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isGpuRow, pick, siteCorpus, variantColor,
   type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
-import { Control, Hint, NOTES_ID, Seg, type HintItem, type TipLine } from "./components/ui";
+import { Control, Hint, MethodContext, Seg, type HintItem, type TipLine } from "./components/ui";
 import { PRScatter, type PRItem } from "./components/PRScatter";
 import { PRRows } from "./components/PRRows";
 import { OpsBars, type BarItem } from "./components/OpsBars";
 import { Consistency } from "./components/Consistency";
 import { ExplainButton, ExplainModal } from "./components/Explain";
 import { Picker, type PickGroup } from "./components/Picker";
+import { MethodButton, MethodModal } from "./components/Method";
 import { Logo } from "./logos";
 
 type Chart = "map" | "ranked";
@@ -32,7 +33,7 @@ function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = t
         <span className="right">
           <Seg value={chart} onChange={setChart} options={[{ id: "map", label: "map", title: "Recall against precision, one box per model" }, { id: "ranked", label: "ranked", title: "Rows sorted by F1, whiskers for the intervals" }]} />
           <Seg value={zoom ? "zoom" : "full"} onChange={(z) => setZoom(z === "zoom")} options={[{ id: "full", label: "0–100%" }, { id: "zoom", label: "fit to data" }]} />
-          <Hint items={hint} more="Notes on method" />
+          <Hint items={hint} more="Method" />
         </span>
       </div>
       {chart === "map" ? <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill onSelect={onSelect} /></div> : <PRRows items={items} zoom={zoom} sortBy="f1" logos={logos} onSelect={onSelect} />}
@@ -194,14 +195,14 @@ function OpsCards({ recs, colorOf, nameOf, logos = true, explain }: { recs: Rec[
       <div className="card">
         <div className="card-t">
           <h3>Review time</h3><span className="unit">per 100k documents, single stream</span>
-          <span className="right">{seg}<Hint items={TIME_ITEMS} more="Notes on method" /></span>
+          <span className="right">{seg}<Hint items={TIME_ITEMS} more="Method" /></span>
         </div>
         <OpsBars items={time} axis="hours" logos={logos} onSelect={onSelect} />
       </div>
       <div className="card">
         <div className="card-t">
           <h3>Cost</h3><span className="unit">per 100k documents, as paid</span>
-          <span className="right">{seg}<Hint items={COST_ITEMS} more="Notes on method" /></span>
+          <span className="right">{seg}<Hint items={COST_ITEMS} more="Method" /></span>
         </div>
         <OpsBars items={cost} axis="US dollars" logos={logos} onSelect={onSelect} />
       </div>
@@ -346,6 +347,10 @@ export default function App() {
 
   const pickCorpus = (c: string) => { setCorpus(c); setIssue(null); };
   const [explain, setExplain] = useState<string | null>(null);
+  // The Method modal (how each experiment was run) opens from the header and foot buttons and from every hint's "Method" link, via MethodContext.
+  const [method, setMethod] = useState(false);
+  const openMethod = useCallback(() => setMethod(true), []);
+  const closeMethod = useCallback(() => setMethod(false), []);
   const [on, setOn] = useState<Set<string>>(new Set(DEFAULT_ON));
   const [grp, setGrp] = useState("jev");
   const [off, setOff] = useState<Set<string>>(new Set());
@@ -366,7 +371,7 @@ export default function App() {
   }, []);
   const goPage = (p: Page) => { history.replaceState(null, "", p === "compare" ? "#compare" : "#configurations"); setPageId(p); window.scrollTo(0, 0); };
 
-  return (
+  const page = (
     <div className="page">
       <header className="masthead">
         <h1 className="title">Decider Model v LLM Bakeoff</h1>
@@ -375,7 +380,7 @@ export default function App() {
             <button key={p.id} className={pageId === p.id ? "on" : ""} onClick={() => goPage(p.id)} aria-current={pageId === p.id ? "page" : undefined}>{p.label}</button>
           ))}
         </nav>
-        <span className="theme"><Seg value={theme} onChange={setTheme} options={[{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }]} /></span>
+        <span className="theme"><MethodButton onClick={openMethod} /><Seg value={theme} onChange={setTheme} options={[{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }]} /></span>
       </header>
 
       <div className="controls">
@@ -438,47 +443,13 @@ export default function App() {
       {pageId === "compare" ? <CompareSection v={v} on={on} explain={setExplain} /> : <AblationSection v={v} grp={grp} off={off} explain={setExplain} />}
       {explain && <ExplainModal initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)} />}
 
-      <details className="notes" id={NOTES_ID}>
-        <summary>Notes on method<span className="chev" /></summary>
-        <footer className="foot">
-        <div>
-          <h4>What every model saw</h4>
-          <p>The same document text, the same issue criteria and matter context, and returned a label plus a probability. Metrics use the model's own label. Jev rows are the default configuration unless marked optimized.</p>
-        </div>
-        <div>
-          <h4>Laya</h4>
-          <p>The Laya row on Compare models is a checkpoint fine-tuned (RLCD) on a 30% document-level dev split of the same corpus and scored on the held-out 70%; every other row is zero-shot, so it is not on equal footing, and the labeled data it needed is not counted in the time and cost panels. The zero-shot Laya configurations are on the Configurations page.</p>
-        </div>
-        <div>
-          <h4>GPU cost</h4>
-          <p>Laya and Gemma 3 12B ran on a rented {GPU_NAME} rather than an API. Their cost is that GPU's on-demand rate (${GPU_USD_PER_HOUR.toFixed(2)}/hour, Lambda list price as of September 2026) times the single-stream review time shown, so it is an upper bound: serving many documents concurrently would lower it.</p>
-        </div>
-        <div>
-          <h4>Human time</h4>
-          <p>The '+ human time' toggle on the time and cost cards adds the prompt or criteria development a person does for every non-TAR row: {HUMAN_DEV_DOCS} documents reviewed at {HUMAN_DEV_DOCS_PER_HOUR}/hour and ${HUMAN_DEV_USD_PER_HOUR}/hour, {fmtHours(HUMAN_DEV_HOURS)} and {fmtUSD(HUMAN_DEV_USD)}, counted once per 100k-document project. TAR rows are already human time and are unchanged; in 'machine only' they show none.</p>
-        </div>
-        <div>
-          <h4>Intervals</h4>
-          <p>95% Wilson score intervals. Recall is measured over the gold-positive set, precision over the flagged set. Where a model is scored on a stratified subset (marked *), intervals widen to match.</p>
-        </div>
-        <div>
-          <h4>TREC criteria</h4>
-          <p>Issue criteria were refined once on a 668-email calibration set that is disjoint from the evaluation set shown. The bare-topic toggle shows the NIST topic sentence with no iteration.</p>
-        </div>
-        <div>
-          <h4>Determinism</h4>
-          <p>Measured on Mallinckrodt only and shown for every corpus, since it is a property of the model rather than the documents. Each model re-scored the same 300 Mallinckrodt emails (100 with a debatable gold label, 100 clear positives, 100 clear negatives) five times (all eight issues per call, and the two narrow issues one per call). Bars are the probability that two runs disagree on a decision, with a 95% bootstrap interval over decisions; the benchmark run is repeat one. Temperature 0 was run where the API accepts it; Anthropic rejects sampling parameters on Sonnet 5. Jev and Laya expose no sampling controls. Classical TAR rows are 0 by construction; their spread across random training samples is the seed range in the row tooltips.</p>
-        </div>
-        <div>
-          <h4>Classical TAR</h4>
-          <p>A simulated reviewer (gold labels; 50 documents/hour at $65/hour) plus TF‑IDF and logistic regression, one model per issue and one for any‑issue relevance. TAR 1.0 codes a random sample and picks its cutoff by cross‑validation on that sample alone. TAR 2.0 is continuous active learning stopped by the knee method (Cormack & Grossman 2016: pre‑knee slope at least 6× post‑knee, after 10% of the collection); it is plotted as the review set the classifier queued, since the hand‑coded production set has the reviewer's precision rather than the classifier's. Mallinckrodt's benchmark sample is 61% rich by design, so CAL there runs on a 10%‑rich pool (all gold‑negative emails plus a random draw of positives per seed). Rows are the median of five random seeds (three for TREC). TREC rows are trained and reviewed over the full 286k collection and scored on the same evaluation set as the other models. The imperfect‑reviewer variants miss 10% of relevant documents and over‑code 2% of non‑relevant ones.</p>
-        </div>
-        <div>
-          <h4>Absent cells</h4>
-          <p>A few one-issue-per-call Laya configurations stalled and are omitted from that view. The fine-tuned Laya checkpoint on CUAD collapsed to a constant negative and is shown as such.</p>
-        </div>
-        </footer>
-      </details>
+      {method && <MethodModal onClose={closeMethod} />}
+
+      <footer className="notes">
+        <MethodButton onClick={openMethod} />
+        <span className="notes-t">How each experiment was run: data sets, truth data, measurement.</span>
+      </footer>
     </div>
   );
+  return <MethodContext.Provider value={openMethod}>{page}</MethodContext.Provider>;
 }
