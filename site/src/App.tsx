@@ -13,6 +13,7 @@ import { HoverProvider, useHover } from "./components/hover";
 import { ExplainButton, ExplainModal } from "./components/Explain";
 import { Picker, type PickGroup } from "./components/Picker";
 import { MethodButton, MethodModal } from "./components/Method";
+import { DisclaimerLink, DisclaimerModal, useDisclaimer } from "./components/Disclaimer";
 import { Logo } from "./logos";
 
 type Chart = "map" | "ranked";
@@ -364,6 +365,7 @@ export default function App() {
   const [method, setMethod] = useState(false);
   const openMethod = useCallback(() => setMethod(true), []);
   const closeMethod = useCallback(() => setMethod(false), []);
+  const disclaimer = useDisclaimer(); // first-visit disclaimer; reopens from the footer
   const [on, setOn] = useState<Set<string>>(new Set(DEFAULT_ON));
   const [grp, setGrp] = useState("jev");
   const [off, setOff] = useState<Set<string>>(new Set());
@@ -457,10 +459,12 @@ export default function App() {
       {explain && <ExplainModal initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)} />}
 
       {method && <MethodModal onClose={closeMethod} />}
+      {disclaimer.open && <DisclaimerModal onClose={disclaimer.close} />}
 
       <footer className="notes">
         <MethodButton onClick={openMethod} />
         <span className="notes-t">How each experiment was run: data sets, truth data, measurement.</span>
+        <DisclaimerLink onClick={disclaimer.show} />
       </footer>
     </div>
   );
