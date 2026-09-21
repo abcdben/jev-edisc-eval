@@ -368,7 +368,7 @@ export default function App() {
         </div>
         <div>
           <h4>Classical TAR</h4>
-          <p>A simulated reviewer (gold labels; 50 documents/hour at $65/hour) plus TF‑IDF and logistic regression, one model per issue and one for any‑issue relevance. TAR 1.0 codes a random sample and picks its cutoff by cross‑validation on that sample alone; TAR 2.0 is continuous active learning stopped after two consecutive batches under 5% relevant. Rows are the median of five random seeds (three for TREC). TREC rows are trained and reviewed over the full 286k collection and scored on the same evaluation set as the other models. The 90%‑reviewer variants miscode 10% of documents at random.</p>
+          <p>A simulated reviewer (gold labels; 50 documents/hour at $65/hour) plus TF‑IDF and logistic regression, one model per issue and one for any‑issue relevance. TAR 1.0 codes a random sample and picks its cutoff by cross‑validation on that sample alone; TAR 2.0 is continuous active learning stopped after two consecutive batches under 5% relevant. Rows are the median of five random seeds (three for TREC). TREC rows are trained and reviewed over the full 286k collection and scored on the same evaluation set as the other models. The 90%‑reviewer variants miscode 10% of documents at random; with that reviewer the CAL stopping rule can never fire (every batch comes back at least ~9% "relevant"), so those rows reviewed the whole collection on Mallinckrodt and CUAD and were not run on TREC.</p>
         </div>
         <div>
           <h4>Absent cells</h4>

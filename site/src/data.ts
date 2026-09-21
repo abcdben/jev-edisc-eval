@@ -93,7 +93,7 @@ export const PRIMARY: { key: string; color: string; short: string; note: string 
   { key: "lexical", color: "var(--c-lexical)", short: "Keyword floor", note: "Term overlap between the RFP text and the document, thresholded at 0.5. No model; shows what vocabulary alone buys." },
 ];
 export const PRIMARY_BY_KEY = Object.fromEntries(PRIMARY.map((p) => [p.key, p]));
-export const DEFAULT_ON = new Set(["jev@base", "laya@recipe", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gemini-3.8-flash", "lexical"]);
+export const DEFAULT_ON = new Set(["jev@base", "laya@recipe", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gemini-3.8-flash", "tar@t1_1000", "tar@cal", "lexical"]);
 
 /** Ablation families: a base model whose variants change one lever at a time. */
 export const ABLATION_GROUPS: { id: string; label: string; recipe: string; note: string }[] = [
