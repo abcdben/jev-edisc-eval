@@ -277,10 +277,11 @@ svg text { user-select: none; font-family: var(--sans); }
   *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
 }
 
-/* decider marker (data.ts isDecider): a 2px rule in the model colour down the left edge of a picker row; the charts draw the same rule in SVG */
-.pick-row { position: relative; }
-.pick-row .rule { position: absolute; left: 1px; top: 3px; bottom: 3px; width: 2px; border-radius: 1px; pointer-events: none; }
-.pick-row:not(.on) .rule { opacity: 0.45; }
+/* decider marker (data.ts isDecider): a hairline rectangle in the model colour (--frame, 55% opacity) around a picker row's mark and name,
+   3px of air left and right, 2px above and below; the charts draw the same frame in SVG (ui.tsx DeciderFrame) */
+.pick-main .lbl { display: inline-flex; align-items: center; gap: 8px; position: relative; }
+.pick-main .lbl.frame::before { content: ""; position: absolute; inset: -2px -3px; border: 1px solid var(--frame); border-radius: 3px; opacity: 0.55; pointer-events: none; }
+.pick-row:not(.on) .lbl.frame::before { opacity: 0.3; }
 /* the small muted tag after a decider's name in the details and Method modals */
 .decider-tag {
   display: inline-block; vertical-align: 0.15em; margin-left: 8px; padding: 0 5px; border: 1px solid var(--line-2); border-radius: 2px;

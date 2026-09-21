@@ -1,5 +1,5 @@
 import raw from "../../results/examples.json";
-import { SITE_CORPORA } from "./data";
+import { SITE_CORPORA, isHidden } from "./data";
 
 export type ExOutput = {
   arm: "single" | "multi";
@@ -60,16 +60,17 @@ export const EX_GROUPS: { id: string; label: string; match: (k: string) => boole
   },
   {
     id: "tar", label: "Classical TAR", match: (k) => k.startsWith("tar@"),
-    intro: "No model reads the request. A reviewer codes documents by hand (simulated from the gold labels at 50 documents/hour, $65/hour) and a TF-IDF + logistic-regression classifier learns from those codes. The request shown is the workflow and the coded sample; the output is the median seed's call on this document. Switch rows to compare sample sizes, cutoff rules, reviewer accuracy, and TAR 1.0 against continuous active learning.",
+    intro: "No model reads the request. A reviewer codes documents by hand (simulated from the gold labels at 50 documents/hour, $65/hour) and a TF-IDF + logistic-regression classifier learns from those codes. The request shown is the workflow and the coded sample; the output is the median seed's call on this document. Switch rows to compare sample sizes, cutoff rules and reviewer accuracy.",
   },
 ];
 
 export const groupOf = (key: string) => EX_GROUPS.find((g) => g.match(key))?.id ?? "jev";
+/** The family's configurations with examples on this corpus, less the keys the site hides (data.ts HIDDEN_MODELS). */
 export const membersOf = (corpus: string, group: string): string[] => {
   const g = EX_GROUPS.find((x) => x.id === group)!;
   const c = EX.corpora[corpus];
   if (!c) return [];
-  return Object.keys(c.configs).filter(g.match);
+  return Object.keys(c.configs).filter((k) => g.match(k) && !isHidden(k));
 };
 
 /** Corpus key used by the site view -> corpus key in examples.json; only site corpora are eligible, first one with examples as fallback. */

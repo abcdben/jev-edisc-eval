@@ -1,9 +1,8 @@
 import { DATA, fmtCI, fmtInt, fmtPct, isDecider, type DetCell, type Rec } from "../data";
 import { Logo, LogoGlyph } from "../logos";
 import { useRef, useState } from "react";
-import { CLICK_HINT, Hint, Seg, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth, type HintItem, type TipLine } from "./ui";
+import { CLICK_HINT, DeciderFrame, Hint, Seg, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth, type HintItem, type TipLine } from "./ui";
 import { hoverable } from "./hover";
-import { DeciderRule } from "./PRRows";
 
 /** The Determinism card's "i" popover. */
 const DET_ITEMS: HintItem[] = [
@@ -117,7 +116,7 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
             // the row's group is translated to its rank (CSS transition on transform); everything inside is drawn at y = 0..ROW
             const top = lastTop.current.get(x.r.model) ?? 0, cy = ROW / 2;
             const c = colorOf(x.r), nm = nameOf(x.r), k = x.r.model;
-            const rule = isDecider(x.r.kind) && <DeciderRule color={c} row={ROW} />;
+            const rule = isDecider(x.r.kind) && <DeciderFrame color={c} cy={cy} text={nm} />; // the decider marker (ui.tsx) frames logo and name
             const wrap = { className: `mv fd${highlight === k ? " hl" : ""}`, style: { transform: `translate(0px, ${top}px)`, ...fadeStyle(state) } };
             if (!x.c) {
               return (

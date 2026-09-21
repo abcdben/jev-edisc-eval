@@ -3,14 +3,11 @@ import type { CI } from "../data";
 import { fmtPct } from "../data";
 import type { PRItem } from "./PRScatter";
 import { Logo, LogoGlyph } from "../logos";
-import { CLICK_HINT, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth } from "./ui";
+import { CLICK_HINT, DeciderFrame, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth } from "./ui";
 import { prTip } from "./PRScatter";
 import { hoverable } from "./hover";
 
 const ROW = 26, NUM_W = 54;
-
-/** The decider marker on a chart row (data.ts isDecider): a 2px rule in the model colour down the left edge of the label area, the row's height less 4px. */
-export const DeciderRule = ({ color, row }: { color: string; row: number }) => <rect x={0} y={2} width={2} height={row - 4} rx={1} fill={color} style={{ pointerEvents: "none" }} />;
 
 /** Ranked rows: recall and precision side by side, dot at the point estimate, whisker across the 95% interval. `onSelect` makes each row a button (click, Enter, Space). `highlight` tints the row with that id (cross-chart hover, see hover.tsx); `onHover` reports the row under the pointer or keyboard focus. */
 /** Motion (ui.tsx): rows slide to their new rank over 320 ms (a CSS transform on the keyed group), whiskers and dots ease along the axis; rows fade in and out over 150 ms. */
@@ -67,19 +64,19 @@ export function PRRows({ items, zoom, sortBy, logos = true, onSelect, highlight,
         ))}
         {drawn.map(({ r, state }) => {
           // the row's group is translated to its rank (CSS transition on transform); everything inside is drawn at y = 0..ROW
-          const top = lastTop.current.get(r.id) ?? 20, y = ROW / 2;
+          const top = lastTop.current.get(r.id) ?? 20, y = ROW / 2, label = `${r.name}${r.subset ? " *" : ""}`;
           return (
             <g key={r.id} className={`mv fd${highlight === r.id ? " hl" : ""}`} style={{ transform: `translate(0px, ${top}px)`, ...fadeStyle(state) }} {...hoverable(onHover, r.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
             <g onMouseMove={(e) => show(e, { kind: "row", top, height: ROW, clearX: W }, prTip(r, logos ? <Logo model={r.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
               <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
-              {r.decider && <DeciderRule color={r.color} row={ROW} />}
               {logos ? (
                 <>
+                  {r.decider && <DeciderFrame color={r.color} cy={y} text={label} />}{/* the decider marker (ui.tsx) frames logo and name */}
                   <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={8} cy={y} /></g>
-                  <text x={22} y={y + 4} fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
+                  <text x={22} y={y + 4} fontSize={12} fill="var(--ink-2)">{label}</text>
                 </>
               ) : (
-                <text x={LABEL_W - 12} y={y + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
+                <text x={LABEL_W - 12} y={y + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{label}</text>
               )}
               {([r.recall, r.precision] as CI[]).map((ci, col) =>
                 ci ? (

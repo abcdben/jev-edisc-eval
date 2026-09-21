@@ -85,13 +85,20 @@ export const KIND_LABEL: Record<Kind, string> = {
   baseline: "Floor",
 };
 export const KIND_ORDER: Kind[] = ["system1", "system1_ft", "llm", "local_llm", "tar", "baseline"];
-/** The decider kinds (Jev, Laya). The one rule behind every decider marker: the accent rule on rows, the outlined box on the map, the DECIDER tag in modals. */
+/** The decider kinds (Jev, Laya). The one rule behind every decider marker: the outlined name on rows and in the picker, the ringed mark on the map, the DECIDER tag in modals. */
 export const isDecider = (kind: string | null | undefined): boolean => kind === "system1" || kind === "system1_ft";
+
+/**
+ * Model keys the site does not show anywhere (roster, picker, charts, Configurations, details modal), though their results stay in
+ * findings.json and examples.json. CAL hidden for now; remove from this list to bring it back.
+ */
+export const HIDDEN_MODELS: string[] = ["tar@cal", "tar@cal_75", "tar@cal_perfect", "tar@cal_knee"];
+export const isHidden = (key: string): boolean => HIDDEN_MODELS.includes(key);
 /** The kind of a model key (headline roster or configuration), from the models map or the first record that ran it. */
 export const modelKind = (key: string): string | undefined => DATA.models[key]?.kind ?? DATA.records.find((r) => r.model === key)?.kind;
 
-/** Headline roster, in display order, with a stable colour each. `kind` overrides the record's kind for grouping on the Compare page. */
-export const PRIMARY: { key: string; color: string; short: string; note: string; kind?: Kind }[] = [
+/** Headline roster, in display order, with a stable colour each. `kind` overrides the record's kind for grouping on the Compare page. HIDDEN_MODELS are filtered out below. */
+const ALL_PRIMARY: { key: string; color: string; short: string; note: string; kind?: Kind }[] = [
   { key: "jev@base", color: "var(--c-jev)", short: "Jev", note: "TypeSafe Jev 1.13, default configuration: Noul question form, prose criteria, RFP phrasing, matter context." },
   { key: "jev@state_string", color: "var(--c-jev-2)", short: "Jev · optimized", note: "Jev 1.13 with the one lever that won the 12-variant ablation on the Veridian dev split (flat-string state): the optimized configuration, selected before any other corpus was scored." },
   { key: "laya-ft", color: "var(--c-laya-ft)", short: "Laya", kind: "system1", note: "ConvAI Laya, fine-tuned (RLCD) on a 30% document-level dev split of the same corpus and scored on the held-out 70%; every other row is zero-shot. The labeled data it needed is not counted in the time and cost panels. Zero-shot Laya configurations are on the Configurations page." },
@@ -108,8 +115,9 @@ export const PRIMARY: { key: string; color: string; short: string; note: string;
   { key: "tar@t1_5000", color: "var(--c-tar-4)", short: "TAR 1.0 · 5,000", note: "As above with 5,000 documents coded." },
   { key: "tar@cal", color: "var(--c-cal)", short: "TAR 2.0 · CAL", note: "Continuous active learning with an imperfect reviewer (misses 10% of relevant documents, over-codes 2% of non-relevant), as run in practice. The reviewer first codes a random control set (10% of the pool, capped at 500; 2,000 on TREC), then codes the classifier's top-ranked batch, it retrains, repeat; review stops once the control set estimates 80% recall for two consecutive batches. Plotted as the production set: every document the reviewer coded relevant, scored against gold on the pool CAL ran over. The tooltip has the review effort, the recall estimate at stop against the true figure, and the classifier on its own. On Mallinckrodt, whose benchmark sample is 61% rich by design, CAL runs on a 10%-rich pool." },
 ];
+export const PRIMARY = ALL_PRIMARY.filter((p) => !isHidden(p.key));
 export const PRIMARY_BY_KEY = Object.fromEntries(PRIMARY.map((p) => [p.key, p]));
-export const DEFAULT_ON = new Set(["jev@base", "laya-ft", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash", "gemma3-12b", "tar@t1_100", "tar@t1_300", "tar@t1_1000", "tar@t1_5000", "tar@cal"]);
+export const DEFAULT_ON = new Set(["jev@base", "laya-ft", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash", "gemma3-12b", "tar@t1_100", "tar@t1_300", "tar@t1_1000", "tar@t1_5000", "tar@cal"].filter((k) => !isHidden(k)));
 
 /**
  * Human prompt/criteria development, added to every non-TAR row when the ops cards are set to "+ human time".
@@ -146,7 +154,7 @@ export const ABLATION_GROUPS: { id: string; label: string; recipe: string; note:
   { id: "laya", label: "Laya", recipe: "recipe", note: "ConvAI Laya, English checkpoint, zero-shot. Two levers (compact, chunk) exist only to fit its 512-token context; ★ marks the configuration that combines them, selected on the Veridian dev split." },
   { id: "laya-typed", label: "Laya · typed", recipe: "recipe", note: "Laya typed checkpoint, zero-shot." },
   { id: "laya-multilingual", label: "Laya · multilingual", recipe: "recipe", note: "Laya multilingual checkpoint, zero-shot." },
-  { id: "tar", label: "Classical TAR", recipe: "", note: "A simulated reviewer (50 docs/h, $65/h) plus TF-IDF + logistic regression. TAR 1.0 rows vary the size of the coded sample, the cutoff rule (80% recall vs. F1) and reviewer accuracy; TAR 2.0 rows are continuous active learning stopped by a control-set recall estimate (80% or 75% target, imperfect or perfect reviewer) or by the knee method, plotted as the production set the reviewer coded relevant. Every row is the median of the random seeds." },
+  { id: "tar", label: "Classical TAR", recipe: "", note: "A simulated reviewer (50 docs/h, $65/h) plus TF-IDF + logistic regression. TAR 1.0 rows vary the size of the coded sample, the cutoff rule (80% recall vs. F1) and reviewer accuracy. Every row is the median of the random seeds." },
 ];
 export const VARIANT_ORDER = ["base", "choice", "score", "crit_none", "crit_struct", "literal", "no_context", "state_string", "gate", "ensemble", "decompose", "preview", "compact", "chunk", "recipe", "recipe_choice",
   "t1_100", "t1_100_f1", "t1_100_noisy", "t1_300", "t1_300_f1", "t1_300_noisy", "t1_1000", "t1_1000_f1", "t1_1000_noisy", "t1_5000", "t1_5000_f1", "t1_5000_noisy", "cal", "cal_75", "cal_perfect", "cal_knee"];

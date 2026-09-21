@@ -1,10 +1,9 @@
 import { useRef } from "react";
 import { Logo, LogoGlyph } from "../logos";
-import { CLICK_HINT, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth } from "./ui";
+import { CLICK_HINT, DeciderFrame, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth } from "./ui";
 import { hoverable } from "./hover";
-import { DeciderRule } from "./PRRows";
 
-/** `sub` is the one secondary line of the row's hover tooltip. `empty` replaces the "not measured" text when `value` is null for a reason other than missing data. `decider` (data.ts isDecider) draws the accent rule at the row's left edge. */
+/** `sub` is the one secondary line of the row's hover tooltip. `empty` replaces the "not measured" text when `value` is null for a reason other than missing data. `decider` (data.ts isDecider) frames the row's logo and name. */
 export type BarItem = { id: string; name: string; color: string; value: number | null; label: string; sub?: string; subset?: string | null; empty?: string; decider?: boolean };
 
 const ROW = 20;
@@ -37,20 +36,20 @@ export function OpsBars({ items, axis, unit, sort = true, logos = true, onSelect
           // the row's group is translated to its rank (CSS transition on transform); everything inside is drawn at y = 0..ROW
           const top = lastTop.current.get(r.id) ?? 0;
           const v = r.value;
-          const bw = widths[r.id] ?? barW(v);
+          const bw = widths[r.id] ?? barW(v), label = `${r.name}${r.subset ? " *" : ""}`;
           const content = { title: r.name, color: r.color, icon: logos ? <Logo model={r.id} size={12} /> : undefined, value: v == null ? r.empty ?? "not measured" : r.label, unit: v == null ? undefined : unit, sub: r.sub };
           return (
             <g key={r.id} className={`mv fd${highlight === r.id ? " hl" : ""}`} style={{ transform: `translate(0px, ${top}px)`, ...fadeStyle(state) }} {...hoverable(onHover, r.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
             <g onMouseMove={(e) => show(e, { kind: "row", top, height: ROW, clearX }, content)} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
               <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
-              {r.decider && <DeciderRule color={r.color} row={ROW} />}
               {logos ? (
                 <>
+                  {r.decider && <DeciderFrame color={r.color} cy={ROW / 2} text={label} />}{/* the decider marker (ui.tsx) frames logo and name */}
                   <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={8} cy={ROW / 2} /></g>
-                  <text x={22} y={ROW / 2 + 4} fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
+                  <text x={22} y={ROW / 2 + 4} fontSize={12} fill="var(--ink-2)">{label}</text>
                 </>
               ) : (
-                <text x={LABEL_W - 10} y={ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{r.name}{r.subset ? " *" : ""}</text>
+                <text x={LABEL_W - 10} y={ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{label}</text>
               )}
               <rect x={LABEL_W} y={6} width={bw} height={ROW - 12} fill={r.color} rx={1.5} style={{ fillOpacity: v === 0 ? "calc(var(--bar-alpha) * 0.5)" : "var(--bar-alpha)" }} />
               <text x={LABEL_W + bw + 7} y={ROW / 2 + 4} fontSize={11.5} fill={v == null ? "var(--ink-4)" : "var(--ink)"} className="mono">{v == null ? r.empty ?? "not measured" : r.label}</text>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-/** `accent` draws a 2px rule in that colour down the row's left edge (the decider marker, data.ts isDecider). */
+/** `accent` frames the row's mark and label with a hairline rectangle in that colour (the decider marker, data.ts isDecider; the charts draw the same frame in SVG, ui.tsx DeciderFrame). */
 export type PickItem = { id: string; label: string; mark?: ReactNode; title?: string; suffix?: ReactNode; detail?: () => void; accent?: string };
 export type PickGroup = { id: string; label: string; items: PickItem[] };
 
@@ -59,12 +59,13 @@ export function Picker({ label, summary, groups, on, onChange, onReset, footer }
                   const isOn = on.has(it.id);
                   return (
                     <div className={`pick-row${isOn ? " on" : ""}`} key={it.id} role="option" aria-selected={isOn}>
-                      {it.accent && <span className="rule" style={{ background: it.accent }} aria-hidden />}
                       <button className="pick-main" onClick={() => set([it.id], !isOn)} title={it.title}>
                         <span className={`box${isOn ? " on" : ""}`} />
-                        {it.mark && <span className="mark">{it.mark}</span>}
-                        <span className="nm">{it.label}</span>
-                        {it.suffix}
+                        <span className={`lbl${it.accent ? " frame" : ""}`} style={it.accent ? ({ "--frame": it.accent } as React.CSSProperties) : undefined}>
+                          {it.mark && <span className="mark">{it.mark}</span>}
+                          <span className="nm">{it.label}</span>
+                          {it.suffix}
+                        </span>
                       </button>
                       {it.detail && <button className="pick-i" onClick={it.detail} title="How this one is asked">i</button>}
                     </div>

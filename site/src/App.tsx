@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, HUMAN_DEV_DOCS, HUMAN_DEV_DOCS_PER_HOUR, HUMAN_DEV_HOURS, HUMAN_DEV_USD, HUMAN_DEV_USD_PER_HOUR, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
-  corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, pick, siteCorpus, variantColor,
+  corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, pick, siteCorpus, variantColor,
   type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
 import { Control, Hint, MethodContext, Seg, type HintItem, type TipLine } from "./components/ui";
@@ -59,7 +59,7 @@ const PR_ITEMS: HintItem[] = [
   { k: "Scope", v: "Document level: responsive if positive for any issue. Decision level: every (document, issue) judgment pooled." },
   { k: "Gray", v: "'Exclude gray' drops decisions whose gold label was flagged as debatable." },
   { k: "*", v: "Scored on a stratified subset; hover a row for the count. Intervals widen to match." },
-  { k: "Deciders", v: "Jev and Laya rows carry a coloured rule (tables) or outlined interval box (map)." },
+  { k: "Deciders", v: "Jev and Laya carry an outlined name (tables) and a ringed mark (map)." },
 ];
 /** Recall and precision card, Configurations page. */
 const CONFIG_PR_ITEMS: HintItem[] = [
@@ -246,7 +246,7 @@ const COST_ITEMS: HintItem[] = [
   ...HUMAN_ITEMS,
 ];
 
-/** `decider` marks a row with the decider accent rule (data.ts isDecider); Compare models passes it, the Configurations page (one family per chart) does not. */
+/** `decider` marks a row with the decider frame around its name (data.ts isDecider); Compare models passes it, the Configurations page (one family per chart) does not. */
 function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean; explain?: (k: string) => void; decider?: (r: Rec) => boolean }) {
   const [mode, setMode] = useState<OpsMode>(() => (localStorage.getItem(OPS_MODE_KEY) === "human" ? "human" : "machine"));
   const onSelect = explain && ((it: BarItem) => explain(it.id));
@@ -308,7 +308,7 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
   const primary = rows.filter((r) => r.primary);
   const sel = PRIMARY.map((p) => primary.find((r) => r.model === p.key)).filter((r): r is Rec => !!r && on.has(r.model));
   const [chart, setChart] = useState<Chart>("map");
-  // the decider marker (data.ts isDecider) on every chart of this page, by the roster's kind (Laya's fine-tuned row is grouped with the deciders)
+  // the decider marker (data.ts isDecider: framed name on rows, ringed mark on the map) on every chart of this page, by the roster's kind (Laya's fine-tuned row is grouped with the deciders)
   const decider = (r: Rec) => isDecider(kindOf(r));
 
   const items: PRItem[] = sel.map((r) => {
@@ -346,7 +346,7 @@ function ConsistencyCard(props: Parameters<typeof Consistency>[0]) {
 function useVariants(v: View, grp: string) {
   const rows = useRows(v);
   return useMemo(() => {
-    const recs = rows.filter((r) => r.group === grp && r.variant);
+    const recs = rows.filter((r) => r.group === grp && r.variant && !isHidden(r.model));
     return VARIANT_ORDER.map((vv) => recs.find((r) => r.variant === vv)).filter((r): r is Rec => !!r);
   }, [rows, grp]);
 }
@@ -531,7 +531,7 @@ export default function App() {
       {explain && (
         <ExplainModal
           initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)}
-          metrics={(k, c) => metricsFor(k, c, v, (rows) => (pageId === "compare" ? rows.filter((r) => r.primary && on.has(r.model)) : rows.filter((r) => r.group === grp && !!r.variant && !off.has(r.variant))))}
+          metrics={(k, c) => metricsFor(k, c, v, (rows) => (pageId === "compare" ? rows.filter((r) => r.primary && on.has(r.model)) : rows.filter((r) => r.group === grp && !!r.variant && !isHidden(r.model) && !off.has(r.variant))))}
         />
       )}
 

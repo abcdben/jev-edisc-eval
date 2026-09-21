@@ -207,6 +207,49 @@ export function DeciderTag() {
   return <span className="decider-tag" title="A decider model (Jev, Laya): answers typed questions with probabilities, writes no text">decider</span>;
 }
 
+// Text measurement for SVG labels, on a canvas in the page's font. Cached per string; the cache is dropped and subscribers re-render when a
+// web font finishes loading, since a measurement taken in the fallback face is wrong by a few pixels.
+let measureCtx: CanvasRenderingContext2D | null = null;
+let measureFont: string | null = null;
+const widthCache = new Map<string, number>();
+const fontListeners = new Set<() => void>();
+if (typeof document !== "undefined" && document.fonts) {
+  document.fonts.addEventListener("loadingdone", () => { widthCache.clear(); measureFont = null; fontListeners.forEach((f) => f()); });
+}
+/** Advance width of `text` at `px` pixels in the body's font family; 6.3 px per character when canvas is unavailable. */
+export function textWidth(text: string, px = 12): number {
+  const key = `${px}|${text}`;
+  const hit = widthCache.get(key);
+  if (hit != null) return hit;
+  measureCtx ??= typeof document === "undefined" ? null : document.createElement("canvas").getContext("2d");
+  if (!measureCtx) return text.length * 6.3;
+  measureFont ??= getComputedStyle(document.body).fontFamily || "sans-serif";
+  measureCtx.font = `${px}px ${measureFont}`;
+  const w = measureCtx.measureText(text).width;
+  widthCache.set(key, w);
+  return w;
+}
+/** Re-renders the caller when a web font finishes loading, so labels measured with `textWidth` are re-measured in the loaded face. */
+export function useFontMetrics(): void {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const f = () => tick((n) => n + 1);
+    fontListeners.add(f);
+    return () => { fontListeners.delete(f); };
+  }, []);
+}
+
+/**
+ * The decider marker on a chart row (data.ts isDecider): a hairline rectangle around the row's label cell (logo and name), 1px in the
+ * model's colour at 55% opacity, 3px radius, no fill; about 3px of air left and right of the label, 2px above and below the text. The label
+ * is drawn with its logo centred at x = 8 and its text at `textX`, baseline `cy + 4`, 12px; the frame's width follows the measured text.
+ */
+export function DeciderFrame({ color, cy, text, textX = 22 }: { color: string; cy: number; text: string; textX?: number }) {
+  useFontMetrics();
+  const x0 = -1.5, x1 = textX + textWidth(text) + 3;
+  return <rect x={x0} y={cy - 7.5} width={x1 - x0} height={16} rx={3} fill="none" stroke={color} strokeOpacity={0.55} strokeWidth={1} style={{ pointerEvents: "none" }} />;
+}
+
 /** Measured content box of the host element. */
 export function useSize(hostRef: React.RefObject<HTMLDivElement | null>, fallback: { w: number; h: number }): { w: number; h: number } {
   const [sz, setSz] = useState(fallback);
