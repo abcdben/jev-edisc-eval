@@ -281,14 +281,14 @@ export function ExplainModal({ initialKey, initialCorpus, onClose }: { initialKe
 }
 
 /** Small "how it works" affordance used next to picker rows and section heads. */
-export function ExplainButton({ onClick, label = "example" }: { onClick: () => void; label?: string }) {
+export function ExplainButton({ onClick, label = "details" }: { onClick: () => void; label?: string }) {
   // a span, not a button: it lives inside picker rows that are themselves <button>s
   return (
     <span
       className="ex-btn" role="button" tabIndex={0}
       onClick={(e) => { e.stopPropagation(); e.preventDefault(); onClick(); }}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); e.preventDefault(); onClick(); } }}
-      title="Show a worked example: the request sent and the answer returned"
+      title="Configuration details: the request sent and the answer returned"
     >
       {label}
     </span>
