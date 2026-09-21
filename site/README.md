@@ -20,3 +20,7 @@ Two sections, both driven by the sticky control bar (corpus, TREC criteria, prom
 Every mark carries a hover tooltip with the counts and intervals behind it; every panel title has an (i) explaining the measurement.
 
 **Consistency** (third card under each section): run-to-run disagreement from the determinism study, `bench determinism` → `results/determinism.json`, merged into `findings.json` by `bench export-findings`. Repeat runs are produced by `scripts/det_run.sh <arm>` (API models, this machine) and `scripts/gpu_box.sh det` (Laya, Gemma on a GPU box).
+
+## Publishing
+
+`scripts/deploy_site.sh` builds and force-pushes `site/dist` to [github.com/abcdben/tarcalc](https://github.com/abcdben/tarcalc), which GitHub Pages serves at https://tarcalc.com. If results changed, run `.venv/bin/bench export-findings` first. DNS at Namecheap: A records for `@` → 185.199.108.153 / .109.153 / .110.153 / .111.153, CNAME `www` → `abcdben.github.io`.
