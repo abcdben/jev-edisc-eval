@@ -56,7 +56,6 @@ const PR_ITEMS: HintItem[] = [
   { k: "Intervals", v: <mark><b>95% Wilson</b> score; recall over the gold-positive set, precision over the flagged set, since every document carries a gold label.</mark> },
   { k: "Label", v: <><b>The model's own label</b>, not a tuned threshold.</> },
   { k: "Scope", v: <><b>Document level</b>: responsive if positive for any issue. Decision level: every (document, issue) judgment pooled.</> },
-  { k: "Gray", v: <>'Exclude gray' <b>drops decisions whose gold label was flagged as debatable</b>.</> },
   { k: "*", v: <><b>Scored on a stratified subset</b>; hover a row for the count. Intervals widen to match.</> },
   { k: "Deciders", v: <><b>Jev and Laya</b> are set in a heavier name in the tables.</> },
 ];
@@ -428,7 +427,7 @@ export default function App() {
   const setCorpus = (c: string) => setCorpusRaw(siteCorpus(c));
   const tag: "" | "v0" = ""; // TREC criteria: always the calibrated set; the bare-topic (v0) rows stay exported but are not shown
   const [arm, setArm] = useState<"multi" | "single">("multi");
-  const [gray, setGray] = useState<Gray>("all");
+  const gray: Gray = "all"; // gray gold labels always count; the exclude-gray view is not shown
   const [level, setLevel] = useState<Level>("doc");
   const [issue, setIssue] = useState<string | null>(null);
   const v: View = { corpus, tag: corpus === "trec" ? tag : "", arm, gray, level, issue };
@@ -448,7 +447,6 @@ export default function App() {
   const nonDefault = [
     arm === "single" ? "one issue per call" : null,
     issue ? `issue: ${meta.issues[issue]}` : level === "decision" ? "every decision" : null,
-    !issue && gray === "nogray" ? "gray excluded" : null,
   ].filter((x): x is string => !!x);
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "dark");
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
@@ -510,19 +508,6 @@ export default function App() {
             { k: "Document", v: <mark>A document is <b>responsive if it is positive for any issue</b>: the relevance call a review team makes.</mark> },
             { k: "Decision", v: <><b>Pools every (document, issue) judgment</b>.</> },
             { k: "Single issue", v: <><b>That issue's recall and precision on its own</b>, over all gold labels.</> },
-          ]} />
-        </Control>
-        <Control label="Gold">
-          <Seg value={issue ? "all" : gray} onChange={setGray} options={[
-            { id: "all", label: "all labels" },
-            { id: "nogray", label: "exclude gray", title: issue ? "Not available for a single issue" : "Drop decisions whose gold label was flagged as debatable" },
-          ]} />
-          <Hint title="Gold" items={[
-            { k: "All labels", v: <>Every (document, issue) gold label counts.</> },
-            { k: "Exclude gray", v: <mark><b>Drops the decisions whose gold label is debatable</b>, so a model is not marked wrong on a call reasonable reviewers would split.</mark> },
-            { k: "Gray", v: <>{corpus === "mnk" ? <>The three-model panel split, or its mean p(responsive) fell in 0.35–0.65.</>
-              : corpus === "cuad" ? <>The paragraph overlaps an annotated clause below both 50% thresholds (a clause running across a paragraph break).</>
-              : <>None from NIST; flagged where a facet's gold contradicts the topic text (NRA / non-resident aliens).</>}</> },
           ]} />
         </Control>
       </div>
