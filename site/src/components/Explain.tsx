@@ -247,11 +247,6 @@ function Output({ o, gold, contended }: { o: ExOutput; gold: string; contended: 
 
 type MenuItem = { id: string; label: string; def?: string; tags?: { text: string; title?: string }[] };
 /** `s` cut at a word boundary to about `n` characters, with an ellipsis; unchanged when it fits. The row's CSS ellipsis does the exact fit; this bounds the text. */
-const clip = (s: string, n = 120) => {
-  if (s.length <= n) return s;
-  const cut = s.lastIndexOf(" ", n);
-  return s.slice(0, cut > n - 30 ? cut : n).replace(/[,;:]$/, "") + "…";
-};
 
 /**
  * One title menu: a button styled as the h2's text with a small chevron, opening a fixed-position menu below it (right-aligned or above at the
@@ -306,13 +301,12 @@ function TitleMenu({ label, value, items, onPick, muted, wide, ariaLabel, foot }
           <div className="ex-menu-list">
             {items.map((it) => (
               <button
-                key={it.id} type="button" role="menuitemradio" aria-checked={it.id === value} className={`ex-mi${it.id === value ? " on" : ""}`}
+                key={it.id} type="button" role="menuitemradio" aria-checked={it.id === value} className={`ex-mi${it.id === value ? " on" : ""}`} title={it.def}
                 onClick={() => { onPick(it.id); close(true); }}
               >
                 <span className="ex-mi-chk" aria-hidden="true">{it.id === value ? "✓" : ""}</span>
                 <span className="ex-mi-body">
                   <span className="ex-mi-l">{it.label}{it.tags?.map((t) => <span key={t.text} className="tag" title={t.title}>{t.text}</span>)}</span>
-                  {it.def && <span className="ex-mi-d" title={it.def}>{clip(it.def)}</span>}
                 </span>
               </button>
             ))}

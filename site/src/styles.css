@@ -386,7 +386,7 @@ svg text { user-select: none; font-family: var(--sans); }
   display: flex; flex-direction: column; max-height: 60vh; animation: rise-2 120ms var(--ease);
 }
 [data-theme="dark"] .ex-menu-pop { box-shadow: 0 8px 24px rgba(0,0,0,0.4); border-color: var(--line-2); }
-.ex-menu-pop.wide { width: 460px; }
+.ex-menu-pop.wide { width: 300px; }
 .ex-menu-list { overflow: auto; min-height: 0; display: flex; flex-direction: column; gap: 1px; }
 .ex-mi {
   display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 8px; align-items: start; padding: 6px 10px 6px 8px; border: 0; border-radius: 5px; background: none;
@@ -398,7 +398,6 @@ svg text { user-select: none; font-family: var(--sans); }
 .ex-mi-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .ex-mi-l { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .ex-mi-l .tag { font-size: 10px; color: var(--ink-4); letter-spacing: 0.02em; }
-.ex-mi-d { color: var(--ink-3); font-size: 12px; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ex-menu-foot { flex: none; color: var(--ink-4); font-size: 10.5px; letter-spacing: 0.04em; padding: 6px 10px 4px; border-top: 1px solid var(--line); margin-top: 3px; }
 .ex-eyebrow { font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
 .ex-head-ctl { display: flex; align-items: center; gap: 14px; }
