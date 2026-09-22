@@ -401,7 +401,7 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
               <>
                 {showNote && <p className="ex-note"><Emph s={note} term={NOTE_KEY_TERM[noteFamily(group)]?.[group === "llm" ? "" : variant]} /></p>}
                 {base && d.changed.size === 0 && d.removed.length === 0 && (
-                  <p className="ex-same">On this corpus and issue the request is identical to the default: the lever has nothing to act on here{variant === "decompose" ? " (this issue has no sub-questions in the task file; try CUAD or TREC)" : ""}. Any difference in the output is run-to-run variation.</p>
+                  <p className="ex-same">On this corpus and issue the request is identical to the default: the lever has nothing to act on here{variant === "decompose" ? " (this issue has no sub-questions in the task file; try TREC)" : ""}. Any difference in the output is run-to-run variation.</p>
                 )}
                 <div className="ex-sec">
                   <span className="ex-sec-t">Example</span>

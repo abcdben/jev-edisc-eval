@@ -1,11 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-/**
- * `accent` marks a decider row (data.ts isDecider): its name is set a step heavier, in full ink.
- * `disabled` is the reason a row cannot be selected here (e.g. data.ts UNSHOWN): it renders unchecked and greyed, the reason as its title,
- * and the group / all / none toggles skip it.
- */
-export type PickItem = { id: string; label: string; mark?: ReactNode; title?: string; suffix?: ReactNode; detail?: () => void; accent?: string; disabled?: string };
+/** `accent` marks a decider row (data.ts isDecider): its name is set a step heavier, in full ink. */
+export type PickItem = { id: string; label: string; mark?: ReactNode; title?: string; suffix?: ReactNode; detail?: () => void; accent?: string };
 export type PickGroup = { id: string; label: string; items: PickItem[] };
 
 /**
@@ -38,7 +34,7 @@ export function Picker({ label, summary, groups, on, onChange, onReset, footer }
     return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onKey); };
   }, [open]);
 
-  const all = groups.flatMap((g) => g.items.filter((i) => !i.disabled).map((i) => i.id));
+  const all = groups.flatMap((g) => g.items.map((i) => i.id));
   const set = (ids: string[], val: boolean) => { const n = new Set(on); ids.forEach((id) => (val ? n.add(id) : n.delete(id))); onChange(n); };
 
   return (
@@ -52,7 +48,7 @@ export function Picker({ label, summary, groups, on, onChange, onReset, footer }
         <div className={`pick-pop${alignR ? " r" : ""}`} style={maxW ? { maxWidth: Math.min(maxW, 760) } : undefined} role="listbox" aria-multiselectable>
           <div className="pick-grps">
           {groups.map((g) => {
-            const ids = g.items.filter((i) => !i.disabled).map((i) => i.id);
+            const ids = g.items.map((i) => i.id);
             const nOn = ids.filter((id) => on.has(id)).length;
             return (
               <div className="pick-grp" key={g.id}>
@@ -60,10 +56,10 @@ export function Picker({ label, summary, groups, on, onChange, onReset, footer }
                   <span>{g.label}</span><span className="n">{nOn}/{ids.length}</span>
                 </button>
                 {g.items.map((it) => {
-                  const isOn = !it.disabled && on.has(it.id);
+                  const isOn = on.has(it.id);
                   return (
-                    <div className={`pick-row${isOn ? " on" : ""}${it.disabled ? " dis" : ""}`} key={it.id} role="option" aria-selected={isOn} aria-disabled={!!it.disabled || undefined}>
-                      <button className="pick-main" onClick={() => set([it.id], !isOn)} title={it.disabled ?? it.title} disabled={!!it.disabled}>
+                    <div className={`pick-row${isOn ? " on" : ""}`} key={it.id} role="option" aria-selected={isOn}>
+                      <button className="pick-main" onClick={() => set([it.id], !isOn)} title={it.title}>
                         <span className={`box${isOn ? " on" : ""}`} />
                         <span className={`lbl${it.accent ? " dec" : ""}`}>
                           {it.mark && <span className="mark">{it.mark}</span>}

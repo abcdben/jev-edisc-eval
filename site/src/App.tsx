@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, HUMAN_DEV_DOCS, HUMAN_DEV_DOCS_PER_HOUR, HUMAN_DEV_HOURS, HUMAN_DEV_USD, HUMAN_DEV_USD_PER_HOUR, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
-  corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, pick, siteCorpus, starOf, unshownWhy, variantColor,
+  corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, pick, siteCorpus, starOf, variantColor,
   type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
 import { Control, Hint, MethodContext, ROW_PULSE_MS, Seg, usePulseWindow, type HintItem, type TipLine } from "./components/ui";
@@ -169,11 +169,8 @@ function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) =
   const scope = vv.issue ? meta.issues[vv.issue] : vv.level === "decision" ? "every decision" : "document level";
   const context = [meta.display, vv.arm === "single" ? "one issue per call" : "all issues per call", scope, !vv.issue && vv.gray === "nogray" ? "gray excluded" : null].filter(Boolean).join(" · ");
   const q = qualityLines(r, vv);
-  // a row the charts drop on this corpus (data.ts UNSHOWN) still opens here; say why its figures are not plotted
-  const unshown = unshownWhy(r.model, corpus);
-  if (unshown) q.notes.push(unshown);
   const o = opsLines(r, timeMode, costMode);
-  const peers = shown(rows).filter((x) => !unshownWhy(x.model, corpus));
+  const peers = shown(rows);
   const lowest = (f: (x: Rec) => number | null) => { const vals = peers.map(f).filter((x): x is number => x != null && x > 0); return vals.length ? Math.min(...vals) : null; };
   const ratio = (label: string, val: number | null, best: number | null): TipLine[] => {
     if (val == null || !best || val / best <= 1.05) return [];
@@ -197,9 +194,9 @@ function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) =
 
 // ------------------------------------------------------------------------------------------------
 
-/** The records the page plots for the view; keys data.ts hides (isHidden) and rows UNSHOWN drops on this corpus are left out (the Models picker lists the latter disabled). */
+/** The records the page plots for the view; keys data.ts hides (isHidden) are left out. */
 function useRows(v: View) {
-  return useMemo(() => DATA.records.filter((r) => r.corpus === v.corpus && r.tag === v.tag && r.arm === v.arm && !isHidden(r.model) && !unshownWhy(r.model, r.corpus)), [v.corpus, v.tag, v.arm]);
+  return useMemo(() => DATA.records.filter((r) => r.corpus === v.corpus && r.tag === v.tag && r.arm === v.arm && !isHidden(r.model)), [v.corpus, v.tag, v.arm]);
 }
 
 const OPS_MODE_OPTIONS = [
@@ -275,16 +272,13 @@ const kindOf = (r: Rec): Kind => PRIMARY_BY_KEY[r.model]?.kind ?? (r.kind as Kin
 function ModelPicker({ v, on, setOn, explain }: { v: View; on: Set<string>; setOn: (s: Set<string>) => void; explain: (k: string) => void }) {
   const rows = useRows(v);
   const primary = rows.filter((r) => r.primary && PRIMARY_BY_KEY[r.model]);
-  // rows that ran on this corpus but are not plotted (data.ts UNSHOWN): listed disabled, the reason as the title
-  const unshown = useMemo(() => DATA.records.filter((r) => r.corpus === v.corpus && r.tag === v.tag && r.arm === v.arm && r.primary && PRIMARY_BY_KEY[r.model] && unshownWhy(r.model, r.corpus)), [v.corpus, v.tag, v.arm]);
-  const listed = [...primary, ...unshown];
-  const byKind = PICK_ORDER.map((k) => ({ kind: k, recs: PRIMARY.map((p) => listed.find((r) => r.model === p.key)).filter((r): r is Rec => !!r && kindOf(r) === k) })).filter((g) => g.recs.length);
+  const byKind = PICK_ORDER.map((k) => ({ kind: k, recs: PRIMARY.map((p) => primary.find((r) => r.model === p.key)).filter((r): r is Rec => !!r && kindOf(r) === k) })).filter((g) => g.recs.length);
   const avail = primary.filter((r) => on.has(r.model)).length;
   const groups: PickGroup[] = byKind.map((g) => ({
     id: g.kind, label: KIND_SHORT[g.kind as Kind],
     items: g.recs.map((r) => {
       const m = PRIMARY_BY_KEY[r.model];
-      return { id: r.model, label: m.short, title: m.note, mark: <span style={{ color: m.color }}><Logo model={r.model} /></span>, suffix: starOf(r) ? <span className="sub" title={`scored on ${r.subset}`}>*</span> : undefined, detail: () => explain(r.model), accent: isDecider(kindOf(r)) ? m.color : undefined, disabled: unshownWhy(r.model, r.corpus) };
+      return { id: r.model, label: m.short, title: m.note, mark: <span style={{ color: m.color }}><Logo model={r.model} /></span>, suffix: starOf(r) ? <span className="sub" title={`scored on ${r.subset}`}>*</span> : undefined, detail: () => explain(r.model), accent: isDecider(kindOf(r)) ? m.color : undefined };
     }),
   }));
   return <Picker label="Models" summary={`${avail} of ${primary.length}`} groups={groups} on={on} onChange={setOn} onReset={() => setOn(new Set(DEFAULT_ON))} />;

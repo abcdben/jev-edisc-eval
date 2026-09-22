@@ -42,19 +42,17 @@ const DATASET_ROWS: FactRow[] = [
     k: "Source",
     cells: {
       mnk: <><b>UCSF / JHU Opioid Industry Documents Archive</b>, Mallinckrodt litigation collection: emails of 23 key custodians.</>,
-      cuad: <><b>CUAD v1</b> (Atticus Project, CC BY 4.0), official test split: 102 EDGAR commercial contracts.</>,
       trec: <><b>TREC 2016 Total Recall</b>, athome4: Jeb Bush gubernatorial email, 290,099 messages.</>,
     },
   },
   {
     k: "Documents scored",
-    cells: { mnk: <DocsCell id="mnk" />, cuad: <DocsCell id="cuad" />, trec: <DocsCell id="trec" /> },
+    cells: { mnk: <DocsCell id="mnk" />, trec: <DocsCell id="trec" /> },
   },
   {
     k: "Unit · length",
     cells: {
       mnk: <><b>One email</b> with its headers; 300–12,000 characters (median ≈ 2,700).</>,
-      cuad: <><b>One contract paragraph</b> with a title / position header; ≤ 3,000 characters (median ≈ 520).</>,
       trec: <><b>One email</b> with its headers; ≤ 12,000 characters (median ≈ 1,500).</>,
     },
   },
@@ -62,7 +60,6 @@ const DATASET_ROWS: FactRow[] = [
     k: "Issues",
     cells: {
       mnk: <><b><N v={8} /></b>: four broad / narrow pairs (suspicious order monitoring, marketing, distribution data, DEA) written for this study from the opioid MDL record.</>,
-      cuad: <><b><N v={12} /></b> of CUAD's 41 clause categories, reframed as requests for production; license grant / non-transferable license form a broad / narrow pair.</>,
       trec: <><b><N v={12} /></b> of the 34 NIST topics; the official topic sentence is the request, verbatim.</>,
     },
   },
@@ -70,7 +67,6 @@ const DATASET_ROWS: FactRow[] = [
     k: "Criteria",
     cells: {
       mnk: <>RFP text, prose positive / negative descriptions, structured includes / excludes; <b>identical for every model</b>.</>,
-      cuad: <>Same forms; the 'literal' phrasing is <b>CUAD's own category definition</b>.</>,
       trec: <>Refined once on a <b>668-email calibration set</b> disjoint from evaluation (Jev and Gemini Flash-Lite on the bare NIST topic sentence; shared misses read per topic). Only the refined criteria are shown.</>,
     },
   },
@@ -78,7 +74,6 @@ const DATASET_ROWS: FactRow[] = [
     k: "Truth data",
     cells: {
       mnk: <mark>Provisional gold from a <b>3-LLM panel</b> (Sonnet 5, GPT-5.6 Terra, Gemini 3.8 Flash), majority vote per decision; Jev and Laya never feed gold.</mark>,
-      cuad: <mark><b>Expert-highlighted spans</b>. A paragraph is positive when it carries ≥ 50% of a span, or a span covers ≥ 50% of it.</mark>,
       trec: <mark><b>NIST assessor judgments</b>: rel 1 or 2 → responsive; judged non-relevant and unjudged → not responsive (TREC convention).</mark>,
     },
   },
@@ -86,7 +81,6 @@ const DATASET_ROWS: FactRow[] = [
     k: "Gray (debatable)",
     cells: {
       mnk: <>Panel split, or mean p(responsive) in 0.35–0.65: <b><GrayCount id="mnk" /></b>.</>,
-      cuad: <>Overlaps a span below both 50% thresholds (a clause across a paragraph break): <b><GrayCount id="cuad" /></b>.</>,
       trec: <>None from NIST; <b><GrayCount id="trec" /></b> flagged where a facet's gold contradicts the topic text (NRA / non-resident aliens).</>,
     },
   },
@@ -94,7 +88,6 @@ const DATASET_ROWS: FactRow[] = [
     k: "Sampling",
     cells: {
       mnk: <><b>Stratified</b>: keyword-doped strata per issue pair, adjacent-product hard negatives, 700 random; near-duplicate threads thinned. Keyword strata are not labels.</>,
-      cuad: <><b>Every paragraph</b> of the 102 test contracts.</>,
       trec: <><b>Stratified</b> from the collection: 100 gold positives per topic, 1,000 judged non-relevant, 1,000 random; excludes the calibration set and 696 documents read while exploring.</>,
     },
   },
@@ -106,7 +99,6 @@ const DATASET_ROWS: FactRow[] = [
     k: "What each model saw",
     cells: {
       mnk: <>The email text with headers, the issue criteria, and a matter-background paragraph; returned <b>a label and a probability</b>.</>,
-      cuad: <>The excerpt with its header, the clause criteria, and a due-diligence background paragraph; <b>label and probability</b>.</>,
       trec: <>The email text with headers, the topic criteria, and a public-records background paragraph; <b>label and probability</b>.</>,
     },
   },
@@ -114,7 +106,6 @@ const DATASET_ROWS: FactRow[] = [
     k: "Runs",
     cells: {
       mnk: <><b>Both arms</b> (all issues per call; one issue per call). 12 Jev and 11 Laya configurations; Laya fine-tuned.</>,
-      cuad: <><b>Both arms</b>. 12 Jev and 10 Laya configurations; Laya fine-tuned.</>,
       trec: <><b>Both arms</b>, calibrated and bare-topic criteria. 12 Jev and 11 Laya configurations; Laya fine-tuned.</>,
     },
   },
@@ -132,9 +123,9 @@ const MEASURE_ROWS: [string, ReactNode][] = [
   ["+ human time", <mark>{HUMAN_DEV_DOCS} documents at {HUMAN_DEV_DOCS_PER_HOUR}/h and ${HUMAN_DEV_USD_PER_HOUR}/h = <b>{fmtHours(HUMAN_DEV_HOURS)} and {fmtUSD(HUMAN_DEV_USD)}</b> of prompt or criteria development, once per 100k-document project, added to every row.</mark>],
   ["Determinism", <><b>300 Mallinckrodt emails</b> (100 gray, 100 clear positive, 100 clear negative) scored five times, both arms; the benchmark run is repeat one. Shown for every corpus.</>],
   ["Determinism metric", <><b>Probability that two runs disagree</b> on a decision (pairwise), 95% bootstrap interval over decisions. Temperature 0 where the API accepts it; Sonnet 5 rejects sampling parameters; Jev and Laya expose none.</>],
-  ["Laya fine-tuned", <>RLCD recipe on a 30% document-level split of the same corpus (CUAD split by contract; TREC: the 668-email calibration set), scored on the held-out rest. Its labeled data is <b>not counted in time or cost</b>.</>],
+  ["Laya fine-tuned", <>RLCD recipe on a 30% document-level split of the same corpus (TREC: the 668-email calibration set), scored on the held-out rest. Its labeled data is <b>not counted in time or cost</b>.</>],
   ["Optimized configurations", <mark>Jev flat-string state and Laya compact + chunk (★) were selected on the <b>Veridian synthetic dev split</b> before any other corpus was scored.</mark>],
-  ["Absent cells", "Some one-issue-per-call Laya configurations stalled and are omitted from that view. The fine-tuned Laya checkpoint on CUAD collapsed to a constant negative and is shown as such."],
+  ["Absent cells", "Some one-issue-per-call Laya configurations stalled and are omitted from that view."],
 ];
 
 export function MethodModal({ onClose }: { onClose: () => void }) {
