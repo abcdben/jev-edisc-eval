@@ -57,6 +57,14 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
           <li><b>Cost</b> per 100,000 documents, as paid.</li>
           <li><b>Determinism</b>: how often a model changes its answer on the same document across repeated runs.</li>
         </ul>
+        <p>
+          <b>Nothing was iterated.</b> In practice a review team refines its criteria against sample documents many times before scoring a
+          population; here <mark>every model received the criteria as written, once, through a single shared prompt that was not tuned for any
+          model</mark>. The one exception is TREC, where the NIST topic sentences were refined once on a 668‑email calibration set disjoint from the
+          evaluation set, and the refined wording was then given to every model alike. Laya's fine‑tuned checkpoint learned from a labelled split of
+          each corpus; its prompt was not iterated either. The figures therefore compare models on like inputs; they are <b>not a ceiling on what
+          any model can do</b> with a tuned workflow.
+        </p>
         <h4>What this is</h4>
         <p>
           <mark>This is a point‑in‑time snapshot of model performance on established industry data sets</mark>, showing where these new decision models
