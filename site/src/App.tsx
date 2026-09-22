@@ -475,10 +475,6 @@ export default function App() {
               </optgroup>
             </select>
           </span>
-          <Hint title="Issue" items={[
-            { k: "Any issue (document level)", v: <mark>One call per document: it counts as <b>responsive if the model says yes to any issue</b>, matching how a review team decides what to produce.</mark> },
-            { k: "Single issue", v: <>Pick one issue from the list: <b>recall and precision for that issue alone</b>, scored against its own gold labels.</> },
-          ]} />
         </Control>
       </div>
 
