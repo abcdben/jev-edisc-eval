@@ -348,35 +348,16 @@ function useVariants(v: View, grp: string) {
 }
 
 /** Model select + configuration multi-select for the Configurations page, rendered in the control bar. */
-function VariantPicker({ v, grp, setGrp, off, setOff, explain }: { v: View; grp: string; setGrp: (g: string) => void; off: Set<string>; setOff: (s: Set<string>) => void; explain: (k: string) => void }) {
-  const G = ABLATION_GROUPS.find((g) => g.id === grp)!;
-  const variants = useVariants(v, grp);
-  const on = new Set(variants.filter((r) => !off.has(r.variant!)).map((r) => r.variant!));
-  const groups: PickGroup[] = [{
-    id: grp, label: G.label,
-    items: variants.map((r) => ({
-      id: r.variant!, label: VARIANT_LABEL[r.variant!] ?? r.variant!, title: r.lever ?? undefined,
-      mark: <span className="sw" style={{ background: variantColor(r.variant!, G.recipe) }} />,
-      suffix: <>{r.variant === G.recipe && <span className="star" title="iterated configuration: selected on the Veridian dev split">★</span>}{starOf(r) && <span className="sub" title={`scored on ${r.subset}`}>*</span>}</>,
-      detail: () => explain(r.model),
-    })),
-  }];
+/** Compare configurations shows every configuration of the chosen family; there is no per-configuration picker (the rows' details buttons open the modal). */
+function VariantPicker({ grp, setGrp }: { grp: string; setGrp: (g: string) => void }) {
   return (
-    <>
-      <Control label="Model">
-        <span className="select">
-          <select value={grp} onChange={(e) => { setGrp(e.target.value); setOff(new Set()); }}>
-            {ABLATION_GROUPS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
-          </select>
-        </span>
-      </Control>
-      <Picker
-        label="Configurations" summary={`${on.size} of ${variants.length}`} groups={groups} on={on}
-        onChange={(next) => setOff(new Set(variants.map((r) => r.variant!).filter((vv) => !next.has(vv))))}
-        onReset={() => setOff(new Set())}
-        footer={<span className="pick-note">{G.note}</span>}
-      />
-    </>
+    <Control label="Model">
+      <span className="select">
+        <select value={grp} onChange={(e) => setGrp(e.target.value)}>
+          {ABLATION_GROUPS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
+        </select>
+      </span>
+    </Control>
   );
 }
 
@@ -434,7 +415,7 @@ export default function App() {
   const openMethod = disclaimer.show;
   const [on, setOn] = useState<Set<string>>(new Set(DEFAULT_ON));
   const [grp, setGrp] = useState("jev");
-  const [off, setOff] = useState<Set<string>>(new Set());
+  const off = useMemo(() => new Set<string>(), []); // every configuration of the family is shown
   const corpusTitle = `${fmtInt(meta.n_docs)} documents · ${meta.n_issues} issues · ${fmtInt(meta.n_pos_docs_any)} responsive to at least one (${fmtPct(meta.n_pos_docs_any / meta.n_docs, 0)}) · gold: ${meta.gold}`;
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "dark");
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
@@ -465,7 +446,7 @@ export default function App() {
         </Control>
         {pageId === "compare"
           ? <ModelPicker v={v} on={on} setOn={setOn} explain={setExplain} />
-          : <VariantPicker v={v} grp={grp} setGrp={setGrp} off={off} setOff={setOff} explain={setExplain} />}
+          : <VariantPicker grp={grp} setGrp={setGrp} />}
         <Control label="Issue">
           <span className="select">
             <select value={issue ?? "__doc"} onChange={(e) => { const val = e.target.value; setIssue(val === "__doc" ? null : val); }}>
