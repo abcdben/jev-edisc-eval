@@ -57,7 +57,7 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         </p>
         <h4>What this is</h4>
         <p>
-          <mark>A comparison done with care</mark>, meant to give a sense of what these new models can do on review tasks next to the models people already use.
+          <mark>A point-in-time snapshot of model performance on established industry data sets</mark>, meant to show where these new decision models stand on review tasks next to the models people already use.
         </p>
         <h4>What this is not</h4>
         <p>
