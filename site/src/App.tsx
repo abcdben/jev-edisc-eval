@@ -22,9 +22,9 @@ import { Logo } from "./logos";
 type Chart = "map" | "ranked" | "rail" | "dumbbell" | "heat";
 
 /** Short group names for the one-line picker. */
-/** Picker order: decision models first, then the LLMs (API and local share one group via the PRIMARY `kind` override), then TAR. Kinds with no roster member (`baseline`, `local_llm`) are dropped before rendering. */
-const PICK_ORDER: Kind[] = ["system1", "system1_ft", "baseline", "llm", "local_llm", "tar"];
-const KIND_SHORT: Record<Kind, string> = { system1: "Decision models", system1_ft: "Supervised", llm: "LLM", local_llm: "Local LLM", tar: "Classical TAR", baseline: "Floor" };
+/** Picker order: decision models first, then the LLMs (API and local share one group via the PRIMARY `kind` override). Kinds with no roster member (`baseline`, `local_llm`) are dropped before rendering. */
+const PICK_ORDER: Kind[] = ["system1", "system1_ft", "baseline", "llm", "local_llm"];
+const KIND_SHORT: Record<Kind, string> = { system1: "Decision models", system1_ft: "Supervised", llm: "LLM", local_llm: "Local LLM", baseline: "Floor" };
 
 
 /** Recall/precision card with a map (scatter with interval boxes) or ranked (rows with whiskers) view. The chart mode is owned by the section so it can switch the dashboard layout. `explain` opens the details modal for a clicked mark or row (item ids are model keys). */
@@ -93,35 +93,16 @@ function qualityLines(r: Rec, v: View): { lines: TipLine[]; notes: string[] } {
   }
   if (r.subset) lines.push(["Scored on", r.subset]);
   const notes: string[] = [];
-  if (r.tar) {
-    const t = r.tar;
-    lines.push([t.kind === "cal" ? "Reviewed by hand" : "Coded for training", `${fmtInt(t.docs_reviewed)} of ${fmtInt(t.n_corpus)} (${fmtPct(t.review_share, 0)})`]);
-    if (t.kind === "cal") {
-      if (t.control_set) lines.push(["Control set", `${fmtInt(t.control_set.n)} random documents, coded first (${fmtInt(t.control_set.relevant_coded)} coded relevant)`]);
-      const trueRecall = t.production?.recall ?? null;
-      if (t.est_recall_at_stop != null) lines.push(["Estimated recall at stop", `${fmtPct(t.est_recall_at_stop)} · true ${fmtPct(trueRecall)} on the pool${t.reached_recall != null ? ` (reviewer read ${fmtPct(t.reached_recall)} of relevant)` : ""}`]);
-      else if (t.stop) lines.push(["Stop", `${t.stop}${trueRecall != null ? ` · true recall ${fmtPct(trueRecall)} on the pool` : ""}`]);
-      if (t.review_set_precision != null) lines.push(["Review-set precision", `${fmtPct(t.review_set_precision)} of documents read were relevant`]);
-      if (t.classifier) lines.push(["Classifier alone on eval set", `recall ${fmtPct(t.classifier.eval.recall)} · precision ${fmtPct(t.classifier.eval.precision)} (cutoff set on the control set)`]);
-    }
-    if (t.recall_range) lines.push([`Recall across ${t.seeds} seeds`, `${fmtPct(t.recall_range[0])} – ${fmtPct(t.recall_range[1])}`]);
-    if (t.kind === "cal") {
-      notes.push("Plotted: the production set, every document the reviewer coded relevant (control set included), scored against gold on the pool CAL ran over. Its precision is the reviewer's, so the classifier's own quality is the 'classifier alone' line.");
-      if (t.control_set && t.reviewer.miscode_rate > 0) notes.push("The recall estimate is against the reviewer's coding of the control set: documents the reviewer over-coded as relevant are never found by the classifier and hold the estimate below the true figure, so review runs past the target.");
-      if (t.downsampled) notes.push(`Run on a ${fmtPct(t.pool_richness ?? 0, 0)}-rich pool of ${fmtInt(t.n_corpus)} documents (all gold-negatives plus a random draw of positives); the benchmark sample itself is 61% rich by design.`);
-    }
-  }
   if (r.lever && !r.primary) notes.push(r.lever);
   return { lines, notes };
 }
 
-/** "machine": the model's own time and bill. "human": adds the prompt/criteria development a person does for every non-TAR row. */
+/** "machine": the model's own time and bill. "human": adds the prompt/criteria development a person does for every row. */
 type OpsMode = "machine" | "human";
 
-/** Hours and dollars per 100k documents for a record under the toggle; null when not measured or, for TAR in machine mode, not applicable. */
+/** Hours and dollars per 100k documents for a record under the toggle; null when not measured. */
 function opsValues(r: Rec, mode: OpsMode): { hours: number | null; usd: number | null } {
   const c = costPerDoc(r);
-  if (r.tar) return mode === "machine" ? { hours: null, usd: null } : { hours: r.ops.hours_per_100k_docs, usd: c == null ? null : c * 1e5 };
   const add = mode === "human";
   return {
     hours: r.ops.hours_per_100k_docs == null ? null : r.ops.hours_per_100k_docs + (add ? HUMAN_DEV_HOURS : 0),
@@ -132,7 +113,6 @@ function opsValues(r: Rec, mode: OpsMode): { hours: number | null; usd: number |
 /** The one secondary line of a Review time or Cost hover: the per-document time, or where the money went. */
 function opsSub(r: Rec, mode: OpsMode, kind: "time" | "cost"): string {
   const human = mode === "human" ? " · incl. prompt development" : "";
-  if (r.tar) return kind === "time" ? `${fmtInt(r.tar.docs_reviewed)} documents read by hand` : `reviewer at $${r.tar.reviewer.usd_per_hour}/h`;
   if (kind === "time") return `${fmtMs(r.ops.doc_latency_p50_ms)} per doc${human}`;
   return `as paid · ${isGpuRow(r) ? "GPU rental" : "API"}${human}`;
 }
@@ -142,18 +122,6 @@ function opsLines(r: Rec, timeMode: OpsMode, costMode: OpsMode): { lines: TipLin
   const o = r.ops;
   const c = costPerDoc(r);
   const usd100k = c == null ? "—" : fmtUSD(c * 1e5);
-  if (r.tar) {
-    const t = r.tar;
-    return {
-      lines: [
-        ["Documents reviewed by hand", `${fmtInt(t.docs_reviewed)} of ${fmtInt(t.n_corpus)}`],
-        ["Reviewer hours", fmtHours(t.hours)],
-        ["Reviewer cost", fmtUSD(t.cost_usd)],
-        ["Per 100k docs, scaled from this corpus", `${fmtHours(o.hours_per_100k_docs)} · ${usd100k}`],
-      ],
-      notes: [`${t.reviewer.docs_per_hour} docs/hour at $${t.reviewer.usd_per_hour}/hour; classifier compute not charged. A fixed coded sample does not scale with corpus size, so the per-100k figure is specific to a ${fmtInt(t.n_corpus)}-document collection.`],
-    };
-  }
   const lines: TipLine[] = [
     ["Time per 100k docs", fmtHours(o.hours_per_100k_docs)],
     ["Cost per 100k docs", usd100k],
@@ -229,16 +197,16 @@ function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) =
 
 // ------------------------------------------------------------------------------------------------
 
-/** The records the page plots for the view; rows data.ts UNSHOWN drops on this corpus are left out (the Models picker lists them disabled). */
+/** The records the page plots for the view; keys data.ts hides (isHidden) and rows UNSHOWN drops on this corpus are left out (the Models picker lists the latter disabled). */
 function useRows(v: View) {
-  return useMemo(() => DATA.records.filter((r) => r.corpus === v.corpus && r.tag === v.tag && r.arm === v.arm && !unshownWhy(r.model, r.corpus)), [v.corpus, v.tag, v.arm]);
+  return useMemo(() => DATA.records.filter((r) => r.corpus === v.corpus && r.tag === v.tag && r.arm === v.arm && !isHidden(r.model) && !unshownWhy(r.model, r.corpus)), [v.corpus, v.tag, v.arm]);
 }
 
 const OPS_MODE_OPTIONS = [
   { id: "machine" as const, label: "machine only", title: "The model's own time and bill" },
-  { id: "human" as const, label: "+ human time", title: `Adds ${fmtHours(HUMAN_DEV_HOURS)} and ${fmtUSD(HUMAN_DEV_USD)} of prompt development to every non-TAR row` },
+  { id: "human" as const, label: "+ human time", title: `Adds ${fmtHours(HUMAN_DEV_HOURS)} and ${fmtUSD(HUMAN_DEV_USD)} of prompt development to every row` },
 ];
-/** The two rows shared by the Review time and Cost hints: what the '+ human time' toggle adds, and why TAR rows disappear without it. */
+/** The row shared by the Review time and Cost hints: what the '+ human time' toggle adds. */
 const HUMAN_ITEMS: HintItem[] = [
   { k: "+ human time", v: <mark>Adds prompt or criteria development: {HUMAN_DEV_DOCS} documents at {HUMAN_DEV_DOCS_PER_HOUR}/h and ${HUMAN_DEV_USD_PER_HOUR}/h, <b>{fmtHours(HUMAN_DEV_HOURS)} and {fmtUSD(HUMAN_DEV_USD)}</b>, once per 100k-document project.</mark> },
 ];
@@ -270,14 +238,13 @@ function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider, empha
   const hover = useHover();
   useEffect(() => { if (!machineOnly) localStorage.setItem(OPS_MODE_KEYS.time, timeModeSaved); }, [timeModeSaved, machineOnly]);
   useEffect(() => { if (!machineOnly) localStorage.setItem(OPS_MODE_KEYS.cost, costModeSaved); }, [costModeSaved, machineOnly]);
-  const empty = (r: Rec, mode: OpsMode) => (r.tar && mode === "machine" ? "human only" : undefined);
   const time: BarItem[] = recs.map((r) => {
     const { hours } = opsValues(r, timeMode);
-    return { id: r.model, name: nameOf(r), color: colorOf(r), value: hours, label: fmtHours(hours), sub: opsSub(r, timeMode, "time"), subset: starOf(r), empty: empty(r, timeMode), decider: decider?.(r), emphasis: emphasis?.(r) };
+    return { id: r.model, name: nameOf(r), color: colorOf(r), value: hours, label: fmtHours(hours), sub: opsSub(r, timeMode, "time"), subset: starOf(r), decider: decider?.(r), emphasis: emphasis?.(r) };
   });
   const cost: BarItem[] = recs.map((r) => {
     const { usd } = opsValues(r, costMode);
-    return { id: r.model, name: nameOf(r), color: colorOf(r), value: usd, label: fmtUSD(usd), sub: opsSub(r, costMode, "cost"), subset: starOf(r), empty: empty(r, costMode), decider: decider?.(r), emphasis: emphasis?.(r) };
+    return { id: r.model, name: nameOf(r), color: colorOf(r), value: usd, label: fmtUSD(usd), sub: opsSub(r, costMode, "cost"), subset: starOf(r), decider: decider?.(r), emphasis: emphasis?.(r) };
   });
   return (
     <>
@@ -394,13 +361,9 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
   const color = (r: Rec) => variantColor(r.variant!, G.recipe);
   const name = (r: Rec) => VARIANT_LABEL[r.variant!] ?? r.variant!;
   const [chart, setChart] = useState<Chart>("ranked");
-  // The family's reference configuration, for the `heat` view's "vs default" column: the `@base` variant (Jev, Laya), or for Classical TAR the same
-  // 1,000-coded row Explain.tsx uses as its baseline (`tar@t1_1000_div`, then `tar@t1_1000`, then any TAR 1.0 row). Taken from the whole family, so
+  // The family's reference configuration, for the `heat` view's "vs default" column: the `@base` variant. Taken from the whole family, so
   // it is stable while configurations are toggled; PRHeat omits the comparison while that row is not shown.
-  const keys = variants.map((r) => r.model);
-  const referenceId = grp === "tar"
-    ? keys.find((k) => k === "tar@t1_1000_div") ?? keys.find((k) => k === "tar@t1_1000") ?? keys.find((k) => k.includes("@t1_"))
-    : keys.find((k) => k.endsWith("@base"));
+  const referenceId = variants.map((r) => r.model).find((k) => k.endsWith("@base"));
 
   const items: PRItem[] = sel.map((r) => {
     const p = pick(r, v.level, v.gray, v.issue);

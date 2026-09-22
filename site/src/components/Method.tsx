@@ -113,9 +113,9 @@ const DATASET_ROWS: FactRow[] = [
   {
     k: "Runs",
     cells: {
-      mnk: <><b>Both arms</b> (all issues per call; one issue per call). 12 Jev and 11 Laya configurations; Laya fine-tuned. TAR 1.0 at 100 / 300 / 1,000 coded; 5 seeds.</>,
-      cuad: <><b>Both arms</b>. 12 Jev and 10 Laya configurations; Laya fine-tuned. TAR 1.0 at 100 / 1,000 / 5,000 coded; 5 seeds.</>,
-      trec: <><b>Both arms</b>, calibrated and bare-topic criteria. 12 Jev and 11 Laya configurations; Laya fine-tuned. TAR over the full 286,326-email collection: TAR 1.0 at 100 / 1,000 / 5,000; 5 seeds.</>,
+      mnk: <><b>Both arms</b> (all issues per call; one issue per call). 12 Jev and 11 Laya configurations; Laya fine-tuned.</>,
+      cuad: <><b>Both arms</b>. 12 Jev and 10 Laya configurations; Laya fine-tuned.</>,
+      trec: <><b>Both arms</b>, calibrated and bare-topic criteria. 12 Jev and 11 Laya configurations; Laya fine-tuned.</>,
     },
   },
 ];
@@ -129,13 +129,9 @@ const MEASURE_ROWS: [string, ReactNode][] = [
   ["Concurrency", <>Every service accepts parallel requests, so hours shrink for all rows alike; <b>compare ratios, not absolutes</b>.</>],
   ["Cost", <><b>As paid</b>: OpenAI on flex pricing (half of list); Anthropic with prompt caching on the all-issues arm; Google and TypeSafe at list.</>],
   ["GPU rows", <>Laya and Gemma 3 12B ran on a rented {GPU_NAME}: ${GPU_USD_PER_HOUR.toFixed(2)}/h (Lambda list, September 2026) × single-stream review time, <b>an upper bound</b>. Gemma via Ollama on 400–600-document subsets.</>],
-  ["+ human time", <mark>{HUMAN_DEV_DOCS} documents at {HUMAN_DEV_DOCS_PER_HOUR}/h and ${HUMAN_DEV_USD_PER_HOUR}/h = <b>{fmtHours(HUMAN_DEV_HOURS)} and {fmtUSD(HUMAN_DEV_USD)}</b> of prompt or criteria development, once per 100k-document project, added to every non-TAR row.</mark>],
+  ["+ human time", <mark>{HUMAN_DEV_DOCS} documents at {HUMAN_DEV_DOCS_PER_HOUR}/h and ${HUMAN_DEV_USD_PER_HOUR}/h = <b>{fmtHours(HUMAN_DEV_HOURS)} and {fmtUSD(HUMAN_DEV_USD)}</b> of prompt or criteria development, once per 100k-document project, added to every row.</mark>],
   ["Determinism", <><b>300 Mallinckrodt emails</b> (100 gray, 100 clear positive, 100 clear negative) scored five times, both arms; the benchmark run is repeat one. Shown for every corpus.</>],
-  ["Determinism metric", <><b>Probability that two runs disagree</b> on a decision (pairwise), 95% bootstrap interval over decisions. Temperature 0 where the API accepts it; Sonnet 5 rejects sampling parameters; Jev and Laya expose none. TAR is 0 by construction.</>],
-  ["TAR reviewer", <>Simulated from gold labels: <b>50 documents/hour, $65/hour</b>; classifier compute not charged. A perfect reviewer in the TAR 1.0 rows; an imperfect one (misses 10% of relevant, over-codes 2% of non-relevant) is offered as a variant on the Configurations page.</>],
-  ["TAR classifier", <><b>TF-IDF (word 1–2-grams) + logistic regression</b>, one model per issue and one for any-issue relevance.</>],
-  ["TAR 1.0", <>The reviewer codes a random sample; cutoff by 5-fold cross-validation on that sample alone, targeting <b>80% recall</b> (or best F1). Median of 5 seeds.</>],
-  ["TAR 1.0 · diverse", <>Same sizes, but the coded sample is a <b>cluster-stratified diversity sample</b>: 100-dimension SVD of the collection's TF-IDF, k-means into N clusters, the document nearest each centre. Cutoff chosen the same way; as the sample is not random, its recall estimate is only a guide.</>],
+  ["Determinism metric", <><b>Probability that two runs disagree</b> on a decision (pairwise), 95% bootstrap interval over decisions. Temperature 0 where the API accepts it; Sonnet 5 rejects sampling parameters; Jev and Laya expose none.</>],
   ["Laya fine-tuned", <>RLCD recipe on a 30% document-level split of the same corpus (CUAD split by contract; TREC: the 668-email calibration set), scored on the held-out rest. Its labeled data is <b>not counted in time or cost</b>.</>],
   ["Optimized configurations", <mark>Jev flat-string state and Laya compact + chunk (★) were selected on the <b>Veridian synthetic dev split</b> before any other corpus was scored.</mark>],
   ["Absent cells", "Some one-issue-per-call Laya configurations stalled and are omitted from that view. The fine-tuned Laya checkpoint on CUAD collapsed to a constant negative and is shown as such."],

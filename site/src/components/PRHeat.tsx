@@ -61,7 +61,7 @@ export function PRHeat({ items, zoom, sortBy = "recall", logos = false, onSelect
   const g = (k: string) => geo[k] ?? target[k];
   const sortLabel = sortBy === "f1" ? "F1" : sortBy;
   const refName = ref?.name ?? "default";
-  const deltaHead = ref && ref.name !== "default" ? "VS REF" : "VS DEFAULT";
+  const deltaHead = "VS DEFAULT";
   return (
     <>
       <div ref={hostRef} data-tip-host style={{ position: "relative" }}>

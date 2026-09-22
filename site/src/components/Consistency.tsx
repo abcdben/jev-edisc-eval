@@ -17,17 +17,12 @@ const LABEL_W = 168, ROW = 20;
 
 /**
  * What the card plots for one record. `cell` is the measured cell (its `model` names the configuration it was measured on, which differs
- * from the record's key when a row borrows a sibling's cell); it is null for the classical TAR rows, whose disagreement is zero by construction.
+ * from the record's key when a row borrows a sibling's cell).
  */
-export type DetEntry = { pairwise: [number, number, number]; setting: "default" | "t0"; cell: DetCell | null };
-
-const isTar = (r: Rec) => r.model_key.startsWith("tar@") || r.model.startsWith("tar@") || !!r.tar;
+export type DetEntry = { pairwise: [number, number, number]; setting: "default" | "t0"; cell: DetCell };
 
 /** The determinism entry for a record: matched on model key, arm follows the page. Ablation variants are not covered. */
 export function detFor(r: Rec, arm: "multi" | "single", setting: "default" | "t0"): DetEntry | null {
-  // A trained TF-IDF / logistic-regression classifier gives the identical score on every pass over the same document, and the simulated
-  // reviewer is deterministic too, so pairwise disagreement is exactly 0. There is no temperature to set; the t = 0 view falls back to this.
-  if (isTar(r)) return setting === "default" ? { pairwise: [0, 0, 0], setting, cell: null } : null;
   const det = DATA.determinism;
   if (!det) return null;
   const find = (key: string) => det.cells.find((c) => c.model === key && c.arm === arm && c.setting === setting) ?? null;
@@ -36,18 +31,9 @@ export function detFor(r: Rec, arm: "multi" | "single", setting: "default" | "t0
   return cell ? { pairwise: cell.pairwise, setting: cell.setting, cell } : null;
 }
 
-const TAR_LINES: { lines: TipLine[]; notes: string[] } = {
-  lines: [["Pairwise disagreement", "0"]],
-  notes: [
-    "Deterministic given its training sample: the same trained classifier gives the same score on every pass, and the simulated reviewer is deterministic too.",
-    "The variation across random training samples is the seed range under recall and precision, not a determinism effect.",
-  ],
-};
-
 /** The full determinism facts for a record (shown in the details modal's Metrics block; the hover carries only the bar's figure). */
 export function detLines(x: DetEntry, r: Rec, name: string): { lines: TipLine[]; notes: string[] } {
   const c = x.cell;
-  if (!c) return TAR_LINES;
   const lines: TipLine[] = [
     ["Runs", String(c.k)],
     ["Decisions compared", fmtInt(c.n_decisions)],
@@ -77,7 +63,7 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
   const isLLM = (r: Rec) => r.kind === "llm" || r.kind === "local_llm";
   const shown = rows.map((x) => ({ r: x.r, c: setting === "t0" ? (x.t0 ?? (isLLM(x.r) ? null : x.d)) : x.d }));
   const measured = shown.filter((x) => x.c);
-  // Ascending by point estimate; rows without an entry sink to the bottom. The analytic TAR zeros tie with the other 0 rows (stable sort keeps picker order among ties).
+  // Ascending by point estimate; rows without an entry sink to the bottom (stable sort keeps picker order among ties).
   const sorted = [...shown].sort((a, b) => (a.c?.pairwise[0] ?? Infinity) - (b.c?.pairwise[0] ?? Infinity));
   const max = Math.max(0.01, ...measured.map((x) => x.c!.pairwise[2]));
   const plotW = Math.max(120, W - LABEL_W - 90);
@@ -86,7 +72,7 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
   const lbl = (v: number) => (v === 0 ? "0" : fmtPct(v, v < 0.001 ? 2 : 1));
   // where the widest whisker's figure ends: a tooltip beside the pointer may only sit right of this
   const clearX = Math.max(LABEL_W + 120, ...measured.map((x) => X(x.c!.pairwise[2]) + 7 + lbl(x.c!.pairwise[0]).length * 6.6));
-  const sub = (c: DetEntry) => (c.cell ? `${fmtInt(c.cell.n_decisions)} decisions · ${c.cell.k} runs` : "deterministic by construction");
+  const sub = (c: DetEntry) => `${fmtInt(c.cell.n_decisions)} decisions · ${c.cell.k} runs`;
   // Motion (ui.tsx): drawn in the order rows first appeared (usePresence) and placed by rank with a transform, so a re-sort slides rows instead
   // of moving DOM nodes; rows fade in and out, leavers where they last stood. Bars grow from 0 on first paint and whisker ends ease (useTween).
   const presence = usePresence(shown, (x) => x.r.model);

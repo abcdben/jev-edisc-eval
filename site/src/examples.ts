@@ -59,10 +59,6 @@ export const EX_GROUPS: { id: string; label: string; match: (k: string) => boole
     id: "llm", label: "Language models", match: (k) => !k.includes("@") && k !== "lexical" && k !== "laya-ft",
     intro: "Every generative model received the **same prompt**, described below; the reply is a label and a probability, nothing else. Switch models to see the settings that differ; the prompt does not.",
   },
-  {
-    id: "tar", label: "Classical TAR", match: (k) => k.startsWith("tar@"),
-    intro: "**No model reads the request.** A simulated reviewer codes documents by hand from the gold labels and a TF-IDF + logistic-regression classifier learns from those codes. The request shown is the workflow and the coded sample; the output is the median seed's call on this document. Switch rows to compare sample sizes, cutoff rules and reviewer accuracy.",
-  },
 ];
 
 export const groupOf = (key: string) => EX_GROUPS.find((g) => g.match(key))?.id ?? "jev";

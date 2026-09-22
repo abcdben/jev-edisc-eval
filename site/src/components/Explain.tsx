@@ -115,11 +115,6 @@ function leadFor(group: string, key: string, corpus: string, groupLabel: string)
     const p = PRIMARY_BY_KEY[key];
     return { pre: `**${p?.short ?? DATA.models[key]?.name ?? key}** is a generative model asked with `, def, post: `.${p?.note ? ` ${p.note}` : ""}` };
   }
-  if (group === "tar") {
-    const label = VARIANT_LABEL[v] ?? v;
-    const plain = /^t1_\d+(_div)?$/.test(v); // the shown TAR 1.0 rows read as full definitions; F1 / noisy crosses as deltas
-    return { pre: `**${label}** is ${plain ? "the classical TAR row in which " : ""}`, def, post: ". No model reads the request; every figure is the median of the random seeds." };
-  }
   return null;
 }
 
@@ -227,19 +222,17 @@ function Output({ o, gold, contended }: { o: ExOutput; gold: string; contended: 
     ["confidence", o.confidence == null ? "—" : `${o.confidence.toFixed(2)}  (|2p − 1|)`],
     ["latency", o.latency_ms == null ? "—" : contended ? `${fmtMs(o.latency_ms)} (queued behind 64 concurrent requests on one A100; the site's review-time panel uses a one-at-a-time sample)` : fmtMs(o.latency_ms)],
     ["tokens", o.input_tokens == null ? "—" : `${o.input_tokens.toLocaleString()} in · ${(o.output_tokens ?? 0).toLocaleString()} out`],
-    ["cost", o.cost_usd == null ? "—" : o.cost_usd === 0 ? (o.model_resolved === "tfidf-logreg" ? "$0 compute; the reviewer's time is in the request" : "$0 (local)") : `$${o.cost_usd.toFixed(6)}`],
+    ["cost", o.cost_usd == null ? "—" : o.cost_usd === 0 ? "$0 (local)" : `$${o.cost_usd.toFixed(6)}`],
     ["served by", o.model_resolved ?? "—"],
   ];
-  const isTar = o.model_resolved === "tfidf-logreg";
-  const shown = isTar ? rows.filter(([k]) => k !== "latency" && k !== "tokens" && k !== "confidence") : rows;
-  if (o.error) shown.push(["error", <code className="ex-lit">{o.error}</code>]);
+  if (o.error) rows.push(["error", <code className="ex-lit">{o.error}</code>]);
   return (
     <div className="ex-obj">
-      {shown.map(([k, v]) => <div key={k} className="ex-row"><div className="ex-k">{k}</div><div className="ex-v">{v}</div></div>)}
+      {rows.map(([k, v]) => <div key={k} className="ex-row"><div className="ex-k">{k}</div><div className="ex-v">{v}</div></div>)}
       {o.raw && Object.keys(o.raw).length > 0 && (
         <div className="ex-row"><div className="ex-k">raw</div><div className="ex-v"><Node v={o.raw} path="raw" changed={new Set()} doc="" ctx="" /></div></div>
       )}
-      <div className="ex-foot">{isTar ? "The median seed's call on this document. p(responsive) is the classifier's probability, or 1 / 0 when the reviewer coded the document by hand." : `Recorded in the ${o.arm === "single" ? "one-issue-per-call" : "all-issues-per-call"} run; the request shown is the one-issue form.`}</div>
+      <div className="ex-foot">{`Recorded in the ${o.arm === "single" ? "one-issue-per-call" : "all-issues-per-call"} run; the request shown is the one-issue form.`}</div>
     </div>
   );
 }
@@ -334,7 +327,7 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
   const G = EX_GROUPS.find((g) => g.id === group)!;
   const active = members.includes(key) ? key : members[0];
   const cfg = active ? C.configs[active] : null;
-  const baseKey = group === "llm" ? null : group === "tar" ? (members.includes("tar@t1_1000_div") ? "tar@t1_1000_div" : members.includes("tar@t1_1000") ? "tar@t1_1000" : members.find((m) => m.includes("@t1_")) ?? null) : members.find((m) => m.endsWith("@base")) ?? null;
+  const baseKey = group === "llm" ? null : members.find((m) => m.endsWith("@base")) ?? null;
   const base = baseKey && baseKey !== active ? C.configs[baseKey] : null;
 
   useEffect(() => {
@@ -371,7 +364,7 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
     id: k, label: memberLabel(k),
     def: group === "llm" ? PRIMARY_BY_KEY[k]?.note ?? variantDefinition(k, corpusLabel) : variantDefinition(k, corpusLabel),
     tags: [
-      ...(k.endsWith("@base") || (group === "tar" && k === baseKey) ? [{ text: "reference" }] : []),
+      ...(k.endsWith("@base") ? [{ text: "reference" }] : []),
       ...(k === "laya-ft" ? [{ text: "Compare models", title: "the Laya row charted on Compare models; the other configurations are zero-shot" }] : []),
       ...(recipe && k.split("@")[1] === recipe ? [{ text: "★ selected", title: "selected on the Veridian dev split" }] : []),
     ],
@@ -412,11 +405,11 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
                 )}
                 <div className="ex-sec">
                   <span className="ex-sec-t">Example</span>
-                  <span className="ex-col-s">{group === "tar" ? "one document from this corpus: the workflow that produced the classifier, and the call it recorded" : "one document from this corpus: the exact request that was sent, and the output that came back"}</span>
+                  <span className="ex-col-s">one document from this corpus: the exact request that was sent, and the output that came back</span>
                 </div>
                 <div className="ex-cols">
                   <div className="ex-col">
-                    <div className="ex-col-t">{group === "tar" ? "Example workflow" : "Example input"}<span className="ex-col-s">{group === "tar" ? "how the coded sample and classifier were produced" : "the request as sent, with the document and background folded"}</span></div>
+                    <div className="ex-col-t">Example input<span className="ex-col-s">the request as sent, with the document and background folded</span></div>
                     {ex && <Node v={ex.request} path="" changed={d.changed} doc={doc.text} ctx={C.context} />}
                     {base && d.removed.length > 0 && (
                       <div className="ex-removed">Not present in this configuration (present in the default): {d.removed.map((p) => p.replace(/^questions\.[^.]+\./, "question.")).join(", ")}</div>

@@ -14,26 +14,8 @@ export type Ops = {
 export type Rec = {
   corpus: string; tag: string; arm: "multi" | "single"; model: string; model_key: string; name: string; family: string; kind: string;
   primary: boolean; group: string | null; variant: string | null; lever: string | null;
-  subset: string | null; ops: Ops; all: Score; nogray: Score; tar?: TarBlock;
+  subset: string | null; ops: Ops; all: Score; nogray: Score;
 };
-/** Classical TAR rows: the simulated reviewer's effort and the spread across random seeds. */
-export type TarBlock = {
-  variant: string; kind: "t1" | "cal"; n_corpus: number; n_eval: number;
-  docs_reviewed: number; hours: number; cost_usd: number; review_share: number;
-  reviewer: { docs_per_hour: number; usd_per_hour: number; miscode_rate: number };
-  seeds: number; median_seed: number; recall_range: [number, number] | null; precision_range: [number, number] | null;
-  cutoff_rule: string | null; issue_models: string[] | null; train_positives_any: number | null;
-  batches: number | null; batch: number | null; stop: string | null; stop_rule: string | null; curve: { reviewed: number; found: number; est_recall?: number | null }[] | null;
-  pool_richness: number | null; relevant_in_pool: number | null; found_gold: number | null; downsampled: boolean;
-  /** CAL only. The plotted set is the production set (what the reviewer coded relevant, control set included) on the CAL pool. */
-  plotted?: string; target?: number | null; docs_queued?: number | null;
-  control_set?: { n: number; relevant_coded: number; relevant_gold: number } | null;
-  est_recall_at_stop?: number | null; reached_recall?: number | null; review_set_precision?: number | null;
-  production?: TarPRF | null;
-  classifier?: { cutoff: number; target: number; pool: TarPRF; eval: TarPRF & { n_reviewed_in_eval: number } } | null;
-};
-/** Point recall / precision of a set against gold, no interval (sidecar figures on the CAL pool or the evaluation set). */
-export type TarPRF = { recall: number | null; precision: number | null; flagged: number; relevant: number; n: number };
 export type CorpusMeta = {
   corpus: string; tag: string; display: string; gold: string; n_docs: number; n_issues: number;
   issues: Record<string, string>; n_pos_docs_any: number; n_pos_by_issue: Record<string, number>; n_gray_by_issue: Record<string, number>;
@@ -75,16 +57,15 @@ export const DEFAULT_CORPUS = CORPORA[0].id;
 /** Coerce a corpus id (state, hash, storage) to one the site offers, falling back to the first. */
 export const siteCorpus = (id: string | null | undefined) => (id && SITE_CORPORA.includes(id) ? id : DEFAULT_CORPUS);
 
-export type Kind = "system1" | "system1_ft" | "llm" | "local_llm" | "tar" | "baseline";
+export type Kind = "system1" | "system1_ft" | "llm" | "local_llm" | "baseline";
 export const KIND_LABEL: Record<Kind, string> = {
   system1: "Decision models",
   system1_ft: "Decision models, supervised",
   llm: "Large language models (API)",
   local_llm: "Open-weight LLM (local GPU)",
-  tar: "Classical TAR",
   baseline: "Floor",
 };
-export const KIND_ORDER: Kind[] = ["system1", "system1_ft", "llm", "local_llm", "tar", "baseline"];
+export const KIND_ORDER: Kind[] = ["system1", "system1_ft", "llm", "local_llm", "baseline"];
 /** The decision-model kinds (Jev, Laya). The one rule behind every decision-model marker: the outlined name on rows and in the picker, the ringed mark on the map, the DECISION MODEL tag in modals. */
 export const isDecider = (kind: string | null | undefined): boolean => kind === "system1" || kind === "system1_ft";
 /** Rows whose name carries no subset asterisk even though they were scored on a subset (the fact stays in the tooltip and the Method table). */
@@ -93,15 +74,12 @@ export const starOf = (r: { model: string; subset: string | null }): string | nu
 
 /**
  * Model keys the site does not show anywhere (roster, picker, charts, Configurations, details modal), though their results stay in
- * findings.json and examples.json. CAL hidden for now; remove from this list to bring it back.
+ * findings.json and examples.json. HIDDEN_FAMILIES hides a whole key family (`<family>@<variant>`): the `tar` family is exported but
+ * not shown; remove it from the set to bring it back.
  */
-export const HIDDEN_MODELS: string[] = [
-  "tar@cal", "tar@cal_75", "tar@cal_perfect", "tar@cal_knee",
-  // random-sample TAR 1.0 rows (and their F1 / noisy-reviewer crosses): the diversity-sampled rows are the ones shown
-  "tar@t1_100", "tar@t1_100_f1", "tar@t1_100_noisy", "tar@t1_300", "tar@t1_300_f1", "tar@t1_300_noisy",
-  "tar@t1_1000", "tar@t1_1000_f1", "tar@t1_1000_noisy", "tar@t1_5000", "tar@t1_5000_f1", "tar@t1_5000_noisy",
-];
-export const isHidden = (key: string): boolean => HIDDEN_MODELS.includes(key);
+export const HIDDEN_MODELS: string[] = [];
+export const HIDDEN_FAMILIES = new Set(["tar"]);
+export const isHidden = (key: string): boolean => HIDDEN_MODELS.includes(key) || HIDDEN_FAMILIES.has(key.split("@")[0]);
 /**
  * Rows that ran but are not plotted on one corpus: the record stays in findings.json and the details modal still opens on it, but the
  * Compare page charts drop it and the Models picker shows it disabled with the reason. Keyed by model key, one entry per corpus.
@@ -125,21 +103,16 @@ const ALL_PRIMARY: { key: string; color: string; short: string; note: string; ki
   { key: "gemini-3.5-flash-lite", color: "var(--c-flashlite)", short: "Gemini 3.5 Flash-Lite", note: "Google Gemini 3.5 Flash-Lite, structured output." },
   { key: "gemini-3.8-flash", color: "var(--c-flash)", short: "Gemini 3.8 Flash", note: "Google Gemini 3.8 Flash, structured output." },
   { key: "gemma3-12b", color: "var(--c-gemma)", short: "Gemma 3 12B", kind: "llm", note: "Local, open-weight. Google Gemma 3 12B run via Ollama on a rented A100. Scored on a 400-600 document stratified subsample; latency measured with 4 concurrent requests." },
-  { key: "tar@t1_100_div", color: "var(--c-tar-1)", short: "TAR 1.0 · 100", note: "Simple learning. A simulated reviewer (50 docs/h, $65/h) codes 100 documents chosen by cluster-stratified diversity sampling (100-dimension SVD of the collection's TF-IDF, k-means into 100 clusters, the document nearest each centre); TF-IDF + logistic regression labels the rest with a cutoff targeting 80% recall, chosen by cross-validation on the coded sample. Median of 5 seeds." },
-  { key: "tar@t1_300_div", color: "var(--c-tar-2)", short: "TAR 1.0 · 300", note: "As above with 300 documents coded (300 clusters)." },
-  { key: "tar@t1_1000_div", color: "var(--c-tar-3)", short: "TAR 1.0 · 1,000", note: "As above with 1,000 documents coded (1,000 clusters)." },
-  { key: "tar@t1_5000_div", color: "var(--c-tar-4)", short: "TAR 1.0 · 5,000", note: "As above with 5,000 documents coded (5,000 clusters)." },
-  { key: "tar@cal", color: "var(--c-cal)", short: "TAR 2.0 · CAL", note: "Continuous active learning with an imperfect reviewer (misses 10% of relevant documents, over-codes 2% of non-relevant), as run in practice. The reviewer first codes a random control set (10% of the pool, capped at 500; 2,000 on TREC), then codes the classifier's top-ranked batch, it retrains, repeat; review stops once the control set estimates 80% recall for two consecutive batches. Plotted as the production set: every document the reviewer coded relevant, scored against gold on the pool CAL ran over. The tooltip has the review effort, the recall estimate at stop against the true figure, and the classifier on its own. On Mallinckrodt, whose benchmark sample is 61% rich by design, CAL runs on a 10%-rich pool." },
 ];
 export const PRIMARY = ALL_PRIMARY.filter((p) => !isHidden(p.key));
 export const PRIMARY_BY_KEY = Object.fromEntries(PRIMARY.map((p) => [p.key, p]));
 export const DEFAULT_ON = new Set(["jev@base", "laya-ft", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash"].filter((k) => !isHidden(k)));
 
 /**
- * Human prompt/criteria development, added to every non-TAR row when the ops cards are set to "+ human time".
+ * Human prompt/criteria development, added to every row when the ops cards are set to "+ human time".
  * Someone has to write and iterate the criteria for an LLM or a decision model;
  * we assume that iteration reviews 500 documents at 50 docs/hour and $175/hour, i.e. 10 h and $1,750, and count it
- * once per 100k-document project since the cards are per 100k documents. TAR rows are already human time.
+ * once per 100k-document project since the cards are per 100k documents.
  */
 export const HUMAN_DEV_DOCS = 500;
 export const HUMAN_DEV_DOCS_PER_HOUR = 50;
@@ -169,26 +142,18 @@ export const ABLATION_GROUPS: { id: string; label: string; recipe: string; note:
   { id: "jev", label: "Jev 1.13", recipe: "state_string", note: "Twelve configurations of TypeSafe Jev. Each variant changes a single lever from the default. ★ marks the configuration selected on the Veridian dev split." },
   { id: "laya", label: "Laya", recipe: "recipe", note: "ConvAI Laya, English checkpoint, zero-shot. Two levers (compact, chunk) exist only to fit its 512-token context; ★ marks the configuration that combines them, selected on the Veridian dev split." },
   // The typed and multilingual Laya checkpoints (groups laya-typed, laya-multilingual) stay in findings.json but are not offered: only the English family, whose request the charted fine-tune uses, is shown.
-  { id: "tar", label: "Classical TAR", recipe: "", note: "A simulated reviewer (50 docs/h, $65/h) plus TF-IDF + logistic regression. The reviewer codes a cluster-stratified diversity sample; the rows vary its size. Every row is the median of the random seeds." },
 ];
-export const VARIANT_ORDER = ["base", "choice", "score", "crit_none", "crit_struct", "literal", "no_context", "state_string", "gate", "ensemble", "decompose", "preview", "compact", "chunk", "recipe", "recipe_choice",
-  "t1_100", "t1_100_div", "t1_100_f1", "t1_100_noisy", "t1_300", "t1_300_div", "t1_300_f1", "t1_300_noisy", "t1_1000", "t1_1000_div", "t1_1000_f1", "t1_1000_noisy",
-  "t1_5000", "t1_5000_div", "t1_5000_f1", "t1_5000_noisy", "cal", "cal_75", "cal_perfect", "cal_knee"];
+export const VARIANT_ORDER = ["base", "choice", "score", "crit_none", "crit_struct", "literal", "no_context", "state_string", "gate", "ensemble", "decompose", "preview", "compact", "chunk", "recipe", "recipe_choice"];
 export const VARIANT_LABEL: Record<string, string> = {
   base: "default", choice: "Choice form", score: "Score form", crit_none: "no criteria", crit_struct: "structured criteria", literal: "literal phrasing",
   no_context: "no matter context", state_string: "flat-string state", gate: "gated", ensemble: "3-phrasing ensemble", decompose: "decomposed",
   preview: "jev-preview", compact: "compact", chunk: "chunked", recipe: "compact + chunk", recipe_choice: "compact + chunk, Choice",
-  t1_100: "TAR 1.0 · 100 coded", t1_100_div: "TAR 1.0 · 100 coded", t1_100_f1: "TAR 1.0 · 100 · F1 cutoff", t1_100_noisy: "TAR 1.0 · 100 · 90% reviewer",
-  t1_300: "TAR 1.0 · 300 coded", t1_300_div: "TAR 1.0 · 300 coded", t1_300_f1: "TAR 1.0 · 300 · F1 cutoff", t1_300_noisy: "TAR 1.0 · 300 · 90% reviewer",
-  t1_1000: "TAR 1.0 · 1,000 coded", t1_1000_div: "TAR 1.0 · 1,000 coded", t1_1000_f1: "TAR 1.0 · 1,000 · F1 cutoff", t1_1000_noisy: "TAR 1.0 · 1,000 · 90% reviewer",
-  t1_5000: "TAR 1.0 · 5,000 coded", t1_5000_div: "TAR 1.0 · 5,000 coded", t1_5000_f1: "TAR 1.0 · 5,000 · F1 cutoff", t1_5000_noisy: "TAR 1.0 · 5,000 · 90% reviewer",
-  cal: "TAR 2.0 · CAL (80% target)", cal_75: "TAR 2.0 · CAL · 75% target", cal_perfect: "TAR 2.0 · CAL · perfect reviewer", cal_knee: "TAR 2.0 · CAL · knee stop",
 };
 /**
  * One-line definition of each configuration, the highlighted clause of the details modal's opening sentence
  * ("<name> is the configuration in which <definition>."). Lower-case clauses, no trailing stop. Keyed by model key
- * (family@variant); the typed and multilingual Laya checkpoints fall back to laya@<variant>. TAR 1.0 rows are templates
- * with {n} for the coded-sample size. Text follows the lever notes in ediscovery_bench/examples.py and export.py.
+ * (family@variant); the typed and multilingual Laya checkpoints fall back to laya@<variant>.
+ * Text follows the lever notes in ediscovery_bench/examples.py and export.py.
  */
 export const VARIANT_DEFINITION: Record<string, string> = {
   // Jev 1.13
@@ -220,33 +185,16 @@ export const VARIANT_DEFINITION: Record<string, string> = {
   "laya-ft": "Laya's compact + chunk request is sent to a checkpoint fine-tuned (RLCD) on a 30% document-level dev split of {corpus}'s own gold labels and scored on the held-out 70%; the request does not change, the weights do",
   // Generative models: one definition, the prompt is the same for every model
   "llm": "one chat completion per document (all issues at once) or per issue, with a JSON schema the vendor enforces on the reply: a label and p(responsive), no free text",
-  // Classical TAR 1.0, templated on the coded-sample size
-  "tar@t1": "a simulated reviewer (50 documents/hour, $65/hour) codes {n} random documents and a TF-IDF + logistic-regression classifier learns from those codes and labels the rest, with a cutoff targeting 80% recall chosen by 5-fold cross-validation on the coded sample",
-  "tar@t1_f1": "the TAR 1.0 · {n} coded workflow with the classifier cutoff set to maximise F1 on the coded sample instead of targeting 80% recall",
-  "tar@t1_noisy": "the TAR 1.0 · {n} coded workflow with an imperfect reviewer, who misses 10% of relevant documents and over-codes 2% of non-relevant ones",
-  "tar@t1_div": "a simulated reviewer (50 documents/hour, $65/hour) codes {n} documents chosen by cluster-stratified diversity sampling (the collection's TF-IDF reduced to 100 dimensions by SVD, k-means into {n} clusters, the document nearest each centre) and a TF-IDF + logistic-regression classifier learns from those codes and labels the rest, with a cutoff targeting 80% recall chosen by 5-fold cross-validation on the coded sample",
 };
-/** The definition for a model key on a corpus: resolves the Laya checkpoints, the TAR templates and the {corpus} placeholder. */
+/** The definition for a model key on a corpus: resolves the Laya checkpoints and the {corpus} placeholder. */
 export const variantDefinition = (key: string, corpusLabel: string): string | undefined => {
   const [fam, v] = key.includes("@") ? key.split("@") : [key, ""];
   let d = VARIANT_DEFINITION[key] ?? (fam.startsWith("laya") && v ? VARIANT_DEFINITION[`laya@${v}`] : undefined);
-  if (!d && fam === "tar") {
-    const m = /^t1_(\d+)(_f1|_noisy|_div)?$/.exec(v);
-    if (m) d = VARIANT_DEFINITION[`tar@t1${m[2] ?? ""}`]?.replace("{n}", fmtInt(Number(m[1])));
-  }
   if (!d && !key.includes("@") && key !== "lexical") d = VARIANT_DEFINITION.llm;
   return d?.replace("{corpus}", corpusLabel);
 };
-/** TAR variants share a hue per coded-sample size so the three rows of one stage read as a family. */
-const TAR_VARIANT_COLOR: Record<string, string> = {
-  t1_100: "var(--c-tar-1)", t1_100_div: "var(--c-tar-1)", t1_100_f1: "var(--c-tar-1)", t1_100_noisy: "var(--c-tar-1)",
-  t1_300: "var(--c-tar-2)", t1_300_div: "var(--c-tar-2)", t1_300_f1: "var(--c-tar-2)", t1_300_noisy: "var(--c-tar-2)",
-  t1_1000: "var(--c-tar-3)", t1_1000_div: "var(--c-tar-3)", t1_1000_f1: "var(--c-tar-3)", t1_1000_noisy: "var(--c-tar-3)",
-  t1_5000: "var(--c-tar-4)", t1_5000_div: "var(--c-tar-4)", t1_5000_f1: "var(--c-tar-4)", t1_5000_noisy: "var(--c-tar-4)",
-  cal: "var(--c-cal)", cal_75: "var(--c-cal)", cal_perfect: "var(--c-cal)", cal_knee: "var(--c-cal)",
-};
 const VARIANT_PALETTE = Array.from({ length: 16 }, (_, i) => `var(--v${i})`);
-export const variantColor = (v: string, recipe: string) => TAR_VARIANT_COLOR[v] ?? (v === recipe ? "var(--c-jev)" : v === "base" ? "var(--c-base)" : VARIANT_PALETTE[(VARIANT_ORDER.indexOf(v) + 1) % VARIANT_PALETTE.length]);
+export const variantColor = (v: string, recipe: string) => (v === recipe ? "var(--c-jev)" : v === "base" ? "var(--c-base)" : VARIANT_PALETTE[(VARIANT_ORDER.indexOf(v) + 1) % VARIANT_PALETTE.length]);
 
 // ------------------------------------------------------------------------------------------------
 
