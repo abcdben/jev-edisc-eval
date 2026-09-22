@@ -39,7 +39,8 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
           <b>Two new decision models</b>, Jev (TypeSafe AI) and Laya (ConvAI), against <b>seven commercially available language models</b>: Haiku 4.5,
           Sonnet 5, GPT‑5.6 Luna and Terra, Gemini 3.5 Flash‑Lite and 3.8 Flash, and a locally run Gemma 3 12B. <b>Classical TAR</b> is included
           for reference: a simulated reviewer with TF‑IDF and logistic regression, as TAR 1.0 at several training-sample sizes. The
-          reviewer codes a simple random sample of 100 to 5,000 documents drawn from the collection. The task is the one review teams do in discovery: <mark>is this document responsive, and to which issues.</mark>
+          reviewer codes a simple random sample of 100 to 5,000 documents drawn from the collection, and each size was also run with a
+          diversity (cluster-stratified) sample in place of the random one. The task is the one review teams do in discovery: <mark>is this document responsive, and to which issues.</mark>
         </p>
         <h4>Data sets</h4>
         <ul>
@@ -54,7 +55,7 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         </p>
         <ul>
           <li><b>Recall and precision</b>, with 95% confidence intervals.</li>
-          <li><b>Review time</b> per 100,000 documents, single stream.</li>
+          <li><b>Review time</b> per 100,000 documents in a single stream.</li>
           <li><b>Cost</b> per 100,000 documents, as paid.</li>
           <li><b>Determinism</b>: how often a model changes its answer on the same document across repeated runs.</li>
         </ul>
