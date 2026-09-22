@@ -63,7 +63,7 @@ export const DATA = raw as unknown as Findings;
 // ------------------------------------------------------------------------------------------------
 
 /** Corpora offered on the site, in display order. Veridian (synthetic) stays in findings.json and examples.json but is not listed; add "veridian" here to bring it back. */
-export const SITE_CORPORA = ["mnk", "cuad", "trec"];
+export const SITE_CORPORA = ["trec", "mnk", "cuad"];
 const ALL_CORPORA: { id: string; label: string; short: string }[] = [
   { id: "veridian", label: "Veridian", short: "synthetic medical-device MDL" },
   { id: "mnk", label: "Mallinckrodt", short: "real opioid-litigation emails" },
