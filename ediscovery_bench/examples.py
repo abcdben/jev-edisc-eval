@@ -179,26 +179,26 @@ def _lexical_request(ts: TaskSet, qid: str, doc: Document) -> dict:
 
 TAR_WORKFLOW = {
     "t1": [
-        "1. Draw a random sample of N documents from the collection.",
-        "2. A reviewer reads each and codes it for every issue (simulated here from the gold labels; 50 documents/hour, $65/hour).",
-        "3. Fit TF-IDF (word 1-2 grams, sublinear tf) and balanced logistic regression: one model for any-issue relevance and one per issue with at least 5 coded positives.",
-        "4. Choose each model's cutoff by 5-fold cross-validation on the coded sample only: the score that keeps 80% of the sample's positives (or, in the F1 variant, the score that maximises F1).",
-        "5. Score the rest of the collection. A document is produced on an issue when it clears the relevance cutoff and that issue's cutoff; the coded documents keep the reviewer's codes.",
+        "Draw a random sample of N documents from the collection.",
+        "A reviewer reads each and codes it for every issue (simulated here from the gold labels; 50 documents/hour, $65/hour).",
+        "Fit TF-IDF (word 1-2 grams, sublinear tf) and balanced logistic regression: one model for any-issue relevance and one per issue with at least 5 coded positives.",
+        "Choose each model's cutoff by 5-fold cross-validation on the coded sample only: the score that keeps 80% of the sample's positives (or, in the F1 variant, the score that maximises F1).",
+        "Score the rest of the collection. A document is produced on an issue when it clears the relevance cutoff and that issue's cutoff; the coded documents keep the reviewer's codes.",
     ],
     "t1_div": [
-        "1. Draw a diversity sample of N documents from the collection: reduce the collection's TF-IDF matrix to 100 dimensions with a truncated SVD (fit on at most 50,000 documents, every document projected, rows L2-normalised), cluster it into N groups with k-means (MiniBatchKMeans), and take the document nearest each cluster centre (one per cluster; any empty cluster is filled by a random draw).",
-        "2. A reviewer reads each and codes it for every issue (simulated here from the gold labels; 50 documents/hour, $65/hour).",
-        "3. Fit TF-IDF (word 1-2 grams, sublinear tf) and balanced logistic regression: one model for any-issue relevance and one per issue with at least 5 coded positives.",
-        "4. Choose each model's cutoff by 5-fold cross-validation on the coded sample only: the score that keeps 80% of the sample's positives. The procedure is the same as the random-sample rows for comparability, but the coded sample is no longer a random sample of the collection, so its recall estimate is only a guide.",
-        "5. Score the rest of the collection. A document is produced on an issue when it clears the relevance cutoff and that issue's cutoff; the coded documents keep the reviewer's codes.",
+        "Draw a diversity sample of N documents from the collection: reduce the collection's TF-IDF matrix to 100 dimensions with a truncated SVD (fit on at most 50,000 documents, every document projected, rows L2-normalised), cluster it into N groups with k-means (MiniBatchKMeans), and take the document nearest each cluster centre (one per cluster; any empty cluster is filled by a random draw).",
+        "A reviewer reads each and codes it for every issue (simulated here from the gold labels; 50 documents/hour, $65/hour).",
+        "Fit TF-IDF (word 1-2 grams, sublinear tf) and balanced logistic regression: one model for any-issue relevance and one per issue with at least 5 coded positives.",
+        "Choose each model's cutoff by 5-fold cross-validation on the coded sample only: the score that keeps 80% of the sample's positives. The coded sample is not a random sample of the collection, so that recall estimate is a guide rather than an unbiased one.",
+        "Score the rest of the collection. A document is produced on an issue when it clears the relevance cutoff and that issue's cutoff; the coded documents keep the reviewer's codes.",
     ],
     "cal": [
-        "1. Control set: the reviewer codes a simple random sample of the collection first (10% of the pool, capped at 500 and sized for at least ~30 relevant documents; a fixed 2,000 on TREC's 286k collection). These documents never enter the review queue and are not trained on; their coding counts as review effort and their codes are part of the production set.",
-        "2. Seed: random documents plus the same number of the strongest keyword-floor hits, coded by the reviewer (50 + 50 on the 800-document Mallinckrodt pool, 100 + 100 elsewhere).",
-        "3. Fit TF-IDF + balanced logistic regression on everything queued and coded so far for any-issue relevance.",
-        "4. Rank the collection; the reviewer codes the top uncoded batch (50 / 100 / 1,000 documents by collection size), tagging issues as they go.",
-        "5. Estimate recall from the control set: whenever a batch is picked, every control document scoring at or above the batch's lowest queued score counts as reached from then on (it would have been in the batch had it not been held out); recall is the share of control-set documents coded relevant that have been reached. Repeat 3-5 and stop once the estimate is at or above the target (80%; 75% in the 'cal_75' variant) for two consecutive batches, or when the pool is exhausted. (The 'knee stop' variant uses Cormack & Grossman's knee method and no control set.)",
-        "6. The production set is everything the reviewer coded relevant, control set included; that is what the site plots, scored against gold on the pool CAL ran over. The review set (everything read), the recall estimate at stop against the true figure, and the classifier applied on its own to the evaluation set at the control-set cutoff are reported alongside.",
+        "Control set: the reviewer codes a simple random sample of the collection first (10% of the pool, capped at 500 and sized for at least ~30 relevant documents; a fixed 2,000 on TREC's 286k collection). These documents never enter the review queue and are not trained on; their coding counts as review effort and their codes are part of the production set.",
+        "Seed: random documents plus the same number of the strongest keyword-floor hits, coded by the reviewer (50 + 50 on the 800-document Mallinckrodt pool, 100 + 100 elsewhere).",
+        "Fit TF-IDF + balanced logistic regression on everything queued and coded so far for any-issue relevance.",
+        "Rank the collection; the reviewer codes the top uncoded batch (50 / 100 / 1,000 documents by collection size), tagging issues as they go.",
+        "Estimate recall from the control set: whenever a batch is picked, every control document scoring at or above the batch's lowest queued score counts as reached from then on (it would have been in the batch had it not been held out); recall is the share of control-set documents coded relevant that have been reached. Repeat 3-5 and stop once the estimate is at or above the target (80%; 75% in the 'cal_75' variant) for two consecutive batches, or when the pool is exhausted. (The 'knee stop' variant uses Cormack & Grossman's knee method and no control set.)",
+        "The production set is everything the reviewer coded relevant, control set included; that is what the site plots, scored against gold on the pool CAL ran over. The review set (everything read), the recall estimate at stop against the true figure, and the classifier applied on its own to the evaluation set at the control-set cutoff are reported alongside.",
     ],
 }
 

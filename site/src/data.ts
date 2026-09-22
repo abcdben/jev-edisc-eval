@@ -95,7 +95,12 @@ export const starOf = (r: { model: string; subset: string | null }): string | nu
  * Model keys the site does not show anywhere (roster, picker, charts, Configurations, details modal), though their results stay in
  * findings.json and examples.json. CAL hidden for now; remove from this list to bring it back.
  */
-export const HIDDEN_MODELS: string[] = ["tar@cal", "tar@cal_75", "tar@cal_perfect", "tar@cal_knee"];
+export const HIDDEN_MODELS: string[] = [
+  "tar@cal", "tar@cal_75", "tar@cal_perfect", "tar@cal_knee",
+  // random-sample TAR 1.0 rows (and their F1 / noisy-reviewer crosses): the diversity-sampled rows are the ones shown
+  "tar@t1_100", "tar@t1_100_f1", "tar@t1_100_noisy", "tar@t1_300", "tar@t1_300_f1", "tar@t1_300_noisy",
+  "tar@t1_1000", "tar@t1_1000_f1", "tar@t1_1000_noisy", "tar@t1_5000", "tar@t1_5000_f1", "tar@t1_5000_noisy",
+];
 export const isHidden = (key: string): boolean => HIDDEN_MODELS.includes(key);
 /** The kind of a model key (headline roster or configuration), from the models map or the first record that ran it. */
 export const modelKind = (key: string): string | undefined => DATA.models[key]?.kind ?? DATA.records.find((r) => r.model === key)?.kind;
@@ -111,14 +116,10 @@ const ALL_PRIMARY: { key: string; color: string; short: string; note: string; ki
   { key: "gemini-3.5-flash-lite", color: "var(--c-flashlite)", short: "Gemini 3.5 Flash-Lite", note: "Google Gemini 3.5 Flash-Lite, structured output." },
   { key: "gemini-3.8-flash", color: "var(--c-flash)", short: "Gemini 3.8 Flash", note: "Google Gemini 3.8 Flash, structured output." },
   { key: "gemma3-12b", color: "var(--c-gemma)", short: "Gemma 3 12B", kind: "llm", note: "Local, open-weight. Google Gemma 3 12B run via Ollama on a rented A100. Scored on a 400-600 document stratified subsample; latency measured with 4 concurrent requests." },
-  { key: "tar@t1_100", color: "var(--c-tar-1)", short: "TAR 1.0 · 100", note: "Simple learning. A simulated reviewer (50 docs/h, $65/h) codes 100 random documents; TF-IDF + logistic regression labels the rest with a cutoff targeting 80% recall, chosen by cross-validation on the coded sample. Median of 5 random seeds." },
-  { key: "tar@t1_300", color: "var(--c-tar-2)", short: "TAR 1.0 · 300", note: "As above with 300 documents coded." },
-  { key: "tar@t1_1000", color: "var(--c-tar-3)", short: "TAR 1.0 · 1,000", note: "As above with 1,000 documents coded." },
-  { key: "tar@t1_5000", color: "var(--c-tar-4)", short: "TAR 1.0 · 5,000", note: "As above with 5,000 documents coded." },
-  { key: "tar@t1_100_div", color: "var(--c-tar-1)", short: "TAR 1.0 · 100 · diverse", note: "As TAR 1.0 · 100, but the 100 documents the reviewer codes are chosen by cluster-stratified diversity sampling (100-dimension SVD of the collection's TF-IDF, k-means into 100 clusters, the document nearest each centre) instead of at random. The cutoff is chosen the same way; the coded sample is no longer random, so its recall estimate is only a guide. Median of 5 seeds." },
-  { key: "tar@t1_300_div", color: "var(--c-tar-2)", short: "TAR 1.0 · 300 · diverse", note: "As above with 300 documents chosen by diversity sampling (300 clusters)." },
-  { key: "tar@t1_1000_div", color: "var(--c-tar-3)", short: "TAR 1.0 · 1,000 · diverse", note: "As above with 1,000 documents chosen by diversity sampling (1,000 clusters)." },
-  { key: "tar@t1_5000_div", color: "var(--c-tar-4)", short: "TAR 1.0 · 5,000 · diverse", note: "As above with 5,000 documents chosen by diversity sampling (5,000 clusters)." },
+  { key: "tar@t1_100_div", color: "var(--c-tar-1)", short: "TAR 1.0 · 100", note: "Simple learning. A simulated reviewer (50 docs/h, $65/h) codes 100 documents chosen by cluster-stratified diversity sampling (100-dimension SVD of the collection's TF-IDF, k-means into 100 clusters, the document nearest each centre); TF-IDF + logistic regression labels the rest with a cutoff targeting 80% recall, chosen by cross-validation on the coded sample. Median of 5 seeds." },
+  { key: "tar@t1_300_div", color: "var(--c-tar-2)", short: "TAR 1.0 · 300", note: "As above with 300 documents coded (300 clusters)." },
+  { key: "tar@t1_1000_div", color: "var(--c-tar-3)", short: "TAR 1.0 · 1,000", note: "As above with 1,000 documents coded (1,000 clusters)." },
+  { key: "tar@t1_5000_div", color: "var(--c-tar-4)", short: "TAR 1.0 · 5,000", note: "As above with 5,000 documents coded (5,000 clusters)." },
   { key: "tar@cal", color: "var(--c-cal)", short: "TAR 2.0 · CAL", note: "Continuous active learning with an imperfect reviewer (misses 10% of relevant documents, over-codes 2% of non-relevant), as run in practice. The reviewer first codes a random control set (10% of the pool, capped at 500; 2,000 on TREC), then codes the classifier's top-ranked batch, it retrains, repeat; review stops once the control set estimates 80% recall for two consecutive batches. Plotted as the production set: every document the reviewer coded relevant, scored against gold on the pool CAL ran over. The tooltip has the review effort, the recall estimate at stop against the true figure, and the classifier on its own. On Mallinckrodt, whose benchmark sample is 61% rich by design, CAL runs on a 10%-rich pool." },
 ];
 export const PRIMARY = ALL_PRIMARY.filter((p) => !isHidden(p.key));
@@ -160,7 +161,7 @@ export const ABLATION_GROUPS: { id: string; label: string; recipe: string; note:
   { id: "laya", label: "Laya", recipe: "recipe", note: "ConvAI Laya, English checkpoint, zero-shot. Two levers (compact, chunk) exist only to fit its 512-token context; ★ marks the configuration that combines them, selected on the Veridian dev split." },
   { id: "laya-typed", label: "Laya · typed", recipe: "recipe", note: "Laya typed checkpoint, zero-shot." },
   { id: "laya-multilingual", label: "Laya · multilingual", recipe: "recipe", note: "Laya multilingual checkpoint, zero-shot." },
-  { id: "tar", label: "Classical TAR", recipe: "", note: "A simulated reviewer (50 docs/h, $65/h) plus TF-IDF + logistic regression. TAR 1.0 rows vary the size of the coded sample, how it is drawn (random vs. cluster-stratified diversity sample), the cutoff rule (80% recall vs. F1) and reviewer accuracy. Every row is the median of the random seeds." },
+  { id: "tar", label: "Classical TAR", recipe: "", note: "A simulated reviewer (50 docs/h, $65/h) plus TF-IDF + logistic regression. The reviewer codes a cluster-stratified diversity sample; the rows vary its size. Every row is the median of the random seeds." },
 ];
 export const VARIANT_ORDER = ["base", "choice", "score", "crit_none", "crit_struct", "literal", "no_context", "state_string", "gate", "ensemble", "decompose", "preview", "compact", "chunk", "recipe", "recipe_choice",
   "t1_100", "t1_100_div", "t1_100_f1", "t1_100_noisy", "t1_300", "t1_300_div", "t1_300_f1", "t1_300_noisy", "t1_1000", "t1_1000_div", "t1_1000_f1", "t1_1000_noisy",
@@ -169,10 +170,10 @@ export const VARIANT_LABEL: Record<string, string> = {
   base: "default", choice: "Choice form", score: "Score form", crit_none: "no criteria", crit_struct: "structured criteria", literal: "literal phrasing",
   no_context: "no matter context", state_string: "flat-string state", gate: "gated", ensemble: "3-phrasing ensemble", decompose: "decomposed",
   preview: "jev-preview", compact: "compact", chunk: "chunked", recipe: "compact + chunk", recipe_choice: "compact + chunk, Choice",
-  t1_100: "TAR 1.0 · 100 coded", t1_100_div: "TAR 1.0 · 100 · diverse sample", t1_100_f1: "TAR 1.0 · 100 · F1 cutoff", t1_100_noisy: "TAR 1.0 · 100 · 90% reviewer",
-  t1_300: "TAR 1.0 · 300 coded", t1_300_div: "TAR 1.0 · 300 · diverse sample", t1_300_f1: "TAR 1.0 · 300 · F1 cutoff", t1_300_noisy: "TAR 1.0 · 300 · 90% reviewer",
-  t1_1000: "TAR 1.0 · 1,000 coded", t1_1000_div: "TAR 1.0 · 1,000 · diverse sample", t1_1000_f1: "TAR 1.0 · 1,000 · F1 cutoff", t1_1000_noisy: "TAR 1.0 · 1,000 · 90% reviewer",
-  t1_5000: "TAR 1.0 · 5,000 coded", t1_5000_div: "TAR 1.0 · 5,000 · diverse sample", t1_5000_f1: "TAR 1.0 · 5,000 · F1 cutoff", t1_5000_noisy: "TAR 1.0 · 5,000 · 90% reviewer",
+  t1_100: "TAR 1.0 · 100 coded", t1_100_div: "TAR 1.0 · 100 coded", t1_100_f1: "TAR 1.0 · 100 · F1 cutoff", t1_100_noisy: "TAR 1.0 · 100 · 90% reviewer",
+  t1_300: "TAR 1.0 · 300 coded", t1_300_div: "TAR 1.0 · 300 coded", t1_300_f1: "TAR 1.0 · 300 · F1 cutoff", t1_300_noisy: "TAR 1.0 · 300 · 90% reviewer",
+  t1_1000: "TAR 1.0 · 1,000 coded", t1_1000_div: "TAR 1.0 · 1,000 coded", t1_1000_f1: "TAR 1.0 · 1,000 · F1 cutoff", t1_1000_noisy: "TAR 1.0 · 1,000 · 90% reviewer",
+  t1_5000: "TAR 1.0 · 5,000 coded", t1_5000_div: "TAR 1.0 · 5,000 coded", t1_5000_f1: "TAR 1.0 · 5,000 · F1 cutoff", t1_5000_noisy: "TAR 1.0 · 5,000 · 90% reviewer",
   cal: "TAR 2.0 · CAL (80% target)", cal_75: "TAR 2.0 · CAL · 75% target", cal_perfect: "TAR 2.0 · CAL · perfect reviewer", cal_knee: "TAR 2.0 · CAL · knee stop",
 };
 /**
@@ -215,7 +216,7 @@ export const VARIANT_DEFINITION: Record<string, string> = {
   "tar@t1": "a simulated reviewer (50 documents/hour, $65/hour) codes {n} random documents and a TF-IDF + logistic-regression classifier learns from those codes and labels the rest, with a cutoff targeting 80% recall chosen by 5-fold cross-validation on the coded sample",
   "tar@t1_f1": "the TAR 1.0 · {n} coded workflow with the classifier cutoff set to maximise F1 on the coded sample instead of targeting 80% recall",
   "tar@t1_noisy": "the TAR 1.0 · {n} coded workflow with an imperfect reviewer, who misses 10% of relevant documents and over-codes 2% of non-relevant ones",
-  "tar@t1_div": "the TAR 1.0 · {n} coded workflow with the training sample chosen by cluster-stratified diversity sampling instead of at random: the collection's TF-IDF is reduced to 100 dimensions by SVD, k-means splits it into {n} clusters, and the reviewer codes the document nearest each cluster centre; the cutoff is chosen the same way, but the coded sample is no longer random, so its recall estimate is only a guide",
+  "tar@t1_div": "a simulated reviewer (50 documents/hour, $65/hour) codes {n} documents chosen by cluster-stratified diversity sampling (the collection's TF-IDF reduced to 100 dimensions by SVD, k-means into {n} clusters, the document nearest each centre) and a TF-IDF + logistic-regression classifier learns from those codes and labels the rest, with a cutoff targeting 80% recall chosen by 5-fold cross-validation on the coded sample",
 };
 /** The definition for a model key on a corpus: resolves the Laya checkpoints, the TAR templates and the {corpus} placeholder. */
 export const variantDefinition = (key: string, corpusLabel: string): string | undefined => {

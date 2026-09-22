@@ -38,7 +38,7 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         <p>
           <b>Two new decision models</b>, Jev (TypeSafe AI) and Laya (ConvAI), against <b>seven commercially available language models</b>: Haiku 4.5,
           Sonnet 5, GPT‑5.6 Luna and Terra, Gemini 3.5 Flash‑Lite and 3.8 Flash, and a locally run Gemma 3 12B. <b>Classical TAR</b> is included
-          for reference: a simulated reviewer with TF‑IDF and logistic regression, as TAR 1.0 at several training-sample sizes. The task is the one review teams do in discovery: <mark>is this document responsive, and to which issues.</mark>
+          for reference: a simulated reviewer with TF‑IDF and logistic regression, as TAR 1.0 at several training-sample sizes, the reviewer's training sample drawn by cluster-stratified diversity sampling rather than at random. The task is the one review teams do in discovery: <mark>is this document responsive, and to which issues.</mark>
         </p>
         <h4>Data sets</h4>
         <ul>

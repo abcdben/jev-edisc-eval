@@ -115,7 +115,7 @@ function leadFor(group: string, key: string, corpus: string, groupLabel: string)
   }
   if (group === "tar") {
     const label = VARIANT_LABEL[v] ?? v;
-    const plain = /^t1_\d+$/.test(v);
+    const plain = /^t1_\d+(_div)?$/.test(v); // the shown TAR 1.0 rows read as full definitions; F1 / noisy crosses as deltas
     return { pre: `**${label}** is ${plain ? "the classical TAR row in which " : ""}`, def, post: ". No model reads the request; every figure is the median of the random seeds." };
   }
   return null;
@@ -332,7 +332,7 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
   const G = EX_GROUPS.find((g) => g.id === group)!;
   const active = members.includes(key) ? key : members[0];
   const cfg = active ? C.configs[active] : null;
-  const baseKey = group === "llm" ? null : group === "tar" ? (members.includes("tar@t1_1000") ? "tar@t1_1000" : members.find((m) => m.includes("@t1_")) ?? null) : members.find((m) => m.endsWith("@base")) ?? null;
+  const baseKey = group === "llm" ? null : group === "tar" ? (members.includes("tar@t1_1000_div") ? "tar@t1_1000_div" : members.includes("tar@t1_1000") ? "tar@t1_1000" : members.find((m) => m.includes("@t1_")) ?? null) : members.find((m) => m.endsWith("@base")) ?? null;
   const base = baseKey && baseKey !== active ? C.configs[baseKey] : null;
 
   useEffect(() => {
