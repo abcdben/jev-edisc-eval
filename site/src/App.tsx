@@ -487,7 +487,7 @@ export default function App() {
           : <VariantPicker v={v} grp={grp} setGrp={setGrp} off={off} setOff={setOff} explain={setExplain} />}
         <span className="more-wrap">
           {!more && nonDefault.length > 0 && <span className="more-summary">{nonDefault.join(" · ")}</span>}
-          <ExplainButton label={pageId === "compare" ? "how each model is asked" : "requests side by side"} onClick={() => setExplain(pageId === "compare" ? "jev@base" : `${grp}@base`)} />
+          {pageId === "compare" && <ExplainButton label="how each model is asked" onClick={() => setExplain("jev@base")} />}
           <button className={`more${more ? " on" : ""}`} onClick={() => setMore((m) => !m)} aria-expanded={more}>
             {more ? "Fewer options" : "More options"}<span className="chev" />
           </button>
