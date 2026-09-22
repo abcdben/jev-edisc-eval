@@ -500,11 +500,15 @@ export function Hint({ text, items, more, title }: { text?: string; items?: Hint
   );
 }
 
-export function Seg<T extends string>({ value, onChange, options }: { value: T; onChange: (v: T) => void; options: { id: T; label: string; title?: string }[] }) {
+/**
+ * An option with `accent` is flagged as the one to look at while it is not selected: a faint --hl tint (styles.css `.seg-hl`), and while
+ * `pulse` is true the same double breathe as the emphasised table row (`.seg-hl.pulse`, drive it with usePulseWindow). Selected, it is the plain pill.
+ */
+export function Seg<T extends string>({ value, onChange, options, pulse = false }: { value: T; onChange: (v: T) => void; options: { id: T; label: string; title?: string; accent?: boolean }[]; pulse?: boolean }) {
   return (
     <span className="seg" role="radiogroup">
       {options.map((o) => (
-        <button key={o.id} className={o.id === value ? "on" : ""} onClick={() => onChange(o.id)} title={o.title} role="radio" aria-checked={o.id === value}>
+        <button key={o.id} className={o.id === value ? "on" : o.accent ? `seg-hl${pulse ? " pulse" : ""}` : ""} onClick={() => onChange(o.id)} title={o.title} role="radio" aria-checked={o.id === value}>
           {o.label}
         </button>
       ))}

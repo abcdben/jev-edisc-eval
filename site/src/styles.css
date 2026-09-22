@@ -136,6 +136,12 @@ svg text { user-select: none; font-family: var(--sans); }
 }
 .seg button:hover { color: var(--ink); }
 .seg button.on { background: var(--ink); color: var(--bg); }
+/* the accented option of a toggle (ui.tsx Seg `accent`; the Recall and precision card's `ranked` view) while it is not selected: the --hl tint behind the label at
+   the emphasised table row's rest strength, breathing with the same double pulse (`.pulse`, row-breathe below) when the card mounts or its corpus changes; hover brings it to full */
+.seg button.seg-hl { position: relative; z-index: 0; color: var(--ink); }
+.seg button.seg-hl::before { content: ""; position: absolute; inset: 0; border-radius: 4px; background: var(--hl); opacity: 0.55; z-index: -1; transition: opacity 120ms; }
+.seg button.seg-hl:hover::before { opacity: 1; }
+.seg button.seg-hl.pulse::before { animation: row-breathe 0.65s ease-in-out 2; }
 
 /* sections */
 .section { padding: 14px 0 8px; }
@@ -301,7 +307,7 @@ svg text { user-select: none; font-family: var(--sans); }
 /* reduced motion: every CSS transition and animation on the page completes at once (the hooks snap on the same media query); the faint rest tint stays */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
-  .pr-box.pulse, .row-jev.pulse { animation: none; }
+  .pr-box.pulse, .row-jev.pulse, .seg button.seg-hl.pulse::before { animation: none; }
 }
 
 /* decider marker (data.ts isDecider): the name a step heavier and in full ink; the charts do the same in SVG (ui.tsx DECIDER_TEXT) */

@@ -4,7 +4,7 @@ import {
   corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, pick, siteCorpus, starOf, unshownWhy, variantColor,
   type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
-import { Control, Hint, MethodContext, Seg, type HintItem, type TipLine } from "./components/ui";
+import { Control, Hint, MethodContext, ROW_PULSE_MS, Seg, usePulseWindow, type HintItem, type TipLine } from "./components/ui";
 import { PRScatter, type PRItem } from "./components/PRScatter";
 import { PRRows } from "./components/PRRows";
 import { PRRail } from "./components/PRRail";
@@ -30,15 +30,17 @@ const KIND_SHORT: Record<Kind, string> = { system1: "Deciders", system1_ft: "Sup
 /** Recall/precision card with a map (scatter with interval boxes) or ranked (rows with whiskers) view. The chart mode is owned by the section so it can switch the dashboard layout. `explain` opens the details modal for a clicked mark or row (item ids are model keys). */
 /** `pulse` (Compare models only: the Configurations page shows one family, so no decider to single out) lets the deciders' interval boxes breathe for a few cycles when the map loads or its points change. */
 /** `variants` (Configurations page) adds the ranked-view candidates (`rail`, `dumbbell`, `heat`) to the view toggle; `referenceId` is the row the `heat` view compares against (the family's base configuration). The candidate components draw their own legend line. */
-function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false, variants = false, referenceId }: { items: PRItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean; variants?: boolean; referenceId?: string }) {
+/** `sig` names what the card is showing (the corpus, and the family on Configurations): the `ranked` option's accent (ui.tsx Seg `accent`) breathes once when the card mounts and again whenever it changes, not on every model toggle. */
+function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false, variants = false, referenceId, sig = "card" }: { items: PRItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean; variants?: boolean; referenceId?: string; sig?: string }) {
   const setChart = onChart;
   const [zoom, setZoom] = useState(defaultZoom);
   const onSelect = explain && ((it: PRItem) => explain(it.id));
   const hover = useHover();
   const rowProps = { items, zoom, sortBy: "recall" as const, logos, onSelect, highlight: hover.id, onHover: hover.set };
-  const options: { id: Chart; label: string; title?: string }[] = [
+  const accentPulse = usePulseWindow(sig, true, ROW_PULSE_MS);
+  const options: { id: Chart; label: string; title?: string; accent?: boolean }[] = [
     { id: "map", label: "map", title: "Recall against precision, one box per model" },
-    { id: "ranked", label: "ranked", title: "Rows sorted by F1, whiskers for the intervals" },
+    { id: "ranked", label: "ranked", title: "Rows sorted by recall, whiskers for the intervals", accent: true },
     ...(variants ? [
       { id: "rail" as const, label: "rail", title: "Ranked rows on a rank rail, with the interval width beside each value" },
       { id: "dumbbell" as const, label: "dumbbell", title: "Recall and precision on one axis, joined per row" },
@@ -50,7 +52,7 @@ function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, h
       <div className="card-t">
         <h3>Recall and precision</h3>
         <span className="right">
-          <Seg value={chart} onChange={setChart} options={options} />
+          <Seg value={chart} onChange={setChart} options={options} pulse={accentPulse} />
           <Seg value={zoom ? "zoom" : "full"} onChange={(z) => setZoom(z === "zoom")} options={[{ id: "full", label: "0–100%" }, { id: "zoom", label: "fit to data" }]} />
         </span>
       </div>
@@ -343,7 +345,7 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
         <div className={`dash${chart !== "map" ? " ranked" : ""}`}>
           <PRCard
             items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
-            pulse
+            pulse sig={v.corpus}
           />
           <div className="stack">
             <OpsCards recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} explain={explain} decider={decider} emphasis={emphasis} />
@@ -412,7 +414,7 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
           <PRCard
             items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
             emptyText={variants.length ? "Select at least one configuration." : "No configurations of this model were run on this corpus and arm."}
-            logos={false} variants referenceId={referenceId}
+            logos={false} variants referenceId={referenceId} sig={`${v.corpus}:${grp}`}
           />
           <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} explain={explain} machineOnly /></div>
         </div>
