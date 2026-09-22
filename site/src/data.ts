@@ -133,7 +133,7 @@ const ALL_PRIMARY: { key: string; color: string; short: string; note: string; ki
 ];
 export const PRIMARY = ALL_PRIMARY.filter((p) => !isHidden(p.key));
 export const PRIMARY_BY_KEY = Object.fromEntries(PRIMARY.map((p) => [p.key, p]));
-export const DEFAULT_ON = new Set(["jev@base", "laya-ft", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash", "gemma3-12b"].filter((k) => !isHidden(k)));
+export const DEFAULT_ON = new Set(["jev@base", "laya-ft", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash"].filter((k) => !isHidden(k)));
 
 /**
  * Human prompt/criteria development, added to every non-TAR row when the ops cards are set to "+ human time".
