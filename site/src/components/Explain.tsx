@@ -99,7 +99,7 @@ function leadFor(group: string, key: string, corpus: string, groupLabel: string)
   const name = `**${groupLabel}${v ? ` · ${VARIANT_LABEL[v] ?? v}` : ""}**`;
   if (group === "jev") {
     if (v === "base") return { pre: `${name} is the baseline configuration of TypeSafe Jev 1.13, a decider model: `, def, post: ". Every other Jev configuration changes one lever from this one." };
-    const star = v === "state_string" ? " It is the configuration selected on the Veridian dev split and carried into Compare models as Jev w/ Iteration." : "";
+    const star = v === "state_string" ? " It is the configuration selected on the Veridian dev split." : "";
     return { pre: `${name} is the Jev 1.13 configuration in which `, def, post: `. Everything else matches the default.${star}` };
   }
   if (group === "laya-ft") return { pre: `${name} is the Laya row on Compare models: `, def, post: ". Not on equal footing with the zero-shot rows." };

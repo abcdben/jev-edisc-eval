@@ -67,7 +67,7 @@ const CONFIG_PR_ITEMS: HintItem[] = [
   { k: "Default view", v: <><b>Ranked rows with axes fitted to the data</b>, since configurations differ less than model families; switch to map and 0–100% for the Compare scale.</> },
   { k: "Intervals", v: <><b>95% Wilson</b> score; * marks a stratified subset.</> },
   { k: "Levers", v: <><b>Hover a configuration</b> for what its lever changes.</> },
-  { k: "★", v: <mark><b>The iterated configuration</b>, selected on the Veridian dev split and shown on Compare models as Jev w/ Iteration.</mark> },
+  { k: "★", v: <mark><b>The configuration selected on the Veridian dev split</b>, after one round of iteration.</mark> },
 ];
 
 // ------------------------------------------------------------------------------------------------
