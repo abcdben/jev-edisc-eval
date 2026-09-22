@@ -2,6 +2,10 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "rea
 import { ABLATION_GROUPS, CORPORA, DATA, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER, fmtMs, fmtPct, isDecider, modelKind, variantDefinition } from "../data";
 import { EX, EX_GROUPS, exCorpus, groupOf, membersOf, type ExOutput } from "../examples";
 import { DeciderTag, Seg, usePopDismiss, usePopPlace, type TipLine } from "./ui";
+import { Hi, detect, pretty } from "./Tokens";
+
+/** A JSON primitive as `<code class="ex-lit">`, coloured like a JSON token (numbers magenta, true/false/null the same). */
+const Lit = ({ v }: { v: unknown }) => <code className={`ex-lit ${typeof v === "number" ? "tk-num" : "tk-bool"}`}>{String(v)}</code>;
 
 /** The Metrics block: the full figures for one model on one corpus (what the chart tooltips used to carry), one fact list per card. */
 export type MetricSection = { title: string; lines: TipLine[]; notes?: string[] };
@@ -50,7 +54,7 @@ function ParamCard({ settings, changed }: { settings: Record<string, unknown>; c
           return (
             <div key={path} className={`row${changed.has(path) ? " chg" : ""}`}>
               <dt>{path}</dt>
-              <dd>{v === null ? <code className="ex-lit">null</code> : typeof v === "string" ? v : <code className="ex-lit">{String(v)}</code>}</dd>
+              <dd>{typeof v === "string" ? v : <Lit v={v} />}</dd>
             </div>
           );
         })}
@@ -143,6 +147,8 @@ function leadFor(group: string, key: string, corpus: string, groupLabel: string)
 function Str({ s, doc, ctx }: { s: string; doc: string; ctx: string }) {
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const parts = s.split(/(\{\{document\}\}|\{\{context\}\})/);
+  // tag / JSON / plain is decided on the whole string; each text run between the fold chips is highlighted in that mode
+  const mode = useMemo(() => detect(s), [s]);
   return (
     <span className="ex-str">
       {parts.map((p, i) => {
@@ -157,15 +163,15 @@ function Str({ s, doc, ctx }: { s: string; doc: string; ctx: string }) {
             </span>
           );
         }
-        return <span key={i}>{p}</span>;
+        return <span key={i}><Hi s={p} mode={mode} /></span>;
       })}
     </span>
   );
 }
 
 function Node({ v, path, changed, doc, ctx }: { v: unknown; path: string; changed: Set<string>; doc: string; ctx: string }): ReactNode {
-  if (v === null || v === undefined) return <code className="ex-lit">null</code>;
-  if (typeof v === "boolean" || typeof v === "number") return <code className="ex-lit">{String(v)}</code>;
+  if (v === null || v === undefined) return <Lit v={null} />;
+  if (typeof v === "boolean" || typeof v === "number") return <Lit v={v} />;
   if (typeof v === "string") return <Str s={v} doc={doc} ctx={ctx} />;
   if (Array.isArray(v)) {
     if (v.every((x) => typeof x === "string") && v.length > 6) return <span className="ex-str">{(v as string[]).join(", ")}</span>;
@@ -206,7 +212,7 @@ function Node({ v, path, changed, doc, ctx }: { v: unknown; path: string; change
           return (
             <div key={k} className="ex-row">
               <div className="ex-k">{k}</div>
-              <details className="ex-details"><summary>JSON schema enforced on the reply</summary><pre>{JSON.stringify(x, null, 2)}</pre></details>
+              <details className="ex-details"><summary>JSON schema enforced on the reply</summary><pre><Hi s={pretty(x)} mode="json" /></pre></details>
             </div>
           );
         }
@@ -249,7 +255,7 @@ function Output({ o, gold, contended }: { o: ExOutput; gold: string; contended: 
     <div className="ex-obj">
       {rows.map(([k, v]) => <div key={k} className="ex-row"><div className="ex-k">{k}</div><div className="ex-v">{v}</div></div>)}
       {o.raw && Object.keys(o.raw).length > 0 && (
-        <div className="ex-row"><div className="ex-k">raw</div><div className="ex-v"><Node v={o.raw} path="raw" changed={new Set()} doc="" ctx="" /></div></div>
+        <div className="ex-row"><div className="ex-k">raw</div><div className="ex-v"><pre className="ex-json"><Hi s={pretty(o.raw)} mode="json" /></pre></div></div>
       )}
       <div className="ex-foot">{`Recorded in the ${o.arm === "single" ? "one-issue-per-call" : "all-issues-per-call"} run; the request shown is the one-issue form.`}</div>
     </div>

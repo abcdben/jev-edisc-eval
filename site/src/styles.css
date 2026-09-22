@@ -22,6 +22,12 @@
   /* key-section highlight: a very light chartreuse behind the details modal's definition, lever callout and headline figures */
   --hl: #f2fbc4;
   --hl-line: #d6e88f;
+  /* token colours for the code-like text in the details modal (tags, JSON): quiet, editor-like, readable on the white panes */
+  --tk-tag: #3a6ea5;
+  --tk-attr: #6c5b9e;
+  --tk-key: #3a6ea5;
+  --tk-str: #4f7d3f;
+  --tk-num: #8e4a8c;
 
   /* model palette, light */
   --c-jev: #b52f8a;
@@ -62,6 +68,11 @@
   --bar-alpha: 0.7;
   --hl: rgba(206, 240, 60, .14);
   --hl-line: rgba(206, 240, 60, .38);
+  --tk-tag: #7fa8d8;
+  --tk-attr: #a894d4;
+  --tk-key: #7fa8d8;
+  --tk-str: #93b876;
+  --tk-num: #cc8bc0;
 
   --c-jev: #ea5fbf;
   --c-jev-2: #f2a1d8;
@@ -464,6 +475,15 @@ svg text { user-select: none; font-family: var(--sans); }
 .ex-inline { display: block; white-space: pre-wrap; color: var(--ink-2); font-size: 12px; margin: 6px 0 4px; padding: 8px 10px; border: 1px dashed var(--line-2); border-radius: 4px; max-height: 320px; overflow: auto; }
 .ex-details summary { cursor: pointer; color: var(--ink-2); font-size: 12.5px; }
 .ex-details pre { margin: 6px 0 0; font: 11.5px/1.45 ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink-2); white-space: pre-wrap; max-height: 360px; overflow: auto; }
+/* the raw response object in the output pane, as JSON text */
+.ex-json { margin: 0; font: 11.5px/1.5 ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink-2); white-space: pre-wrap; word-break: break-word; }
+/* token classes from components/Tokens.tsx: tag names, attribute names, JSON keys, strings, numbers / true / false / null, punctuation */
+.tk-tag { color: var(--tk-tag); }
+.tk-attr { color: var(--tk-attr); }
+.tk-key { color: var(--tk-key); }
+.tk-str { color: var(--tk-str); }
+.tk-num, .tk-bool { color: var(--tk-num); }
+.tk-p { color: var(--ink-3); }
 .ex-removed { margin-top: 10px; color: var(--ink-3); font-size: 12px; line-height: 1.45; padding-top: 8px; border-top: 1px dashed var(--line); }
 .ex-empty { color: var(--ink-4); font-size: 12.5px; padding: 12px 0; }
 .ex-label { font-weight: 500; }
