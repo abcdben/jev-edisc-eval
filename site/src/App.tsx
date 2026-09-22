@@ -271,14 +271,14 @@ function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider }: { r
     <>
       <div className="card">
         <div className="card-t">
-          <h3>Review time</h3><span className="unit">per 100k documents, single stream</span>
+          <h3>Review time</h3><span className="unit">per 100k docs</span>
           <span className="right"><Seg value={timeMode} onChange={setTimeMode} options={OPS_MODE_OPTIONS} /><Hint items={TIME_ITEMS} more="Method" /></span>
         </div>
         <OpsBars items={time} axis="hours" unit="per 100k docs" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
       </div>
       <div className="card">
         <div className="card-t">
-          <h3>Cost</h3><span className="unit">per 100k documents, as paid</span>
+          <h3>Cost</h3><span className="unit">per 100k docs</span>
           <span className="right"><Seg value={costMode} onChange={setCostMode} options={OPS_MODE_OPTIONS} /><Hint items={COST_ITEMS} more="Method" /></span>
         </div>
         <OpsBars items={cost} axis="US dollars" unit="per 100k docs" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
