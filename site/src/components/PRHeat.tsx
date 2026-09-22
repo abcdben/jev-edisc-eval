@@ -59,8 +59,6 @@ export function PRHeat({ items, zoom, sortBy = "recall", logos = false, onSelect
   for (const { r } of drawn) ([r.recall, r.precision] as CI[]).forEach((ci, col) => { if (ci) { target[`${r.id}:${col}:lo`] = sx(col, ci[1]); target[`${r.id}:${col}:hi`] = sx(col, ci[2]); target[`${r.id}:${col}:v`] = sx(col, ci[0]); } });
   const geo = useTween(target, undefined, undefined, W);
   const g = (k: string) => geo[k] ?? target[k];
-  const sortLabel = sortBy === "f1" ? "F1" : sortBy;
-  const refName = ref?.name ?? "default";
   const deltaHead = "VS DEFAULT";
   return (
     <>
@@ -129,7 +127,7 @@ export function PRHeat({ items, zoom, sortBy = "recall", logos = false, onSelect
         <TipBox tip={tip} hint={onSelect ? CLICK_HINT : undefined} />
       </div>
       <div className="legend-note">
-        <span>Sorted by {sortLabel}. Dot: point estimate. Whisker: 95% interval.{ref ? ` Cell tint: distance from the ${refName} row, green above, umber below. Dashed line: the ${refName} row's value.` : ""}</span>
+        <span>Dot: point estimate. Whisker: 95% interval.</span>
         {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
       </div>
     </>
