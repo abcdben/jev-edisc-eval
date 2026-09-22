@@ -61,9 +61,10 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         </p>
         <h4>What this is not</h4>
         <p>
-          <b>A peer‑reviewed study.</b> It has not been independently replicated, the gold labels for one corpus are model‑generated, and every
-          figure rests on choices about criteria, configurations, pricing and sampling that would shift on another matter. Read the numbers
-          as <mark>a well‑built snapshot, not a forecast</mark>.
+          <b>This is not a peer‑reviewed study.</b> Each result rests on choices about criteria, configurations, pricing and sampling that
+          would shift on another matter. The same criteria, documents and scoring were applied to every model, and no configuration was
+          tuned against the test data; even so, <mark>assumptions and choices were made that are not documented on this page</mark>, and they
+          may favour some models over others in ways that were not measured.
         </p>
         <p>
           Questions, corrections and requests for the underlying data are welcome: <a href={CONTACT_HREF}>{CONTACT_LABEL}</a>.
