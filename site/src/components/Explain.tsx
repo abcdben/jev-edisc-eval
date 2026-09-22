@@ -19,24 +19,43 @@ function Emph({ s, term }: { s: string; term?: string }) {
   return <>{s.slice(0, i)}<b>{term}</b>{s.slice(i + term.length)}</>;
 }
 
-function MetricsBlock({ m }: { m: Metrics }) {
+/** One card of the Settings fact grid: a micro-caps title over a two-column fact list (the Metrics sections, and the request parameters). */
+function MetricCards({ m }: { m: Metrics }) {
   return (
-    <section className="ex-metrics" aria-label="Metrics">
-      <div className="ex-metrics-t"><span className="sw" style={{ background: m.color }} />Metrics<span className="ex-col-s">{m.name} · {m.context}</span></div>
-      <div className="ex-metrics-grid">
-        {m.sections.map((s, si) => (
-          <div key={s.title} className="ex-metric">
-            <div className="ex-metric-t">{s.title}</div>
-            <dl>
-              {s.lines.map((l, i) => (typeof l === "string"
-                ? <div key={i} className="row"><dd className="line">{l}</dd></div>
-                : <div key={i} className="row"><dt>{l[0]}</dt><dd className={si === 0 && (l[0] === "Recall" || l[0] === "Precision") ? "hl" : undefined}>{l[1]}</dd></div>))}
-            </dl>
-            {s.notes?.filter(Boolean).map((n, i) => <p key={i} className="ex-metric-note">{n}</p>)}
-          </div>
-        ))}
-      </div>
-    </section>
+    <>
+      {m.sections.map((s, si) => (
+        <div key={s.title} className="ex-metric">
+          <div className="ex-metric-t">{s.title}</div>
+          <dl>
+            {s.lines.map((l, i) => (typeof l === "string"
+              ? <div key={i} className="row"><dd className="line">{l}</dd></div>
+              : <div key={i} className="row"><dt>{l[0]}</dt><dd className={si === 0 && (l[0] === "Recall" || l[0] === "Precision") ? "hl" : undefined}>{l[1]}</dd></div>))}
+          </dl>
+          {s.notes?.filter(Boolean).map((n, i) => <p key={i} className="ex-metric-note">{n}</p>)}
+        </div>
+      ))}
+    </>
+  );
+}
+
+/** The request parameters fixed for the whole run, one leaf per row (nested objects flattened to dotted paths), rows that differ from the Default highlighted. */
+function ParamCard({ settings, changed }: { settings: Record<string, unknown>; changed: Set<string> }) {
+  const rows = [...leaves(settings)];
+  return (
+    <div className="ex-metric ex-params">
+      <div className="ex-metric-t">Request parameters</div>
+      <dl>
+        {rows.map(([path, json]) => {
+          const v = JSON.parse(json) as unknown;
+          return (
+            <div key={path} className={`row${changed.has(path) ? " chg" : ""}`}>
+              <dt>{path}</dt>
+              <dd>{v === null ? <code className="ex-lit">null</code> : typeof v === "string" ? v : <code className="ex-lit">{String(v)}</code>}</dd>
+            </div>
+          );
+        })}
+      </dl>
+    </div>
   );
 }
 
@@ -387,7 +406,6 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
             </h2>
           </div>
           <div className="ex-head-ctl">
-            <Seg value={corpus} onChange={(c) => setCorpus(c)} options={CORPORA.filter((c) => EX.corpora[c.id]).map((c) => ({ id: c.id, label: c.label, title: c.short }))} />
             <button className="ex-close" onClick={onClose} aria-label="close">×</button>
           </div>
         </div>
@@ -395,44 +413,66 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
         <div className="ex-body">
           <div className="ex-main">
             {lead && <p className="ex-lead"><Rich s={lead.pre} /><mark>{lead.def}</mark><Rich s={lead.post} /></p>}
-            {m && <MetricsBlock m={m} />}
             <p className="ex-intro"><Rich s={G.intro} /></p>
+
             {cfg && (
-              <>
-                {showNote && <p className="ex-note"><Emph s={note} term={NOTE_KEY_TERM[noteFamily(group)]?.[group === "llm" ? "" : variant]} /></p>}
-                {base && d.changed.size === 0 && d.removed.length === 0 && (
-                  <p className="ex-same">On this corpus and issue the request is identical to the default: the lever has nothing to act on here{variant === "decompose" ? " (this issue has no sub-questions in the task file; try TREC)" : ""}. Any difference in the output is run-to-run variation.</p>
-                )}
-                <div className="ex-sec">
-                  <span className="ex-sec-t">Example</span>
-                  <span className="ex-col-s">one document from this corpus: the exact request that was sent, and the output that came back</span>
+              <section className="ex-set" aria-label="Settings">
+                <div className="ex-band">
+                  <span className="ex-band-t">Settings</span>
+                  {m
+                    ? <span className="ex-band-s"><span className="sw" style={{ background: m.color }} />{m.name} · {m.context}</span>
+                    : <span className="ex-band-s">fixed for the whole run</span>}
                 </div>
-                <div className="ex-cols">
-                  <div className="ex-col">
-                    <div className="ex-col-t">Example input<span className="ex-col-s">the request as sent, with the document and background folded</span></div>
-                    {ex && <Node v={ex.request} path="" changed={d.changed} doc={doc.text} ctx={C.context} />}
-                    {base && d.removed.length > 0 && (
-                      <div className="ex-removed">Not present in this configuration (present in the default): {d.removed.map((p) => p.replace(/^questions\.[^.]+\./, "question.")).join(", ")}</div>
-                    )}
+                {showNote && <p className="ex-note"><Emph s={note} term={NOTE_KEY_TERM[noteFamily(group)]?.[group === "llm" ? "" : variant]} /></p>}
+                <div className="ex-facts">
+                  <ParamCard settings={settingsFor(group, cfg.settings)} changed={base ? diff(settingsFor(group, cfg.settings), settingsFor(group, base.settings)).changed : new Set()} />
+                  {m && <MetricCards m={m} />}
+                </div>
+              </section>
+            )}
+
+            {/* the corpus and document toggles live in this band: they change only the example (and, via the corpus, the metrics) */}
+            <section className="ex-example" aria-label="Example">
+              <div className="ex-band">
+                <span className="ex-band-t">Example</span>
+                <span className="ex-band-s">one document from this corpus: the exact request that was sent, and the output that came back</span>
+                <span className="ex-band-ctl">
+                  <Seg value={corpus} onChange={(c) => setCorpus(c)} options={CORPORA.filter((c) => EX.corpora[c.id]).map((c) => ({ id: c.id, label: c.label, title: c.short }))} />
+                  <Seg
+                    value={String(docIdx)} onChange={(v) => setDocIdx(Number(v))}
+                    options={C.documents.map((dd, i) => ({ id: String(i), label: dd.gold === "responsive" ? "gold-responsive" : "gold-not-responsive", title: `${dd.gold === "responsive" ? "a gold-responsive" : "a gold-not-responsive"} document (${dd.id})` }))}
+                  />
+                </span>
+              </div>
+              {cfg && base && d.changed.size === 0 && d.removed.length === 0 && (
+                <p className="ex-same">On this corpus and issue the request is identical to the default: the lever has nothing to act on here{variant === "decompose" ? " (this issue has no sub-questions in the task file; try TREC)" : ""}. Any difference in the output is run-to-run variation.</p>
+              )}
+              {cfg && (
+                <div className="ex-pair">
+                  <div className="ex-pane">
+                    <div className="ex-pane-h">
+                      <span className="ex-pane-t">Example input <span className="ex-pane-k">· request</span></span>
+                      <span className="ex-col-s">the request as sent, with the document and background folded</span>
+                    </div>
+                    <div className="ex-pane-b">
+                      {ex && <Node v={ex.request} path="" changed={d.changed} doc={doc.text} ctx={C.context} />}
+                      {base && d.removed.length > 0 && (
+                        <div className="ex-removed">Not present in this configuration (present in the default): {d.removed.map((p) => p.replace(/^questions\.[^.]+\./, "question.")).join(", ")}</div>
+                      )}
+                    </div>
                   </div>
-                  <div className="ex-col pin">
-                    <div className="ex-col-t">Settings<span className="ex-col-s">fixed for the whole run</span></div>
-                    <Node v={settingsFor(group, cfg.settings)} path="settings" changed={base ? diff(settingsFor(group, cfg.settings), settingsFor(group, base.settings)).changed : new Set()} doc="" ctx="" />
-                    <div className="ex-col-t ex-out-t">
-                      <span className="ex-out-row">
-                        Example output
-                        <Seg
-                          value={String(docIdx)} onChange={(v) => setDocIdx(Number(v))}
-                          options={C.documents.map((dd, i) => ({ id: String(i), label: dd.gold === "responsive" ? "gold-responsive" : "gold-not-responsive", title: `${dd.gold === "responsive" ? "a gold-responsive" : "a gold-not-responsive"} document (${dd.id})` }))}
-                        />
-                      </span>
+                  <div className="ex-pane">
+                    <div className="ex-pane-h">
+                      <span className="ex-pane-t">Example output <span className="ex-pane-k">· response</span></span>
                       <span className="ex-col-s">Issue: <b>{C.question.title}</b> · what the model returned on this document</span>
                     </div>
-                    <Output o={ex?.output ?? null} gold={doc.gold} contended={group.startsWith("laya")} />
+                    <div className="ex-pane-b">
+                      <Output o={ex?.output ?? null} gold={doc.gold} contended={group.startsWith("laya")} />
+                    </div>
                   </div>
                 </div>
-              </>
-            )}
+              )}
+            </section>
           </div>
         </div>
         <div className="ex-legend">
