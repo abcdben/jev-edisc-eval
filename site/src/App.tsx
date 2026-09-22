@@ -426,7 +426,7 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
 // ------------------------------------------------------------------------------------------------
 
 type Page = "compare" | "configurations";
-const PAGES: { id: Page; label: string }[] = [{ id: "compare", label: "Compare models" }, { id: "configurations", label: "Configurations of one model" }];
+const PAGES: { id: Page; label: string }[] = [{ id: "compare", label: "Compare models" }, { id: "configurations", label: "Compare configurations" }];
 
 export default function App() {
   // The corpus is not persisted (hash or storage); siteCorpus still guards the state so an unlisted id (e.g. "veridian") can never render.
