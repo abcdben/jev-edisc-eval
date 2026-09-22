@@ -123,7 +123,7 @@ const MEASURE_ROWS: [string, ReactNode][] = [
   ["Determinism", <><b>300 Mallinckrodt emails</b> (100 gray, 100 clear positive, 100 clear negative) scored five times, both arms; the benchmark run is repeat one. Shown for every corpus.</>],
   ["Determinism metric", <><b>Probability that two runs disagree</b> on a decision (pairwise), 95% bootstrap interval over decisions. Temperature 0 where the API accepts it; Sonnet 5 rejects sampling parameters; Jev and Laya expose none.</>],
   ["Laya fine-tuned", <>RLCD recipe on a 30% document-level split of the same corpus (TREC: the 668-email calibration set), scored on the held-out rest. Its labeled data is <b>not counted in time or cost</b>.</>],
-  ["Optimized configurations", <mark>Jev flat-string state and Laya compact + chunk (★) were selected on the <b>Veridian synthetic dev split</b> before any other corpus was scored.</mark>],
+  ["Optimized configurations", <mark>Jev Flat-Text State and Laya Compact + Chunked (★) were selected on the <b>Veridian synthetic dev split</b> before any other corpus was scored.</mark>],
   ["Absent cells", "Some one-issue-per-call Laya configurations stalled and are omitted from that view."],
 ];
 

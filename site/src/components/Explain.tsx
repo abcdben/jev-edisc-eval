@@ -60,7 +60,7 @@ function diff(cur: unknown, base: unknown): { changed: Set<string>; removed: str
   return { changed, removed };
 }
 const memberLabel = (k: string) => {
-  if (k === "laya-ft") return "fine-tuned"; // the Laya row on Compare models, listed among Laya's zero-shot configurations
+  if (k === "laya-ft") return "Fine-Tuned"; // the Laya row on Compare models, listed among Laya's zero-shot configurations
   if (!k.includes("@")) return PRIMARY_BY_KEY[k]?.short ?? k;
   const v = k.split("@")[1];
   return VARIANT_LABEL[v] ?? v;
@@ -100,16 +100,16 @@ function leadFor(group: string, key: string, corpus: string, groupLabel: string)
   const v = key.includes("@") ? key.split("@")[1] : "";
   const name = `**${groupLabel}${v ? ` · ${VARIANT_LABEL[v] ?? v}` : ""}**`;
   if (group === "jev") {
-    if (v === "base") return { pre: `${name} is the baseline configuration of TypeSafe Jev 1.13, a decision model: `, def, post: ". Every other Jev configuration changes one lever from this one." };
+    if (v === "base") return { pre: `${name} is the baseline configuration of TypeSafe Jev 1.13, a decision model: `, def, post: ". Every other Jev configuration changes one lever from the Default." };
     const star = v === "state_string" ? " It is the configuration selected on the Veridian dev split." : "";
-    return { pre: `${name} is the Jev 1.13 configuration in which `, def, post: `. Everything else matches the default.${star}` };
+    return { pre: `${name} is the Jev 1.13 configuration in which `, def, post: `. Everything else matches the Default configuration.${star}` };
   }
-  if (key === "laya-ft") return { pre: `**${groupLabel} · fine-tuned** is the Laya row on Compare models, the one supervised row in this zero-shot comparison: `, def, post: ". Not on equal footing with the zero-shot configurations." };
+  if (key === "laya-ft") return { pre: `**${groupLabel} · Fine-Tuned** is the Laya row on Compare models, the one supervised row in this zero-shot comparison: `, def, post: ". Not on equal footing with the zero-shot configurations." };
   if (group.startsWith("laya")) {
     const ckpt = group === "laya-typed" ? "the typed Laya checkpoint" : group === "laya-multilingual" ? "the multilingual Laya checkpoint" : "ConvAI Laya (English checkpoint), a local decision model";
     if (v === "base") return { pre: `${name} is the baseline configuration of ${ckpt}: `, def, post: `. Every other ${group === "laya" ? "zero-shot " : ""}${groupLabel} configuration changes one lever from this one.` };
     const star = v === "recipe" ? " It is the configuration selected on the Veridian dev split." : "";
-    return { pre: `${name} is the ${groupLabel} configuration in which `, def, post: `. Everything else matches the ${groupLabel} default.${star}` };
+    return { pre: `${name} is the ${groupLabel} configuration in which `, def, post: `. Everything else matches the ${groupLabel} Default configuration.${star}` };
   }
   if (group === "llm") {
     const p = PRIMARY_BY_KEY[key];
@@ -436,7 +436,7 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
           </div>
         </div>
         <div className="ex-legend">
-          {base && <span><span className="ex-sw chg" /> differs from the default configuration</span>}
+          {base && <span><span className="ex-sw chg" /> differs from the Default configuration</span>}
           <span>Probabilities are the model's own; every model's label is “responsive” when p ≥ {fmtPct(0.5, 0)}.</span>
           <span>Nothing here was re-run: requests are rebuilt by the benchmark code, outputs are the recorded rows.</span>
         </div>

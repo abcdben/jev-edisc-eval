@@ -119,14 +119,14 @@ export const costPerDoc = (r: Rec): number | null => {
 /** Ablation families: a base model whose variants change one lever at a time. */
 export const ABLATION_GROUPS: { id: string; label: string; recipe: string; note: string }[] = [
   { id: "jev", label: "Jev 1.13", recipe: "state_string", note: "Twelve configurations of TypeSafe Jev. Each variant changes a single lever from the default. ★ marks the configuration selected on the Veridian dev split." },
-  { id: "laya", label: "Laya", recipe: "recipe", note: "ConvAI Laya, English checkpoint, zero-shot. Two levers (compact, chunk) exist only to fit its 512-token context; ★ marks the configuration that combines them, selected on the Veridian dev split." },
+  { id: "laya", label: "Laya", recipe: "recipe", note: "ConvAI Laya, English checkpoint, zero-shot. Two levers (Compact Question, Chunked Document) exist only to fit its 512-token context; ★ marks the configuration that combines them (Compact + Chunked), selected on the Veridian dev split." },
   // The typed and multilingual Laya checkpoints (groups laya-typed, laya-multilingual) stay in findings.json but are not offered: only the English family, whose request the charted fine-tune uses, is shown.
 ];
 export const VARIANT_ORDER = ["base", "choice", "score", "crit_none", "crit_struct", "literal", "no_context", "state_string", "gate", "ensemble", "decompose", "preview", "compact", "chunk", "recipe", "recipe_choice"];
 export const VARIANT_LABEL: Record<string, string> = {
-  base: "default", choice: "Choice form", score: "Score form", crit_none: "no criteria", crit_struct: "structured criteria", literal: "literal phrasing",
-  no_context: "no matter context", state_string: "flat-string state", gate: "gated", ensemble: "3-phrasing ensemble", decompose: "decomposed",
-  preview: "jev-preview", compact: "compact", chunk: "chunked", recipe: "compact + chunk", recipe_choice: "compact + chunk, Choice",
+  base: "Default", choice: "Choice Question", score: "Five-Point Score", crit_none: "No Criteria", crit_struct: "Structured Criteria", literal: "Plain-Language Phrasing",
+  no_context: "No Matter Context", state_string: "Flat-Text State", gate: "Relevance Gate", ensemble: "Three-Phrasing Ensemble", decompose: "Decomposed Sub-Questions",
+  preview: "Jev Preview Model", compact: "Compact Question", chunk: "Chunked Document", recipe: "Compact + Chunked", recipe_choice: "Compact + Chunked, Choice",
 };
 /**
  * One-line definition of each configuration, the highlighted clause of the details modal's opening sentence
@@ -147,7 +147,7 @@ export const VARIANT_DEFINITION: Record<string, string> = {
   "jev@gate": "an extra Noul first asks whether the document has anything to do with the matter at all, and each issue probability is multiplied by that gate probability",
   "jev@ensemble": "three phrasings of the same question (RFP text, literal, title + positive description) are asked as three Nouls and their probabilities averaged",
   "jev@decompose": "each issue is split into the atomic sub-questions the task file defines for it; each is asked as its own Noul and the issue probability is the maximum across them (logical OR)",
-  "jev@preview": "the request is identical to the default but is sent to the jev-preview model instead of jev-1.13.0",
+  "jev@preview": "the request is identical to the Default configuration but is sent to the jev-preview model instead of jev-1.13.0",
   // Laya, zero-shot (also the typed and multilingual checkpoints)
   "laya@base": "the same request as Jev's default, run through the local Laya encoder, which packs the question head into at most 192 tokens and the whole input into 512, so the instruction and criteria are truncated and most documents are cut from the right",
   "laya@choice": "the question is asked as a Choice over the two labels instead of a Noul",
@@ -159,9 +159,9 @@ export const VARIANT_DEFINITION: Record<string, string> = {
   "laya@compact": "a one-line instruction ('Is this document responsive to the request for production about: <title>?') and one-sentence criteria are sized to fit Laya's 192-token head, so nothing in the question is truncated",
   "laya@chunk": "the document is split into overlapping windows sized to Laya's remaining context (about 300 tokens), each window is scored, and the per-question probability is the maximum over windows (up to 16)",
   "laya@recipe": "the compact question and the chunked document are combined: the two levers that address Laya's 512-token context, changing how much of the request Laya can read rather than what is asked",
-  "laya@recipe_choice": "compact + chunk with the Choice question form",
+  "laya@recipe_choice": "the Compact + Chunked request is asked with the Choice question form",
   // Laya, supervised (the Compare models row)
-  "laya-ft": "Laya's compact + chunk request is sent to a checkpoint fine-tuned (RLCD) on a 30% document-level dev split of {corpus}'s own gold labels and scored on the held-out 70%; the request does not change, the weights do",
+  "laya-ft": "Laya's Compact + Chunked request is sent to a checkpoint fine-tuned (RLCD) on a 30% document-level dev split of {corpus}'s own gold labels and scored on the held-out 70%; the request does not change, the weights do",
   // Generative models: one definition, the prompt is the same for every model
   "llm": "one zero-shot chat completion per document (all issues at once) or per issue, with a JSON schema the vendor enforces on the reply: a label and p(responsive), no free text",
 };
