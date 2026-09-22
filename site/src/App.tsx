@@ -7,6 +7,9 @@ import {
 import { Control, Hint, MethodContext, Seg, type HintItem, type TipLine } from "./components/ui";
 import { PRScatter, type PRItem } from "./components/PRScatter";
 import { PRRows } from "./components/PRRows";
+import { PRRail } from "./components/PRRail";
+import { PRDumbbell } from "./components/PRDumbbell";
+import { PRHeat } from "./components/PRHeat";
 import { OpsBars, type BarItem } from "./components/OpsBars";
 import { Consistency, detFor, detLines } from "./components/Consistency";
 import { HoverProvider, useHover } from "./components/hover";
@@ -15,7 +18,8 @@ import { Picker, type PickGroup } from "./components/Picker";
 import { DisclaimerLink, DisclaimerModal, useDisclaimer } from "./components/Disclaimer";
 import { Logo } from "./logos";
 
-type Chart = "map" | "ranked";
+/** The recall/precision card's views. `map` and `ranked` are the two shipped views; `rail`, `dumbbell` and `heat` are ranked-view candidates offered on the Configurations page only (PRCard `variants`), each in its own component file (PRRail, PRDumbbell, PRHeat): to drop one, delete the file, its id here and its Seg option and render branch in PRCard. */
+type Chart = "map" | "ranked" | "rail" | "dumbbell" | "heat";
 
 /** Short group names for the one-line picker. */
 /** Picker order: deciders first, then the LLMs (API and local share one group via the PRIMARY `kind` override), then TAR. Kinds with no roster member (`baseline`, `local_llm`) are dropped before rendering. */
@@ -25,25 +29,42 @@ const KIND_SHORT: Record<Kind, string> = { system1: "Deciders", system1_ft: "Sup
 
 /** Recall/precision card with a map (scatter with interval boxes) or ranked (rows with whiskers) view. The chart mode is owned by the section so it can switch the dashboard layout. `explain` opens the details modal for a clicked mark or row (item ids are model keys). */
 /** `pulse` (Compare models only: the Configurations page shows one family, so no decider to single out) lets the deciders' interval boxes breathe for a few cycles when the map loads or its points change. */
-function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false }: { items: PRItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean }) {
+/** `variants` (Configurations page) adds the ranked-view candidates (`rail`, `dumbbell`, `heat`) to the view toggle; `referenceId` is the row the `heat` view compares against (the family's base configuration). The candidate components draw their own legend line. */
+function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false, variants = false, referenceId }: { items: PRItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean; variants?: boolean; referenceId?: string }) {
   const setChart = onChart;
   const [zoom, setZoom] = useState(defaultZoom);
   const onSelect = explain && ((it: PRItem) => explain(it.id));
   const hover = useHover();
+  const rowProps = { items, zoom, sortBy: "recall" as const, logos, onSelect, highlight: hover.id, onHover: hover.set };
+  const options: { id: Chart; label: string; title?: string }[] = [
+    { id: "map", label: "map", title: "Recall against precision, one box per model" },
+    { id: "ranked", label: "ranked", title: "Rows sorted by F1, whiskers for the intervals" },
+    ...(variants ? [
+      { id: "rail" as const, label: "rail", title: "Ranked rows on a rank rail, with the interval width beside each value" },
+      { id: "dumbbell" as const, label: "dumbbell", title: "Recall and precision on one axis, joined per row" },
+      { id: "heat" as const, label: "vs default", title: "Ranked rows with each value tinted and differenced against the default configuration" },
+    ] : []),
+  ];
   return (
     <div className={`card${chart === "map" ? " fill" : ""}`}>
       <div className="card-t">
         <h3>Recall and precision</h3>
         <span className="right">
-          <Seg value={chart} onChange={setChart} options={[{ id: "map", label: "map", title: "Recall against precision, one box per model" }, { id: "ranked", label: "ranked", title: "Rows sorted by F1, whiskers for the intervals" }]} />
+          <Seg value={chart} onChange={setChart} options={options} />
           <Seg value={zoom ? "zoom" : "full"} onChange={(z) => setZoom(z === "zoom")} options={[{ id: "full", label: "0–100%" }, { id: "zoom", label: "fit to data" }]} />
         </span>
       </div>
-      {chart === "map" ? <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill onSelect={onSelect} highlight={hover.id} onHover={hover.set} pulse={pulse} /></div> : <PRRows items={items} zoom={zoom} sortBy="recall" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />}
-      <div className="legend-note">
-        {chart === "map" ? <span>Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span> : <span>Sorted by recall. Dot: point estimate. Whisker: 95% interval.</span>}
-        {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
-      </div>
+      {chart === "map" && <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill onSelect={onSelect} highlight={hover.id} onHover={hover.set} pulse={pulse} /></div>}
+      {chart === "ranked" && <PRRows {...rowProps} />}
+      {chart === "rail" && <PRRail {...rowProps} />}
+      {chart === "dumbbell" && <PRDumbbell {...rowProps} />}
+      {chart === "heat" && <PRHeat {...rowProps} referenceId={referenceId} />}
+      {(chart === "map" || chart === "ranked") && (
+        <div className="legend-note">
+          {chart === "map" ? <span>Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span> : <span>Sorted by recall. Dot: point estimate. Whisker: 95% interval.</span>}
+          {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
+        </div>
+      )}
     </div>
   );
 }
@@ -319,7 +340,7 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
   return (
     <section className="section">
       <HoverProvider>
-        <div className={`dash${chart === "ranked" ? " ranked" : ""}`}>
+        <div className={`dash${chart !== "map" ? " ranked" : ""}`}>
           <PRCard
             items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
             pulse
@@ -371,6 +392,13 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
   const color = (r: Rec) => variantColor(r.variant!, G.recipe);
   const name = (r: Rec) => VARIANT_LABEL[r.variant!] ?? r.variant!;
   const [chart, setChart] = useState<Chart>("ranked");
+  // The family's reference configuration, for the `heat` view's "vs default" column: the `@base` variant (Jev, Laya), or for Classical TAR the same
+  // 1,000-coded row Explain.tsx uses as its baseline (`tar@t1_1000_div`, then `tar@t1_1000`, then any TAR 1.0 row). Taken from the whole family, so
+  // it is stable while configurations are toggled; PRHeat omits the comparison while that row is not shown.
+  const keys = variants.map((r) => r.model);
+  const referenceId = grp === "tar"
+    ? keys.find((k) => k === "tar@t1_1000_div") ?? keys.find((k) => k === "tar@t1_1000") ?? keys.find((k) => k.includes("@t1_"))
+    : keys.find((k) => k.endsWith("@base"));
 
   const items: PRItem[] = sel.map((r) => {
     const p = pick(r, v.level, v.gray, v.issue);
@@ -380,11 +408,11 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
   return (
     <section className="section">
       <HoverProvider>
-        <div className={`dash${chart === "ranked" ? " ranked" : ""}`}>
+        <div className={`dash${chart !== "map" ? " ranked" : ""}`}>
           <PRCard
             items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
             emptyText={variants.length ? "Select at least one configuration." : "No configurations of this model were run on this corpus and arm."}
-            logos={false}
+            logos={false} variants referenceId={referenceId}
           />
           <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} explain={explain} machineOnly /></div>
         </div>

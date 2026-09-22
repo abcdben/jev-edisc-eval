@@ -295,6 +295,9 @@ svg text { user-select: none; font-family: var(--sans); }
 .row-jev.pulse { animation: row-breathe 0.65s ease-in-out 2; }
 @keyframes row-breathe { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
 .sel:hover .row-jev, .sel:focus-visible .row-jev, .hl .row-jev { fill-opacity: 0; }
+/* the reference row of the Configurations page's "vs default" ranked view (components/PRHeat.tsx): the same --hl band at rest strength, no pulse; it too yields to the grey hover band */
+.row-ref { fill: var(--hl); fill-opacity: 1; opacity: 0.55; pointer-events: none; transition: fill-opacity 0.12s; }
+.sel:hover .row-ref, .sel:focus-visible .row-ref, .hl .row-ref { fill-opacity: 0; }
 /* reduced motion: every CSS transition and animation on the page completes at once (the hooks snap on the same media query); the faint rest tint stays */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
