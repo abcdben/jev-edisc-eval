@@ -1,14 +1,14 @@
 import { useRef } from "react";
 import type { CI } from "../data";
-import { fmtPct, fmtRange } from "../data";
+import { fmtPct } from "../data";
 import { Logo, LogoGlyph } from "../logos";
 import type { PRItem } from "./PRScatter";
 import { prTip } from "./PRScatter";
 import { CLICK_HINT, DECIDER_TEXT, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth } from "./ui";
 import { hoverable } from "./hover";
 
-/** Row geometry shared with PRRail; VAL_W is the value cell (with its tint), RANGE_W the muted "82–91" interval column after it, DELTA_W the "vs default" column that follows when a reference row is given. HDR is the two-line header. */
-const ROW = 26, VAL_W = 58, RANGE_W = 50, DELTA_W = 66, HDR = 28;
+/** Row geometry shared with PRRail; VAL_W is the value cell (with its tint), DELTA_W the "vs default" column that follows when a reference row is given (the interval itself is in the whisker and the hover). HDR is the two-line header. */
+const ROW = 26, VAL_W = 58, RANGE_W = 0, DELTA_W = 76, HDR = 28;
 
 /** Signed difference in percentage points, with a true minus sign; "0.0" within rounding. */
 const signed = (d: number) => (Math.abs(d) < 0.05 ? "0.0" : `${d > 0 ? "+" : "\u2212"}${Math.abs(d).toFixed(1)}`);
@@ -71,7 +71,6 @@ export function PRHeat({ items, zoom, sortBy = "recall", logos = false, onSelect
               <text x={x0[col]} y={10} fontSize={10} fontWeight={500} letterSpacing=".07em" fill="var(--ink)">{col === 0 ? "RECALL" : "PRECISION"}</text>
               <text x={x0[col]} y={22} fontSize={10} fill="var(--ink-4)">{col === 0 ? "share of relevant documents found" : "share of flagged documents that are relevant"}</text>
               <text x={x0[col] + colW + 8} y={10} fontSize={10} fontWeight={500} letterSpacing=".07em" fill="var(--ink-3)">VALUE</text>
-              <text x={x0[col] + colW + 8 + VAL_W} y={10} fontSize={10} fontWeight={500} letterSpacing=".05em" fill="var(--ink-3)">95% CI</text>
               {ref && (
                 <>
                   <text x={x0[col] + colW + 8 + VAL_W + RANGE_W} y={10} fontSize={10} fontWeight={500} letterSpacing=".05em" fill="var(--ink-3)">{deltaHead}</text>
@@ -112,7 +111,6 @@ export function PRHeat({ items, zoom, sortBy = "recall", logos = false, onSelect
                         <line x1={g(`${r.id}:${col}:lo`)} x2={g(`${r.id}:${col}:hi`)} y1={y} y2={y} stroke={r.color} strokeWidth={1.5} strokeLinecap="butt" />
                         <circle cx={g(`${r.id}:${col}:v`)} cy={y} r={3.2} fill={r.color} />
                         <text x={x0[col] + colW + 8} y={y + 4} fontSize={11.5} fill={isRef ? "var(--ink-3)" : "var(--ink)"} className="mono">{fmtPct(ci[0])}</text>
-                        <text x={x0[col] + colW + 8 + VAL_W} y={y + 4} fontSize={10.5} fill="var(--ink-4)" className="mono">{fmtRange(ci)}</text>
                         {ref && (isRef ? (
                           <text x={x0[col] + colW + 8 + VAL_W + RANGE_W} y={y + 4} fontSize={11} fill="var(--ink-4)" className="mono">ref</text>
                         ) : (
@@ -132,7 +130,7 @@ export function PRHeat({ items, zoom, sortBy = "recall", logos = false, onSelect
         <TipBox tip={tip} hint={onSelect ? CLICK_HINT : undefined} />
       </div>
       <div className="legend-note">
-        <span>Sorted by {sortLabel}. Dot: point estimate. Whisker and range: 95% interval.{ref ? ` Cell tint: distance from the ${refName} row, green above, umber below. Dashed line: the ${refName} row's value.` : ""}</span>
+        <span>Sorted by {sortLabel}. Dot: point estimate. Whisker: 95% interval.{ref ? ` Cell tint: distance from the ${refName} row, green above, umber below. Dashed line: the ${refName} row's value.` : ""}</span>
         {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
       </div>
     </>
