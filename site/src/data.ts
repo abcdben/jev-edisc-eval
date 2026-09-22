@@ -77,15 +77,15 @@ export const siteCorpus = (id: string | null | undefined) => (id && SITE_CORPORA
 
 export type Kind = "system1" | "system1_ft" | "llm" | "local_llm" | "tar" | "baseline";
 export const KIND_LABEL: Record<Kind, string> = {
-  system1: "System 1 decision models",
-  system1_ft: "System 1, supervised",
+  system1: "Decision models",
+  system1_ft: "Decision models, supervised",
   llm: "Large language models (API)",
   local_llm: "Open-weight LLM (local GPU)",
   tar: "Classical TAR",
   baseline: "Floor",
 };
 export const KIND_ORDER: Kind[] = ["system1", "system1_ft", "llm", "local_llm", "tar", "baseline"];
-/** The decider kinds (Jev, Laya). The one rule behind every decider marker: the outlined name on rows and in the picker, the ringed mark on the map, the DECIDER tag in modals. */
+/** The decision-model kinds (Jev, Laya). The one rule behind every decision-model marker: the outlined name on rows and in the picker, the ringed mark on the map, the DECISION MODEL tag in modals. */
 export const isDecider = (kind: string | null | undefined): boolean => kind === "system1" || kind === "system1_ft";
 /** Rows whose name carries no subset asterisk even though they were scored on a subset (the fact stays in the tooltip and the Method table). */
 export const NO_STAR = new Set(["laya-ft"]);
@@ -137,7 +137,7 @@ export const DEFAULT_ON = new Set(["jev@base", "laya-ft", "claude-haiku-4.5", "c
 
 /**
  * Human prompt/criteria development, added to every non-TAR row when the ops cards are set to "+ human time".
- * Someone has to write and iterate the criteria for an LLM or a decider model;
+ * Someone has to write and iterate the criteria for an LLM or a decision model;
  * we assume that iteration reviews 500 documents at 50 docs/hour and $175/hour, i.e. 10 h and $1,750, and count it
  * once per 100k-document project since the cards are per 100k documents. TAR rows are already human time.
  */

@@ -313,7 +313,7 @@ svg text { user-select: none; font-family: var(--sans); }
 /* decider marker (data.ts isDecider): the name a step heavier and in full ink; the charts do the same in SVG (ui.tsx DECIDER_TEXT) */
 .pick-main .lbl { display: inline-flex; align-items: center; gap: 8px; position: relative; }
 .pick-main .lbl.dec .nm { color: var(--ink); font-weight: 500; }
-/* the small muted tag after a decider's name in the details and Method modals */
+/* the small muted "decision model" tag after a decision model's name in the details and Method modals */
 .decider-tag {
   display: inline-block; vertical-align: 0.15em; margin-left: 8px; padding: 0 5px; border: 1px solid var(--line-2); border-radius: 2px;
   color: var(--ink-2); font-size: 10px; line-height: 1.5; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;

@@ -17,7 +17,7 @@ const N = ({ v }: { v: number | string }) => <span className="n">{typeof v === "
 
 /** Why a headline row was scored on fewer documents than the corpus. */
 const SUBSET_WHY: Record<string, string> = { "laya-ft": "held-out split", "gemma3-12b": "stratified subsample" };
-/** "Laya 1,288 (held-out split)" for every headline row of a corpus that was scored on a subset (all-issues arm), then the corpus size. A decider's name carries the DECIDER tag (data.ts isDecider). */
+/** "Laya 1,288 (held-out split)" for every headline row of a corpus that was scored on a subset (all-issues arm), then the corpus size. A decision model's name carries the DECISION MODEL tag (data.ts isDecider). */
 function subsets(id: string): ReactNode {
   const rows = DATA.records.filter((r) => r.corpus === id && r.tag === "" && r.arm === "multi" && r.primary && r.subset && PRIMARY_BY_KEY[r.model]);
   if (!rows.length) return "—";

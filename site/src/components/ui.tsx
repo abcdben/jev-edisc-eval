@@ -232,9 +232,9 @@ export function usePresence<T>(items: T[], keyOf: (t: T) => string, ms = 480): P
 /** Inline style for a presence state: the `.fd` class transitions opacity over 480 ms (styles.css). */
 export const fadeStyle = (state: Presence<unknown>["state"]): React.CSSProperties => ({ opacity: state === "present" ? 1 : 0, pointerEvents: state === "exit" ? "none" : undefined });
 
-/** The small muted "DECIDER" tag after a decider's name in the modals (data.ts isDecider). */
+/** The small muted "DECISION MODEL" tag after a decision model's name in the modals (data.ts isDecider). */
 export function DeciderTag() {
-  return <span className="decider-tag" title="A decider model (Jev, Laya): answers typed questions with probabilities, writes no text">decider</span>;
+  return <span className="decider-tag" title="A decision model (Jev, Laya): answers typed questions with probabilities, writes no text">decision model</span>;
 }
 
 // Text measurement for SVG labels, on a canvas in the page's font. Cached per string; the cache is dropped and subscribers re-render when a

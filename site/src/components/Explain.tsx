@@ -100,13 +100,13 @@ function leadFor(group: string, key: string, corpus: string, groupLabel: string)
   const v = key.includes("@") ? key.split("@")[1] : "";
   const name = `**${groupLabel}${v ? ` · ${VARIANT_LABEL[v] ?? v}` : ""}**`;
   if (group === "jev") {
-    if (v === "base") return { pre: `${name} is the baseline configuration of TypeSafe Jev 1.13, a decider model: `, def, post: ". Every other Jev configuration changes one lever from this one." };
+    if (v === "base") return { pre: `${name} is the baseline configuration of TypeSafe Jev 1.13, a decision model: `, def, post: ". Every other Jev configuration changes one lever from this one." };
     const star = v === "state_string" ? " It is the configuration selected on the Veridian dev split." : "";
     return { pre: `${name} is the Jev 1.13 configuration in which `, def, post: `. Everything else matches the default.${star}` };
   }
   if (key === "laya-ft") return { pre: `**${groupLabel} · fine-tuned** is the Laya row on Compare models: `, def, post: ". Not on equal footing with the zero-shot configurations." };
   if (group.startsWith("laya")) {
-    const ckpt = group === "laya-typed" ? "the typed Laya checkpoint" : group === "laya-multilingual" ? "the multilingual Laya checkpoint" : "ConvAI Laya (English checkpoint), a local decider model";
+    const ckpt = group === "laya-typed" ? "the typed Laya checkpoint" : group === "laya-multilingual" ? "the multilingual Laya checkpoint" : "ConvAI Laya (English checkpoint), a local decision model";
     if (v === "base") return { pre: `${name} is the baseline configuration of ${ckpt}: `, def, post: `. Every other ${group === "laya" ? "zero-shot " : ""}${groupLabel} configuration changes one lever from this one.` };
     const star = v === "recipe" ? " It is the configuration selected on the Veridian dev split." : "";
     return { pre: `${name} is the ${groupLabel} configuration in which `, def, post: `. Everything else matches the ${groupLabel} default.${star}` };

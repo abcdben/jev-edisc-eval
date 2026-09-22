@@ -49,7 +49,7 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         <h4>Set‑up</h4>
         <p>
           Every model saw the <b>same document text, issue criteria and matter context</b>, and returned a label with a 0–1 score: a model
-          probability for the deciders, a self‑reported confidence for the LLMs. Compared:
+          probability for the decision models, a self‑reported confidence for the LLMs. Compared:
         </p>
         <ul>
           <li><b>Recall and precision</b>, with 95% confidence intervals.</li>
