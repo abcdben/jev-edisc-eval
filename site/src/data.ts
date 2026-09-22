@@ -100,18 +100,6 @@ export const PRIMARY_BY_KEY = Object.fromEntries(PRIMARY.map((p) => [p.key, p]))
 export const DEFAULT_ON = new Set(["jev@base", "laya-ft", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash"].filter((k) => !isHidden(k)));
 
 /**
- * Human prompt/criteria development, added to every row when the ops cards are set to "+ human time".
- * Someone has to write and iterate the criteria for an LLM or a decision model;
- * we assume that iteration reviews 500 documents at 50 docs/hour and $175/hour, i.e. 10 h and $1,750, and count it
- * once per 100k-document project since the cards are per 100k documents.
- */
-export const HUMAN_DEV_DOCS = 500;
-export const HUMAN_DEV_DOCS_PER_HOUR = 50;
-export const HUMAN_DEV_USD_PER_HOUR = 175;
-export const HUMAN_DEV_HOURS = HUMAN_DEV_DOCS / HUMAN_DEV_DOCS_PER_HOUR;
-export const HUMAN_DEV_USD = HUMAN_DEV_HOURS * HUMAN_DEV_USD_PER_HOUR;
-
-/**
  * GPU rental for the rows that ran on our own hardware rather than an API (Laya checkpoints, Gemma 3 12B).
  * Both were measured on a Lambda Cloud 1× A100 (Laya single-stream latency samples; Gemma via Ollama with 4 concurrent requests).
  * Lambda on-demand list price, lambda.ai/pricing, checked 2026-09-21: 1× A100 40 GB SXM $1.99/GPU-h; 1× H100 PCIe $3.29/GPU-h (H100 SXM $4.29).

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, HUMAN_DEV_DOCS, HUMAN_DEV_DOCS_PER_HOUR, HUMAN_DEV_HOURS, HUMAN_DEV_USD, HUMAN_DEV_USD_PER_HOUR, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
+  ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
   corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, issueLabel, pick, siteCorpus, starOf, variantColor,
   type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
@@ -97,28 +97,19 @@ function qualityLines(r: Rec, v: View): { lines: TipLine[]; notes: string[] } {
   return { lines, notes };
 }
 
-/** "machine": the model's own time and bill. "human": adds the prompt/criteria development a person does for every row. */
-type OpsMode = "machine" | "human";
-
-/** Hours and dollars per 100k documents for a record under the toggle; null when not measured. */
-function opsValues(r: Rec, mode: OpsMode): { hours: number | null; usd: number | null } {
+/** The model's own hours and dollars per 100k documents; null when not measured. */
+function opsValues(r: Rec): { hours: number | null; usd: number | null } {
   const c = costPerDoc(r);
-  const add = mode === "human";
-  return {
-    hours: r.ops.hours_per_100k_docs == null ? null : r.ops.hours_per_100k_docs + (add ? HUMAN_DEV_HOURS : 0),
-    usd: c == null ? null : c * 1e5 + (add ? HUMAN_DEV_USD : 0),
-  };
+  return { hours: r.ops.hours_per_100k_docs, usd: c == null ? null : c * 1e5 };
 }
 
 /** The one secondary line of a Review time or Cost hover: the per-document time, or where the money went. */
-function opsSub(r: Rec, mode: OpsMode, kind: "time" | "cost"): string {
-  const human = mode === "human" ? " · incl. prompt development" : "";
-  if (kind === "time") return `${fmtMs(r.ops.doc_latency_p50_ms)} per doc${human}`;
-  return `as paid · ${isGpuRow(r) ? "GPU rental" : "API"}${human}`;
+function opsSub(r: Rec, kind: "time" | "cost"): string {
+  if (kind === "time") return `${fmtMs(r.ops.doc_latency_p50_ms)} per doc`;
+  return `as paid · ${isGpuRow(r) ? "GPU rental" : "API"}`;
 }
 
-/** `timeMode` and `costMode` are the two cards' independent "+ human time" toggles. */
-function opsLines(r: Rec, timeMode: OpsMode, costMode: OpsMode): { lines: TipLine[]; notes: string[] } {
+function opsLines(r: Rec): { lines: TipLine[]; notes: string[] } {
   const o = r.ops;
   const c = costPerDoc(r);
   const usd100k = c == null ? "—" : fmtUSD(c * 1e5);
@@ -131,15 +122,7 @@ function opsLines(r: Rec, timeMode: OpsMode, costMode: OpsMode): { lines: TipLin
     lines.push(["GPU rental", `${GPU_NAME} at $${GPU_USD_PER_HOUR.toFixed(2)}/h × ${fmtHours(o.hours_per_100k_docs)} = ${usd100k} per 100k`]);
     notes.push("Cost is the rented GPU time for the single-stream review time shown; serving many documents concurrently would lower it.");
   }
-  if (timeMode === "human" || costMode === "human") {
-    const tot = { hours: opsValues(r, timeMode).hours, usd: opsValues(r, costMode).usd };
-    const shown = [timeMode === "human" ? fmtHours(tot.hours) : null, costMode === "human" ? fmtUSD(tot.usd) : null].filter(Boolean).join(" · ");
-    lines.push(
-      ["Prompt development", `${fmtHours(HUMAN_DEV_HOURS)} · ${fmtUSD(HUMAN_DEV_USD)} (${HUMAN_DEV_DOCS} docs at ${HUMAN_DEV_DOCS_PER_HOUR}/h, $${HUMAN_DEV_USD_PER_HOUR}/h; counted once per 100k-document project)`],
-      ["Shown, machine + human", shown],
-    );
-    if (r.model === "laya-ft") notes.push("The labeled training data this checkpoint needed is not counted here, only the same 500-document iteration every row gets.");
-  }
+  if (r.model === "laya-ft") notes.push("The labeled training data this checkpoint needed is not counted here.");
   lines.push(
     ["Median time per doc", fmtMs(o.doc_latency_p50_ms)],
     ["Tokens in / out per doc", o.tokens_in_per_doc == null ? "—" : `${fmtInt(Math.round(o.tokens_in_per_doc))} / ${fmtInt(Math.round(o.tokens_out_per_doc ?? 0))}`],
@@ -147,29 +130,24 @@ function opsLines(r: Rec, timeMode: OpsMode, costMode: OpsMode): { lines: TipLin
   return { lines, notes };
 }
 
-/** The "+ human time" toggles are independent: Review time and Cost each remember their own mode. */
-const OPS_MODE_KEYS = { time: "opsMode.time", cost: "opsMode.cost" } as const;
-const readOpsMode = (k: keyof typeof OPS_MODE_KEYS): OpsMode => (localStorage.getItem(OPS_MODE_KEYS[k]) === "human" ? "human" : "machine");
-
 /**
  * Everything the details modal's Metrics block lists for one row on one corpus: the recall/precision, review time and cost, and determinism
  * facts that the chart tooltips used to carry. `shown` picks the page's selection out of the corpus rows, the referent of "vs. lowest shown".
  */
-function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) => Rec[], machineOnly = false): Metrics | null {
+function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) => Rec[]): Metrics | null {
   const tag = corpus === "trec" ? v.tag : "";
   const rows = DATA.records.filter((r) => r.corpus === corpus && r.tag === tag && r.arm === v.arm);
   const r = rows.find((x) => x.model === key);
   if (!r) return null;
   const vv: View = { ...v, corpus, tag, issue: corpus === v.corpus ? v.issue : null };
   const meta = DATA.corpora[corpusKey(corpus, tag)];
-  const timeMode: OpsMode = machineOnly ? "machine" : readOpsMode("time"), costMode: OpsMode = machineOnly ? "machine" : readOpsMode("cost");
   const group = ABLATION_GROUPS.find((g) => g.id === r.group);
   const name = PRIMARY_BY_KEY[r.model]?.short ?? (r.variant ? `${group?.label ?? r.family} · ${VARIANT_LABEL[r.variant] ?? r.variant}` : r.name);
   const color = PRIMARY_BY_KEY[r.model]?.color ?? (r.variant ? variantColor(r.variant, group?.recipe ?? "") : "var(--ink)");
   const scope = vv.issue ? issueLabel(meta, vv.issue) : vv.level === "decision" ? "every decision" : "document level";
   const context = [meta.display, vv.arm === "single" ? "one issue per call" : "all issues per call", scope, !vv.issue && vv.gray === "nogray" ? "gray excluded" : null].filter(Boolean).join(" · ");
   const q = qualityLines(r, vv);
-  const o = opsLines(r, timeMode, costMode);
+  const o = opsLines(r);
   const peers = shown(rows);
   const lowest = (f: (x: Rec) => number | null) => { const vals = peers.map(f).filter((x): x is number => x != null && x > 0); return vals.length ? Math.min(...vals) : null; };
   const ratio = (label: string, val: number | null, best: number | null): TipLine[] => {
@@ -177,12 +155,12 @@ function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) =
     const k = val / best;
     return [[label, `${k >= 10 ? Math.round(k) : k.toFixed(1)}×`]];
   };
-  const mine = { hours: opsValues(r, timeMode).hours, usd: opsValues(r, costMode).usd };
+  const mine = opsValues(r);
   const sections: MetricSection[] = [
     { title: "Recall and precision", lines: q.lines, notes: q.notes },
     {
-      title: timeMode === "human" || costMode === "human" ? "Review time and cost · machine + human" : "Review time and cost",
-      lines: [...o.lines, ...ratio("Time vs. lowest shown", mine.hours, lowest((x) => opsValues(x, timeMode).hours)), ...ratio("Cost vs. lowest shown", mine.usd, lowest((x) => opsValues(x, costMode).usd))],
+      title: "Review time and cost",
+      lines: [...o.lines, ...ratio("Time vs. lowest shown", mine.hours, lowest((x) => opsValues(x).hours)), ...ratio("Cost vs. lowest shown", mine.usd, lowest((x) => opsValues(x).usd))],
       notes: o.notes,
     },
   ];
@@ -199,63 +177,47 @@ function useRows(v: View) {
   return useMemo(() => DATA.records.filter((r) => r.corpus === v.corpus && r.tag === v.tag && r.arm === v.arm && !isHidden(r.model)), [v.corpus, v.tag, v.arm]);
 }
 
-const OPS_MODE_OPTIONS = [
-  { id: "machine" as const, label: "machine only", title: "The model's own time and bill" },
-  { id: "human" as const, label: "+ human time", title: `Adds ${fmtHours(HUMAN_DEV_HOURS)} and ${fmtUSD(HUMAN_DEV_USD)} of prompt development to every row` },
-];
-/** The row shared by the Review time and Cost hints: what the '+ human time' toggle adds. */
-const HUMAN_ITEMS: HintItem[] = [
-  { k: "+ human time", v: <mark>Adds prompt or criteria development: {HUMAN_DEV_DOCS} documents at {HUMAN_DEV_DOCS_PER_HOUR}/h and ${HUMAN_DEV_USD_PER_HOUR}/h, <b>{fmtHours(HUMAN_DEV_HOURS)} and {fmtUSD(HUMAN_DEV_USD)}</b>, once per 100k-document project.</mark> },
-];
+/** The Review time and Cost hints: machine time and price only. */
 const TIME_ITEMS: HintItem[] = [
-  { k: "Measures", v: <><b>Median</b> wall-clock time per document for the model's own calls, one request at a time, scaled to 100,000 documents.</> },
+  { k: "Measures", v: <><b>Median</b> wall-clock time per document for the model's own calls, one request at a time, multiplied out to 100,000 documents in a single sequential stream.</> },
   { k: "Arms", v: <><b>All issues per call</b>: one call per document. One issue per call: the sum over issues.</> },
   { k: "Parallelism", v: <>Every service accepts parallel requests, so hours shrink for all models alike; <b>compare the ratios, not the absolutes</b>.</> },
   { k: "GPU rows", v: <>Laya and Gemma ran on <b>one rented A100</b>.</> },
-  ...HUMAN_ITEMS,
 ];
 const COST_ITEMS: HintItem[] = [
-  { k: "Measures", v: <><b>What was actually paid</b> to the vendor, summed over the model's decisions and scaled to 100,000 documents.</> },
+  { k: "Measures", v: <><b>API price as paid</b> to the vendor, summed over the model's decisions and scaled to 100,000 documents.</> },
   { k: "Pricing", v: <>OpenAI on <b>flex pricing (half of list)</b>; Anthropic with prompt caching on the all-issues arm.</> },
   { k: "GPU rows", v: <mark>Laya and Gemma: a rented {GPU_NAME} at ${GPU_USD_PER_HOUR.toFixed(2)}/h times the single-stream review time, so <b>an upper bound</b>.</mark> },
-  ...HUMAN_ITEMS,
 ];
 
 /**
  * `decider` sets a row's name a step heavier (data.ts isDecider); Compare models passes it, the Configurations page (one family per chart) does not.
  * `emphasis` picks the row that carries the faint --hl tint (Compare models: Jev only; the Configurations page passes nothing, its base row looks like the others).
- * `machineOnly` pins both cards to machine time with no toggle: the Configurations page compares one family's configurations, where the fixed
- * human development cost would only shift every bar by the same amount.
  */
-function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider, emphasis, machineOnly = false }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean; explain?: (k: string) => void; decider?: (r: Rec) => boolean; emphasis?: (r: Rec) => boolean; machineOnly?: boolean }) {
-  const [timeModeSaved, setTimeMode] = useState<OpsMode>(() => readOpsMode("time"));
-  const [costModeSaved, setCostMode] = useState<OpsMode>(() => readOpsMode("cost"));
-  const timeMode: OpsMode = machineOnly ? "machine" : timeModeSaved, costMode: OpsMode = machineOnly ? "machine" : costModeSaved;
+function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider, emphasis }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean; explain?: (k: string) => void; decider?: (r: Rec) => boolean; emphasis?: (r: Rec) => boolean }) {
   const onSelect = explain && ((it: BarItem) => explain(it.id));
   const hover = useHover();
-  useEffect(() => { if (!machineOnly) localStorage.setItem(OPS_MODE_KEYS.time, timeModeSaved); }, [timeModeSaved, machineOnly]);
-  useEffect(() => { if (!machineOnly) localStorage.setItem(OPS_MODE_KEYS.cost, costModeSaved); }, [costModeSaved, machineOnly]);
   const time: BarItem[] = recs.map((r) => {
-    const { hours } = opsValues(r, timeMode);
-    return { id: r.model, name: nameOf(r), color: colorOf(r), value: hours, label: fmtHours(hours), sub: opsSub(r, timeMode, "time"), subset: starOf(r), decider: decider?.(r), emphasis: emphasis?.(r) };
+    const { hours } = opsValues(r);
+    return { id: r.model, name: nameOf(r), color: colorOf(r), value: hours, label: fmtHours(hours), sub: opsSub(r, "time"), subset: starOf(r), decider: decider?.(r), emphasis: emphasis?.(r) };
   });
   const cost: BarItem[] = recs.map((r) => {
-    const { usd } = opsValues(r, costMode);
-    return { id: r.model, name: nameOf(r), color: colorOf(r), value: usd, label: fmtUSD(usd), sub: opsSub(r, costMode, "cost"), subset: starOf(r), decider: decider?.(r), emphasis: emphasis?.(r) };
+    const { usd } = opsValues(r);
+    return { id: r.model, name: nameOf(r), color: colorOf(r), value: usd, label: fmtUSD(usd), sub: opsSub(r, "cost"), subset: starOf(r), decider: decider?.(r), emphasis: emphasis?.(r) };
   });
   return (
     <>
       <div className="card">
         <div className="card-t">
           <h3>Review time</h3><span className="unit">per 100k docs</span>
-          <span className="right">{!machineOnly && <Seg value={timeMode} onChange={setTimeMode} options={OPS_MODE_OPTIONS} />}<Hint items={machineOnly ? TIME_ITEMS.filter((i) => i.k !== "+ human time") : TIME_ITEMS} more="About" /></span>
+          <span className="right"><Hint items={TIME_ITEMS} more="About" /></span>
         </div>
         <OpsBars items={time} axis="hours" unit="per 100k docs" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
       </div>
       <div className="card">
         <div className="card-t">
           <h3>Cost</h3><span className="unit">per 100k docs</span>
-          <span className="right">{!machineOnly && <Seg value={costMode} onChange={setCostMode} options={OPS_MODE_OPTIONS} />}<Hint items={machineOnly ? COST_ITEMS.filter((i) => i.k !== "+ human time") : COST_ITEMS} more="About" /></span>
+          <span className="right"><Hint items={COST_ITEMS} more="About" /></span>
         </div>
         <OpsBars items={cost} axis="US dollars" unit="per 100k docs" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
       </div>
@@ -373,7 +335,7 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
             emptyText={variants.length ? "Select at least one configuration." : "No configurations of this model were run on this corpus and arm."}
             logos={false} variants referenceId={referenceId} sig={`${v.corpus}:${grp}`}
           />
-          <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} explain={explain} machineOnly /></div>
+          <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} explain={explain} /></div>
         </div>
       </HoverProvider>
     </section>
@@ -453,7 +415,7 @@ export default function App() {
       {explain && (
         <ExplainModal
           initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)}
-          metrics={(k, c) => metricsFor(k, c, v, (rows) => (pageId === "compare" ? rows.filter((r) => r.primary && on.has(r.model)) : rows.filter((r) => r.group === grp && !!r.variant && !isHidden(r.model) && !off.has(r.variant))), pageId !== "compare")}
+          metrics={(k, c) => metricsFor(k, c, v, (rows) => (pageId === "compare" ? rows.filter((r) => r.primary && on.has(r.model)) : rows.filter((r) => r.group === grp && !!r.variant && !isHidden(r.model) && !off.has(r.variant))))}
         />
       )}
 
