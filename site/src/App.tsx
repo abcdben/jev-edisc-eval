@@ -183,7 +183,7 @@ const COST_ITEMS: HintItem[] = [
 
 /**
  * `decider` sets a row's name a step heavier (data.ts isDecider); Compare models passes it, the Configurations page (one family per chart) does not.
- * `emphasis` picks the row that carries the faint --hl tint (Compare models: Jev only; the Configurations page passes nothing, its base row looks like the others).
+ * `emphasis` picks the rows that carry the faint --hl tint (Compare models: the decision models, Jev and Laya; the Configurations page passes nothing, its base row looks like the others).
  */
 function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider, emphasis }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean; explain?: (k: string) => void; decider?: (r: Rec) => boolean; emphasis?: (r: Rec) => boolean }) {
   const onSelect = explain && ((it: BarItem) => explain(it.id));
@@ -244,8 +244,8 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
   const [chart, setChart] = useState<Chart>("map");
   // the decider marker (data.ts isDecider: heavier name on rows) on every chart of this page, by the roster's kind (Laya's fine-tuned row is grouped with the deciders)
   const decider = (r: Rec) => isDecider(kindOf(r));
-  // the one emphasised row on this page's tables (ui.tsx RowTint, the --hl tint): Jev's base configuration, not Laya or the other deciders
-  const emphasis = (r: Rec) => r.model === "jev@base";
+  // the emphasised rows on this page's tables (ui.tsx RowTint, the --hl tint): the decision models, Jev and Laya, by the same kind rule as `decider`
+  const emphasis = (r: Rec) => isDecider(kindOf(r));
 
   const items: PRItem[] = sel.map((r) => {
     const p = pick(r, v.level, v.gray, v.issue);

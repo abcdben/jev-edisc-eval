@@ -49,7 +49,7 @@ export function detLines(x: DetEntry, r: Rec, name: string): { lines: TipLine[];
   return { lines, notes };
 }
 
-/** `onSelect` makes each row a button (click, Enter, Space), including the rows without a measurement. `highlight` tints the row of that model (cross-chart hover, see hover.tsx); `onHover` reports the row under the pointer or keyboard focus. `emphasis` (Compare models: the Jev row only) picks the row that carries the faint tint (ui.tsx RowTint). */
+/** `onSelect` makes each row a button (click, Enter, Space), including the rows without a measurement. `highlight` tints the row of that model (cross-chart hover, see hover.tsx); `onHover` reports the row under the pointer or keyboard focus. `emphasis` (Compare models: the decision-model rows, Jev and Laya) picks the row that carries the faint tint (ui.tsx RowTint). */
 export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, onHover, emphasis }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single"; onSelect?: (r: Rec) => void; highlight?: string | null; onHover?: (id: string | null) => void; emphasis?: (r: Rec) => boolean }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickRow = onSelect && ((r: Rec) => { hide(); onSelect(r); });
@@ -82,7 +82,7 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
   for (const { x } of drawn) if (x.c) { target[`${x.r.model}:v`] = X(x.c.pairwise[0]); target[`${x.r.model}:lo`] = X(x.c.pairwise[1]); target[`${x.r.model}:hi`] = X(x.c.pairwise[2]); }
   const geo = useTween(target, 320, () => LABEL_W, W);
   const g = (k: string) => geo[k] ?? target[k];
-  // An emphasised row (`emphasis`, Compare models' Jev row) carries a faint tint that breathes for a few cycles when the card loads or its rows change (ui.tsx usePulseWindow, RowTint).
+  // An emphasised row (`emphasis`, Compare models' decision-model rows) carries a faint tint that breathes for a few cycles when the card loads or its rows change (ui.tsx usePulseWindow, RowTint).
   const sig = shown.map((x) => `${x.r.model}:${x.c ? x.c.pairwise[0].toFixed(5) : "-"}`).join("|");
   const pulsing = usePulseWindow(sig, !!emphasis && shown.some((x) => emphasis(x.r)), ROW_PULSE_MS);
   return (

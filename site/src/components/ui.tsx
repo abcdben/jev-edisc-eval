@@ -103,17 +103,17 @@ export function usePulseWindow(sig: string, enabled: boolean, ms: number): boole
   return pulsing;
 }
 
-/** How long the emphasised (Jev) row's tint breathes after a table loads or its rows change: ROW_PULSE_CYCLES cycles of the styles.css row-breathe animation (keep in step with `.row-jev.pulse`). */
+/** How long the emphasised (decision-model) row's tint breathes after a table loads or its rows change: ROW_PULSE_CYCLES cycles of the styles.css row-breathe animation (keep in step with `.row-dm.pulse`). */
 export const ROW_PULSE_CYCLES = 2, ROW_PULSE_CYCLE_MS = 650;
 export const ROW_PULSE_MS = ROW_PULSE_CYCLES * ROW_PULSE_CYCLE_MS;
 
 /**
- * The full-width tint behind an emphasised table row (Compare models: the Jev row, `emphasis: true` on the item), drawn first in the row's
- * `.sel` group so the hover band (`.hit`) sits on top; styles.css `.row-jev` is the faint rest tint on the --hl highlight, `.pulse` breathes it
+ * The full-width tint behind an emphasised table row (Compare models: the decision-model rows, `emphasis: true` on the item), drawn first in the row's
+ * `.sel` group so the hover band (`.hit`) sits on top; styles.css `.row-dm` is the faint rest tint on the --hl highlight, `.pulse` breathes it
  * for ROW_PULSE_CYCLES cycles. Keyed on `sig` so the animation restarts whenever the table's rows change; hidden while the row is hovered or highlighted (CSS).
  */
 export function RowTint({ sig, pulsing, width, height }: { sig: string; pulsing: boolean; width: number; height: number }) {
-  return <rect key={`tint:${sig}`} className={pulsing ? "row-jev pulse" : "row-jev"} x={0} y={0} width={width} height={height} rx={2} />;
+  return <rect key={`tint:${sig}`} className={pulsing ? "row-dm pulse" : "row-dm"} x={0} y={0} width={width} height={height} rx={2} />;
 }
 
 type Tween = { from: Record<string, number>; to: Record<string, number>; t0: number };
