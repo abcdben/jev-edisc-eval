@@ -69,7 +69,6 @@ export function PRHeat({ items, zoom, sortBy = "recall", logos = false, onSelect
           {[0, 1].map((col) => (
             <g key={col}>
               <text x={x0[col]} y={10} fontSize={10} fontWeight={500} letterSpacing=".07em" fill="var(--ink)">{col === 0 ? "RECALL" : "PRECISION"}</text>
-              <text x={x0[col]} y={22} fontSize={10} fill="var(--ink-4)">{col === 0 ? "share of relevant documents found" : "share of flagged documents that are relevant"}</text>
               <text x={x0[col] + colW + 8} y={10} fontSize={10} fontWeight={500} letterSpacing=".07em" fill="var(--ink-3)">VALUE</text>
               {ref && (
                 <>
