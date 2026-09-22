@@ -4,7 +4,7 @@ import { Logo, LogoGlyph, logoFor } from "../logos";
 import { CLICK_HINT, TipBox, fadeStyle, selectable, usePresence, useSize, useTip, useTween, type TipContent } from "./ui";
 import { hoverable } from "./hover";
 
-/** `sub` is the one secondary line of the hover tooltip (what the point was scored on); the full figures live in the details modal. `decider` (data.ts isDecider) rings the mark and draws it a little larger. */
+/** `sub` is the one secondary line of the hover tooltip (what the point was scored on); the full figures live in the details modal. `decider` is kept on the item for the tables; the map draws every mark alike. */
 export type PRItem = { id: string; name: string; color: string; recall: CI; precision: CI; dashed?: boolean; subset?: string | null; sub?: string; decider?: boolean };
 
 /** The compact hover tooltip of a recall/precision mark or row: both intervals and the scoring line. */
@@ -92,10 +92,9 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
   const geo = useTween(target, undefined, undefined, `${W}x${H}`);
   const g = (id: string, k: string) => geo[`${id}:${k}`] ?? target[`${id}:${k}`];
 
-  // Mark sizes: deciders (data.ts isDecider) draw 15% larger with a thin ring in their colour; the cross-chart highlight ring is a hairline in ink, outside it.
-  const glyph = (p: PRItem) => (p.decider ? 14 : 12);
-  const ringR = (p: PRItem) => (logos && logoFor(p.id) ? 9.5 : 6.5);
-  const hlR = (p: PRItem) => (logos && logoFor(p.id) ? (p.decider ? 11.5 : 9) : p.decider ? 8.5 : 6.5);
+  // Mark sizes are uniform; the cross-chart highlight ring is a hairline in ink just outside the glyph.
+  const glyph = (_p: PRItem) => 12;
+  const hlR = (p: PRItem) => (logos && logoFor(p.id) ? 9 : 6.5);
 
   return (
     <div ref={hostRef} data-tip-host style={fill ? { position: "absolute", inset: 0 } : { position: "relative" }}>
@@ -148,13 +147,12 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
             <g key={`d${p.id}`} className="fd" style={fadeStyle(stateOf[p.id] ?? "exit")}>{/* fade in / out (ui.tsx usePresence) */}
             <g {...hoverable(onHover, p.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
             <g transform={`translate(${x} ${y})`} onMouseMove={(e) => show(e, { kind: "mark", x: tx, y: ty, r: 9 }, prTip(p, logos ? <Logo model={p.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)}>
-              <circle className="hit" r={p.decider ? 11 : 9} fill="transparent" />
+              <circle className="hit" r={9} fill="transparent" />
               {hl === p.id && <circle r={hlR(p)} fill="none" stroke="var(--ink)" strokeOpacity={0.6} strokeWidth={1} />}
-              {p.decider && <circle r={ringR(p)} fill="none" stroke={p.color} strokeWidth={1} />}
               {hasLogo ? (
                 <g color={p.color}><LogoGlyph model={p.id} cx={0} cy={0} size={glyph(p)} /></g>
               ) : (
-                <circle r={p.decider ? 3.7 : 3.2} fill={p.color} />
+                <circle r={3.2} fill={p.color} />
               )}
               {l && (
                 <text x={l.x} y={l.y + 10} fontSize={11} fill="var(--ink)" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round", pointerEvents: onSelect ? "auto" : "none" }}>

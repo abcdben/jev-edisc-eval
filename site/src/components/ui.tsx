@@ -155,7 +155,7 @@ export type Presence<T> = { item: T; key: string; state: "enter" | "present" | "
  * its place in the DOM for its CSS transitions to run (React moves a node whose index changes, which resets them), so callers draw in this
  * order and place rows by transform. Under prefers-reduced-motion everything is simply "present" and leavers are dropped at once.
  */
-export function usePresence<T>(items: T[], keyOf: (t: T) => string, ms = 150): Presence<T>[] {
+export function usePresence<T>(items: T[], keyOf: (t: T) => string, ms = 480): Presence<T>[] {
   const reduced = useReducedMotion();
   const [, tick] = useState(0);
   const reg = useRef(new Map<string, { item: T; fresh: boolean; exitAt: number | null }>());
@@ -199,7 +199,7 @@ export function usePresence<T>(items: T[], keyOf: (t: T) => string, ms = 150): P
   return out;
 }
 
-/** Inline style for a presence state: the `.fd` class transitions opacity over 150 ms (styles.css). */
+/** Inline style for a presence state: the `.fd` class transitions opacity over 480 ms (styles.css). */
 export const fadeStyle = (state: Presence<unknown>["state"]): React.CSSProperties => ({ opacity: state === "present" ? 1 : 0, pointerEvents: state === "exit" ? "none" : undefined });
 
 /** The small muted "DECIDER" tag after a decider's name in the modals (data.ts isDecider). */
@@ -244,12 +244,8 @@ export function useFontMetrics(): void {
  * model's colour at 55% opacity, 3px radius, no fill; about 3px of air left and right of the label, 2px above and below the text. The label
  * is drawn with its logo centred at x = 8 and its text at `textX`, baseline `cy + 4`, 12px; the frame's width follows the measured text.
  */
-export function DeciderFrame({ color, cy, text, textX = 22 }: { color: string; cy: number; text: string; textX?: number }) {
-  useFontMetrics();
-  // a soft tint in the model colour behind logo and name: the same wash as the model's interval box on the map, no stroke
-  const x0 = -3, x1 = textX + textWidth(text) + 5;
-  return <rect className="dec-wash" x={x0} y={cy - 9} width={x1 - x0} height={18} rx={4} fill={color} style={{ pointerEvents: "none" }} />;
-}
+/** Decider rows (data.ts isDecider) set their name a step heavier and in full ink; there is no other marker in the tables. */
+export const DECIDER_TEXT = { fill: "var(--ink)", fontWeight: 500 } as const;
 
 /** Measured content box of the host element. */
 export function useSize(hostRef: React.RefObject<HTMLDivElement | null>, fallback: { w: number; h: number }): { w: number; h: number } {

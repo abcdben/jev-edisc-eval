@@ -266,11 +266,11 @@ svg text { user-select: none; font-family: var(--sans); }
 .hl .hit { fill: var(--ink); fill-opacity: 0.05; transition: fill-opacity 0.12s; }
 .hl text[fill="var(--ink-2)"] { fill: var(--ink); }
 
-/* motion (components/ui.tsx): chart rows and marks slide to a new place over 320 ms (.mv, a CSS transform), items fade in and out over 150 ms (.fd);
+/* motion (components/ui.tsx): chart rows and marks slide to a new place over 320 ms (.mv, a CSS transform), items fade in and out over 480 ms (.fd);
    tooltips and hint popovers rise 2px over 120 ms, modals 4px over 180 ms. Geometry CSS cannot transition (bar widths, box sizes) is eased by useTween. */
 .mv { transition: transform 320ms var(--ease); }
-.fd { transition: opacity 150ms var(--ease); }
-.mv.fd { transition: transform 320ms var(--ease), opacity 150ms var(--ease); }
+.fd { transition: opacity 480ms var(--ease); }
+.mv.fd { transition: transform 320ms var(--ease), opacity 480ms var(--ease); }
 .tip, .hint .pop { animation: rise-2 120ms var(--ease); }
 .ex-back { animation: fade-in 180ms var(--ease); }
 .ex-modal { animation: rise-4 180ms var(--ease); }
@@ -282,14 +282,9 @@ svg text { user-select: none; font-family: var(--sans); }
   *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
 }
 
-/* decider marker (data.ts isDecider): a soft wash in the model colour (--frame) behind a picker row's mark and name, the same tint as the
-   model's interval box on the map; the charts draw the same wash in SVG (ui.tsx DeciderFrame, .dec-wash) */
+/* decider marker (data.ts isDecider): the name a step heavier and in full ink; the charts do the same in SVG (ui.tsx DECIDER_TEXT) */
 .pick-main .lbl { display: inline-flex; align-items: center; gap: 8px; position: relative; }
-.pick-main .lbl.frame::before { content: ""; position: absolute; inset: -3px -5px; background: var(--frame); border-radius: 4px; opacity: var(--wash-alpha); pointer-events: none; }
-.pick-row:not(.on) .lbl.frame::before { opacity: calc(var(--wash-alpha) * 0.5); }
-.dec-wash { fill-opacity: var(--wash-alpha); }
-:root { --wash-alpha: 0.16; }
-[data-theme="dark"] { --wash-alpha: 0.22; }
+.pick-main .lbl.dec .nm { color: var(--ink); font-weight: 500; }
 /* the small muted tag after a decider's name in the details and Method modals */
 .decider-tag {
   display: inline-block; vertical-align: 0.15em; margin-left: 8px; padding: 0 5px; border: 1px solid var(--line-2); border-radius: 2px;

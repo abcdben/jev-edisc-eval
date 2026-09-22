@@ -1,7 +1,7 @@
 import { DATA, fmtCI, fmtInt, fmtPct, isDecider, type DetCell, type Rec } from "../data";
 import { Logo, LogoGlyph } from "../logos";
 import { useRef, useState } from "react";
-import { CLICK_HINT, DeciderFrame, Hint, Seg, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth, type HintItem, type TipLine } from "./ui";
+import { CLICK_HINT, DECIDER_TEXT, Hint, Seg, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth, type HintItem, type TipLine } from "./ui";
 import { hoverable } from "./hover";
 
 /** The Determinism card's "i" popover. */
@@ -116,14 +116,13 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
             // the row's group is translated to its rank (CSS transition on transform); everything inside is drawn at y = 0..ROW
             const top = lastTop.current.get(x.r.model) ?? 0, cy = ROW / 2;
             const c = colorOf(x.r), nm = nameOf(x.r), k = x.r.model;
-            const rule = isDecider(x.r.kind) && <DeciderFrame color={c} cy={cy} text={nm} />; // the decider marker (ui.tsx) washes logo and name
+            const dec = isDecider(x.r.kind);
             const wrap = { className: `mv fd${highlight === k ? " hl" : ""}`, style: { transform: `translate(0px, ${top}px)`, ...fadeStyle(state) } };
             if (!x.c) {
               return (
                 <g key={k} {...wrap} {...hoverable(onHover, k)}>{/* cross-chart hover (hover.tsx) */}
                 <g {...selectable(pickRow, x.r, nm)}>
                   <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
-                  {rule}
                   <g color="var(--ink-4)"><LogoGlyph model={k} cx={8} cy={cy} opacity={0.5} /></g>
                   <text x={22} y={cy + 4} fontSize={12} fill="var(--ink-4)">{nm}</text>
                   <text x={LABEL_W + 7} y={cy + 4} fontSize={11} fill="var(--ink-4)">{setting === "t0" ? "API rejects temperature" : "not measured"}</text>
@@ -137,9 +136,8 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
               <g key={k} {...wrap} {...hoverable(onHover, k)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
               <g onMouseMove={(e) => show(e, { kind: "row", top, height: ROW, clearX }, { title: `${nm}${x.c!.setting === "t0" ? " · temperature 0" : ""}`, color: c, icon: <Logo model={k} size={12} />, value: v === 0 ? "0" : fmtPct(v, 2), unit: "pairwise disagreement", lines: v === 0 ? undefined : [["95% interval", `${fmtPct(lo, 2)} – ${fmtPct(hi, 2)}`]], sub: sub(x.c!) })} onMouseLeave={hide} {...selectable(pickRow, x.r, nm)}>
                 <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
-                {rule}
                 <g color="var(--ink-2)"><LogoGlyph model={k} cx={8} cy={cy} /></g>
-                <text x={22} y={cy + 4} fontSize={12} fill="var(--ink-2)">{nm}</text>
+                <text x={22} y={cy + 4} fontSize={12} fill="var(--ink-2)" style={dec ? DECIDER_TEXT : undefined}>{nm}</text>
                 <rect x={LABEL_W} y={cy - 4} width={Math.max(1.5, xv - LABEL_W)} height={8} fill={c} rx={1.5} style={{ fillOpacity: "var(--bar-alpha)" }} />
                 <line x1={xlo} x2={xhi} y1={cy} y2={cy} stroke="var(--ink)" strokeWidth={1} opacity={0.6} />
                 <text x={xhi + 7} y={cy + 4} fontSize={11} fill="var(--ink)" className="mono">{lbl(v)}</text>

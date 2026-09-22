@@ -87,6 +87,9 @@ export const KIND_LABEL: Record<Kind, string> = {
 export const KIND_ORDER: Kind[] = ["system1", "system1_ft", "llm", "local_llm", "tar", "baseline"];
 /** The decider kinds (Jev, Laya). The one rule behind every decider marker: the outlined name on rows and in the picker, the ringed mark on the map, the DECIDER tag in modals. */
 export const isDecider = (kind: string | null | undefined): boolean => kind === "system1" || kind === "system1_ft";
+/** Rows whose name carries no subset asterisk even though they were scored on a subset (the fact stays in the tooltip and the Method table). */
+export const NO_STAR = new Set(["laya-ft"]);
+export const starOf = (r: { model: string; subset: string | null }): string | null => (NO_STAR.has(r.model) ? null : r.subset);
 
 /**
  * Model keys the site does not show anywhere (roster, picker, charts, Configurations, details modal), though their results stay in

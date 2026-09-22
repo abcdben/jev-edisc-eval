@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Logo, LogoGlyph } from "../logos";
-import { CLICK_HINT, DeciderFrame, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth } from "./ui";
+import { CLICK_HINT, DECIDER_TEXT, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth } from "./ui";
 import { hoverable } from "./hover";
 
 /** `sub` is the one secondary line of the row's hover tooltip. `empty` replaces the "not measured" text when `value` is null for a reason other than missing data. `decider` (data.ts isDecider) washes the row's logo and name. */
@@ -44,12 +44,12 @@ export function OpsBars({ items, axis, unit, sort = true, logos = true, onSelect
               <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
               {logos ? (
                 <>
-                  {r.decider && <DeciderFrame color={r.color} cy={ROW / 2} text={label} />}{/* the decider marker (ui.tsx) washes logo and name */}
+                  
                   <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={8} cy={ROW / 2} /></g>
-                  <text x={22} y={ROW / 2 + 4} fontSize={12} fill="var(--ink-2)">{label}</text>
+                  <text x={22} y={ROW / 2 + 4} fontSize={12} fill="var(--ink-2)" style={r.decider ? DECIDER_TEXT : undefined}>{label}</text>
                 </>
               ) : (
-                <text x={LABEL_W - 10} y={ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{label}</text>
+                <text x={LABEL_W - 10} y={ROW / 2 + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)" style={r.decider ? DECIDER_TEXT : undefined}>{label}</text>
               )}
               <rect x={LABEL_W} y={6} width={bw} height={ROW - 12} fill={r.color} rx={1.5} style={{ fillOpacity: v === 0 ? "calc(var(--bar-alpha) * 0.5)" : "var(--bar-alpha)" }} />
               <text x={LABEL_W + bw + 7} y={ROW / 2 + 4} fontSize={11.5} fill={v == null ? "var(--ink-4)" : "var(--ink)"} className="mono">{v == null ? r.empty ?? "not measured" : r.label}</text>

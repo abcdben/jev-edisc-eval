@@ -3,7 +3,7 @@ import type { CI } from "../data";
 import { fmtPct } from "../data";
 import type { PRItem } from "./PRScatter";
 import { Logo, LogoGlyph } from "../logos";
-import { CLICK_HINT, DeciderFrame, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth } from "./ui";
+import { CLICK_HINT, DECIDER_TEXT, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth } from "./ui";
 import { prTip } from "./PRScatter";
 import { hoverable } from "./hover";
 
@@ -71,12 +71,12 @@ export function PRRows({ items, zoom, sortBy, logos = true, onSelect, highlight,
               <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
               {logos ? (
                 <>
-                  {r.decider && <DeciderFrame color={r.color} cy={y} text={label} />}{/* the decider marker (ui.tsx) washes logo and name */}
+                  
                   <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={8} cy={y} /></g>
-                  <text x={22} y={y + 4} fontSize={12} fill="var(--ink-2)">{label}</text>
+                  <text x={22} y={y + 4} fontSize={12} fill="var(--ink-2)" style={r.decider ? DECIDER_TEXT : undefined}>{label}</text>
                 </>
               ) : (
-                <text x={LABEL_W - 12} y={y + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)">{label}</text>
+                <text x={LABEL_W - 12} y={y + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)" style={r.decider ? DECIDER_TEXT : undefined}>{label}</text>
               )}
               {([r.recall, r.precision] as CI[]).map((ci, col) =>
                 ci ? (

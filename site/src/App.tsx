@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, HUMAN_DEV_DOCS, HUMAN_DEV_DOCS_PER_HOUR, HUMAN_DEV_HOURS, HUMAN_DEV_USD, HUMAN_DEV_USD_PER_HOUR, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
-  corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, pick, siteCorpus, variantColor,
+  corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, pick, siteCorpus, starOf, variantColor,
   type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
 import { Control, Hint, MethodContext, Seg, type HintItem, type TipLine } from "./components/ui";
@@ -59,7 +59,7 @@ const PR_ITEMS: HintItem[] = [
   { k: "Scope", v: <><b>Document level</b>: responsive if positive for any issue. Decision level: every (document, issue) judgment pooled.</> },
   { k: "Gray", v: <>'Exclude gray' <b>drops decisions whose gold label was flagged as debatable</b>.</> },
   { k: "*", v: <><b>Scored on a stratified subset</b>; hover a row for the count. Intervals widen to match.</> },
-  { k: "Deciders", v: <><b>Jev and Laya</b> carry a tinted name (tables) and a ringed mark (map).</> },
+  { k: "Deciders", v: <><b>Jev and Laya</b> are set in a heavier name in the tables.</> },
 ];
 /** Recall and precision card, Configurations page. */
 const CONFIG_PR_ITEMS: HintItem[] = [
@@ -246,7 +246,7 @@ const COST_ITEMS: HintItem[] = [
   ...HUMAN_ITEMS,
 ];
 
-/** `decider` marks a row with the decider frame around its name (data.ts isDecider); Compare models passes it, the Configurations page (one family per chart) does not. */
+/** `decider` sets a row's name a step heavier (data.ts isDecider); Compare models passes it, the Configurations page (one family per chart) does not. */
 function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean; explain?: (k: string) => void; decider?: (r: Rec) => boolean }) {
   const [mode, setMode] = useState<OpsMode>(() => (localStorage.getItem(OPS_MODE_KEY) === "human" ? "human" : "machine"));
   const onSelect = explain && ((it: BarItem) => explain(it.id));
@@ -255,11 +255,11 @@ function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider }: { r
   const empty = (r: Rec) => (r.tar && mode === "machine" ? "human only" : undefined);
   const time: BarItem[] = recs.map((r) => {
     const { hours } = opsValues(r, mode);
-    return { id: r.model, name: nameOf(r), color: colorOf(r), value: hours, label: fmtHours(hours), sub: opsSub(r, mode, "time"), subset: r.subset, empty: empty(r), decider: decider?.(r) };
+    return { id: r.model, name: nameOf(r), color: colorOf(r), value: hours, label: fmtHours(hours), sub: opsSub(r, mode, "time"), subset: starOf(r), empty: empty(r), decider: decider?.(r) };
   });
   const cost: BarItem[] = recs.map((r) => {
     const { usd } = opsValues(r, mode);
-    return { id: r.model, name: nameOf(r), color: colorOf(r), value: usd, label: fmtUSD(usd), sub: opsSub(r, mode, "cost"), subset: r.subset, empty: empty(r), decider: decider?.(r) };
+    return { id: r.model, name: nameOf(r), color: colorOf(r), value: usd, label: fmtUSD(usd), sub: opsSub(r, mode, "cost"), subset: starOf(r), empty: empty(r), decider: decider?.(r) };
   });
   const seg = <Seg value={mode} onChange={setMode} options={OPS_MODE_OPTIONS} />;
   return (
@@ -297,7 +297,7 @@ function ModelPicker({ v, on, setOn, explain }: { v: View; on: Set<string>; setO
     id: g.kind, label: KIND_SHORT[g.kind as Kind],
     items: g.recs.map((r) => {
       const m = PRIMARY_BY_KEY[r.model];
-      return { id: r.model, label: m.short, title: m.note, mark: <span style={{ color: m.color }}><Logo model={r.model} /></span>, suffix: r.subset ? <span className="sub" title={`scored on ${r.subset}`}>*</span> : undefined, detail: () => explain(r.model), accent: isDecider(kindOf(r)) ? m.color : undefined };
+      return { id: r.model, label: m.short, title: m.note, mark: <span style={{ color: m.color }}><Logo model={r.model} /></span>, suffix: starOf(r) ? <span className="sub" title={`scored on ${r.subset}`}>*</span> : undefined, detail: () => explain(r.model), accent: isDecider(kindOf(r)) ? m.color : undefined };
     }),
   }));
   return <Picker label="Models" summary={`${avail} of ${primary.length}`} groups={groups} on={on} onChange={setOn} onReset={() => setOn(new Set(DEFAULT_ON))} />;
@@ -308,13 +308,13 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
   const primary = rows.filter((r) => r.primary);
   const sel = PRIMARY.map((p) => primary.find((r) => r.model === p.key)).filter((r): r is Rec => !!r && on.has(r.model));
   const [chart, setChart] = useState<Chart>("map");
-  // the decider marker (data.ts isDecider: framed name on rows, ringed mark on the map) on every chart of this page, by the roster's kind (Laya's fine-tuned row is grouped with the deciders)
+  // the decider marker (data.ts isDecider: heavier name on rows) on every chart of this page, by the roster's kind (Laya's fine-tuned row is grouped with the deciders)
   const decider = (r: Rec) => isDecider(kindOf(r));
 
   const items: PRItem[] = sel.map((r) => {
     const p = pick(r, v.level, v.gray, v.issue);
     const meta = PRIMARY_BY_KEY[r.model];
-    return { id: r.model, name: meta.short, color: meta.color, recall: p.recall, precision: p.precision, dashed: r.kind === "system1_ft", subset: r.subset, sub: qualitySub(r, v), decider: decider(r) };
+    return { id: r.model, name: meta.short, color: meta.color, recall: p.recall, precision: p.precision, dashed: r.kind === "system1_ft", subset: starOf(r), sub: qualitySub(r, v), decider: decider(r) };
   });
 
   return (
@@ -361,7 +361,7 @@ function VariantPicker({ v, grp, setGrp, off, setOff, explain }: { v: View; grp:
     items: variants.map((r) => ({
       id: r.variant!, label: VARIANT_LABEL[r.variant!] ?? r.variant!, title: r.lever ?? undefined,
       mark: <span className="sw" style={{ background: variantColor(r.variant!, G.recipe) }} />,
-      suffix: <>{r.variant === G.recipe && <span className="star" title="optimized configuration: selected on the Veridian dev split">★</span>}{r.subset && <span className="sub" title={`scored on ${r.subset}`}>*</span>}</>,
+      suffix: <>{r.variant === G.recipe && <span className="star" title="optimized configuration: selected on the Veridian dev split">★</span>}{starOf(r) && <span className="sub" title={`scored on ${r.subset}`}>*</span>}</>,
       detail: () => explain(r.model),
     })),
   }];
@@ -394,7 +394,7 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
 
   const items: PRItem[] = sel.map((r) => {
     const p = pick(r, v.level, v.gray, v.issue);
-    return { id: r.model, name: name(r), color: color(r), recall: p.recall, precision: p.precision, subset: r.subset, sub: qualitySub(r, v) };
+    return { id: r.model, name: name(r), color: color(r), recall: p.recall, precision: p.precision, subset: starOf(r), sub: qualitySub(r, v) };
   });
 
   return (
