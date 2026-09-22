@@ -10,7 +10,7 @@ import { PRRows } from "./components/PRRows";
 import { OpsBars, type BarItem } from "./components/OpsBars";
 import { Consistency, detFor, detLines } from "./components/Consistency";
 import { HoverProvider, useHover } from "./components/hover";
-import { ExplainButton, ExplainModal, type MetricSection, type Metrics } from "./components/Explain";
+import { ExplainModal, type MetricSection, type Metrics } from "./components/Explain";
 import { Picker, type PickGroup } from "./components/Picker";
 import { DisclaimerLink, DisclaimerModal, useDisclaimer } from "./components/Disclaimer";
 import { Logo } from "./logos";
@@ -492,7 +492,6 @@ export default function App() {
           : <VariantPicker v={v} grp={grp} setGrp={setGrp} off={off} setOff={setOff} explain={setExplain} />}
         <span className="more-wrap">
           {!more && nonDefault.length > 0 && <span className="more-summary">{nonDefault.join(" · ")}</span>}
-          {pageId === "compare" && <ExplainButton label="how each model is asked" onClick={() => setExplain("jev@base")} />}
           <button className={`more${more ? " on" : ""}`} onClick={() => setMore((m) => !m)} aria-expanded={more}>
             {more ? "Fewer options" : "More options"}<span className="chev" />
           </button>
