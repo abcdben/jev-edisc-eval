@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-/** `accent` frames the row's mark and label with a hairline rectangle in that colour (the decider marker, data.ts isDecider; the charts draw the same frame in SVG, ui.tsx DeciderFrame). */
+/** `accent` washes the row's mark and label in that colour (the decider marker, data.ts isDecider; the charts draw the same frame in SVG, ui.tsx DeciderFrame). */
 export type PickItem = { id: string; label: string; mark?: ReactNode; title?: string; suffix?: ReactNode; detail?: () => void; accent?: string };
 export type PickGroup = { id: string; label: string; items: PickItem[] };
 

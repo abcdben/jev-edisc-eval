@@ -116,7 +116,7 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
             // the row's group is translated to its rank (CSS transition on transform); everything inside is drawn at y = 0..ROW
             const top = lastTop.current.get(x.r.model) ?? 0, cy = ROW / 2;
             const c = colorOf(x.r), nm = nameOf(x.r), k = x.r.model;
-            const rule = isDecider(x.r.kind) && <DeciderFrame color={c} cy={cy} text={nm} />; // the decider marker (ui.tsx) frames logo and name
+            const rule = isDecider(x.r.kind) && <DeciderFrame color={c} cy={cy} text={nm} />; // the decider marker (ui.tsx) washes logo and name
             const wrap = { className: `mv fd${highlight === k ? " hl" : ""}`, style: { transform: `translate(0px, ${top}px)`, ...fadeStyle(state) } };
             if (!x.c) {
               return (

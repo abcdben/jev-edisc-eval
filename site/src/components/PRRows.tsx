@@ -71,7 +71,7 @@ export function PRRows({ items, zoom, sortBy, logos = true, onSelect, highlight,
               <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
               {logos ? (
                 <>
-                  {r.decider && <DeciderFrame color={r.color} cy={y} text={label} />}{/* the decider marker (ui.tsx) frames logo and name */}
+                  {r.decider && <DeciderFrame color={r.color} cy={y} text={label} />}{/* the decider marker (ui.tsx) washes logo and name */}
                   <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={8} cy={y} /></g>
                   <text x={22} y={y + 4} fontSize={12} fill="var(--ink-2)">{label}</text>
                 </>

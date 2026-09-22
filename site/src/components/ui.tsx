@@ -246,8 +246,9 @@ export function useFontMetrics(): void {
  */
 export function DeciderFrame({ color, cy, text, textX = 22 }: { color: string; cy: number; text: string; textX?: number }) {
   useFontMetrics();
-  const x0 = -1.5, x1 = textX + textWidth(text) + 3;
-  return <rect x={x0} y={cy - 7.5} width={x1 - x0} height={16} rx={3} fill="none" stroke={color} strokeOpacity={0.55} strokeWidth={1} style={{ pointerEvents: "none" }} />;
+  // a soft tint in the model colour behind logo and name: the same wash as the model's interval box on the map, no stroke
+  const x0 = -3, x1 = textX + textWidth(text) + 5;
+  return <rect className="dec-wash" x={x0} y={cy - 9} width={x1 - x0} height={18} rx={4} fill={color} style={{ pointerEvents: "none" }} />;
 }
 
 /** Measured content box of the host element. */

@@ -59,7 +59,7 @@ const PR_ITEMS: HintItem[] = [
   { k: "Scope", v: <><b>Document level</b>: responsive if positive for any issue. Decision level: every (document, issue) judgment pooled.</> },
   { k: "Gray", v: <>'Exclude gray' <b>drops decisions whose gold label was flagged as debatable</b>.</> },
   { k: "*", v: <><b>Scored on a stratified subset</b>; hover a row for the count. Intervals widen to match.</> },
-  { k: "Deciders", v: <><b>Jev and Laya</b> carry an outlined name (tables) and a ringed mark (map).</> },
+  { k: "Deciders", v: <><b>Jev and Laya</b> carry a tinted name (tables) and a ringed mark (map).</> },
 ];
 /** Recall and precision card, Configurations page. */
 const CONFIG_PR_ITEMS: HintItem[] = [
