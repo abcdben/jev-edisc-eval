@@ -71,7 +71,7 @@ const DATASET_ROWS: FactRow[] = [
     cells: {
       mnk: <>RFP text, prose positive / negative descriptions, structured includes / excludes; <b>identical for every model</b>.</>,
       cuad: <>Same forms; the 'literal' phrasing is <b>CUAD's own category definition</b>.</>,
-      trec: <>Refined once on a <b>668-email calibration set</b> disjoint from evaluation (Jev and Gemini Flash-Lite on v0; shared misses read per topic). 'Bare topic' shows v0.</>,
+      trec: <>Refined once on a <b>668-email calibration set</b> disjoint from evaluation (Jev and Gemini Flash-Lite on the bare NIST topic sentence; shared misses read per topic). Only the refined criteria are shown.</>,
     },
   },
   {
@@ -135,6 +135,7 @@ const MEASURE_ROWS: [string, ReactNode][] = [
   ["TAR reviewer", <>Simulated from gold labels: <b>50 documents/hour, $65/hour</b>; classifier compute not charged. A perfect reviewer in the TAR 1.0 rows; an imperfect one (misses 10% of relevant, over-codes 2% of non-relevant) is offered as a variant on the Configurations page.</>],
   ["TAR classifier", <><b>TF-IDF (word 1–2-grams) + logistic regression</b>, one model per issue and one for any-issue relevance.</>],
   ["TAR 1.0", <>The reviewer codes a random sample; cutoff by 5-fold cross-validation on that sample alone, targeting <b>80% recall</b> (or best F1). Median of 5 seeds.</>],
+  ["TAR 1.0 · diverse", <>Same sizes, but the coded sample is a <b>cluster-stratified diversity sample</b>: 100-dimension SVD of the collection's TF-IDF, k-means into N clusters, the document nearest each centre. Cutoff chosen the same way; as the sample is not random, its recall estimate is only a guide.</>],
   ["Laya fine-tuned", <>RLCD recipe on a 30% document-level split of the same corpus (CUAD split by contract; TREC: the 668-email calibration set), scored on the held-out rest. Its labeled data is <b>not counted in time or cost</b>.</>],
   ["Optimized configurations", <mark>Jev flat-string state and Laya compact + chunk (★) were selected on the <b>Veridian synthetic dev split</b> before any other corpus was scored.</mark>],
   ["Absent cells", "Some one-issue-per-call Laya configurations stalled and are omitted from that view. The fine-tuned Laya checkpoint on CUAD collapsed to a constant negative and is shown as such."],
