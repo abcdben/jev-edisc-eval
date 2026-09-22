@@ -60,7 +60,8 @@ function diff(cur: unknown, base: unknown): { changed: Set<string>; removed: str
   return { changed, removed };
 }
 const memberLabel = (k: string) => {
-  if (k === "laya-ft" || !k.includes("@")) return PRIMARY_BY_KEY[k]?.short ?? k;
+  if (k === "laya-ft") return "fine-tuned"; // the Laya row on Compare models, listed among Laya's zero-shot configurations
+  if (!k.includes("@")) return PRIMARY_BY_KEY[k]?.short ?? k;
   const v = k.split("@")[1];
   return VARIANT_LABEL[v] ?? v;
 };
@@ -71,6 +72,7 @@ const settingsFor = (group: string, s: Record<string, unknown>) => {
   if (group === "llm" && o.effort == null) o.effort = "vendor default";
   return o;
 };
+/** Variant order from data.ts; a key without a variant (`laya-ft`, the Compare row) sorts first. */
 const sortMembers = (ks: string[]) => [...ks].sort((a, b) => VARIANT_ORDER.indexOf(a.split("@")[1]) - VARIANT_ORDER.indexOf(b.split("@")[1]));
 
 /** The term set in bold inside the lever callout (the note from examples.py), one per variant; the callout is plain when a variant has none. */
@@ -85,7 +87,7 @@ const NOTE_KEY_TERM: Record<string, Record<string, string>> = {
   },
   llm: { "": "JSON schema" },
 };
-const noteFamily = (group: string) => (group === "jev" ? "jev" : group.startsWith("laya") && group !== "laya-ft" ? "laya" : group);
+const noteFamily = (group: string) => (group === "jev" ? "jev" : group.startsWith("laya") ? "laya" : group);
 
 /**
  * The opening sentence of the modal: what this configuration is, in plain words, with the definition
@@ -102,10 +104,10 @@ function leadFor(group: string, key: string, corpus: string, groupLabel: string)
     const star = v === "state_string" ? " It is the configuration selected on the Veridian dev split." : "";
     return { pre: `${name} is the Jev 1.13 configuration in which `, def, post: `. Everything else matches the default.${star}` };
   }
-  if (group === "laya-ft") return { pre: `${name} is the Laya row on Compare models: `, def, post: ". Not on equal footing with the zero-shot rows." };
+  if (key === "laya-ft") return { pre: `**${groupLabel} · fine-tuned** is the Laya row on Compare models: `, def, post: ". Not on equal footing with the zero-shot configurations." };
   if (group.startsWith("laya")) {
     const ckpt = group === "laya-typed" ? "the typed Laya checkpoint" : group === "laya-multilingual" ? "the multilingual Laya checkpoint" : "ConvAI Laya (English checkpoint), a local decider model";
-    if (v === "base") return { pre: `${name} is the baseline configuration of ${ckpt}: `, def, post: `. Every other ${groupLabel} configuration changes one lever from this one.` };
+    if (v === "base") return { pre: `${name} is the baseline configuration of ${ckpt}: `, def, post: `. Every other ${group === "laya" ? "zero-shot " : ""}${groupLabel} configuration changes one lever from this one.` };
     const star = v === "recipe" ? " It is the configuration selected on the Veridian dev split." : "";
     return { pre: `${name} is the ${groupLabel} configuration in which `, def, post: `. Everything else matches the ${groupLabel} default.${star}` };
   }
@@ -353,7 +355,7 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
   const d = diff(ex?.request, base ? base.examples[docIdx]?.request : ex?.request);
   const doc = C.documents[docIdx];
   const variant = cfg?.variant ?? "";
-  const note = group === "jev" ? EX.notes.jev[variant] : group.startsWith("laya") && group !== "laya-ft" ? EX.notes.laya[variant] : group === "llm" ? EX.notes.llm : G.intro;
+  const note = group === "jev" ? EX.notes.jev[variant] : group.startsWith("laya") && active !== "laya-ft" ? EX.notes.laya[variant] : group === "llm" ? EX.notes.llm : G.intro;
   const m = metrics && active ? metrics(active, corpus) : null;
   const lead = active ? leadFor(group, active, corpus, G.label) : null;
   const recipe = ABLATION_GROUPS.find((g) => g.id === group)?.recipe;
@@ -362,13 +364,15 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
   // lead replaces it. The LLM callout stays: the prompt's parts and the cache-friendly prefix are not in the lead or the request pane.
   const showNote = !!note && note !== G.intro && (!lead || group === "llm");
 
-  const familyItems: MenuItem[] = EX_GROUPS.filter((g) => membersOf(corpus, g.id).length).map((g) => ({ id: g.id, label: g.label }));
+  // hidden families (the typed / multilingual Laya checkpoints, reachable from the Configurations page) are listed only while current
+  const familyItems: MenuItem[] = EX_GROUPS.filter((g) => (!g.hidden || g.id === group) && membersOf(corpus, g.id).length).map((g) => ({ id: g.id, label: g.label }));
   // the configuration rows: label, tags, and the one-line definition (for the generative models, the roster note: their definition is shared)
   const memberItems: MenuItem[] = members.map((k) => ({
     id: k, label: memberLabel(k),
     def: group === "llm" ? PRIMARY_BY_KEY[k]?.note ?? variantDefinition(k, corpusLabel) : variantDefinition(k, corpusLabel),
     tags: [
       ...(k.endsWith("@base") || (group === "tar" && k === baseKey) ? [{ text: "reference" }] : []),
+      ...(k === "laya-ft" ? [{ text: "Compare models", title: "the Laya row charted on Compare models; the other configurations are zero-shot" }] : []),
       ...(recipe && k.split("@")[1] === recipe ? [{ text: "★ selected", title: "selected on the Veridian dev split" }] : []),
     ],
   }));

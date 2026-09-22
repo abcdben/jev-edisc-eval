@@ -38,22 +38,23 @@ export type Examples = {
 
 export const EX = raw as unknown as Examples;
 
-/** Families the modal can page through. `members` is resolved per corpus from the config keys. */
-export const EX_GROUPS: { id: string; label: string; match: (k: string) => boolean; intro: string }[] = [
+/**
+ * Families the modal can page through. `members` is resolved per corpus from the config keys.
+ * `hidden` families are not offered in the FAMILY menu (only the Laya method charted on Compare models is a family there); the modal still
+ * resolves their keys when the Configurations page opens one, and lists that family while it is the current one.
+ */
+export const EX_GROUPS: { id: string; label: string; match: (k: string) => boolean; intro: string; hidden?: boolean }[] = [
   {
     id: "jev", label: "Jev", match: (k) => k.startsWith("jev@"),
     intro: "Jev is a decider model: it does not write text. Each call sends a state (the document, and usually the matter background) plus one or more typed questions; the answer to each is a **probability**, an option with probabilities, or a level on an ordinal scale. Switch configurations to see exactly what changes in the request, and what the model returned for the same document.",
   },
   {
-    id: "laya", label: "Laya", match: (k) => k.startsWith("laya@"),
-    intro: "Laya is a local decider model with the same three question types (Noul / Choice / Score). It reads at most **512 tokens**: the question head takes up to 192, the rest is the document, truncated from the right. Two of its configurations (compact, chunked) exist only to work around that limit.",
+    // the fine-tuned checkpoint (the Laya row on Compare models, key `laya-ft`) and the zero-shot English-checkpoint configurations it was built from
+    id: "laya", label: "Laya", match: (k) => k === "laya-ft" || k.startsWith("laya@"),
+    intro: "Laya is a local decider model with the same three question types (Noul / Choice / Score). It reads at most **512 tokens**: the question head takes up to 192, the rest is the document, truncated from the right. Two of its configurations (compact, chunked) exist only to work around that limit. The **fine-tuned** configuration is the Laya row on Compare models: the compact + chunk request sent to a checkpoint fine-tuned (RLCD) on a 30% document-level dev split of the corpus and scored on the held-out 70%; every other configuration here is zero-shot, and the labeled data the fine-tuning needed is not counted in the time and cost panels.",
   },
-  { id: "laya-typed", label: "Laya · typed", match: (k) => k.startsWith("laya-typed@"), intro: "The typed Laya checkpoint, same request shapes as Laya." },
-  { id: "laya-multilingual", label: "Laya · multilingual", match: (k) => k.startsWith("laya-multilingual@"), intro: "The multilingual Laya checkpoint, same request shapes as Laya." },
-  {
-    id: "laya-ft", label: "Laya · fine-tuned", match: (k) => k === "laya-ft",
-    intro: "Laya is a local decider model; its zero-shot configurations are under the Laya family. Here only the **weights** differ, and the labeled data the fine-tuning needed is not counted in the time and cost panels.",
-  },
+  { id: "laya-typed", label: "Laya · typed", hidden: true, match: (k) => k.startsWith("laya-typed@"), intro: "The typed Laya checkpoint, zero-shot, same request shapes as Laya." },
+  { id: "laya-multilingual", label: "Laya · multilingual", hidden: true, match: (k) => k.startsWith("laya-multilingual@"), intro: "The multilingual Laya checkpoint, zero-shot, same request shapes as Laya." },
   {
     id: "llm", label: "Language models", match: (k) => !k.includes("@") && k !== "lexical" && k !== "laya-ft",
     intro: "Every generative model received the **same prompt**, described below; the reply is a label and a probability, nothing else. Switch models to see the settings that differ; the prompt does not.",
