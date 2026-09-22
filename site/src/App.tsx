@@ -528,9 +528,9 @@ export default function App() {
             </select>
           </span>
           <Hint title="Scope" items={[
-            { k: "Document", v: <mark>A document is <b>responsive if it is positive for any issue</b>: the relevance call a review team makes.</mark> },
-            { k: "Decision", v: <><b>Pools every (document, issue) judgment</b>.</> },
-            { k: "Single issue", v: <><b>That issue's recall and precision on its own</b>, over all gold labels.</> },
+            { k: "Any issue (document level)", v: <mark>One call per document: it counts as <b>responsive if the model says yes to any issue</b>, matching how a review team decides what to produce.</mark> },
+            { k: "Every decision (document × issue)", v: <>One call per <b>document-and-issue pair</b>, all pooled together. A document asked about six issues contributes six decisions.</> },
+            { k: "Single issue", v: <>Pick one issue from the list: <b>recall and precision for that issue alone</b>, scored against its own gold labels.</> },
           ]} />
         </Control>
       </div>
