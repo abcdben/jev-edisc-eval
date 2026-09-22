@@ -207,6 +207,13 @@ export const fmtUSD = (v: number | null) => {
 };
 export const fmtMs = (v: number | null) => (v == null ? "—" : v < 1000 ? `${Math.round(v)} ms` : `${(v / 1000).toFixed(1)} s`);
 
+/** An issue's display label, wherever `meta.issues` is rendered: the name without its " (broad)" / " (narrow)" suffix, then its measured prevalence ("Suspicious order monitoring · 19%"). */
+export const issueLabel = (meta: CorpusMeta, k: string): string => {
+  const name = (meta.issues[k] ?? k).replace(/\s*\((broad|narrow)\)\s*$/, "");
+  const n = meta.n_pos_by_issue[k];
+  return n == null ? name : `${name} · ${fmtPct(n / meta.n_docs, 0)}`;
+};
+
 export type Level = "doc" | "decision";
 export type Gray = "all" | "nogray";
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, HUMAN_DEV_DOCS, HUMAN_DEV_DOCS_PER_HOUR, HUMAN_DEV_HOURS, HUMAN_DEV_USD, HUMAN_DEV_USD_PER_HOUR, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
-  corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, pick, siteCorpus, starOf, variantColor,
+  corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, issueLabel, pick, siteCorpus, starOf, variantColor,
   type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
 import { Control, Hint, MethodContext, ROW_PULSE_MS, Seg, usePulseWindow, type HintItem, type TipLine } from "./components/ui";
@@ -166,7 +166,7 @@ function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) =
   const group = ABLATION_GROUPS.find((g) => g.id === r.group);
   const name = PRIMARY_BY_KEY[r.model]?.short ?? (r.variant ? `${group?.label ?? r.family} · ${VARIANT_LABEL[r.variant] ?? r.variant}` : r.name);
   const color = PRIMARY_BY_KEY[r.model]?.color ?? (r.variant ? variantColor(r.variant, group?.recipe ?? "") : "var(--ink)");
-  const scope = vv.issue ? meta.issues[vv.issue] : vv.level === "decision" ? "every decision" : "document level";
+  const scope = vv.issue ? issueLabel(meta, vv.issue) : vv.level === "decision" ? "every decision" : "document level";
   const context = [meta.display, vv.arm === "single" ? "one issue per call" : "all issues per call", scope, !vv.issue && vv.gray === "nogray" ? "gray excluded" : null].filter(Boolean).join(" · ");
   const q = qualityLines(r, vv);
   const o = opsLines(r, timeMode, costMode);
@@ -440,9 +440,9 @@ export default function App() {
         <Control label="Issue">
           <span className="select">
             <select value={issue ?? "__doc"} onChange={(e) => { const val = e.target.value; setIssue(val === "__doc" ? null : val); }}>
-              <option value="__doc">Any issue (document level)</option>
-              <optgroup label="Single issue">
-                {Object.entries(meta.issues).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
+              <option value="__doc">Relevance</option>
+              <optgroup label="Issues">
+                {Object.keys(meta.issues).map((k) => <option key={k} value={k}>{issueLabel(meta, k)}</option>)}
               </optgroup>
             </select>
           </span>
