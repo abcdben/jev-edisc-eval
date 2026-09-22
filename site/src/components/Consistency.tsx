@@ -6,11 +6,10 @@ import { hoverable } from "./hover";
 
 /** The Determinism card's "i" popover. */
 const DET_ITEMS: HintItem[] = [
-  { k: "What", v: <mark><b>Whether a model gives the same answer when asked the same question again.</b> Each model coded the same documents five times under identical settings; the bar is how often two runs disagreed on a decision.</mark> },
-  { k: "Why", v: <>A review has to be <b>defensible and repeatable</b>: a document coded responsive today should be coded responsive tomorrow, and a validation sample measures a process that will not drift. A model that flips answers adds noise a team cannot audit away.</> },
-  { k: "Sample", v: <><b>300 Mallinckrodt emails</b>: 100 with a debatable gold label, 100 clear positives, 100 clear negatives; shown for every corpus.</> },
-  { k: "Bar", v: <><b>Pairwise disagreement</b>: the probability that two runs give a different label for the same (document, issue) decision, with a 95% bootstrap whisker.</> },
-  { k: "t = 0", v: <>The same models at <b>temperature 0</b> where the API accepts it; Sonnet 5 rejects it and is marked not measured.</> },
+  { k: "What", v: <mark><b>Whether a model gives the same answer when asked the same question again.</b></mark> },
+  { k: "Why", v: <>A review has to be <b>repeatable to be defensible</b>: a document coded responsive today should be coded responsive tomorrow. A model that flips answers adds noise a team cannot audit away.</> },
+  { k: "How", v: <>Each model coded a fixed panel of <b>300 documents five times</b> under identical settings: 100 with a debatable gold label, 100 clear positives, 100 clear negatives. The bar is the probability that two runs disagree on a decision, with a 95% bootstrap whisker. The same panel is shown for every corpus.</> },
+  { k: "t = 0", v: <><b>Temperature 0</b> asks an LLM for its most likely answer instead of sampling; the toggle re-runs the test that way where the API accepts it. Decision models have no sampling to turn off.</> },
 ];
 
 const LABEL_W = 168, ROW = 20;
