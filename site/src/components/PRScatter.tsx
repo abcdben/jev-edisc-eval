@@ -23,7 +23,7 @@ function niceTicks(lo: number, hi: number): number[] {
 /** Recall (x) against precision (y). Each item is a dot at the point estimate inside a box spanning both 95% intervals. */
 /** `fill`: size to the host's box (host must be positioned, e.g. an absolutely-filled flex child) instead of a fixed height. */
 /** `onSelect` makes each mark (dot, label and interval box) a button: click, Enter or Space. */
-/** `highlight` (cross-chart hover, see hover.tsx) gives that item a subtle emphasis: a hairline ink ring on its mark, a deeper box fill, its label forced visible and the item drawn on top; nothing else changes. `onHover` reports the mark or box under the pointer or keyboard focus. */
+/** `highlight` (cross-chart hover, see hover.tsx) gives that item a subtle emphasis: a deeper box fill, its label forced visible and the item drawn on top; the mark itself is unchanged. `onHover` reports the mark or box under the pointer or keyboard focus. */
 /** Motion (ui.tsx): marks, boxes and labels ease to their new place over 320 ms when the corpus, scope, gold or zoom changes; items fade in and out over 150 ms. */
 export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover }: { items: PRItem[]; zoom: boolean; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
   const { tip, show, hide, hostRef } = useTip();
@@ -92,9 +92,8 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
   const geo = useTween(target, undefined, undefined, `${W}x${H}`);
   const g = (id: string, k: string) => geo[`${id}:${k}`] ?? target[`${id}:${k}`];
 
-  // Mark sizes are uniform; the cross-chart highlight ring is a hairline in ink just outside the glyph.
+  // Mark sizes are uniform.
   const glyph = (_p: PRItem) => 12;
-  const hlR = (p: PRItem) => (logos && logoFor(p.id) ? 9 : 6.5);
 
   return (
     <div ref={hostRef} data-tip-host style={fill ? { position: "absolute", inset: 0 } : { position: "relative" }}>
@@ -148,7 +147,6 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
             <g {...hoverable(onHover, p.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
             <g transform={`translate(${x} ${y})`} onMouseMove={(e) => show(e, { kind: "mark", x: tx, y: ty, r: 9 }, prTip(p, logos ? <Logo model={p.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)}>
               <circle className="hit" r={9} fill="transparent" />
-              {hl === p.id && <circle r={hlR(p)} fill="none" stroke="var(--ink)" strokeOpacity={0.6} strokeWidth={1} />}
               {hasLogo ? (
                 <g color={p.color}><LogoGlyph model={p.id} cx={0} cy={0} size={glyph(p)} /></g>
               ) : (

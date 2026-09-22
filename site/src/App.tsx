@@ -134,7 +134,8 @@ function opsSub(r: Rec, mode: OpsMode, kind: "time" | "cost"): string {
   return `as paid · ${isGpuRow(r) ? "GPU rental" : "API"}${human}`;
 }
 
-function opsLines(r: Rec, mode: OpsMode): { lines: TipLine[]; notes: string[] } {
+/** `timeMode` and `costMode` are the two cards' independent "+ human time" toggles. */
+function opsLines(r: Rec, timeMode: OpsMode, costMode: OpsMode): { lines: TipLine[]; notes: string[] } {
   const o = r.ops;
   const c = costPerDoc(r);
   const usd100k = c == null ? "—" : fmtUSD(c * 1e5);
@@ -159,11 +160,12 @@ function opsLines(r: Rec, mode: OpsMode): { lines: TipLine[]; notes: string[] } 
     lines.push(["GPU rental", `${GPU_NAME} at $${GPU_USD_PER_HOUR.toFixed(2)}/h × ${fmtHours(o.hours_per_100k_docs)} = ${usd100k} per 100k`]);
     notes.push("Cost is the rented GPU time for the single-stream review time shown; serving many documents concurrently would lower it.");
   }
-  if (mode === "human") {
-    const tot = opsValues(r, mode);
+  if (timeMode === "human" || costMode === "human") {
+    const tot = { hours: opsValues(r, timeMode).hours, usd: opsValues(r, costMode).usd };
+    const shown = [timeMode === "human" ? fmtHours(tot.hours) : null, costMode === "human" ? fmtUSD(tot.usd) : null].filter(Boolean).join(" · ");
     lines.push(
       ["Prompt development", `${fmtHours(HUMAN_DEV_HOURS)} · ${fmtUSD(HUMAN_DEV_USD)} (${HUMAN_DEV_DOCS} docs at ${HUMAN_DEV_DOCS_PER_HOUR}/h, $${HUMAN_DEV_USD_PER_HOUR}/h; counted once per 100k-document project)`],
-      ["Shown, machine + human", `${fmtHours(tot.hours)} · ${fmtUSD(tot.usd)}`],
+      ["Shown, machine + human", shown],
     );
     if (r.model === "laya-ft") notes.push("The labeled training data this checkpoint needed is not counted here, only the same 500-document iteration every row gets.");
   }
@@ -174,7 +176,9 @@ function opsLines(r: Rec, mode: OpsMode): { lines: TipLine[]; notes: string[] } 
   return { lines, notes };
 }
 
-const OPS_MODE_KEY = "opsMode";
+/** The "+ human time" toggles are independent: Review time and Cost each remember their own mode. */
+const OPS_MODE_KEYS = { time: "opsMode.time", cost: "opsMode.cost" } as const;
+const readOpsMode = (k: keyof typeof OPS_MODE_KEYS): OpsMode => (localStorage.getItem(OPS_MODE_KEYS[k]) === "human" ? "human" : "machine");
 
 /**
  * Everything the details modal's Metrics block lists for one row on one corpus: the recall/precision, review time and cost, and determinism
@@ -187,14 +191,14 @@ function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) =
   if (!r) return null;
   const vv: View = { ...v, corpus, tag, issue: corpus === v.corpus ? v.issue : null };
   const meta = DATA.corpora[corpusKey(corpus, tag)];
-  const mode: OpsMode = localStorage.getItem(OPS_MODE_KEY) === "human" ? "human" : "machine";
+  const timeMode = readOpsMode("time"), costMode = readOpsMode("cost");
   const group = ABLATION_GROUPS.find((g) => g.id === r.group);
   const name = PRIMARY_BY_KEY[r.model]?.short ?? (r.variant ? `${group?.label ?? r.family} · ${VARIANT_LABEL[r.variant] ?? r.variant}` : r.name);
   const color = PRIMARY_BY_KEY[r.model]?.color ?? (r.variant ? variantColor(r.variant, group?.recipe ?? "") : "var(--ink)");
   const scope = vv.issue ? meta.issues[vv.issue] : vv.level === "decision" ? "every decision" : "document level";
   const context = [meta.display, vv.arm === "single" ? "one issue per call" : "all issues per call", scope, !vv.issue && vv.gray === "nogray" ? "gray excluded" : null].filter(Boolean).join(" · ");
   const q = qualityLines(r, vv);
-  const o = opsLines(r, mode);
+  const o = opsLines(r, timeMode, costMode);
   const peers = shown(rows);
   const lowest = (f: (x: Rec) => number | null) => { const vals = peers.map(f).filter((x): x is number => x != null && x > 0); return vals.length ? Math.min(...vals) : null; };
   const ratio = (label: string, val: number | null, best: number | null): TipLine[] => {
@@ -202,12 +206,12 @@ function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) =
     const k = val / best;
     return [[label, `${k >= 10 ? Math.round(k) : k.toFixed(1)}×`]];
   };
-  const mine = opsValues(r, mode);
+  const mine = { hours: opsValues(r, timeMode).hours, usd: opsValues(r, costMode).usd };
   const sections: MetricSection[] = [
     { title: "Recall and precision", lines: q.lines, notes: q.notes },
     {
-      title: mode === "human" ? "Review time and cost · machine + human" : "Review time and cost",
-      lines: [...o.lines, ...ratio("Time vs. lowest shown", mine.hours, lowest((x) => opsValues(x, mode).hours)), ...ratio("Cost vs. lowest shown", mine.usd, lowest((x) => opsValues(x, mode).usd))],
+      title: timeMode === "human" || costMode === "human" ? "Review time and cost · machine + human" : "Review time and cost",
+      lines: [...o.lines, ...ratio("Time vs. lowest shown", mine.hours, lowest((x) => opsValues(x, timeMode).hours)), ...ratio("Cost vs. lowest shown", mine.usd, lowest((x) => opsValues(x, costMode).usd))],
       notes: o.notes,
     },
   ];
@@ -248,33 +252,34 @@ const COST_ITEMS: HintItem[] = [
 
 /** `decider` sets a row's name a step heavier (data.ts isDecider); Compare models passes it, the Configurations page (one family per chart) does not. */
 function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean; explain?: (k: string) => void; decider?: (r: Rec) => boolean }) {
-  const [mode, setMode] = useState<OpsMode>(() => (localStorage.getItem(OPS_MODE_KEY) === "human" ? "human" : "machine"));
+  const [timeMode, setTimeMode] = useState<OpsMode>(() => readOpsMode("time"));
+  const [costMode, setCostMode] = useState<OpsMode>(() => readOpsMode("cost"));
   const onSelect = explain && ((it: BarItem) => explain(it.id));
   const hover = useHover();
-  useEffect(() => { localStorage.setItem(OPS_MODE_KEY, mode); }, [mode]);
-  const empty = (r: Rec) => (r.tar && mode === "machine" ? "human only" : undefined);
+  useEffect(() => { localStorage.setItem(OPS_MODE_KEYS.time, timeMode); }, [timeMode]);
+  useEffect(() => { localStorage.setItem(OPS_MODE_KEYS.cost, costMode); }, [costMode]);
+  const empty = (r: Rec, mode: OpsMode) => (r.tar && mode === "machine" ? "human only" : undefined);
   const time: BarItem[] = recs.map((r) => {
-    const { hours } = opsValues(r, mode);
-    return { id: r.model, name: nameOf(r), color: colorOf(r), value: hours, label: fmtHours(hours), sub: opsSub(r, mode, "time"), subset: starOf(r), empty: empty(r), decider: decider?.(r) };
+    const { hours } = opsValues(r, timeMode);
+    return { id: r.model, name: nameOf(r), color: colorOf(r), value: hours, label: fmtHours(hours), sub: opsSub(r, timeMode, "time"), subset: starOf(r), empty: empty(r, timeMode), decider: decider?.(r) };
   });
   const cost: BarItem[] = recs.map((r) => {
-    const { usd } = opsValues(r, mode);
-    return { id: r.model, name: nameOf(r), color: colorOf(r), value: usd, label: fmtUSD(usd), sub: opsSub(r, mode, "cost"), subset: starOf(r), empty: empty(r), decider: decider?.(r) };
+    const { usd } = opsValues(r, costMode);
+    return { id: r.model, name: nameOf(r), color: colorOf(r), value: usd, label: fmtUSD(usd), sub: opsSub(r, costMode, "cost"), subset: starOf(r), empty: empty(r, costMode), decider: decider?.(r) };
   });
-  const seg = <Seg value={mode} onChange={setMode} options={OPS_MODE_OPTIONS} />;
   return (
     <>
       <div className="card">
         <div className="card-t">
           <h3>Review time</h3><span className="unit">per 100k documents, single stream</span>
-          <span className="right">{seg}<Hint items={TIME_ITEMS} more="Method" /></span>
+          <span className="right"><Seg value={timeMode} onChange={setTimeMode} options={OPS_MODE_OPTIONS} /><Hint items={TIME_ITEMS} more="Method" /></span>
         </div>
         <OpsBars items={time} axis="hours" unit="per 100k docs" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
       </div>
       <div className="card">
         <div className="card-t">
           <h3>Cost</h3><span className="unit">per 100k documents, as paid</span>
-          <span className="right">{seg}<Hint items={COST_ITEMS} more="Method" /></span>
+          <span className="right"><Seg value={costMode} onChange={setCostMode} options={OPS_MODE_OPTIONS} /><Hint items={COST_ITEMS} more="Method" /></span>
         </div>
         <OpsBars items={cost} axis="US dollars" unit="per 100k docs" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
       </div>
