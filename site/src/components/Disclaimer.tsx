@@ -38,8 +38,8 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         <p>
           <b>A zero‑shot comparison</b> of <b>two new decision models</b>, Jev (TypeSafe AI) and Laya (ConvAI), against <b>seven commercially available
           language models</b>: Haiku 4.5, Sonnet 5, GPT‑5.6 Luna and Terra, Gemini 3.5 Flash‑Lite and 3.8 Flash, and a locally run Gemma 3 12B. No model
-          was trained on examples or given a prompt of its own. The task is the one review teams do in discovery: <mark>is this document responsive, and
-          to which issues.</mark>
+          was trained on examples or given a prompt of its own. The task is relevance review, the one review teams do in discovery: <mark>is this document
+          responsive, and to which issues.</mark>
         </p>
         <h4>Data sets</h4>
         <ul>
@@ -48,8 +48,11 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         </ul>
         <h4>Set‑up</h4>
         <p>
-          Every model saw the <b>same document text, issue criteria and matter context</b>, and returned a label with a 0–1 score: a model
-          probability for the decision models, a self‑reported confidence for the LLMs. Compared:
+          Every model received the <b>same issue criteria and matter context</b> and was scored the same way, and every model but Laya saw the
+          <b> same document text</b>: Laya's 512‑token window received condensed one‑sentence criteria and the document in pieces, scored piece by
+          piece. Gemma and the fine‑tuned Laya row were scored on stratified subsets of the same population (the * on their names), so their intervals
+          are wider. Each model returned a label with a 0–1 score: a model probability for the decision models, a self‑reported confidence for the
+          LLMs. Compared:
         </p>
         <ul>
           <li><b>Recall and precision</b>, with 95% confidence intervals.</li>
@@ -69,7 +72,7 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         <h4>What this is</h4>
         <p>
           <mark>This is a point‑in‑time snapshot of a zero‑shot bake‑off on established industry data sets</mark>, showing where these new decision
-          models stand on review tasks next to the models people already use. The same criteria, documents and scoring were applied to every model, and
+          models stand on relevance review next to the models people already use. The same criteria and scoring were applied to every model, and
           nothing was tuned against the test data; even so, <mark>assumptions and decisions were made that are not documented on this site</mark>, and
           each result rests on choices about criteria, configurations, pricing and sampling that could shift on another matter.
           <b>It is not meant as a peer‑reviewed study.</b>
