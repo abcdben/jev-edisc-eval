@@ -324,16 +324,16 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
     return { id: r.model, name: name(r), color: color(r), recall: p.recall, precision: p.precision, subset: starOf(r), sub: qualitySub(r, v) };
   });
 
+  // Only the Recall and precision card on this page (the Review time and Cost cards belong to Compare models); `.dash.ranked` lets it span the full width in both views.
   return (
     <section className="section">
       <HoverProvider>
-        <div className={`dash${chart !== "map" ? " ranked" : ""}`}>
+        <div className="dash ranked">
           <PRCard
             items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
             emptyText={variants.length ? "Select at least one configuration." : "No configurations of this model were run on this corpus and arm."}
-            logos={false} ranked="heat" referenceId={referenceId} sig={`${v.corpus}:${grp}`}
+            logos={false} ranked="heat" referenceId={referenceId} sig={`${v.corpus}:${grp}`} height={460}
           />
-          <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} explain={explain} /></div>
         </div>
       </HoverProvider>
     </section>
