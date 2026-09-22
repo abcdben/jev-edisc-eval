@@ -32,7 +32,7 @@ export function useDisclaimer() {
 
 export function DisclaimerModal({ onClose }: { onClose: () => void }) {
   return (
-    <Modal className="disclaimer" eyebrow="About this comparison" title="Decision models against LLMs on legal document review" onClose={onClose}>
+    <Modal className="disclaimer" eyebrow="About this comparison" title="Decision models against LLMs for relevance review" onClose={onClose}>
       <div className="disc-body">
         <h4>What was tested</h4>
         <p>
