@@ -156,7 +156,7 @@ function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) =
   const sections: MetricSection[] = [
     { title: "Recall and precision", lines: q.lines, notes: q.notes },
     {
-      title: "Inference latency and cost",
+      title: "Speed and cost",
       lines: [...o.lines, ...ratio("Latency vs. fastest shown", mine.ms, lowest((x) => opsValues(x).ms)), ...ratio("Cost vs. cheapest shown", mine.usd, lowest((x) => opsValues(x).usd))],
       notes: o.notes,
     },
@@ -174,9 +174,9 @@ function useRows(v: View) {
   return useMemo(() => DATA.records.filter((r) => r.corpus === v.corpus && r.tag === v.tag && r.arm === v.arm && !isHidden(r.model)), [v.corpus, v.tag, v.arm]);
 }
 
-/** The Inference latency and Cost hints: machine time and price only. */
+/** The Speed and Cost hints: machine time and price only. */
 const LATENCY_ITEMS: HintItem[] = [
-  { k: "Measures", v: <><b>Median round-trip to score one document</b>, one request at a time; p95 on hover.</> },
+  { k: "Measures", v: <><b>Median round-trip to score one document</b>, one request at a time.</> },
   { k: "Hosted", v: <>Includes network. <b>Rate limits and parallel throughput not measured.</b></> },
   { k: "Local", v: <>Laya and Gemma on <b>one A100</b>; no network.</> },
 ];
@@ -219,7 +219,7 @@ function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider, empha
     <>
       <div className="card">
         <div className="card-t">
-          <h3>Inference latency</h3><span className="unit">per document · median</span>
+          <h3>Speed</h3><span className="unit">median latency per document</span>
           <span className="right"><Hint items={LATENCY_ITEMS} more="About" /></span>
         </div>
         <OpsBars items={latency} axis="milliseconds" unit="per document, median" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />

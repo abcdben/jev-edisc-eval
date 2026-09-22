@@ -239,7 +239,7 @@ function Output({ o, gold, contended }: { o: ExOutput; gold: string; contended: 
     ["label", <span className={`ex-label ${ok ? "ok" : "bad"}`}>{o.label ?? "—"} <span className="ex-gold">{ok ? "matches gold" : `gold is ${gold}`}</span></span>],
     ["p(responsive)", o.p_positive == null ? "—" : o.p_positive.toFixed(3)],
     ["confidence", o.confidence == null ? "—" : `${o.confidence.toFixed(2)}  (|2p − 1|)`],
-    ["latency", o.latency_ms == null ? "—" : contended ? `${fmtMs(o.latency_ms)} (queued behind 64 concurrent requests on one A100; the site's Inference latency card uses a one-request-at-a-time sample)` : fmtMs(o.latency_ms)],
+    ["latency", o.latency_ms == null ? "—" : contended ? `${fmtMs(o.latency_ms)} (queued behind 64 concurrent requests on one A100; the site's Speed card uses a one-request-at-a-time sample)` : fmtMs(o.latency_ms)],
     ["tokens", o.input_tokens == null ? "—" : `${o.input_tokens.toLocaleString()} in · ${(o.output_tokens ?? 0).toLocaleString()} out`],
     ["cost", o.cost_usd == null ? "—" : o.cost_usd === 0 ? "$0 (local)" : `$${o.cost_usd.toFixed(6)}`],
     ["served by", o.model_resolved ?? "—"],
