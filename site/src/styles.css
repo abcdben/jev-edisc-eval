@@ -500,13 +500,6 @@ svg text { user-select: none; font-family: var(--sans); }
 .ex-same { margin: 0 0 18px; color: var(--ink-3); font-size: 12.5px; line-height: 1.5; }
 
 /* advanced controls */
-.controls .more-wrap { margin-left: auto; display: inline-flex; align-items: center; gap: 14px; }
-.controls .more { border: 0; background: none; color: var(--ink-3); font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 4px 0; }
-.controls .more:hover, .controls .more.on { color: var(--ink); }
-.controls .more .chev { width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: translateY(-2px) rotate(45deg); transition: transform 0.15s; }
-.controls .more.on .chev { transform: translateY(1px) rotate(-135deg); }
-.controls .more-summary { color: var(--ink-4); font-size: 12px; }
-.controls-more { position: static; z-index: auto; backdrop-filter: none; background: var(--panel); border-bottom: 1px solid var(--line); padding-top: 10px; padding-bottom: 10px; }
 
 .logo { border-radius: 3px; object-fit: contain; display: inline-block; }
 /* the tinted vendor mark is the colour key; a deselected row goes grey */

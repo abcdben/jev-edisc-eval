@@ -467,10 +467,6 @@ export default function App() {
   const [grp, setGrp] = useState("jev");
   const [off, setOff] = useState<Set<string>>(new Set());
   const corpusTitle = `${fmtInt(meta.n_docs)} documents · ${meta.n_issues} issues · ${fmtInt(meta.n_pos_docs_any)} responsive to at least one (${fmtPct(meta.n_pos_docs_any / meta.n_docs, 0)}) · gold: ${meta.gold}`;
-  const [more, setMore] = useState(false);
-  const nonDefault = [
-    issue ? `issue: ${meta.issues[issue]}` : null,
-  ].filter((x): x is string => !!x);
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "dark");
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
   const [pageId, setPageId] = useState<Page>(() => (location.hash === "#configurations" ? "configurations" : "compare"));
@@ -501,16 +497,7 @@ export default function App() {
         {pageId === "compare"
           ? <ModelPicker v={v} on={on} setOn={setOn} explain={setExplain} />
           : <VariantPicker v={v} grp={grp} setGrp={setGrp} off={off} setOff={setOff} explain={setExplain} />}
-        <span className="more-wrap">
-          {!more && nonDefault.length > 0 && <span className="more-summary">{nonDefault.join(" · ")}</span>}
-          <button className={`more${more ? " on" : ""}`} onClick={() => setMore((m) => !m)} aria-expanded={more}>
-            {more ? "Fewer options" : "More options"}<span className="chev" />
-          </button>
-        </span>
-      </div>
-      {more && (
-      <div className="controls controls-more">
-        <Control label="Scope">
+        <Control label="Issue">
           <span className="select">
             <select value={issue ?? "__doc"} onChange={(e) => { const val = e.target.value; setIssue(val === "__doc" ? null : val); }}>
               <option value="__doc">Any issue (document level)</option>
@@ -519,13 +506,12 @@ export default function App() {
               </optgroup>
             </select>
           </span>
-          <Hint title="Scope" items={[
+          <Hint title="Issue" items={[
             { k: "Any issue (document level)", v: <mark>One call per document: it counts as <b>responsive if the model says yes to any issue</b>, matching how a review team decides what to produce.</mark> },
             { k: "Single issue", v: <>Pick one issue from the list: <b>recall and precision for that issue alone</b>, scored against its own gold labels.</> },
           ]} />
         </Control>
       </div>
-      )}
 
       {pageId === "compare" ? <CompareSection v={v} on={on} explain={setExplain} /> : <AblationSection v={v} grp={grp} off={off} explain={setExplain} />}
       {explain && (
