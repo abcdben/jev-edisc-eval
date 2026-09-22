@@ -111,9 +111,12 @@ export const ROW_PULSE_MS = ROW_PULSE_CYCLES * ROW_PULSE_CYCLE_MS;
  * The full-width tint behind an emphasised table row (Compare models: the decision-model rows, `emphasis: true` on the item), drawn first in the row's
  * `.sel` group so the hover band (`.hit`) sits on top; styles.css `.row-dm` is the faint rest tint on the --hl highlight, `.pulse` breathes it
  * for ROW_PULSE_CYCLES cycles. Keyed on `sig` so the animation restarts whenever the table's rows change; hidden while the row is hovered or highlighted (CSS).
+ * The rect is inset TINT_INSET from the row's top and bottom, so two emphasised rows that sort next to each other (Jev and Laya) keep a hairline of
+ * panel between their bands and read as two rows; the hover band (`.hit`) is a separate, full-height rect and is not affected.
  */
+const TINT_INSET = 1;
 export function RowTint({ sig, pulsing, width, height }: { sig: string; pulsing: boolean; width: number; height: number }) {
-  return <rect key={`tint:${sig}`} className={pulsing ? "row-dm pulse" : "row-dm"} x={0} y={0} width={width} height={height} rx={2} />;
+  return <rect key={`tint:${sig}`} className={pulsing ? "row-dm pulse" : "row-dm"} x={0} y={TINT_INSET} width={width} height={Math.max(0, height - 2 * TINT_INSET)} rx={2} />;
 }
 
 type Tween = { from: Record<string, number>; to: Record<string, number>; t0: number };
