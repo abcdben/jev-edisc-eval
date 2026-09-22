@@ -124,7 +124,7 @@ export const ABLATION_GROUPS: { id: string; label: string; recipe: string; note:
 ];
 export const VARIANT_ORDER = ["base", "choice", "score", "crit_none", "crit_struct", "literal", "no_context", "state_string", "gate", "ensemble", "decompose", "preview", "compact", "chunk", "recipe", "recipe_choice"];
 export const VARIANT_LABEL: Record<string, string> = {
-  base: "Default", choice: "Choice Question", score: "Five-Point Score", crit_none: "No Criteria", crit_struct: "Structured Criteria", literal: "Plain-Language Phrasing",
+  base: "Our Default", choice: "Choice Question", score: "Five-Point Score", crit_none: "No Criteria", crit_struct: "Structured Criteria", literal: "Plain-Language Phrasing",
   no_context: "No Matter Context", state_string: "Flat-Text State", gate: "Relevance Gate", ensemble: "Three-Phrasing Ensemble", decompose: "Decomposed Sub-Questions",
   preview: "Jev Preview Model", compact: "Compact Question", chunk: "Chunked Document", recipe: "Compact + Chunked", recipe_choice: "Compact + Chunked, Choice",
 };
