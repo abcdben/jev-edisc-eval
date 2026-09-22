@@ -8,6 +8,12 @@ gold labels, optionally with a miscoding rate):
            chosen by 5-fold cross-validation on the training sample alone (no peeking at the rest),
            either targeting 80% recall or maximising F1. Output over the whole corpus = the reviewer's
            codes on the N training documents + the classifier's calls on the remainder.
+           The `_div` variants replace the random draw with cluster-stratified diversity sampling: the
+           pool's TF-IDF matrix is reduced with a 100-dimension truncated SVD (fit on at most 50k
+           candidates, all candidates projected, rows L2-normalised), MiniBatchKMeans finds N clusters,
+           and the candidate nearest each centroid is coded (empty clusters are filled at random). The
+           cutoff is still chosen by CV on the coded sample for comparability, but that sample is no
+           longer random, so its recall estimate is only a guide.
 
   TAR 2.0  (continuous active learning)   Before learning starts the reviewer codes a simple random
            control set drawn from the pool (10% of the pool, capped at 500, and at least enough for ~30
@@ -37,7 +43,8 @@ Layout mirrors the API runs so export.py can pick the rows up:
   results/trec_full/multi/tar__<variant>.jsonl       TREC: positive rows only over the 286k collection
 
 Variants: t1_<N> (80%-recall cutoff, perfect reviewer), t1_<N>_f1 (F1 cutoff), t1_<N>_noisy (imperfect
-reviewer: misses 10% of relevant, over-codes 2% of non-relevant), cal (imperfect reviewer, 80% target),
+reviewer: misses 10% of relevant, over-codes 2% of non-relevant), t1_<N>_div (diversity-sampled training
+set, otherwise as t1_<N>), cal (imperfect reviewer, 80% target),
 cal_75 (75% target), cal_perfect (perfect reviewer, 80% target), cal_knee (imperfect reviewer, knee stop).
 """
 
@@ -53,9 +60,12 @@ from pathlib import Path
 import numpy as np
 from rich.console import Console
 from scipy import sparse
+from sklearn.cluster import MiniBatchKMeans
+from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import HashingVectorizer, TfidfTransformer, TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import StratifiedKFold
+from sklearn.preprocessing import normalize
 
 from .providers.base import Prediction
 from .tasks import Document, TaskSet, load_corpus
@@ -77,6 +87,8 @@ CAL_RICHNESS_CAP = 0.15  # pools richer than this are downsampled to CAL_TARGET_
 CAL_TARGET_RICHNESS = 0.10
 NOISE_RATE = 0.10  # imperfect reviewer: misses 10% of relevant documents ...
 NOISE_FP_RATIO = 0.2  # ... and over-codes 2% of non-relevant ones
+DIV_SVD_DIMS = 100  # diversity sampling: TF-IDF -> truncated SVD with this many dimensions ...
+DIV_SVD_FIT_CAP = 50_000  # ... fit on at most this many candidates (all candidates are projected)
 
 # corpus key -> (task yaml, evaluation corpus, training/CAL pool, keyword-floor results, cal batch, cal seeds,
 #                control-set size: None = CONTROL_SHARE / CONTROL_CAP / CONTROL_MIN_RELEVANT rule, else fixed)
@@ -212,12 +224,66 @@ def doc_level(rows_by_doc: dict[str, dict[str, bool]], gold: dict[str, dict[str,
 
 # ------------------------------------------------------------------------------------------------ TAR 1.0
 
+_DIV_EMBED_CACHE: dict[tuple[int, int], np.ndarray] = {}  # (id(X), seed) -> SVD embedding of the candidates
+
+
+def _div_embedding(X, cand: np.ndarray, seed: int) -> np.ndarray:
+    """L2-normalised DIV_SVD_DIMS-dimensional truncated-SVD embedding of the candidate rows of X. The SVD is
+    fit on at most DIV_SVD_FIT_CAP candidates (a seeded draw) and every candidate is projected. Cached per
+    (matrix, seed) so the sample sizes of one seed share the embedding."""
+    key = (id(X), seed)
+    if key in _DIV_EMBED_CACHE:
+        return _DIV_EMBED_CACHE[key]
+    rng = np.random.default_rng(seed * 104_729 + 7)
+    Xc = X[cand]
+    fit_rows = rng.choice(len(cand), size=DIV_SVD_FIT_CAP, replace=False) if len(cand) > DIV_SVD_FIT_CAP else None
+    svd = TruncatedSVD(n_components=min(DIV_SVD_DIMS, Xc.shape[1] - 1), algorithm="randomized", random_state=seed)
+    svd.fit(Xc if fit_rows is None else Xc[fit_rows])
+    Z = normalize(svd.transform(Xc)).astype(np.float32)
+    _DIV_EMBED_CACHE[key] = Z  # 286k x 100 float32 per seed on TREC: ~115 MB each
+    return Z
+
+
+def diversity_sample(X, cand: np.ndarray, n: int, seed: int) -> tuple[np.ndarray, dict]:
+    """Cluster-stratified diversity sample of `n` candidates: k-means with k = n on the SVD embedding, then the
+    candidate nearest each centroid (one per cluster, so the picks are distinct). Clusters that end up empty
+    contribute nothing and the shortfall is filled by a seeded random draw from the rest. Returns the chosen
+    pool indices and a meta block."""
+    n = min(n, len(cand))
+    Z = _div_embedding(X, cand, seed)
+    km = MiniBatchKMeans(n_clusters=n, random_state=seed, batch_size=4096, n_init=1, max_iter=100, init_size=max(3 * n, 10_000))
+    labels = km.fit_predict(Z)
+    picks: list[int] = []
+    for c in range(n):
+        members = np.flatnonzero(labels == c)
+        if len(members) == 0:
+            continue
+        d = ((Z[members] - km.cluster_centers_[c].astype(np.float32)) ** 2).sum(axis=1)
+        picks.append(int(members[int(np.argmin(d))]))
+    empty = n - len(picks)
+    if empty:
+        rng = np.random.default_rng(seed)
+        rest = np.setdiff1d(np.arange(len(cand)), np.array(picks, dtype=int))
+        picks += [int(i) for i in rng.choice(rest, size=empty, replace=False)]
+    meta = {"sampling": "diversity", "svd_dims": int(Z.shape[1]), "svd_fit_rows": int(min(len(cand), DIV_SVD_FIT_CAP)), "k": n,
+            "empty_clusters": int(empty), "kmeans": "MiniBatchKMeans, one document nearest each centroid"}
+    return cand[np.array(picks, dtype=int)], meta
+
+
 def run_tar1(ts: TaskSet, pool: list[Document], pool_idx: dict[str, int], X, eval_docs: list[Document],
-             eval_idx: np.ndarray, n_train: int, rule: str, noise: float, seed: int, exclude: set[str]) -> tuple[dict[str, dict[str, bool]], dict[str, np.ndarray], dict]:
-    """Returns (decisions on eval docs keyed by id, per-issue probabilities on eval docs, run meta)."""
+             eval_idx: np.ndarray, n_train: int, rule: str, noise: float, seed: int, exclude: set[str],
+             sampling: str = "random") -> tuple[dict[str, dict[str, bool]], dict[str, np.ndarray], dict]:
+    """Returns (decisions on eval docs keyed by id, per-issue probabilities on eval docs, run meta).
+    `sampling` is "random" (simple random sample of the candidates) or "diversity" (see diversity_sample)."""
     rng = np.random.default_rng(seed)
     cand = np.array([i for i, d in enumerate(pool) if d.id not in exclude])
-    train = rng.choice(cand, size=min(n_train, len(cand)), replace=False)
+    if sampling == "diversity":
+        t_s = time.time()
+        train, sample_meta = diversity_sample(X, cand, n_train, seed)
+        sample_meta["sample_seconds"] = round(time.time() - t_s, 1)
+    else:
+        train = rng.choice(cand, size=min(n_train, len(cand)), replace=False)
+        sample_meta = {"sampling": "random"}
     rev = Reviewer(ts, {d.id: d for d in pool}, noise, seed)
     codes = [rev.code(pool[i].id) for i in train]
     Xtr = X[train]
@@ -265,7 +331,7 @@ def run_tar1(ts: TaskSet, pool: list[Document], pool_idx: dict[str, int], X, eva
         decisions[d.id] = dec
     meta = {"n_train": int(len(train)), "rule": rule, "noise": noise, "seed": seed, "cutoff_any": round(t_any, 4),
             "issue_models": sorted(issue_models), "train_positives_any": int(y_any.sum()), "train_positives_by_issue": pos_counts,
-            "hours": rev.hours, "cost_usd": rev.cost, "docs_reviewed": rev.n_reviewed}
+            "hours": rev.hours, "cost_usd": rev.cost, "docs_reviewed": rev.n_reviewed, **sample_meta}
     return decisions, probs, meta
 
 
@@ -463,21 +529,24 @@ def run_corpus(corpus: str, out: Path = Path("results"), only: str | None = None
     console.print(f"[{corpus}] pool {len(pool):,} docs, eval {len(eval_docs):,}; fitting TF-IDF…")
     t0 = time.time()
     X = featurize([d.text for d in pool])
+    _DIV_EMBED_CACHE.clear()
     console.print(f"[{corpus}] {X.shape[1]:,} features in {time.time() - t0:.0f}s")
     full_out = out / "trec_full" / "multi" if corpus == "trec" else None
     exclude = {d.id for d in eval_docs} if cfg["pool"] else set()
 
     variants: list[tuple[str, dict]] = []
     for n in cfg["stages"]:
-        variants += [(f"t1_{n}", dict(kind="t1", n=n, rule="recall80", noise=0.0)),
-                     (f"t1_{n}_f1", dict(kind="t1", n=n, rule="f1", noise=0.0)),
-                     (f"t1_{n}_noisy", dict(kind="t1", n=n, rule="recall80", noise=NOISE_RATE))]
+        variants += [(f"t1_{n}", dict(kind="t1", n=n, rule="recall80", noise=0.0, sampling="random")),
+                     (f"t1_{n}_f1", dict(kind="t1", n=n, rule="f1", noise=0.0, sampling="random")),
+                     (f"t1_{n}_noisy", dict(kind="t1", n=n, rule="recall80", noise=NOISE_RATE, sampling="random")),
+                     (f"t1_{n}_div", dict(kind="t1", n=n, rule="recall80", noise=0.0, sampling="diversity"))]
     variants += [("cal", dict(kind="cal", noise=NOISE_RATE, stop="target", target=CAL_TARGET)),
                  ("cal_75", dict(kind="cal", noise=NOISE_RATE, stop="target", target=0.75)),
                  ("cal_perfect", dict(kind="cal", noise=0.0, stop="target", target=CAL_TARGET)),
                  ("cal_knee", dict(kind="cal", noise=NOISE_RATE, stop="knee", target=None))]
     if only:
-        variants = [v for v in variants if v[0] == only or v[0].startswith(only + "_")]
+        # a name or prefix (t1_100, cal), or a suffix starting with "_" (_div, _noisy) for one flavour at every size
+        variants = [v for v in variants if v[0] == only or v[0].startswith(only + "_") or (only.startswith("_") and v[0].endswith(only))]
     kw = _keyword_scores(Path(cfg["lexical"]), [d.id for d in pool]) if any(v[1]["kind"] == "cal" for v in variants) else None
     gold_eval_any = np.array([any(g.values()) for g in gold_eval.values()])
 
@@ -488,12 +557,13 @@ def run_corpus(corpus: str, out: Path = Path("results"), only: str | None = None
         for seed in range(n_seeds):
             t1 = time.time()
             if spec["kind"] == "t1":
+                sampling = spec.get("sampling", "random")
                 if full_out is None:
-                    dec, probs, meta = run_tar1(ts, pool, pool_idx, X, eval_docs, eval_idx, spec["n"], spec["rule"], spec["noise"], seed, exclude)
+                    dec, probs, meta = run_tar1(ts, pool, pool_idx, X, eval_docs, eval_idx, spec["n"], spec["rule"], spec["noise"], seed, exclude, sampling)
                     full_pos = None
                 else:
                     # TREC: score the whole 286k collection once; the eval rows are a subset, the trec_full block gets the positives
-                    full_dec, full_probs, meta = run_tar1(ts, pool, pool_idx, X, pool, np.arange(len(pool)), spec["n"], spec["rule"], spec["noise"], seed, exclude)
+                    full_dec, full_probs, meta = run_tar1(ts, pool, pool_idx, X, pool, np.arange(len(pool)), spec["n"], spec["rule"], spec["noise"], seed, exclude, sampling)
                     dec = {d.id: full_dec[d.id] for d in eval_docs}
                     probs = {q: full_probs[q][eval_idx] for q in ts.qids}
                     full_pos = [(d, q) for d, c in full_dec.items() for q, v in c.items() if v]

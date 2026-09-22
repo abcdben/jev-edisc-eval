@@ -185,6 +185,13 @@ TAR_WORKFLOW = {
         "4. Choose each model's cutoff by 5-fold cross-validation on the coded sample only: the score that keeps 80% of the sample's positives (or, in the F1 variant, the score that maximises F1).",
         "5. Score the rest of the collection. A document is produced on an issue when it clears the relevance cutoff and that issue's cutoff; the coded documents keep the reviewer's codes.",
     ],
+    "t1_div": [
+        "1. Draw a diversity sample of N documents from the collection: reduce the collection's TF-IDF matrix to 100 dimensions with a truncated SVD (fit on at most 50,000 documents, every document projected, rows L2-normalised), cluster it into N groups with k-means (MiniBatchKMeans), and take the document nearest each cluster centre (one per cluster; any empty cluster is filled by a random draw).",
+        "2. A reviewer reads each and codes it for every issue (simulated here from the gold labels; 50 documents/hour, $65/hour).",
+        "3. Fit TF-IDF (word 1-2 grams, sublinear tf) and balanced logistic regression: one model for any-issue relevance and one per issue with at least 5 coded positives.",
+        "4. Choose each model's cutoff by 5-fold cross-validation on the coded sample only: the score that keeps 80% of the sample's positives. The procedure is the same as the random-sample rows for comparability, but the coded sample is no longer a random sample of the collection, so its recall estimate is only a guide.",
+        "5. Score the rest of the collection. A document is produced on an issue when it clears the relevance cutoff and that issue's cutoff; the coded documents keep the reviewer's codes.",
+    ],
     "cal": [
         "1. Control set: the reviewer codes a simple random sample of the collection first (10% of the pool, capped at 500 and sized for at least ~30 relevant documents; a fixed 2,000 on TREC's 286k collection). These documents never enter the review queue and are not trained on; their coding counts as review effort and their codes are part of the production set.",
         "2. Seed: random documents plus the same number of the strongest keyword-floor hits, coded by the reviewer (50 + 50 on the 800-document Mallinckrodt pool, 100 + 100 elsewhere).",
@@ -198,12 +205,15 @@ TAR_WORKFLOW = {
 
 def _tar_request(side: dict) -> dict:
     spec = side["spec"]; med = side["median"]
-    req = {"workflow": TAR_WORKFLOW[spec["kind"]], "reviewer": {"docs_per_hour": side["reviewer"]["docs_per_hour"], "usd_per_hour": side["reviewer"]["usd_per_hour"],
+    workflow = TAR_WORKFLOW["t1_div" if spec["kind"] == "t1" and spec.get("sampling") == "diversity" else spec["kind"]]
+    req = {"workflow": workflow, "reviewer": {"docs_per_hour": side["reviewer"]["docs_per_hour"], "usd_per_hour": side["reviewer"]["usd_per_hour"],
                                                               "miscode_rate": side["reviewer"]["miscode_rate"]},
            "classifier": {"features": "tf-idf, word 1-2 grams, min_df 2, sublinear tf, ≤300k features", "model": "logistic regression, liblinear, class_weight balanced, C=1"}}
     if spec["kind"] == "t1":
-        req["training_sample"] = {"documents_coded": med["docs_reviewed"], "positives_any_issue": med["train_positives_any"], "issues_with_own_model": med["issue_models"],
+        req["training_sample"] = {"sampling": spec.get("sampling", "random"), "documents_coded": med["docs_reviewed"], "positives_any_issue": med["train_positives_any"], "issues_with_own_model": med["issue_models"],
                                   "cutoff_rule": "80% recall (5-fold CV on the sample)" if spec["rule"] == "recall80" else "max F1 (5-fold CV on the sample)"}
+        if spec.get("sampling") == "diversity":
+            req["training_sample"]["diversity"] = {"svd_dims": med.get("svd_dims"), "svd_fit_rows": med.get("svd_fit_rows"), "clusters": med.get("k"), "empty_clusters": med.get("empty_clusters")}
     else:
         ctrl = med.get("control_set") or {}
         req["review"] = {"documents_coded": med["docs_reviewed"], "control_set": ctrl.get("n", 0), "queued": med.get("docs_queued"),
@@ -296,7 +306,7 @@ def export(out: Path = Path("results"), dest: Path = Path("results/examples.json
             side = json.loads(side_path.read_text()); name = side["variant"]
             exs = [{"request": _tar_request(side), "output": _output(out, corpus, f"tar__{name}", d.id, qid)} for d in ex_docs]
             if any(e["output"] is not None for e in exs):
-                c["configs"][f"tar@{name}"] = {"group": "tar", "variant": name, "settings": {"seeds": len(side["seeds"]), "median_seed": side["median_seed"], "miscode_rate": side["spec"]["noise"]}, "examples": exs}
+                c["configs"][f"tar@{name}"] = {"group": "tar", "variant": name, "settings": {"seeds": len(side["seeds"]), "median_seed": side["median_seed"], "miscode_rate": side["spec"]["noise"], **({"sampling": side["spec"]["sampling"]} if side["spec"].get("sampling") else {})}, "examples": exs}
         for cfg in c["configs"].values():
             for i, ex in enumerate(cfg["examples"]):
                 ex["request"] = _template(ex["request"], ex_docs[i].text, ts.context)

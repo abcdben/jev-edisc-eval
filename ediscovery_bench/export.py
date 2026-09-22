@@ -56,6 +56,10 @@ MODELS: dict[str, dict] = {
     "tar@t1_300":           dict(name="TAR 1.0 · 300 reviewed", family="TAR", kind="tar"),
     "tar@t1_1000":          dict(name="TAR 1.0 · 1,000 reviewed", family="TAR", kind="tar"),
     "tar@t1_5000":          dict(name="TAR 1.0 · 5,000 reviewed", family="TAR", kind="tar"),
+    "tar@t1_100_div":       dict(name="TAR 1.0 · 100 reviewed · diverse", family="TAR", kind="tar"),
+    "tar@t1_300_div":       dict(name="TAR 1.0 · 300 reviewed · diverse", family="TAR", kind="tar"),
+    "tar@t1_1000_div":      dict(name="TAR 1.0 · 1,000 reviewed · diverse", family="TAR", kind="tar"),
+    "tar@t1_5000_div":      dict(name="TAR 1.0 · 5,000 reviewed · diverse", family="TAR", kind="tar"),
     "tar@cal":              dict(name="TAR 2.0 · CAL (80% target)", family="TAR", kind="tar"),
 }
 FT_KEYS = {"veridian": "laya-ft-veridian@recipe", "mnk": "laya-ft-mnk@recipe", "cuad": "laya-ft-cuad@recipe", "trec": "laya-ft-trec@recipe"}
@@ -93,6 +97,7 @@ TAR_LEVERS = {
     "t1": "TAR 1.0: the reviewer codes {n} random documents; classifier cutoff targets 80% recall (5-fold CV on the sample)",
     "t1_f1": "TAR 1.0, {n} reviewed: cutoff maximises F1 on the sample instead of targeting 80% recall",
     "t1_noisy": "TAR 1.0, {n} reviewed: imperfect reviewer (misses 10% of relevant documents, over-codes 2% of non-relevant)",
+    "t1_div": "TAR 1.0, {n} reviewed: training sample chosen by cluster-stratified diversity sampling (SVD + k-means, one document per cluster) instead of at random; cutoff chosen the same way, but the coded sample is no longer random so its recall estimate is only a guide",
     "cal": "TAR 2.0: continuous active learning with an imperfect reviewer (misses 10% of relevant, over-codes 2% of non-relevant); stops when a random control set estimates 80% recall for two consecutive batches; plotted as the production set the reviewer coded relevant",
     "cal_75": "TAR 2.0, control-set stop at a 75% recall target instead of 80%",
     "cal_perfect": "TAR 2.0, 80% target, perfect reviewer (codes every document exactly as the gold labels)",
@@ -113,6 +118,7 @@ def _variant_models() -> dict[str, dict]:
         out[f"tar@t1_{n}"] = dict(name=f"TAR 1.0 · {n:,} reviewed", family="TAR", kind="tar", group="tar", variant=f"t1_{n}", lever=TAR_LEVERS["t1"].format(n=f"{n:,}"))
         out[f"tar@t1_{n}_f1"] = dict(name=f"TAR 1.0 · {n:,} · F1 cutoff", family="TAR", kind="tar", group="tar", variant=f"t1_{n}_f1", lever=TAR_LEVERS["t1_f1"].format(n=f"{n:,}"))
         out[f"tar@t1_{n}_noisy"] = dict(name=f"TAR 1.0 · {n:,} · 90% reviewer", family="TAR", kind="tar", group="tar", variant=f"t1_{n}_noisy", lever=TAR_LEVERS["t1_noisy"].format(n=f"{n:,}"))
+        out[f"tar@t1_{n}_div"] = dict(name=f"TAR 1.0 · {n:,} · diverse", family="TAR", kind="tar", group="tar", variant=f"t1_{n}_div", lever=TAR_LEVERS["t1_div"].format(n=f"{n:,}"))
     out["tar@cal"] = dict(name="TAR 2.0 · CAL (80% target)", family="TAR", kind="tar", group="tar", variant="cal", lever=TAR_LEVERS["cal"])
     out["tar@cal_75"] = dict(name="TAR 2.0 · CAL · 75% target", family="TAR", kind="tar", group="tar", variant="cal_75", lever=TAR_LEVERS["cal_75"])
     out["tar@cal_perfect"] = dict(name="TAR 2.0 · CAL · perfect reviewer", family="TAR", kind="tar", group="tar", variant="cal_perfect", lever=TAR_LEVERS["cal_perfect"])
@@ -215,7 +221,9 @@ def _tar_block(side: dict) -> dict:
         "review_share": med["docs_reviewed"] / side["n_corpus"],
         "reviewer": side["reviewer"], "seeds": len(seeds), "median_seed": side["median_seed"],
         "recall_range": [min(rec), max(rec)] if rec else None, "precision_range": [min(prec), max(prec)] if prec else None,
-        "cutoff_rule": side["spec"].get("rule"), "issue_models": med.get("issue_models"), "train_positives_any": med.get("train_positives_any"),
+        "cutoff_rule": side["spec"].get("rule"), "sampling": side["spec"].get("sampling", "random" if side["spec"]["kind"] == "t1" else None),
+        "sampling_meta": {k: med.get(k) for k in ("svd_dims", "svd_fit_rows", "k", "empty_clusters")} if med.get("sampling") == "diversity" else None,
+        "issue_models": med.get("issue_models"), "train_positives_any": med.get("train_positives_any"),
         "batches": med.get("batches"), "batch": med.get("batch"), "stop": med.get("stop"), "stop_rule": med.get("stop_rule"), "curve": med.get("curve"),
         "pool_richness": med.get("pool_richness"), "relevant_in_pool": med.get("relevant_in_pool"), "found_gold": med.get("found_gold"),
         "downsampled": bool(med.get("pool_ids")),
