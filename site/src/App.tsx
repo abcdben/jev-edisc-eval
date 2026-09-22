@@ -450,7 +450,7 @@ export default function App() {
   const [corpus, setCorpusRaw] = useState(DEFAULT_CORPUS);
   const setCorpus = (c: string) => setCorpusRaw(siteCorpus(c));
   const tag: "" | "v0" = ""; // TREC criteria: always the calibrated set; the bare-topic (v0) rows stay exported but are not shown
-  const [arm, setArm] = useState<"multi" | "single">("multi");
+  const arm: "multi" | "single" = "multi"; // prompting: always all issues per call; the one-issue-per-call rows stay exported but are not shown
   const gray: Gray = "all"; // gray gold labels always count; the exclude-gray view is not shown
   const [level, setLevel] = useState<Level>("doc");
   const [issue, setIssue] = useState<string | null>(null);
@@ -469,7 +469,6 @@ export default function App() {
   const corpusTitle = `${fmtInt(meta.n_docs)} documents · ${meta.n_issues} issues · ${fmtInt(meta.n_pos_docs_any)} responsive to at least one (${fmtPct(meta.n_pos_docs_any / meta.n_docs, 0)}) · gold: ${meta.gold}`;
   const [more, setMore] = useState(false);
   const nonDefault = [
-    arm === "single" ? "one issue per call" : null,
     issue ? `issue: ${meta.issues[issue]}` : level === "decision" ? "every decision" : null,
   ].filter((x): x is string => !!x);
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "dark");
@@ -511,12 +510,6 @@ export default function App() {
       </div>
       {more && (
       <div className="controls controls-more">
-        <Control label="Prompting">
-          <Seg value={arm} onChange={setArm} options={[
-            { id: "multi", label: "all issues per call", title: "One call per document answers every issue" },
-            { id: "single", label: "one issue per call", title: "One call per (document, issue) pair" },
-          ]} />
-        </Control>
         <Control label="Scope">
           <span className="select">
             <select value={issue ?? (level === "doc" ? "__doc" : "__dec")} onChange={(e) => { const val = e.target.value; if (val === "__doc") { setIssue(null); setLevel("doc"); } else if (val === "__dec") { setIssue(null); setLevel("decision"); } else setIssue(val); }}>
