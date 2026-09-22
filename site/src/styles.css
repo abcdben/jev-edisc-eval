@@ -282,17 +282,17 @@ svg text { user-select: none; font-family: var(--sans); }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes rise-2 { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
 @keyframes rise-4 { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-/* decider boxes on the Compare map (PRScatter `pulse`): the shaded 95% box breathes between its resting fill and 1.6x that, three 3 s cycles (PRScatter PULSE_CYCLES) after the plot loads or its points change;
+/* decider boxes on the Compare map (PRScatter `pulse`): the shaded 95% box breathes between its resting fill and 1.6x that, a quick double pulse of two 0.65 s cycles (PRScatter PULSE_CYCLES) after the plot loads or its points change;
    the animation overrides the rect's inline fill-opacity, so the rest state is exactly the still look. Size, mark and label are untouched.
    PRScatter drops the class from a highlighted box so the deeper hover fill stays steady. */
-.pr-box.pulse { animation: box-breathe 3s ease-in-out 3; }
+.pr-box.pulse { animation: box-breathe 0.65s ease-in-out 2; }
 @keyframes box-breathe { 0%, 100% { fill-opacity: var(--box-alpha); } 50% { fill-opacity: calc(var(--box-alpha) * 1.6); } }
 /* the emphasised table row on Compare models (ui.tsx RowTint: the Jev row of the ranked, Review time, Cost and Determinism cards): a full-width band on the
    --hl highlight (the same tint as the modals' <mark>, themed per light/dark above), resting at about half strength; `.pulse` breathes it from that faint
-   rest to the full tint and back, three 1.4 s cycles (ui.tsx ROW_PULSE_CYCLES) after the table loads or its rows change, then it settles. The band sits
+   rest to the full tint and back, a quick double pulse of two 0.65 s cycles (ui.tsx ROW_PULSE_CYCLES) after the table loads or its rows change, then it settles. The band sits
    under the row's hover hit area and fades out while the row is hovered, focused or highlighted from another card, so the grey hover band alone shows. */
 .row-jev { fill: var(--hl); fill-opacity: 1; opacity: 0.55; pointer-events: none; transition: fill-opacity 0.12s; }
-.row-jev.pulse { animation: row-breathe 1.4s ease-in-out 3; }
+.row-jev.pulse { animation: row-breathe 0.65s ease-in-out 2; }
 @keyframes row-breathe { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
 .sel:hover .row-jev, .sel:focus-visible .row-jev, .hl .row-jev { fill-opacity: 0; }
 /* reduced motion: every CSS transition and animation on the page completes at once (the hooks snap on the same media query); the faint rest tint stays */

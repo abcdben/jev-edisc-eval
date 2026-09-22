@@ -104,7 +104,7 @@ export function usePulseWindow(sig: string, enabled: boolean, ms: number): boole
 }
 
 /** How long the emphasised (Jev) row's tint breathes after a table loads or its rows change: ROW_PULSE_CYCLES cycles of the styles.css row-breathe animation (keep in step with `.row-jev.pulse`). */
-export const ROW_PULSE_CYCLES = 3, ROW_PULSE_CYCLE_MS = 1400;
+export const ROW_PULSE_CYCLES = 2, ROW_PULSE_CYCLE_MS = 650;
 export const ROW_PULSE_MS = ROW_PULSE_CYCLES * ROW_PULSE_CYCLE_MS;
 
 /**
