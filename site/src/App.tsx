@@ -233,7 +233,6 @@ const OPS_MODE_OPTIONS = [
 /** The two rows shared by the Review time and Cost hints: what the '+ human time' toggle adds, and why TAR rows disappear without it. */
 const HUMAN_ITEMS: HintItem[] = [
   { k: "+ human time", v: <mark>Adds prompt or criteria development: {HUMAN_DEV_DOCS} documents at {HUMAN_DEV_DOCS_PER_HOUR}/h and ${HUMAN_DEV_USD_PER_HOUR}/h, <b>{fmtHours(HUMAN_DEV_HOURS)} and {fmtUSD(HUMAN_DEV_USD)}</b>, once per 100k-document project.</mark> },
-  { k: "TAR rows", v: <><b>Already human time</b>, so they are hidden in machine-only.</> },
 ];
 const TIME_ITEMS: HintItem[] = [
   { k: "Measures", v: <><b>Median</b> wall-clock time per document for the model's own calls, one request at a time, scaled to 100,000 documents.</> },
