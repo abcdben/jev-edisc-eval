@@ -64,7 +64,7 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         <p>
           The same criteria, documents and scoring were applied to every model, and nothing was tuned against the test data; even so,
           <mark>assumptions and decisions were made that are not documented on this site</mark>, and each result rests on choices about criteria,
-          configurations, pricing and sampling that would shift on another matter. <b>This is not meant as a peer‑reviewed study</b> so much as
+          configurations, pricing and sampling that could shift on another matter. <b>This is not meant as a peer‑reviewed study</b> so much as
           <mark>a point‑in‑time snapshot of model performance on established industry data sets</mark>, showing where these new decision models
           stand on review tasks next to the models people already use.
         </p>
