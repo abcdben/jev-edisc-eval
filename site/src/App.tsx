@@ -6,9 +6,7 @@ import {
 } from "./data";
 import { Control, Hint, MethodContext, ROW_PULSE_MS, Seg, usePulseWindow, type HintItem, type TipLine } from "./components/ui";
 import { PRScatter, type PRItem } from "./components/PRScatter";
-import { PRRows } from "./components/PRRows";
 import { PRRail } from "./components/PRRail";
-import { PRDumbbell } from "./components/PRDumbbell";
 import { PRHeat } from "./components/PRHeat";
 import { OpsBars, type BarItem } from "./components/OpsBars";
 import { Consistency, detFor, detLines } from "./components/Consistency";
@@ -18,8 +16,8 @@ import { Picker, type PickGroup } from "./components/Picker";
 import { DisclaimerLink, DisclaimerModal, useDisclaimer } from "./components/Disclaimer";
 import { Logo } from "./logos";
 
-/** The recall/precision card's views. `map` and `ranked` are the two shipped views; `rail`, `dumbbell` and `heat` are ranked-view candidates offered on the Configurations page only (PRCard `variants`), each in its own component file (PRRail, PRDumbbell, PRHeat): to drop one, delete the file, its id here and its Seg option and render branch in PRCard. */
-type Chart = "map" | "ranked" | "rail" | "dumbbell" | "heat";
+/** The recall/precision card's views. `ranked` is drawn by PRRail on Compare models (rank rail) and by PRHeat on Compare configurations (vs default), chosen by PRCard's `ranked` prop. */
+type Chart = "map" | "ranked";
 
 /** Short group names for the one-line picker. */
 /** Picker order: decision models first, then the LLMs (API and local share one group via the PRIMARY `kind` override). Kinds with no roster member (`baseline`, `local_llm`) are dropped before rendering. */
@@ -29,9 +27,9 @@ const KIND_SHORT: Record<Kind, string> = { system1: "Decision models", system1_f
 
 /** Recall/precision card with a map (scatter with interval boxes) or ranked (rows with whiskers) view. The chart mode is owned by the section so it can switch the dashboard layout. `explain` opens the details modal for a clicked mark or row (item ids are model keys). */
 /** `pulse` (Compare models only: the Configurations page shows one family, so no decider to single out) lets the deciders' interval boxes breathe for a few cycles when the map loads or its points change. */
-/** `variants` (Configurations page) adds the ranked-view candidates (`rail`, `dumbbell`, `heat`) to the view toggle; `referenceId` is the row the `heat` view compares against (the family's base configuration). The candidate components draw their own legend line. */
+/** `ranked` picks the ranked view's component: `rail` (PRRail, Compare models) or `heat` (PRHeat, Compare configurations, differenced against `referenceId`, the family's base configuration). Both draw their own legend line. */
 /** `sig` names what the card is showing (the corpus, and the family on Configurations): the `ranked` option's accent (ui.tsx Seg `accent`) breathes once when the card mounts and again whenever it changes, not on every model toggle. */
-function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false, variants = false, referenceId, sig = "card" }: { items: PRItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean; variants?: boolean; referenceId?: string; sig?: string }) {
+function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false, ranked, referenceId, sig = "card" }: { items: PRItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean; ranked: "rail" | "heat"; referenceId?: string; sig?: string }) {
   const setChart = onChart;
   const [zoom, setZoom] = useState(defaultZoom);
   const onSelect = explain && ((it: PRItem) => explain(it.id));
@@ -40,12 +38,7 @@ function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, h
   const accentPulse = usePulseWindow(sig, true, ROW_PULSE_MS);
   const options: { id: Chart; label: string; title?: string; accent?: boolean }[] = [
     { id: "map", label: "map", title: "Recall against precision, one box per model" },
-    { id: "ranked", label: "ranked", title: "Rows sorted by recall, whiskers for the intervals", accent: true },
-    ...(variants ? [
-      { id: "rail" as const, label: "rail", title: "Ranked rows on a rank rail, with the interval width beside each value" },
-      { id: "dumbbell" as const, label: "dumbbell", title: "Recall and precision on one axis, joined per row" },
-      { id: "heat" as const, label: "vs default", title: "Ranked rows with each value tinted and differenced against the default configuration" },
-    ] : []),
+    { id: "ranked", label: "ranked", title: ranked === "heat" ? "Rows sorted by recall, each value differenced against the Default configuration" : "Rows sorted by recall, whiskers for the intervals", accent: true },
   ];
   return (
     <div className={`card${chart === "map" ? " fill" : ""}`}>
@@ -57,13 +50,11 @@ function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, h
         </span>
       </div>
       {chart === "map" && <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill onSelect={onSelect} highlight={hover.id} onHover={hover.set} pulse={pulse} /></div>}
-      {chart === "ranked" && <PRRows {...rowProps} />}
-      {chart === "rail" && <PRRail {...rowProps} />}
-      {chart === "dumbbell" && <PRDumbbell {...rowProps} />}
-      {chart === "heat" && <PRHeat {...rowProps} referenceId={referenceId} />}
-      {(chart === "map" || chart === "ranked") && (
+      {chart === "ranked" && ranked === "rail" && <PRRail {...rowProps} />}
+      {chart === "ranked" && ranked === "heat" && <PRHeat {...rowProps} referenceId={referenceId} />}
+      {chart === "map" && (
         <div className="legend-note">
-          {chart === "map" ? <span>Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span> : <span>Sorted by recall. Dot: point estimate. Whisker: 95% interval.</span>}
+          <span>Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span>
           {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
         </div>
       )}
@@ -268,7 +259,7 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
         <div className={`dash${chart !== "map" ? " ranked" : ""}`}>
           <PRCard
             items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
-            pulse sig={v.corpus}
+            pulse ranked="rail" sig={v.corpus}
           />
           <div className="stack">
             <OpsCards recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} explain={explain} decider={decider} emphasis={emphasis} />
@@ -333,7 +324,7 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
           <PRCard
             items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
             emptyText={variants.length ? "Select at least one configuration." : "No configurations of this model were run on this corpus and arm."}
-            logos={false} variants referenceId={referenceId} sig={`${v.corpus}:${grp}`}
+            logos={false} ranked="heat" referenceId={referenceId} sig={`${v.corpus}:${grp}`}
           />
           <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} explain={explain} /></div>
         </div>

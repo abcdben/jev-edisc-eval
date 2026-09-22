@@ -179,6 +179,8 @@ export const variantColor = (v: string, recipe: string) => (v === recipe ? "var(
 
 export const fmtPct = (v: number | null | undefined, d = 1) => (v == null ? "—" : `${(v * 100).toFixed(d)}%`);
 export const fmtCI = (ci: CI, d = 1) => (ci ? `${fmtPct(ci[0], d)}  [${fmtPct(ci[1], d)}, ${fmtPct(ci[2], d)}]` : "—");
+/** The interval alone, as whole points for the ranked rows' range column: "82–91". */
+export const fmtRange = (ci: CI) => (ci ? `${Math.round(ci[1] * 100)}–${Math.round(ci[2] * 100)}` : "—");
 export const fmtInt = (v: number) => v.toLocaleString("en-US");
 export const fmtHours = (h: number | null) => {
   if (h == null) return "—";

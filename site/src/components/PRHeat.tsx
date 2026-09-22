@@ -1,33 +1,33 @@
 import { useRef } from "react";
 import type { CI } from "../data";
-import { fmtPct } from "../data";
+import { fmtPct, fmtRange } from "../data";
 import { Logo, LogoGlyph } from "../logos";
 import type { PRItem } from "./PRScatter";
 import { prTip } from "./PRScatter";
 import { CLICK_HINT, DECIDER_TEXT, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth } from "./ui";
 import { hoverable } from "./hover";
 
-/** Row geometry shared with PRRows; VAL_W is the value cell (with its tint), DELTA_W the "vs default" column that follows it when a reference row is given. HDR is the two-line header. */
-const ROW = 26, NUM_W = 54, VAL_W = 58, DELTA_W = 50, HDR = 28;
+/** Row geometry shared with PRRail; VAL_W is the value cell (with its tint), RANGE_W the muted "82–91" interval column after it, DELTA_W the "vs default" column that follows when a reference row is given. HDR is the two-line header. */
+const ROW = 26, VAL_W = 58, RANGE_W = 50, DELTA_W = 66, HDR = 28;
 
 /** Signed difference in percentage points, with a true minus sign; "0.0" within rounding. */
 const signed = (d: number) => (Math.abs(d) < 0.05 ? "0.0" : `${d > 0 ? "+" : "\u2212"}${Math.abs(d).toFixed(1)}`);
 
 /**
- * Heat-annotated ranked rows (ranked-view candidate "vs default"): the PRRows dot-whisker panels, plus, when `referenceId` names one of the items,
+ * Heat-annotated ranked rows (the Compare configurations `ranked` view, "vs default"): dot-whisker panels, plus, when `referenceId` names one of the items,
  * a faint diverging tint behind each printed value (--c-terra above the reference, --c-sonnet below, deeper the further away) and a muted ±pp
  * column per panel. The reference row sits on the site's --hl band and a dashed line marks its value through each panel. Without `referenceId`
- * (or when that row is not among the items) the tint, column, band and lines are simply omitted. Same hover, click, cross-chart highlight and motion contract as PRRows.
+ * (or when that row is not among the items) the tint, column, band and lines are simply omitted. Same hover, click, cross-chart highlight and motion contract as PRRail.
  */
 export function PRHeat({ items, zoom, sortBy = "recall", logos = false, onSelect, highlight, onHover, referenceId }: { items: PRItem[]; zoom: boolean; sortBy?: "recall" | "precision" | "f1"; logos?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; referenceId?: string }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickRow = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const W = useWidth(hostRef, 760);
   const wide = Math.min(1, Math.max(0, W - 760) / 340);
-  const LABEL_W = Math.round((logos ? 196 : 170) + wide * 44);
+  const LABEL_W = Math.round((logos ? 196 : 190) + wide * 44);
   const GAP = Math.round(26 + wide * 22);
   const ref = referenceId != null ? items.find((it) => it.id === referenceId) ?? null : null;
-  const NUMS = ref ? VAL_W + DELTA_W : NUM_W;
+  const NUMS = VAL_W + RANGE_W + (ref ? DELTA_W : 0);
   const f1 = (it: PRItem) => (it.recall && it.precision ? (2 * it.recall[0] * it.precision[0]) / (it.recall[0] + it.precision[0] || 1) : -1);
   const rows = [...items].sort((a, b) => {
     const va = sortBy === "f1" ? f1(a) : (a[sortBy]?.[0] ?? -1), vb = sortBy === "f1" ? f1(b) : (b[sortBy]?.[0] ?? -1);
@@ -71,10 +71,11 @@ export function PRHeat({ items, zoom, sortBy = "recall", logos = false, onSelect
               <text x={x0[col]} y={10} fontSize={10} fontWeight={500} letterSpacing=".07em" fill="var(--ink)">{col === 0 ? "RECALL" : "PRECISION"}</text>
               <text x={x0[col]} y={22} fontSize={10} fill="var(--ink-4)">{col === 0 ? "share of relevant documents found" : "share of flagged documents that are relevant"}</text>
               <text x={x0[col] + colW + 8} y={10} fontSize={10} fontWeight={500} letterSpacing=".07em" fill="var(--ink-3)">VALUE</text>
+              <text x={x0[col] + colW + 8 + VAL_W} y={10} fontSize={10} fontWeight={500} letterSpacing=".05em" fill="var(--ink-3)">95% CI</text>
               {ref && (
                 <>
-                  <text x={x0[col] + colW + 8 + VAL_W} y={10} fontSize={10} fontWeight={500} letterSpacing=".05em" fill="var(--ink-3)">{deltaHead}</text>
-                  <text x={x0[col] + colW + 8 + VAL_W} y={22} fontSize={10} fill="var(--ink-4)">pp</text>
+                  <text x={x0[col] + colW + 8 + VAL_W + RANGE_W} y={10} fontSize={10} fontWeight={500} letterSpacing=".05em" fill="var(--ink-3)">{deltaHead}</text>
+                  <text x={x0[col] + colW + 8 + VAL_W + RANGE_W} y={22} fontSize={10} fill="var(--ink-4)">pp</text>
                 </>
               )}
               {ticks.map((t) => (
@@ -111,10 +112,11 @@ export function PRHeat({ items, zoom, sortBy = "recall", logos = false, onSelect
                         <line x1={g(`${r.id}:${col}:lo`)} x2={g(`${r.id}:${col}:hi`)} y1={y} y2={y} stroke={r.color} strokeWidth={1.5} strokeLinecap="butt" />
                         <circle cx={g(`${r.id}:${col}:v`)} cy={y} r={3.2} fill={r.color} />
                         <text x={x0[col] + colW + 8} y={y + 4} fontSize={11.5} fill={isRef ? "var(--ink-3)" : "var(--ink)"} className="mono">{fmtPct(ci[0])}</text>
+                        <text x={x0[col] + colW + 8 + VAL_W} y={y + 4} fontSize={10.5} fill="var(--ink-4)" className="mono">{fmtRange(ci)}</text>
                         {ref && (isRef ? (
-                          <text x={x0[col] + colW + 8 + VAL_W} y={y + 4} fontSize={11} fill="var(--ink-4)" className="mono">ref</text>
+                          <text x={x0[col] + colW + 8 + VAL_W + RANGE_W} y={y + 4} fontSize={11} fill="var(--ink-4)" className="mono">ref</text>
                         ) : (
-                          <text x={x0[col] + colW + 8 + VAL_W} y={y + 4} fontSize={11} fill={d == null ? "var(--ink-4)" : "var(--ink-3)"} className="mono">{d == null ? "—" : signed(d)}</text>
+                          <text x={x0[col] + colW + 8 + VAL_W + RANGE_W} y={y + 4} fontSize={11} fill={d == null ? "var(--ink-4)" : "var(--ink-3)"} className="mono">{d == null ? "—" : signed(d)}</text>
                         ))}
                       </g>
                     );
@@ -130,7 +132,7 @@ export function PRHeat({ items, zoom, sortBy = "recall", logos = false, onSelect
         <TipBox tip={tip} hint={onSelect ? CLICK_HINT : undefined} />
       </div>
       <div className="legend-note">
-        <span>Sorted by {sortLabel}. Dot: point estimate. Whisker: 95% interval.{ref ? ` Cell tint: distance from the ${refName} row, green above, umber below. Dashed line: the ${refName} row's value.` : ""}</span>
+        <span>Sorted by {sortLabel}. Dot: point estimate. Whisker and range: 95% interval.{ref ? ` Cell tint: distance from the ${refName} row, green above, umber below. Dashed line: the ${refName} row's value.` : ""}</span>
         {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
       </div>
     </>

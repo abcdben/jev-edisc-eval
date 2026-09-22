@@ -1,29 +1,30 @@
 import { useRef } from "react";
 import type { CI } from "../data";
-import { fmtPct } from "../data";
+import { fmtPct, fmtRange } from "../data";
 import { Logo, LogoGlyph } from "../logos";
 import type { PRItem } from "./PRScatter";
 import { prTip } from "./PRScatter";
-import { CLICK_HINT, DECIDER_TEXT, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth } from "./ui";
+import { CLICK_HINT, DECIDER_TEXT, ROW_PULSE_MS, RowTint, TipBox, fadeStyle, selectable, usePresence, usePulseWindow, useTip, useTween, useWidth } from "./ui";
 import { hoverable } from "./hover";
 
-/** Row geometry shared with PRRows (row height, value column) so switching views keeps the rows in place; RAIL is the rank rail at the left edge, RANK_W the `01`–`12` numerals, BAR_COL the small "CI width" bar column after each value. */
-const ROW = 26, NUM_W = 54, RAIL = 3, RANK_W = 26, BAR_W = 30, BAR_COL = 40, TOP = 20;
+/** Row geometry (row height, value column) shared with PRHeat so the two ranked views keep rows in place; RAIL is the rank rail at the left edge, RANK_W the `01`–`12` numerals, RANGE_W the muted "82–91" interval column after each value. */
+const ROW = 26, NUM_W = 54, RANGE_W = 52, RAIL = 3, RANK_W = 26, TOP = 20;
 
 /**
- * Ranked rows on a gradient rank rail (ranked-view candidate "rail"): recall and precision side by side, dot at the point estimate, whisker
+ * Ranked rows on a gradient rank rail (the Compare models `ranked` view): recall and precision side by side, dot at the point estimate, whisker
  * across the 95% interval, on a dot-matrix. A thin rail at the left edge darkens toward the top rank, with muted `01`–`12` numerals; hairline
- * separators and faint alternate banding; the top row's name a step heavier with its whiskers on a translucent band. After each value a small grey
- * bar gives the interval's width relative to the widest shown. Same hover, click, cross-chart highlight and motion contract as PRRows.
+ * separators and faint alternate banding; the top row's name a step heavier with its whiskers on a translucent band. After each value the interval's
+ * ends are printed in muted ink. Hover tooltip, click-to-details, cross-card highlight (hover.tsx), presence fades and the emphasis tint (ui.tsx RowTint)
+ * follow the same contract as OpsBars and Consistency.
  */
 export function PRRail({ items, zoom, sortBy = "recall", logos = false, onSelect, highlight, onHover }: { items: PRItem[]; zoom: boolean; sortBy?: "recall" | "precision" | "f1"; logos?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickRow = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const W = useWidth(hostRef, 760);
   const wide = Math.min(1, Math.max(0, W - 760) / 340);
-  const LABEL_W = Math.round((logos ? 196 : 170) + wide * 44) + RANK_W;
+  const LABEL_W = Math.round((logos ? 196 : 190) + wide * 44) + RANK_W;
   const GAP = Math.round(26 + wide * 22);
-  const NUMS = NUM_W + BAR_COL;
+  const NUMS = NUM_W + RANGE_W;
   const f1 = (it: PRItem) => (it.recall && it.precision ? (2 * it.recall[0] * it.precision[0]) / (it.recall[0] + it.precision[0] || 1) : -1);
   const rows = [...items].sort((a, b) => {
     const va = sortBy === "f1" ? f1(a) : (a[sortBy]?.[0] ?? -1), vb = sortBy === "f1" ? f1(b) : (b[sortBy]?.[0] ?? -1);
@@ -43,7 +44,6 @@ export function PRRail({ items, zoom, sortBy = "recall", logos = false, onSelect
   const step = span > 0.6 ? 0.25 : span > 0.3 ? 0.1 : span > 0.12 ? 0.05 : 0.02;
   const ticks: number[] = [];
   for (let t = Math.ceil(lo / step) * step; t <= hi + 1e-9; t += step) ticks.push(Math.round(t * 1000) / 1000);
-  const maxW = Math.max(1e-9, ...all.map((c) => c[2] - c[1]));
   const h = n * ROW + 44;
   const topId = rows[0]?.id;
   // rows drawn in first-appearance order and placed by rank with a transform (ui.tsx usePresence), so a re-sort slides them
@@ -56,6 +56,9 @@ export function PRRail({ items, zoom, sortBy = "recall", logos = false, onSelect
   const geo = useTween(target, undefined, undefined, W);
   const g = (k: string) => geo[k] ?? target[k];
   const sortLabel = sortBy === "f1" ? "F1" : sortBy;
+  // An emphasised row (`emphasis: true`, the decision-model rows on Compare models) carries a faint tint that breathes for a few cycles when the table loads or its rows change (ui.tsx usePulseWindow, RowTint).
+  const sig = items.map((it) => `${it.id}:${it.recall?.[0].toFixed(4) ?? "-"}:${it.precision?.[0].toFixed(4) ?? "-"}`).join("|");
+  const pulsing = usePulseWindow(sig, items.some((it) => it.emphasis), ROW_PULSE_MS);
   return (
     <>
       <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
@@ -79,7 +82,7 @@ export function PRRail({ items, zoom, sortBy = "recall", logos = false, onSelect
             <g key={col}>
               <rect x={x0[col]} y={TOP} width={Math.max(0, colW)} height={n * ROW} fill="url(#dotgrid-rail)" />
               <text x={x0[col]} y={12} fontSize={12} fontWeight={500} fill="var(--ink)">{col === 0 ? "Recall" : "Precision"}</text>
-              <text x={x0[col] + colW + NUMS - 2} y={12} textAnchor="end" fontSize={10} fontWeight={500} letterSpacing=".06em" fill="var(--ink-3)">CI WIDTH</text>
+              <text x={x0[col] + colW + NUMS - 2} y={12} textAnchor="end" fontSize={10} fontWeight={500} letterSpacing=".06em" fill="var(--ink-3)">95% CI</text>
               {ticks.map((t) => (
                 <g key={t}>
                   <line x1={sx(col, t)} x2={sx(col, t)} y1={TOP} y2={TOP + n * ROW} stroke="var(--line)" />
@@ -94,6 +97,7 @@ export function PRRail({ items, zoom, sortBy = "recall", logos = false, onSelect
             return (
               <g key={r.id} className={`mv fd${highlight === r.id ? " hl" : ""}`} style={{ transform: `translate(0px, ${top}px)`, ...fadeStyle(state) }} {...hoverable(onHover, r.id)}>
                 <g onMouseMove={(e) => show(e, { kind: "row", top, height: ROW, clearX: W }, prTip(r, logos ? <Logo model={r.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
+                  {r.emphasis && <RowTint sig={sig} pulsing={pulsing} width={W} height={ROW} />}
                   <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
                   {logos ? (
                     <>
@@ -110,7 +114,7 @@ export function PRRail({ items, zoom, sortBy = "recall", logos = false, onSelect
                         <line x1={g(`${r.id}:${col}:lo`)} x2={g(`${r.id}:${col}:hi`)} y1={y} y2={y} stroke={r.color} strokeWidth={first ? 2 : 1.5} />
                         <circle cx={g(`${r.id}:${col}:v`)} cy={y} r={first ? 4 : 3.2} fill={r.color} />
                         <text x={x0[col] + colW + NUM_W} y={y + 4} textAnchor="end" fontSize={first ? 12.5 : 11.5} fontWeight={first ? 500 : 400} fill="var(--ink)" className="mono">{fmtPct(ci[0])}</text>
-                        <rect x={x0[col] + colW + NUMS - BAR_W - 2} y={y - 1.5} width={Math.max(1, ((ci[2] - ci[1]) / maxW) * BAR_W)} height={3} rx={1.5} fill="var(--ink-4)" />
+                        <text x={x0[col] + colW + NUMS - 2} y={y + 4} textAnchor="end" fontSize={10.5} fill="var(--ink-4)" className="mono">{fmtRange(ci)}</text>
                       </g>
                     ) : (
                       <text key={col} x={x0[col] + colW + NUM_W} y={y + 4} textAnchor="end" fontSize={11.5} fill="var(--ink-4)" className="mono">—</text>
@@ -125,7 +129,7 @@ export function PRRail({ items, zoom, sortBy = "recall", logos = false, onSelect
         <TipBox tip={tip} hint={onSelect ? CLICK_HINT : undefined} />
       </div>
       <div className="legend-note">
-        <span>Sorted by {sortLabel}; the rail darkens toward the top rank. Dot: point estimate. Whisker: 95% interval. Grey bar: interval width, relative to the widest.</span>
+        <span>Sorted by {sortLabel}; the rail darkens toward the top rank. Dot: point estimate. Whisker and range: 95% interval.</span>
         {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
       </div>
     </>
