@@ -294,7 +294,7 @@ function TitleMenu({ label, value, items, onPick, muted, wide, ariaLabel, foot }
         ref={btn} type="button" className={`ex-menu-b${muted ? " muted" : ""}`} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? id : undefined} aria-label={`${ariaLabel}: ${label}`}
         onClick={() => setOpen((o) => !o)}
       >
-        <span className="ex-menu-v">{label}</span><svg className="ex-chev" aria-hidden="true" viewBox="0 0 10 10" width="11" height="11"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        <span className="ex-menu-v">{label}</span><svg className="ex-chev" aria-hidden="true" viewBox="0 0 10 10" width="10" height="10"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </button>
       {open && (
         <div ref={pop} id={id} role="menu" aria-label={ariaLabel} className={`ex-menu-pop${wide ? " wide" : ""}`} style={{ left: place?.left ?? 0, top: place?.top ?? 0, visibility: place ? "visible" : "hidden" }}>

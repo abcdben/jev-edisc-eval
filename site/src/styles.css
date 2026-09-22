@@ -362,15 +362,15 @@ svg text { user-select: none; font-family: var(--sans); }
   display: flex; flex-direction: column; box-shadow: 0 30px 80px rgba(0,0,0,0.45); overflow: hidden;
 }
 .ex-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 18px 24px 14px; border-bottom: 1px solid var(--line); }
-.ex-head h2 { margin: 8px 0 0; font-size: 20px; font-weight: 500; letter-spacing: -0.015em; }
-.ex-title > .decider-tag { align-self: flex-end; margin-bottom: 9px; }
+.ex-head h2 { margin: 6px 0 0; font-size: 20px; font-weight: 500; letter-spacing: -0.015em; }
+.ex-title > .decider-tag { align-self: flex-end; margin-bottom: 5px; }
 /* the details modal's title is two labelled selectors, FAMILY [Jev ▾]  CONFIGURATION [Choice form ▾], drawn as select-style fields so they read as controls */
 .ex-title { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 6px 14px; }
-.ex-menu { position: relative; display: inline-flex; flex-direction: column; align-items: flex-start; gap: 4px; }
-.ex-menu-cap { font-size: 10.5px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-4); line-height: 1; }
+.ex-menu { position: relative; display: inline-flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.ex-menu-cap { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-4); line-height: 1; }
 .ex-menu-b {
-  display: inline-flex; align-items: center; gap: 10px; margin: 0; padding: 6px 10px 6px 12px; font: inherit; font-size: 16px; font-weight: 500; letter-spacing: -0.01em;
-  color: var(--ink); background: var(--panel); border: 1px solid var(--line-2); border-radius: 7px; cursor: pointer; text-align: left; line-height: 1.2;
+  display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 4px 8px 4px 10px; font: inherit; font-size: 13px; font-weight: 500; letter-spacing: 0;
+  color: var(--ink); background: var(--panel); border: 1px solid var(--line-2); border-radius: 6px; cursor: pointer; text-align: left; line-height: 1.2;
   transition: border-color 120ms, background-color 120ms, box-shadow 120ms;
 }
 .ex-menu-b:hover, .ex-menu.open .ex-menu-b { border-color: var(--ink-3); }
