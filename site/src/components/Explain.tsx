@@ -382,7 +382,6 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
       <div className="ex-modal" role="dialog" aria-modal="true" aria-label="How each model is asked">
         <div className="ex-head">
           <div>
-            <div className="ex-eyebrow">How each model is asked</div>
             <h2 className="ex-title">
               <TitleMenu label={G.label} value={group} items={familyItems} ariaLabel="Family" onPick={(g) => { setGroup(g); setKey(membersOf(corpus, g)[0]); }} />
               {cfg && members.length > 1 && (
