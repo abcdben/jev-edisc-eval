@@ -101,7 +101,7 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
     <div className="card">
       <div className="card-t">
         <h3>Determinism</h3>
-        <span className="unit">{det ? `${fmtInt(det.sample.n_docs)} emails · ${rows.find((x) => x.d?.cell)?.d?.cell?.k ?? 5} runs` : "not measured"}</span>
+        <span className="unit">{det ? `disagreement between ${rows.find((x) => x.d?.cell)?.d?.cell?.k ?? 5} identical runs on ${fmtInt(det.sample.n_docs)} emails` : "not measured"}</span>
         <span className="right">
           {hasT0 && <Seg value={setting} onChange={setSetting} options={[{ id: "default", label: "default", title: "Vendor default sampling" }, { id: "t0", label: "t = 0", title: "Temperature 0 where the API accepts it" }]} />}
           <Hint items={DET_ITEMS} more="About" />
