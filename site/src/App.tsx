@@ -188,11 +188,25 @@ const LATENCY_ITEMS: HintItem[] = [
   { k: "GPU rows", v: <>Laya and Gemma ran locally on <b>one rented A100</b>, so no network is included.</> },
   { k: "Laya", v: <>Its latency is the same forward pass as the zero-shot Compact + Chunked configuration, measured in a dedicated single-request run.</> },
 ];
-const COST_ITEMS: HintItem[] = [
-  { k: "Measures", v: <><b>API price as paid</b> to the vendor, summed over the model's decisions and scaled to 100,000 documents.</> },
-  { k: "Pricing", v: <>OpenAI on <b>flex pricing (half of list)</b>; Anthropic with prompt caching on the all-issues arm.</> },
-  { k: "GPU rows", v: <mark>Laya and Gemma: a rented {GPU_NAME} at ${GPU_USD_PER_HOUR.toFixed(2)}/h times the single-stream review time, so <b>an upper bound</b>.</mark> },
-];
+/** What a document is on each corpus, for the Cost hint's per-document line. */
+const DOC_NOUN: Record<string, string> = { trec: "email", mnk: "email" };
+/**
+ * The Cost hint for the rows the card shows: the per-100k basis, then the mean billed tokens per document across the shown LLM rows
+ * (the corpus's average document length in each vendor's tokenizer), so the numbers follow the corpus and the selection.
+ */
+function costItems(recs: Rec[]): HintItem[] {
+  const llm = recs.filter((r) => (r.kind === "llm" || r.kind === "local_llm") && r.ops.tokens_in_per_doc != null);
+  const mean = (f: (r: Rec) => number | null) => { const v = llm.map(f).filter((x): x is number => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+  const tin = mean((r) => r.ops.tokens_in_per_doc), tout = mean((r) => r.ops.tokens_out_per_doc);
+  const noun = DOC_NOUN[recs[0]?.corpus ?? ""] ?? "document";
+  const tokens = tin == null ? null : `${fmtInt(Math.round(tin / 100) * 100)} input and ${fmtInt(Math.max(10, Math.round((tout ?? 0) / 10) * 10))} output tokens`;
+  return [
+    { k: "Measures", v: <><b>API price as paid</b>, per document, multiplied by 100,000.</> },
+    { k: "Per document", v: <>The <b>actual tokens billed</b> for each document in this corpus: the issue criteria and matter context plus the {noun}{tokens ? <>, about <b>{tokens}</b> on average for the LLMs (tokenizers differ by vendor)</> : null}, at each vendor's per-token price. So the figure is for <b>100,000 {noun}s of this corpus's average length</b>.</> },
+    { k: "Pricing", v: <>OpenAI on <b>flex pricing (half of list)</b>; Anthropic with prompt caching on the all-issues arm.</> },
+    { k: "GPU rows", v: <mark>Laya and Gemma: a rented {GPU_NAME} at ${GPU_USD_PER_HOUR.toFixed(2)}/h times the median latency, one request at a time, so <b>an upper bound</b>.</mark> },
+  ];
+}
 
 /**
  * `decider` sets a row's name a step heavier (data.ts isDecider); Compare models passes it, the Configurations page (one family per chart) does not.
@@ -221,7 +235,7 @@ function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider, empha
       <div className="card">
         <div className="card-t">
           <h3>Cost</h3><span className="unit">per 100k docs</span>
-          <span className="right"><Hint items={COST_ITEMS} more="About" /></span>
+          <span className="right"><Hint items={costItems(recs)} more="About" /></span>
         </div>
         <OpsBars items={cost} axis="US dollars" unit="per 100k docs" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
       </div>
