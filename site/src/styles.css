@@ -413,6 +413,9 @@ svg text { user-select: none; font-family: var(--sans); }
 .ex-lead mark { background: var(--hl); color: var(--ink); padding: 1px 3px; margin: 0 -1px; border-radius: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 .ex-intro { margin: 0 0 10px; color: var(--ink-2); font-size: 13.5px; line-height: 1.55; }
 .ex-note { margin: 0 0 18px; color: var(--ink); font-size: 13.5px; line-height: 1.55; padding: 10px 14px; border-left: 2px solid var(--c-jev); background: var(--hl); border-radius: 0 6px 6px 0; }
+/* "Example" band above the request / settings / output columns, so the two panes read as one worked example */
+.ex-sec { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 18px 0 12px; padding-top: 14px; border-top: 1px solid var(--line); }
+.ex-sec-t { font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
 .ex-cols { display: grid; grid-template-columns: minmax(0, 58fr) minmax(0, 42fr); gap: 20px; align-items: start; }
 .ex-col { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px 12px; min-width: 0; }
 .ex-col-t { font-size: 13px; font-weight: 500; margin-bottom: 10px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }

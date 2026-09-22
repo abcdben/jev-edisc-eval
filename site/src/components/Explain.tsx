@@ -407,9 +407,13 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
                 {base && d.changed.size === 0 && d.removed.length === 0 && (
                   <p className="ex-same">On this corpus and issue the request is identical to the default: the lever has nothing to act on here{variant === "decompose" ? " (this issue has no sub-questions in the task file; try CUAD or TREC)" : ""}. Any difference in the output is run-to-run variation.</p>
                 )}
+                <div className="ex-sec">
+                  <span className="ex-sec-t">Example</span>
+                  <span className="ex-col-s">{group === "tar" ? "one document from this corpus: the workflow that produced the classifier, and the call it recorded" : "one document from this corpus: the exact request that was sent, and the output that came back"}</span>
+                </div>
                 <div className="ex-cols">
                   <div className="ex-col">
-                    <div className="ex-col-t">{group === "tar" ? "Workflow" : "Request"}<span className="ex-col-s">{group === "tar" ? "how the coded sample and classifier were produced" : "what was sent, with the document and background folded"}</span></div>
+                    <div className="ex-col-t">{group === "tar" ? "Example workflow" : "Example input"}<span className="ex-col-s">{group === "tar" ? "how the coded sample and classifier were produced" : "the request as sent, with the document and background folded"}</span></div>
                     {ex && <Node v={ex.request} path="" changed={d.changed} doc={doc.text} ctx={C.context} />}
                     {base && d.removed.length > 0 && (
                       <div className="ex-removed">Not present in this configuration (present in the default): {d.removed.map((p) => p.replace(/^questions\.[^.]+\./, "question.")).join(", ")}</div>
@@ -420,7 +424,7 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
                     <Node v={settingsFor(group, cfg.settings)} path="settings" changed={base ? diff(settingsFor(group, cfg.settings), settingsFor(group, base.settings)).changed : new Set()} doc="" ctx="" />
                     <div className="ex-col-t ex-out-t">
                       <span className="ex-out-row">
-                        Output
+                        Example output
                         <Seg
                           value={String(docIdx)} onChange={(v) => setDocIdx(Number(v))}
                           options={C.documents.map((dd, i) => ({ id: String(i), label: dd.gold === "responsive" ? "gold-responsive" : "gold-not-responsive", title: `${dd.gold === "responsive" ? "a gold-responsive" : "a gold-not-responsive"} document (${dd.id})` }))}
