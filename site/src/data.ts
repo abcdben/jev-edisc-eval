@@ -168,8 +168,7 @@ export const costPerDoc = (r: Rec): number | null => {
 export const ABLATION_GROUPS: { id: string; label: string; recipe: string; note: string }[] = [
   { id: "jev", label: "Jev 1.13", recipe: "state_string", note: "Twelve configurations of TypeSafe Jev. Each variant changes a single lever from the default. ★ marks the configuration selected on the Veridian dev split." },
   { id: "laya", label: "Laya", recipe: "recipe", note: "ConvAI Laya, English checkpoint, zero-shot. Two levers (compact, chunk) exist only to fit its 512-token context; ★ marks the configuration that combines them, selected on the Veridian dev split." },
-  { id: "laya-typed", label: "Laya · typed", recipe: "recipe", note: "Laya typed checkpoint, zero-shot." },
-  { id: "laya-multilingual", label: "Laya · multilingual", recipe: "recipe", note: "Laya multilingual checkpoint, zero-shot." },
+  // The typed and multilingual Laya checkpoints (groups laya-typed, laya-multilingual) stay in findings.json but are not offered: only the English family, whose request the charted fine-tune uses, is shown.
   { id: "tar", label: "Classical TAR", recipe: "", note: "A simulated reviewer (50 docs/h, $65/h) plus TF-IDF + logistic regression. The reviewer codes a cluster-stratified diversity sample; the rows vary its size. Every row is the median of the random seeds." },
 ];
 export const VARIANT_ORDER = ["base", "choice", "score", "crit_none", "crit_struct", "literal", "no_context", "state_string", "gate", "ensemble", "decompose", "preview", "compact", "chunk", "recipe", "recipe_choice",
