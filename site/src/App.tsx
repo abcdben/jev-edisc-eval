@@ -25,7 +25,7 @@ const KIND_SHORT: Record<Kind, string> = { system1: "Deciders", system1_ft: "Sup
 
 /** Recall/precision card with a map (scatter with interval boxes) or ranked (rows with whiskers) view. The chart mode is owned by the section so it can switch the dashboard layout. `explain` opens the details modal for a clicked mark or row (item ids are model keys). */
 /** `pulse` (Compare models only: the Configurations page shows one family, so no decider to single out) lets the deciders' interval boxes breathe for a few cycles when the map loads or its points change. */
-function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false }: { items: PRItem[]; hint: HintItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean }) {
+function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false }: { items: PRItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean }) {
   const setChart = onChart;
   const [zoom, setZoom] = useState(defaultZoom);
   const onSelect = explain && ((it: PRItem) => explain(it.id));
@@ -37,7 +37,6 @@ function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = t
         <span className="right">
           <Seg value={chart} onChange={setChart} options={[{ id: "map", label: "map", title: "Recall against precision, one box per model" }, { id: "ranked", label: "ranked", title: "Rows sorted by F1, whiskers for the intervals" }]} />
           <Seg value={zoom ? "zoom" : "full"} onChange={(z) => setZoom(z === "zoom")} options={[{ id: "full", label: "0–100%" }, { id: "zoom", label: "fit to data" }]} />
-          <Hint items={hint} more="About" />
         </span>
       </div>
       {chart === "map" ? <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill onSelect={onSelect} highlight={hover.id} onHover={hover.set} pulse={pulse} /></div> : <PRRows items={items} zoom={zoom} sortBy="recall" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />}
@@ -50,25 +49,6 @@ function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = t
 }
 
 type View = { corpus: string; tag: string; arm: "multi" | "single"; gray: Gray; level: Level; issue: string | null };
-
-/** Recall and precision card, Compare models. */
-const PR_ITEMS: HintItem[] = [
-  { k: "Recall", v: <><b>Gold-responsive items the model flagged</b>, over all gold-responsive items.</> },
-  { k: "Precision", v: <><b>Flagged items that were gold-responsive</b>, over all flagged.</> },
-  { k: "Intervals", v: <mark><b>95% Wilson</b> score; recall over the gold-positive set, precision over the flagged set, since every document carries a gold label.</mark> },
-  { k: "Label", v: <><b>The model's own label</b>, not a tuned threshold.</> },
-  { k: "Scope", v: <><b>Document level</b>: responsive if positive for any issue. Decision level: every (document, issue) judgment pooled.</> },
-  { k: "*", v: <><b>Scored on a stratified subset</b>; hover a row for the count. Intervals widen to match.</> },
-  { k: "Deciders", v: <><b>Jev and Laya</b> are set in a heavier name in the tables.</> },
-];
-/** Recall and precision card, Configurations page. */
-const CONFIG_PR_ITEMS: HintItem[] = [
-  { k: "Measures", v: <><b>The same recall and precision</b> as on Compare models, for configurations of one model.</> },
-  { k: "Default view", v: <><b>Ranked rows with axes fitted to the data</b>, since configurations differ less than model families; switch to map and 0–100% for the Compare scale.</> },
-  { k: "Intervals", v: <><b>95% Wilson</b> score; * marks a stratified subset.</> },
-  { k: "Levers", v: <><b>Hover a configuration</b> for what its lever changes.</> },
-  { k: "★", v: <mark><b>The configuration selected on the Veridian dev split</b>, after one round of iteration.</mark> },
-];
 
 // ------------------------------------------------------------------------------------------------
 // Metrics: the full figures for a row. Shown in the details modal's Metrics block; the chart hovers carry only the plotted value and one
@@ -339,7 +319,7 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
         <div className={`dash${chart === "ranked" ? " ranked" : ""}`}>
           <PRCard
             items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
-            hint={PR_ITEMS} pulse
+            pulse
           />
           <div className="stack">
             <OpsCards recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} explain={explain} decider={decider} />
@@ -421,7 +401,6 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
             items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
             emptyText={variants.length ? "Select at least one configuration." : "No configurations of this model were run on this corpus and arm."}
             logos={false}
-            hint={CONFIG_PR_ITEMS}
           />
           <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} explain={explain} machineOnly /></div>
         </div>
