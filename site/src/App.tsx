@@ -428,7 +428,7 @@ export default function App() {
   // The corpus is not persisted (hash or storage); siteCorpus still guards the state so an unlisted id (e.g. "veridian") can never render.
   const [corpus, setCorpusRaw] = useState(DEFAULT_CORPUS);
   const setCorpus = (c: string) => setCorpusRaw(siteCorpus(c));
-  const [tag, setTag] = useState<"" | "v0">("");
+  const tag: "" | "v0" = ""; // TREC criteria: always the calibrated set; the bare-topic (v0) rows stay exported but are not shown
   const [arm, setArm] = useState<"multi" | "single">("multi");
   const [gray, setGray] = useState<Gray>("all");
   const [level, setLevel] = useState<Level>("doc");
@@ -483,14 +483,6 @@ export default function App() {
         {pageId === "compare"
           ? <ModelPicker v={v} on={on} setOn={setOn} explain={setExplain} />
           : <VariantPicker v={v} grp={grp} setGrp={setGrp} off={off} setOff={setOff} explain={setExplain} />}
-        {corpus === "trec" && (
-          <Control label="Criteria">
-            <Seg value={tag} onChange={setTag} options={[
-              { id: "", label: "calibrated", title: "Criteria refined once on a 668-email calibration set disjoint from this evaluation set" },
-              { id: "v0", label: "bare topic", title: "The NIST topic sentence as written, no iteration" },
-            ]} />
-          </Control>
-        )}
         <span className="more-wrap">
           {!more && nonDefault.length > 0 && <span className="more-summary">{nonDefault.join(" · ")}</span>}
           <ExplainButton label={pageId === "compare" ? "how each model is asked" : "requests side by side"} onClick={() => setExplain(pageId === "compare" ? "jev@base" : `${grp}@base`)} />
