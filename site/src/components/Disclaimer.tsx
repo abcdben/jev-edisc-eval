@@ -49,10 +49,16 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         </ul>
         <h4>Set‑up</h4>
         <p>
-          Every model saw the <b>same document text, issue criteria and matter context</b>, and returned a label with a probability. Reported: <b>recall
-          and precision</b> with 95% intervals, <b>time and cost</b> per 100,000 documents, and <b>how often each model changes its answer</b> across repeated
-          runs. The Method table has the specifics for each corpus.
+          Every model saw the <b>same document text, issue criteria and matter context</b>, and returned a label with a 0–1 score: a model
+          probability for the deciders, a self‑reported confidence for the LLMs. Compared:
         </p>
+        <ul>
+          <li><b>Recall and precision</b>, with 95% intervals.</li>
+          <li><b>Review time</b> per 100,000 documents, single stream.</li>
+          <li><b>Cost</b> per 100,000 documents, as paid.</li>
+          <li><b>Determinism</b>: how often a model changes its answer on the same document across repeated runs.</li>
+        </ul>
+        <p>The Method table has the specifics for each corpus.</p>
         <h4>What this is</h4>
         <p>
           <mark>A point-in-time snapshot of model performance on established industry data sets</mark>, meant to show where these new decision models stand on review tasks next to the models people already use.
