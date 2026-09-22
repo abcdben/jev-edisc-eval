@@ -520,6 +520,13 @@ export default function App() {
             { id: "all", label: "all labels" },
             { id: "nogray", label: "exclude gray", title: issue ? "Not available for a single issue" : "Drop decisions whose gold label was flagged as debatable" },
           ]} />
+          <Hint title="Gold" items={[
+            { k: "All labels", v: <>Every (document, issue) gold label counts.</> },
+            { k: "Exclude gray", v: <mark><b>Drops the decisions whose gold label is debatable</b>, so a model is not marked wrong on a call reasonable reviewers would split.</mark> },
+            { k: "Gray", v: <>{corpus === "mnk" ? <>The three-model panel split, or its mean p(responsive) fell in 0.35–0.65.</>
+              : corpus === "cuad" ? <>The paragraph overlaps an annotated clause below both 50% thresholds (a clause running across a paragraph break).</>
+              : <>None from NIST; flagged where a facet's gold contradicts the topic text (NRA / non-resident aliens).</>} The Method table has the counts.</> },
+          ]} />
         </Control>
       </div>
       )}
