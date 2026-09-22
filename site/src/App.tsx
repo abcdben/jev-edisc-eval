@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, HUMAN_DEV_DOCS, HUMAN_DEV_DOCS_PER_HOUR, HUMAN_DEV_HOURS, HUMAN_DEV_USD, HUMAN_DEV_USD_PER_HOUR, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
   corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, pick, siteCorpus, starOf, variantColor,
@@ -12,7 +12,6 @@ import { Consistency, detFor, detLines } from "./components/Consistency";
 import { HoverProvider, useHover } from "./components/hover";
 import { ExplainButton, ExplainModal, type MetricSection, type Metrics } from "./components/Explain";
 import { Picker, type PickGroup } from "./components/Picker";
-import { MethodButton, MethodModal } from "./components/Method";
 import { DisclaimerLink, DisclaimerModal, useDisclaimer } from "./components/Disclaimer";
 import { Logo } from "./logos";
 
@@ -36,7 +35,7 @@ function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = t
         <span className="right">
           <Seg value={chart} onChange={setChart} options={[{ id: "map", label: "map", title: "Recall against precision, one box per model" }, { id: "ranked", label: "ranked", title: "Rows sorted by F1, whiskers for the intervals" }]} />
           <Seg value={zoom ? "zoom" : "full"} onChange={(z) => setZoom(z === "zoom")} options={[{ id: "full", label: "0–100%" }, { id: "zoom", label: "fit to data" }]} />
-          <Hint items={hint} more="Method" />
+          <Hint items={hint} more="About" />
         </span>
       </div>
       {chart === "map" ? <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill onSelect={onSelect} highlight={hover.id} onHover={hover.set} /></div> : <PRRows items={items} zoom={zoom} sortBy="recall" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />}
@@ -272,14 +271,14 @@ function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider }: { r
       <div className="card">
         <div className="card-t">
           <h3>Review time</h3><span className="unit">per 100k docs</span>
-          <span className="right"><Seg value={timeMode} onChange={setTimeMode} options={OPS_MODE_OPTIONS} /><Hint items={TIME_ITEMS} more="Method" /></span>
+          <span className="right"><Seg value={timeMode} onChange={setTimeMode} options={OPS_MODE_OPTIONS} /><Hint items={TIME_ITEMS} more="About" /></span>
         </div>
         <OpsBars items={time} axis="hours" unit="per 100k docs" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
       </div>
       <div className="card">
         <div className="card-t">
           <h3>Cost</h3><span className="unit">per 100k docs</span>
-          <span className="right"><Seg value={costMode} onChange={setCostMode} options={OPS_MODE_OPTIONS} /><Hint items={COST_ITEMS} more="Method" /></span>
+          <span className="right"><Seg value={costMode} onChange={setCostMode} options={OPS_MODE_OPTIONS} /><Hint items={COST_ITEMS} more="About" /></span>
         </div>
         <OpsBars items={cost} axis="US dollars" unit="per 100k docs" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
       </div>
@@ -439,10 +438,9 @@ export default function App() {
   const pickCorpus = (c: string) => { setCorpus(c); setIssue(null); };
   const [explain, setExplain] = useState<string | null>(null);
   // The Method modal (how each experiment was run) opens from the header and foot buttons and from every hint's "Method" link, via MethodContext.
-  const [method, setMethod] = useState(false);
-  const openMethod = useCallback(() => setMethod(true), []);
-  const closeMethod = useCallback(() => setMethod(false), []);
   const disclaimer = useDisclaimer(); // first-visit disclaimer; reopens from the footer
+  // The Method modal (components/Method.tsx) is not mounted for now; hint "more" links open the About modal instead.
+  const openMethod = disclaimer.show;
   const [on, setOn] = useState<Set<string>>(new Set(DEFAULT_ON));
   const [grp, setGrp] = useState("jev");
   const [off, setOff] = useState<Set<string>>(new Set());
@@ -472,7 +470,7 @@ export default function App() {
             <button key={p.id} className={pageId === p.id ? "on" : ""} onClick={() => goPage(p.id)} aria-current={pageId === p.id ? "page" : undefined}>{p.label}</button>
           ))}
         </nav>
-        <span className="theme"><MethodButton onClick={openMethod} /><Seg value={theme} onChange={setTheme} options={[{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }]} /></span>
+        <span className="theme"><Seg value={theme} onChange={setTheme} options={[{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }]} /></span>
       </header>
 
       <div className="controls">
@@ -525,7 +523,7 @@ export default function App() {
             { k: "Exclude gray", v: <mark><b>Drops the decisions whose gold label is debatable</b>, so a model is not marked wrong on a call reasonable reviewers would split.</mark> },
             { k: "Gray", v: <>{corpus === "mnk" ? <>The three-model panel split, or its mean p(responsive) fell in 0.35–0.65.</>
               : corpus === "cuad" ? <>The paragraph overlaps an annotated clause below both 50% thresholds (a clause running across a paragraph break).</>
-              : <>None from NIST; flagged where a facet's gold contradicts the topic text (NRA / non-resident aliens).</>} The Method table has the counts.</> },
+              : <>None from NIST; flagged where a facet's gold contradicts the topic text (NRA / non-resident aliens).</>}</> },
           ]} />
         </Control>
       </div>
@@ -539,12 +537,9 @@ export default function App() {
         />
       )}
 
-      {method && <MethodModal onClose={closeMethod} />}
       {disclaimer.open && <DisclaimerModal onClose={disclaimer.close} />}
 
       <footer className="notes">
-        <MethodButton onClick={openMethod} />
-        <span className="notes-t">How each experiment was run: data sets, truth data, measurement.</span>
         <DisclaimerLink onClick={disclaimer.show} />
       </footer>
     </div>

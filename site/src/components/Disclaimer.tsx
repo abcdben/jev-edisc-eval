@@ -57,7 +57,6 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
           <li><b>Cost</b> per 100,000 documents, as paid.</li>
           <li><b>Determinism</b>: how often a model changes its answer on the same document across repeated runs.</li>
         </ul>
-        <p>The Method table has the specifics for each corpus.</p>
         <h4>What this is</h4>
         <p>
           The same criteria, documents and scoring were applied to every model, and nothing was tuned against the test data; even so,

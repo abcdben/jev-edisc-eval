@@ -107,7 +107,7 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
         <span className="unit">{det ? `${fmtInt(det.sample.n_docs)} emails · ${rows.find((x) => x.d?.cell)?.d?.cell?.k ?? 5} runs` : "not measured"}</span>
         <span className="right">
           {hasT0 && <Seg value={setting} onChange={setSetting} options={[{ id: "default", label: "default", title: "Vendor default sampling" }, { id: "t0", label: "t = 0", title: "Temperature 0 where the API accepts it" }]} />}
-          <Hint items={DET_ITEMS} more="Notes on method" />
+          <Hint items={DET_ITEMS} more="About" />
         </span>
       </div>
       <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
