@@ -59,11 +59,11 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         </ul>
         <h4>What this is</h4>
         <p>
-          The same criteria, documents and scoring were applied to every model, and nothing was tuned against the test data; even so,
-          <mark>assumptions and decisions were made that are not documented on this site</mark>, and each result rests on choices about criteria,
-          configurations, pricing and sampling that could shift on another matter. <b>This is not meant as a peer‑reviewed study</b> so much as
-          <mark>a point‑in‑time snapshot of model performance on established industry data sets</mark>, showing where these new decision models
-          stand on review tasks next to the models people already use.
+          <mark>This is a point‑in‑time snapshot of model performance on established industry data sets</mark>, showing where these new decision models
+          stand on review tasks next to the models people already use. The same criteria, documents and scoring were applied to every model, and
+          nothing was tuned against the test data; even so, <mark>assumptions and decisions were made that are not documented on this site</mark>, and
+          each result rests on choices about criteria, configurations, pricing and sampling that could shift on another matter.
+          <b>It is not meant as a peer‑reviewed study.</b>
         </p>
         <p>
           Questions, corrections and requests for the underlying data are welcome: <a href={CONTACT_HREF}>{CONTACT_LABEL}</a>.
