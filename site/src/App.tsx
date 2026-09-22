@@ -235,10 +235,11 @@ const COST_ITEMS: HintItem[] = [
 
 /**
  * `decider` sets a row's name a step heavier (data.ts isDecider); Compare models passes it, the Configurations page (one family per chart) does not.
+ * `emphasis` picks the row that carries the faint --hl tint (Compare models: Jev only; the Configurations page passes nothing, its base row looks like the others).
  * `machineOnly` pins both cards to machine time with no toggle: the Configurations page compares one family's configurations, where the fixed
  * human development cost would only shift every bar by the same amount.
  */
-function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider, machineOnly = false }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean; explain?: (k: string) => void; decider?: (r: Rec) => boolean; machineOnly?: boolean }) {
+function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider, emphasis, machineOnly = false }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean; explain?: (k: string) => void; decider?: (r: Rec) => boolean; emphasis?: (r: Rec) => boolean; machineOnly?: boolean }) {
   const [timeModeSaved, setTimeMode] = useState<OpsMode>(() => readOpsMode("time"));
   const [costModeSaved, setCostMode] = useState<OpsMode>(() => readOpsMode("cost"));
   const timeMode: OpsMode = machineOnly ? "machine" : timeModeSaved, costMode: OpsMode = machineOnly ? "machine" : costModeSaved;
@@ -249,11 +250,11 @@ function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider, machi
   const empty = (r: Rec, mode: OpsMode) => (r.tar && mode === "machine" ? "human only" : undefined);
   const time: BarItem[] = recs.map((r) => {
     const { hours } = opsValues(r, timeMode);
-    return { id: r.model, name: nameOf(r), color: colorOf(r), value: hours, label: fmtHours(hours), sub: opsSub(r, timeMode, "time"), subset: starOf(r), empty: empty(r, timeMode), decider: decider?.(r) };
+    return { id: r.model, name: nameOf(r), color: colorOf(r), value: hours, label: fmtHours(hours), sub: opsSub(r, timeMode, "time"), subset: starOf(r), empty: empty(r, timeMode), decider: decider?.(r), emphasis: emphasis?.(r) };
   });
   const cost: BarItem[] = recs.map((r) => {
     const { usd } = opsValues(r, costMode);
-    return { id: r.model, name: nameOf(r), color: colorOf(r), value: usd, label: fmtUSD(usd), sub: opsSub(r, costMode, "cost"), subset: starOf(r), empty: empty(r, costMode), decider: decider?.(r) };
+    return { id: r.model, name: nameOf(r), color: colorOf(r), value: usd, label: fmtUSD(usd), sub: opsSub(r, costMode, "cost"), subset: starOf(r), empty: empty(r, costMode), decider: decider?.(r), emphasis: emphasis?.(r) };
   });
   return (
     <>
@@ -306,11 +307,13 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
   const [chart, setChart] = useState<Chart>("map");
   // the decider marker (data.ts isDecider: heavier name on rows) on every chart of this page, by the roster's kind (Laya's fine-tuned row is grouped with the deciders)
   const decider = (r: Rec) => isDecider(kindOf(r));
+  // the one emphasised row on this page's tables (ui.tsx RowTint, the --hl tint): Jev's base configuration, not Laya or the other deciders
+  const emphasis = (r: Rec) => r.model === "jev@base";
 
   const items: PRItem[] = sel.map((r) => {
     const p = pick(r, v.level, v.gray, v.issue);
     const meta = PRIMARY_BY_KEY[r.model];
-    return { id: r.model, name: meta.short, color: meta.color, recall: p.recall, precision: p.precision, dashed: r.kind === "system1_ft", subset: starOf(r), sub: qualitySub(r, v), decider: decider(r) };
+    return { id: r.model, name: meta.short, color: meta.color, recall: p.recall, precision: p.precision, dashed: r.kind === "system1_ft", subset: starOf(r), sub: qualitySub(r, v), decider: decider(r), emphasis: emphasis(r) };
   });
 
   return (
@@ -322,8 +325,8 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
             pulse
           />
           <div className="stack">
-            <OpsCards recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} explain={explain} decider={decider} />
-            <ConsistencyCard recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} arm={v.arm} onSelect={(r) => explain(r.model)} />
+            <OpsCards recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} explain={explain} decider={decider} emphasis={emphasis} />
+            <ConsistencyCard recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} arm={v.arm} onSelect={(r) => explain(r.model)} emphasis={emphasis} />
           </div>
         </div>
       </HoverProvider>

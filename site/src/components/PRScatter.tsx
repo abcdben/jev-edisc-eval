@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { fmtCI, type CI } from "../data";
 import { Logo, LogoGlyph, logoFor } from "../logos";
-import { CLICK_HINT, TipBox, fadeStyle, selectable, usePresence, useSize, useTip, useTween, type TipContent } from "./ui";
+import { CLICK_HINT, TipBox, fadeStyle, selectable, usePresence, usePulseWindow, useSize, useTip, useTween, type TipContent } from "./ui";
 import { hoverable } from "./hover";
 
-/** `sub` is the one secondary line of the hover tooltip (what the point was scored on); the full figures live in the details modal. `decider` sets the row's name heavier in the tables; on the map it only selects which interval boxes breathe when `pulse` is on (the mark and label are drawn like every other). */
-export type PRItem = { id: string; name: string; color: string; recall: CI; precision: CI; dashed?: boolean; subset?: string | null; sub?: string; decider?: boolean };
+/** `sub` is the one secondary line of the hover tooltip (what the point was scored on); the full figures live in the details modal. `decider` sets the row's name heavier in the tables; on the map it only selects which interval boxes breathe when `pulse` is on (the mark and label are drawn like every other). `emphasis` (Compare models: the Jev row only) tints the row in the ranked table (ui.tsx RowTint); the map ignores it. */
+export type PRItem = { id: string; name: string; color: string; recall: CI; precision: CI; dashed?: boolean; subset?: string | null; sub?: string; decider?: boolean; emphasis?: boolean };
 
 /** The compact hover tooltip of a recall/precision mark or row: both intervals and the scoring line. */
 export const prTip = (p: PRItem, icon?: ReactNode): TipContent => ({ title: p.name, color: p.color, icon, lines: [["Recall", fmtCI(p.recall)], ["Precision", fmtCI(p.precision)]], sub: p.sub });
@@ -46,15 +46,9 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
   const hl = highlight != null && pts.some((p) => p.id === highlight) ? highlight : null;
   const drawn = hl == null ? shownPts : [...shownPts.filter((p) => p.id !== hl), ...shownPts.filter((p) => p.id === hl)];
 
-  // The pulse runs for a bounded window after the plotted set changes (ids and point estimates); outside the window the boxes are still.
+  // The pulse runs for a bounded window after the plotted set changes (ids and point estimates); outside the window the boxes are still (ui.tsx usePulseWindow).
   const sig = pts.map((p) => `${p.id}:${p.recall[0].toFixed(4)}:${p.precision[0].toFixed(4)}`).join("|");
-  const [pulsing, setPulsing] = useState(false);
-  useEffect(() => {
-    if (!pulse || !sig) { setPulsing(false); return; }
-    setPulsing(true);
-    const t = window.setTimeout(() => setPulsing(false), PULSE_CYCLES * PULSE_CYCLE_MS + 200);
-    return () => window.clearTimeout(t);
-  }, [pulse, sig]);
+  const pulsing = usePulseWindow(sig, pulse, PULSE_CYCLES * PULSE_CYCLE_MS);
 
   const dom = useMemo(() => {
     if (!zoom || pts.length === 0) return { x: [0, 1] as [number, number], y: [0, 1] as [number, number] };

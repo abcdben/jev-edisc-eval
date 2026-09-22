@@ -1,10 +1,10 @@
 import { useRef } from "react";
 import { Logo, LogoGlyph } from "../logos";
-import { CLICK_HINT, DECIDER_TEXT, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth } from "./ui";
+import { CLICK_HINT, DECIDER_TEXT, ROW_PULSE_MS, RowTint, TipBox, fadeStyle, selectable, usePresence, usePulseWindow, useTip, useTween, useWidth } from "./ui";
 import { hoverable } from "./hover";
 
-/** `sub` is the one secondary line of the row's hover tooltip. `empty` replaces the "not measured" text when `value` is null for a reason other than missing data. `decider` (data.ts isDecider) washes the row's logo and name. */
-export type BarItem = { id: string; name: string; color: string; value: number | null; label: string; sub?: string; subset?: string | null; empty?: string; decider?: boolean };
+/** `sub` is the one secondary line of the row's hover tooltip. `empty` replaces the "not measured" text when `value` is null for a reason other than missing data. `decider` (data.ts isDecider) washes the row's logo and name. `emphasis` (Compare models: the Jev row only) tints the row (ui.tsx RowTint). */
+export type BarItem = { id: string; name: string; color: string; value: number | null; label: string; sub?: string; subset?: string | null; empty?: string; decider?: boolean; emphasis?: boolean };
 
 const ROW = 20;
 
@@ -29,6 +29,9 @@ export function OpsBars({ items, axis, unit, sort = true, logos = true, onSelect
   rows.forEach((r, i) => lastTop.current.set(r.id, i * ROW));
   const drawn = presence.map((p) => ({ r: p.item, state: p.state }));
   const widths = useTween(Object.fromEntries(drawn.map(({ r }) => [r.id, barW(r.value)])), 320, () => 0, W);
+  // An emphasised row (`emphasis: true`, Compare models' Jev row) carries a faint tint that breathes for a few cycles when the table loads or its rows change (ui.tsx usePulseWindow, RowTint).
+  const sig = items.map((it) => `${it.id}:${it.value == null ? "-" : it.value.toPrecision(6)}`).join("|");
+  const pulsing = usePulseWindow(sig, items.some((it) => it.emphasis), ROW_PULSE_MS);
   return (
     <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
       <svg viewBox={`0 0 ${W} ${h}`} width={W} height={h} style={{ display: "block", overflow: "visible" }}>
@@ -41,6 +44,7 @@ export function OpsBars({ items, axis, unit, sort = true, logos = true, onSelect
           return (
             <g key={r.id} className={`mv fd${highlight === r.id ? " hl" : ""}`} style={{ transform: `translate(0px, ${top}px)`, ...fadeStyle(state) }} {...hoverable(onHover, r.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
             <g onMouseMove={(e) => show(e, { kind: "row", top, height: ROW, clearX }, content)} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
+              {r.emphasis && <RowTint sig={sig} pulsing={pulsing} width={W} height={ROW} />}
               <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
               {logos ? (
                 <>

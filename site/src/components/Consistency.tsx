@@ -1,7 +1,7 @@
 import { DATA, fmtCI, fmtInt, fmtPct, isDecider, type DetCell, type Rec } from "../data";
 import { Logo, LogoGlyph } from "../logos";
 import { useRef, useState } from "react";
-import { CLICK_HINT, DECIDER_TEXT, Hint, Seg, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth, type HintItem, type TipLine } from "./ui";
+import { CLICK_HINT, DECIDER_TEXT, Hint, ROW_PULSE_MS, RowTint, Seg, TipBox, fadeStyle, selectable, usePresence, usePulseWindow, useTip, useTween, useWidth, type HintItem, type TipLine } from "./ui";
 import { hoverable } from "./hover";
 
 /** The Determinism card's "i" popover. */
@@ -64,8 +64,8 @@ export function detLines(x: DetEntry, r: Rec, name: string): { lines: TipLine[];
   return { lines, notes };
 }
 
-/** `onSelect` makes each row a button (click, Enter, Space), including the rows without a measurement. `highlight` tints the row of that model (cross-chart hover, see hover.tsx); `onHover` reports the row under the pointer or keyboard focus. */
-export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, onHover }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single"; onSelect?: (r: Rec) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
+/** `onSelect` makes each row a button (click, Enter, Space), including the rows without a measurement. `highlight` tints the row of that model (cross-chart hover, see hover.tsx); `onHover` reports the row under the pointer or keyboard focus. `emphasis` (Compare models: the Jev row only) picks the row that carries the faint tint (ui.tsx RowTint). */
+export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, onHover, emphasis }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single"; onSelect?: (r: Rec) => void; highlight?: string | null; onHover?: (id: string | null) => void; emphasis?: (r: Rec) => boolean }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickRow = onSelect && ((r: Rec) => { hide(); onSelect(r); });
   const W = useWidth(hostRef, 760);
@@ -97,6 +97,9 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
   for (const { x } of drawn) if (x.c) { target[`${x.r.model}:v`] = X(x.c.pairwise[0]); target[`${x.r.model}:lo`] = X(x.c.pairwise[1]); target[`${x.r.model}:hi`] = X(x.c.pairwise[2]); }
   const geo = useTween(target, 320, () => LABEL_W, W);
   const g = (k: string) => geo[k] ?? target[k];
+  // An emphasised row (`emphasis`, Compare models' Jev row) carries a faint tint that breathes for a few cycles when the card loads or its rows change (ui.tsx usePulseWindow, RowTint).
+  const sig = shown.map((x) => `${x.r.model}:${x.c ? x.c.pairwise[0].toFixed(5) : "-"}`).join("|");
+  const pulsing = usePulseWindow(sig, !!emphasis && shown.some((x) => emphasis(x.r)), ROW_PULSE_MS);
   return (
     <div className="card">
       <div className="card-t">
@@ -114,11 +117,13 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
             const top = lastTop.current.get(x.r.model) ?? 0, cy = ROW / 2;
             const c = colorOf(x.r), nm = nameOf(x.r), k = x.r.model;
             const dec = isDecider(x.r.kind);
+            const tint = emphasis?.(x.r) ? <RowTint sig={sig} pulsing={pulsing} width={W} height={ROW} /> : null;
             const wrap = { className: `mv fd${highlight === k ? " hl" : ""}`, style: { transform: `translate(0px, ${top}px)`, ...fadeStyle(state) } };
             if (!x.c) {
               return (
                 <g key={k} {...wrap} {...hoverable(onHover, k)}>{/* cross-chart hover (hover.tsx) */}
                 <g {...selectable(pickRow, x.r, nm)}>
+                  {tint}
                   <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
                   <g color="var(--ink-4)"><LogoGlyph model={k} cx={8} cy={cy} opacity={0.5} /></g>
                   <text x={22} y={cy + 4} fontSize={12} fill="var(--ink-4)">{nm}</text>
@@ -132,6 +137,7 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
             return (
               <g key={k} {...wrap} {...hoverable(onHover, k)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
               <g onMouseMove={(e) => show(e, { kind: "row", top, height: ROW, clearX }, { title: `${nm}${x.c!.setting === "t0" ? " · temperature 0" : ""}`, color: c, icon: <Logo model={k} size={12} />, value: v === 0 ? "0" : fmtPct(v, 2), unit: "pairwise disagreement", lines: v === 0 ? undefined : [["95% interval", `${fmtPct(lo, 2)} – ${fmtPct(hi, 2)}`]], sub: sub(x.c!) })} onMouseLeave={hide} {...selectable(pickRow, x.r, nm)}>
+                {tint}
                 <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
                 <g color="var(--ink-2)"><LogoGlyph model={k} cx={8} cy={cy} /></g>
                 <text x={22} y={cy + 4} fontSize={12} fill="var(--ink-2)" style={dec ? DECIDER_TEXT : undefined}>{nm}</text>

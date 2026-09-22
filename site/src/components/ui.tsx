@@ -86,6 +86,36 @@ export function ease(u: number): number {
   return bezier(0.7, 1, Math.min(1, Math.max(0, t)));
 }
 
+/**
+ * A bounded pulsing window: true for `ms` (plus a little slack) after `sig` changes, including on mount, while `enabled`; false otherwise and
+ * under prefers-reduced-motion. `sig` is a signature of what the chart shows (ids and point estimates), so the window opens when the plotted
+ * set changes and stays shut while it is still. Callers key the animated element on `sig` too, so its CSS animation restarts from the top.
+ */
+export function usePulseWindow(sig: string, enabled: boolean, ms: number): boolean {
+  const reduced = useReducedMotion();
+  const [pulsing, setPulsing] = useState(false);
+  useEffect(() => {
+    if (!enabled || !sig || reduced) { setPulsing(false); return; }
+    setPulsing(true);
+    const t = window.setTimeout(() => setPulsing(false), ms + 200);
+    return () => window.clearTimeout(t);
+  }, [enabled, sig, ms, reduced]);
+  return pulsing;
+}
+
+/** How long the emphasised (Jev) row's tint breathes after a table loads or its rows change: ROW_PULSE_CYCLES cycles of the styles.css row-breathe animation (keep in step with `.row-jev.pulse`). */
+export const ROW_PULSE_CYCLES = 3, ROW_PULSE_CYCLE_MS = 1400;
+export const ROW_PULSE_MS = ROW_PULSE_CYCLES * ROW_PULSE_CYCLE_MS;
+
+/**
+ * The full-width tint behind an emphasised table row (Compare models: the Jev row, `emphasis: true` on the item), drawn first in the row's
+ * `.sel` group so the hover band (`.hit`) sits on top; styles.css `.row-jev` is the faint rest tint on the --hl highlight, `.pulse` breathes it
+ * for ROW_PULSE_CYCLES cycles. Keyed on `sig` so the animation restarts whenever the table's rows change; hidden while the row is hovered or highlighted (CSS).
+ */
+export function RowTint({ sig, pulsing, width, height }: { sig: string; pulsing: boolean; width: number; height: number }) {
+  return <rect key={`tint:${sig}`} className={pulsing ? "row-jev pulse" : "row-jev"} x={0} y={0} width={width} height={height} rx={2} />;
+}
+
 type Tween = { from: Record<string, number>; to: Record<string, number>; t0: number };
 const tweenAt = (tw: Tween, now: number, ms: number): Record<string, number> => {
   const e = ms <= 0 ? 1 : ease((now - tw.t0) / ms);

@@ -3,7 +3,7 @@ import type { CI } from "../data";
 import { fmtPct } from "../data";
 import type { PRItem } from "./PRScatter";
 import { Logo, LogoGlyph } from "../logos";
-import { CLICK_HINT, DECIDER_TEXT, TipBox, fadeStyle, selectable, usePresence, useTip, useTween, useWidth } from "./ui";
+import { CLICK_HINT, DECIDER_TEXT, ROW_PULSE_MS, RowTint, TipBox, fadeStyle, selectable, usePresence, usePulseWindow, useTip, useTween, useWidth } from "./ui";
 import { prTip } from "./PRScatter";
 import { hoverable } from "./hover";
 
@@ -48,6 +48,9 @@ export function PRRows({ items, zoom, sortBy, logos = true, onSelect, highlight,
   for (const { r } of drawn) ([r.recall, r.precision] as CI[]).forEach((ci, col) => { if (ci) { target[`${r.id}:${col}:lo`] = sx(col, ci[1]); target[`${r.id}:${col}:hi`] = sx(col, ci[2]); target[`${r.id}:${col}:v`] = sx(col, ci[0]); } });
   const geo = useTween(target, undefined, undefined, W);
   const g = (k: string) => geo[k] ?? target[k];
+  // An emphasised row (`emphasis: true`, Compare models' Jev row) carries a faint tint that breathes for a few cycles when the table loads or its rows change (ui.tsx usePulseWindow, RowTint).
+  const sig = items.map((it) => `${it.id}:${it.recall?.[0].toFixed(4) ?? "-"}:${it.precision?.[0].toFixed(4) ?? "-"}`).join("|");
+  const pulsing = usePulseWindow(sig, items.some((it) => it.emphasis), ROW_PULSE_MS);
   return (
     <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
       <svg viewBox={`0 0 ${W} ${h}`} width={W} height={h} style={{ display: "block", overflow: "visible" }}>
@@ -68,6 +71,7 @@ export function PRRows({ items, zoom, sortBy, logos = true, onSelect, highlight,
           return (
             <g key={r.id} className={`mv fd${highlight === r.id ? " hl" : ""}`} style={{ transform: `translate(0px, ${top}px)`, ...fadeStyle(state) }} {...hoverable(onHover, r.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
             <g onMouseMove={(e) => show(e, { kind: "row", top, height: ROW, clearX: W }, prTip(r, logos ? <Logo model={r.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
+              {r.emphasis && <RowTint sig={sig} pulsing={pulsing} width={W} height={ROW} />}
               <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
               {logos ? (
                 <>
