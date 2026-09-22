@@ -452,7 +452,7 @@ export default function App() {
   const tag: "" | "v0" = ""; // TREC criteria: always the calibrated set; the bare-topic (v0) rows stay exported but are not shown
   const arm: "multi" | "single" = "multi"; // prompting: always all issues per call; the one-issue-per-call rows stay exported but are not shown
   const gray: Gray = "all"; // gray gold labels always count; the exclude-gray view is not shown
-  const [level, setLevel] = useState<Level>("doc");
+  const level: Level = "doc"; // scope: document level or one issue; the pooled every-decision view is not shown
   const [issue, setIssue] = useState<string | null>(null);
   const v: View = { corpus, tag: corpus === "trec" ? tag : "", arm, gray, level, issue };
   const meta = DATA.corpora[corpusKey(v.corpus, v.tag)];
@@ -469,7 +469,7 @@ export default function App() {
   const corpusTitle = `${fmtInt(meta.n_docs)} documents · ${meta.n_issues} issues · ${fmtInt(meta.n_pos_docs_any)} responsive to at least one (${fmtPct(meta.n_pos_docs_any / meta.n_docs, 0)}) · gold: ${meta.gold}`;
   const [more, setMore] = useState(false);
   const nonDefault = [
-    issue ? `issue: ${meta.issues[issue]}` : level === "decision" ? "every decision" : null,
+    issue ? `issue: ${meta.issues[issue]}` : null,
   ].filter((x): x is string => !!x);
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "dark");
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
@@ -512,9 +512,8 @@ export default function App() {
       <div className="controls controls-more">
         <Control label="Scope">
           <span className="select">
-            <select value={issue ?? (level === "doc" ? "__doc" : "__dec")} onChange={(e) => { const val = e.target.value; if (val === "__doc") { setIssue(null); setLevel("doc"); } else if (val === "__dec") { setIssue(null); setLevel("decision"); } else setIssue(val); }}>
+            <select value={issue ?? "__doc"} onChange={(e) => { const val = e.target.value; setIssue(val === "__doc" ? null : val); }}>
               <option value="__doc">Any issue (document level)</option>
-              <option value="__dec">Every decision (document × issue)</option>
               <optgroup label="Single issue">
                 {Object.entries(meta.issues).map(([k, label]) => <option key={k} value={k}>{label}</option>)}
               </optgroup>
@@ -522,7 +521,6 @@ export default function App() {
           </span>
           <Hint title="Scope" items={[
             { k: "Any issue (document level)", v: <mark>One call per document: it counts as <b>responsive if the model says yes to any issue</b>, matching how a review team decides what to produce.</mark> },
-            { k: "Every decision (document × issue)", v: <>One call per <b>document-and-issue pair</b>, all pooled together. A document asked about six issues contributes six decisions.</> },
             { k: "Single issue", v: <>Pick one issue from the list: <b>recall and precision for that issue alone</b>, scored against its own gold labels.</> },
           ]} />
         </Control>
