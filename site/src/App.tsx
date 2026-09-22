@@ -431,7 +431,7 @@ export default function App() {
 
       <div className="controls">
         <Control label="Corpus">
-          <Seg value={corpus} onChange={pickCorpus} options={CORPORA.map((c) => ({ id: c.id, label: c.label, title: c.id === corpus ? corpusTitle : c.short }))} />
+          <Seg value={corpus} onChange={pickCorpus} options={CORPORA.map((c) => ({ id: c.id, label: c.label }))} />
           <Hint title={meta.display} text={corpusTitle} />
         </Control>
         {pageId === "compare"
