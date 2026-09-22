@@ -317,10 +317,6 @@ svg text { user-select: none; font-family: var(--sans); }
 
 .legend-note { color: var(--ink-3); font-size: 12px; margin-top: 8px; display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
 .legend-note .k { display: inline-flex; align-items: center; gap: 6px; }
-/* the Compare models key under the Recall and precision card (App.tsx PRCard `dmKey`): the decision-model swatch is the same --hl band as the emphasised rows (.row-dm), the LLM swatch plain */
-.legend-note.key { margin-top: 4px; }
-.legend-note .sw { width: 14px; height: 10px; border-radius: 2px; border: 1px solid var(--line-2); background: var(--panel); display: inline-block; flex: none; }
-.legend-note .sw.dm { background: var(--hl); border-color: transparent; opacity: 0.85; }
 
 .empty { color: var(--ink-4); font-size: 13px; padding: 40px 0; text-align: center; }
 

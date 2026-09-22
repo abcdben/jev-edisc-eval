@@ -29,8 +29,7 @@ const KIND_SHORT: Record<Kind, string> = { system1: "Decision models", system1_f
 /** `pulse` (Compare models only: the Configurations page shows one family, so no decider to single out) lets the deciders' interval boxes breathe for a few cycles when the map loads or its points change. */
 /** `ranked` picks the ranked view's component: `rail` (PRRail, Compare models) or `heat` (PRHeat, Compare configurations, differenced against `referenceId`, the family's base configuration). Both draw their own legend line. */
 /** `sig` names what the card is showing (the corpus, and the family on Configurations): the `ranked` option's accent (ui.tsx Seg `accent`) breathes once when the card mounts and again whenever it changes, not on every model toggle. */
-/** `dmKey` (Compare models) adds a key under the legend line: the --hl band that marks the decision-model rows against a plain swatch for the LLMs. */
-function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false, ranked, referenceId, sig = "card", dmKey = false }: { items: PRItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean; ranked: "rail" | "heat"; referenceId?: string; sig?: string; dmKey?: boolean }) {
+function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false, ranked, referenceId, sig = "card" }: { items: PRItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean; ranked: "rail" | "heat"; referenceId?: string; sig?: string }) {
   const setChart = onChart;
   const [zoom, setZoom] = useState(defaultZoom);
   const onSelect = explain && ((it: PRItem) => explain(it.id));
@@ -57,12 +56,6 @@ function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, h
         <div className="legend-note">
           <span>Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span>
           {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
-        </div>
-      )}
-      {dmKey && (
-        <div className="legend-note key">
-          <span className="k"><span className="sw dm" />Decision model (Jev, Laya)</span>
-          <span className="k"><span className="sw" />LLM</span>
         </div>
       )}
     </div>
@@ -286,7 +279,7 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
         <div className={`dash${chart !== "map" ? " ranked" : ""}`}>
           <PRCard
             items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
-            pulse ranked="rail" sig={v.corpus} dmKey
+            pulse ranked="rail" sig={v.corpus}
           />
           <div className="stack">
             <OpsCards recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} explain={explain} decider={decider} emphasis={emphasis} />
