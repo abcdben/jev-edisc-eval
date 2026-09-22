@@ -67,7 +67,7 @@ const CONFIG_PR_ITEMS: HintItem[] = [
   { k: "Default view", v: <><b>Ranked rows with axes fitted to the data</b>, since configurations differ less than model families; switch to map and 0–100% for the Compare scale.</> },
   { k: "Intervals", v: <><b>95% Wilson</b> score; * marks a stratified subset.</> },
   { k: "Levers", v: <><b>Hover a configuration</b> for what its lever changes.</> },
-  { k: "★", v: <mark><b>The optimized configuration</b>, selected on the Veridian dev split.</mark> },
+  { k: "★", v: <mark><b>The iterated configuration</b>, selected on the Veridian dev split and shown on Compare models as Jev w/ Iteration.</mark> },
 ];
 
 // ------------------------------------------------------------------------------------------------
@@ -366,7 +366,7 @@ function VariantPicker({ v, grp, setGrp, off, setOff, explain }: { v: View; grp:
     items: variants.map((r) => ({
       id: r.variant!, label: VARIANT_LABEL[r.variant!] ?? r.variant!, title: r.lever ?? undefined,
       mark: <span className="sw" style={{ background: variantColor(r.variant!, G.recipe) }} />,
-      suffix: <>{r.variant === G.recipe && <span className="star" title="optimized configuration: selected on the Veridian dev split">★</span>}{starOf(r) && <span className="sub" title={`scored on ${r.subset}`}>*</span>}</>,
+      suffix: <>{r.variant === G.recipe && <span className="star" title="iterated configuration: selected on the Veridian dev split">★</span>}{starOf(r) && <span className="sub" title={`scored on ${r.subset}`}>*</span>}</>,
       detail: () => explain(r.model),
     })),
   }];
