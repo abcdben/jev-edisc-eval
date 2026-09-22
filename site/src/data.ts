@@ -86,7 +86,7 @@ export const modelKind = (key: string): string | undefined => DATA.models[key]?.
 /** Headline roster, in display order, with a stable colour each. `kind` overrides the record's kind for grouping on the Compare page. HIDDEN_MODELS are filtered out below. */
 const ALL_PRIMARY: { key: string; color: string; short: string; note: string; kind?: Kind }[] = [
   { key: "jev@base", color: "var(--c-jev)", short: "Jev", note: "TypeSafe Jev 1.13, default configuration: Noul question form, prose criteria, RFP phrasing, matter context." },
-  { key: "laya-ft", color: "var(--c-laya-ft)", short: "Laya", kind: "system1", note: "ConvAI Laya, fine-tuned (RLCD) on a 30% document-level dev split of the same corpus and scored on the held-out 70%; every other row is zero-shot. The labeled data it needed is not counted in the time and cost panels. Zero-shot Laya configurations are on the Configurations page." },
+  { key: "laya-ft", color: "var(--c-laya-ft)", short: "Laya", kind: "system1", note: "ConvAI Laya, fine-tuned: the one supervised row in this zero-shot comparison. Fine-tuned (RLCD) on a 30% document-level dev split of the same corpus and scored on the held-out 70%; every other row is zero-shot. The labeled data it needed is not counted in the time and cost panels. Zero-shot Laya configurations are on the Configurations page." },
   { key: "claude-haiku-4.5", color: "var(--c-haiku)", short: "Haiku 4.5", note: "Anthropic Claude Haiku 4.5, structured JSON output, default effort." },
   { key: "claude-sonnet-5", color: "var(--c-sonnet)", short: "Sonnet 5", note: "Anthropic Claude Sonnet 5, structured JSON output, default effort, prompt caching on the all-issues arm." },
   { key: "gpt-5.6-luna", color: "var(--c-luna)", short: "GPT-5.6 Luna", note: "OpenAI GPT-5.6 Luna, structured output, minimal reasoning, flex pricing (50% off list)." },
@@ -175,7 +175,7 @@ export const VARIANT_DEFINITION: Record<string, string> = {
   // Laya, supervised (the Compare models row)
   "laya-ft": "Laya's compact + chunk request is sent to a checkpoint fine-tuned (RLCD) on a 30% document-level dev split of {corpus}'s own gold labels and scored on the held-out 70%; the request does not change, the weights do",
   // Generative models: one definition, the prompt is the same for every model
-  "llm": "one chat completion per document (all issues at once) or per issue, with a JSON schema the vendor enforces on the reply: a label and p(responsive), no free text",
+  "llm": "one zero-shot chat completion per document (all issues at once) or per issue, with a JSON schema the vendor enforces on the reply: a label and p(responsive), no free text",
 };
 /** The definition for a model key on a corpus: resolves the Laya checkpoints and the {corpus} placeholder. */
 export const variantDefinition = (key: string, corpusLabel: string): string | undefined => {

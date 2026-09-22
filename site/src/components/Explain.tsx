@@ -104,7 +104,7 @@ function leadFor(group: string, key: string, corpus: string, groupLabel: string)
     const star = v === "state_string" ? " It is the configuration selected on the Veridian dev split." : "";
     return { pre: `${name} is the Jev 1.13 configuration in which `, def, post: `. Everything else matches the default.${star}` };
   }
-  if (key === "laya-ft") return { pre: `**${groupLabel} · fine-tuned** is the Laya row on Compare models: `, def, post: ". Not on equal footing with the zero-shot configurations." };
+  if (key === "laya-ft") return { pre: `**${groupLabel} · fine-tuned** is the Laya row on Compare models, the one supervised row in this zero-shot comparison: `, def, post: ". Not on equal footing with the zero-shot configurations." };
   if (group.startsWith("laya")) {
     const ckpt = group === "laya-typed" ? "the typed Laya checkpoint" : group === "laya-multilingual" ? "the multilingual Laya checkpoint" : "ConvAI Laya (English checkpoint), a local decision model";
     if (v === "base") return { pre: `${name} is the baseline configuration of ${ckpt}: `, def, post: `. Every other ${group === "laya" ? "zero-shot " : ""}${groupLabel} configuration changes one lever from this one.` };

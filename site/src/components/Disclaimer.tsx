@@ -32,13 +32,14 @@ export function useDisclaimer() {
 
 export function DisclaimerModal({ onClose }: { onClose: () => void }) {
   return (
-    <Modal className="disclaimer" eyebrow="About this comparison" title="Decision models against LLMs for relevance review" onClose={onClose}>
+    <Modal className="disclaimer" eyebrow="About this comparison" title="A zero-shot bake-off: decision models against LLMs on relevance review" onClose={onClose}>
       <div className="disc-body">
         <h4>What was tested</h4>
         <p>
-          <b>Two new decision models</b>, Jev (TypeSafe AI) and Laya (ConvAI), against <b>seven commercially available language models</b>: Haiku 4.5,
-          Sonnet 5, GPT‑5.6 Luna and Terra, Gemini 3.5 Flash‑Lite and 3.8 Flash, and a locally run Gemma 3 12B. The task is the one review teams
-          do in discovery: <mark>is this document responsive, and to which issues.</mark>
+          <b>A zero‑shot comparison</b> of <b>two new decision models</b>, Jev (TypeSafe AI) and Laya (ConvAI), against <b>seven commercially available
+          language models</b>: Haiku 4.5, Sonnet 5, GPT‑5.6 Luna and Terra, Gemini 3.5 Flash‑Lite and 3.8 Flash, and a locally run Gemma 3 12B. No model
+          was trained on examples or given a prompt of its own. The task is the one review teams do in discovery: <mark>is this document responsive, and
+          to which issues.</mark>
         </p>
         <h4>Data sets</h4>
         <ul>
@@ -57,17 +58,18 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
           <li><b>Determinism</b>: how often a model changes its answer on the same document across repeated runs.</li>
         </ul>
         <p>
-          <b>Nothing was iterated.</b> In practice a review team refines its criteria against sample documents many times before scoring a
-          population; here <mark>every model received the criteria as written, once, through a single shared prompt that was not tuned for any
-          model</mark>. The one exception is TREC, where the NIST topic sentences were refined once on a 668‑email calibration set disjoint from the
-          evaluation set, and the refined wording was then given to every model alike. Laya's fine‑tuned checkpoint learned from a labelled split of
-          each corpus; its prompt was not iterated either. The figures therefore compare models on like inputs; they are <b>not a ceiling on what
-          any model can do</b> with a tuned workflow.
+          <b>Zero‑shot means nothing was iterated.</b> In practice a review team refines its criteria against sample documents many times before
+          scoring a population; here <mark>every model received the criteria as written, once, through a single shared prompt that was not tuned for
+          any model</mark>. The one exception on the criteria is TREC, where the NIST topic sentences were refined once on a 668‑email calibration set
+          disjoint from the evaluation set, and the refined wording was then given to every model alike. <b>The one exception to zero‑shot is the Laya
+          row</b>: it is a fine‑tuned checkpoint that learned from a labelled split of each corpus, the single supervised row on the site; its prompt was
+          not iterated either, and Laya's zero‑shot configurations are on the Configurations page. The figures therefore compare models on like inputs;
+          they are <b>not a ceiling on what any model can do</b> with a tuned workflow.
         </p>
         <h4>What this is</h4>
         <p>
-          <mark>This is a point‑in‑time snapshot of model performance on established industry data sets</mark>, showing where these new decision models
-          stand on review tasks next to the models people already use. The same criteria, documents and scoring were applied to every model, and
+          <mark>This is a point‑in‑time snapshot of a zero‑shot bake‑off on established industry data sets</mark>, showing where these new decision
+          models stand on review tasks next to the models people already use. The same criteria, documents and scoring were applied to every model, and
           nothing was tuned against the test data; even so, <mark>assumptions and decisions were made that are not documented on this site</mark>, and
           each result rests on choices about criteria, configurations, pricing and sampling that could shift on another matter.
           <b>It is not meant as a peer‑reviewed study.</b>

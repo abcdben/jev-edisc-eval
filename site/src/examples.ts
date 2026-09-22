@@ -46,18 +46,18 @@ export const EX = raw as unknown as Examples;
 export const EX_GROUPS: { id: string; label: string; match: (k: string) => boolean; intro: string; hidden?: boolean }[] = [
   {
     id: "jev", label: "Jev", match: (k) => k.startsWith("jev@"),
-    intro: "Jev is a decision model: it does not write text. Each call sends a state (the document, and usually the matter background) plus one or more typed questions; the answer to each is a **probability**, an option with probabilities, or a level on an ordinal scale. Switch configurations to see exactly what changes in the request, and what the model returned for the same document.",
+    intro: "Jev is a decision model: it does not write text. Each call sends a state (the document, and usually the matter background) plus one or more typed questions; the answer to each is a **probability**, an option with probabilities, or a level on an ordinal scale. Every configuration is zero-shot: the criteria as written, no examples. Switch configurations to see exactly what changes in the request, and what the model returned for the same document.",
   },
   {
     // the fine-tuned checkpoint (the Laya row on Compare models, key `laya-ft`) and the zero-shot English-checkpoint configurations it was built from
     id: "laya", label: "Laya", match: (k) => k === "laya-ft" || k.startsWith("laya@"),
-    intro: "Laya is a local decision model with the same three question types (Noul / Choice / Score). It reads at most **512 tokens**: the question head takes up to 192, the rest is the document, truncated from the right. Two of its configurations (compact, chunked) exist only to work around that limit. The **fine-tuned** configuration is the Laya row on Compare models: the compact + chunk request sent to a checkpoint fine-tuned (RLCD) on a 30% document-level dev split of the corpus and scored on the held-out 70%; every other configuration here is zero-shot, and the labeled data the fine-tuning needed is not counted in the time and cost panels.",
+    intro: "Laya is a local decision model with the same three question types (Noul / Choice / Score). It reads at most **512 tokens**: the question head takes up to 192, the rest is the document, truncated from the right. Two of its configurations (compact, chunked) exist only to work around that limit. The **fine-tuned** configuration is the Laya row on Compare models and the one supervised row in this zero-shot comparison: the compact + chunk request sent to a checkpoint fine-tuned (RLCD) on a 30% document-level dev split of the corpus and scored on the held-out 70%; every other configuration here is zero-shot, and the labeled data the fine-tuning needed is not counted in the time and cost panels.",
   },
   { id: "laya-typed", label: "Laya · typed", hidden: true, match: (k) => k.startsWith("laya-typed@"), intro: "The typed Laya checkpoint, zero-shot, same request shapes as Laya." },
   { id: "laya-multilingual", label: "Laya · multilingual", hidden: true, match: (k) => k.startsWith("laya-multilingual@"), intro: "The multilingual Laya checkpoint, zero-shot, same request shapes as Laya." },
   {
     id: "llm", label: "Language models", match: (k) => !k.includes("@") && k !== "lexical" && k !== "laya-ft",
-    intro: "Every generative model received the **same prompt**, described below; the reply is a label and a probability, nothing else. Switch models to see the settings that differ; the prompt does not.",
+    intro: "Every generative model received the **same zero-shot prompt**, described below, with no examples and no per-model tuning; the reply is a label and a probability, nothing else. Switch models to see the settings that differ; the prompt does not.",
   },
 ];
 
