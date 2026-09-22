@@ -6,10 +6,9 @@ import { hoverable } from "./hover";
 
 /** The Determinism card's "i" popover. */
 const DET_ITEMS: HintItem[] = [
-  { k: "What", v: <mark><b>Whether a model gives the same answer when asked the same question again.</b></mark> },
-  { k: "Why", v: <>A review has to be <b>repeatable to be defensible</b>: a document coded responsive today should be coded responsive tomorrow. A model that flips answers adds noise a team cannot audit away.</> },
-  { k: "How", v: <>Each model coded a fixed panel of <b>300 documents five times</b> under identical settings: 100 with a debatable gold label, 100 clear positives, 100 clear negatives. The bar is the probability that two runs disagree on a decision, with a 95% bootstrap whisker. The same panel is shown for every corpus.</> },
-  { k: "t = 0", v: <><b>Temperature 0</b> asks an LLM for its most likely answer instead of sampling; the toggle re-runs the test that way where the API accepts it. Decision models have no sampling to turn off.</> },
+  { k: "What", v: <mark><b>Same answer when asked the same question again.</b></mark> },
+  { k: "How", v: <><b>300 documents coded 5 times</b>, identical settings. Bar: probability two runs disagree; 95% bootstrap interval.</> },
+  { k: "t = 0", v: <><b>Temperature 0</b> where the API allows it. Decision models have no sampling.</> },
 ];
 
 const LABEL_W = 168, ROW = 20;

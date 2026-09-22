@@ -176,12 +176,11 @@ function useRows(v: View) {
 
 /** The Inference latency and Cost hints: machine time and price only. */
 const LATENCY_ITEMS: HintItem[] = [
-  { k: "Measures", v: <><b>Median round-trip time to score one document</b> (all issues in one request), one request at a time; p95 in the hover.</> },
-  { k: "Hosted models", v: <>Includes network and the vendor's per-request overhead as observed from the client; <b>rate limits and parallel throughput are not measured</b>, so this is per-request latency, not capacity.</> },
-  { k: "GPU rows", v: <>Laya and Gemma ran locally on <b>one rented A100</b>, so no network is included.</> },
-  { k: "Laya", v: <>Its latency is the same forward pass as the zero-shot Compact + Chunked configuration, measured in a dedicated single-request run.</> },
+  { k: "Measures", v: <><b>Median round-trip to score one document</b>, one request at a time; p95 on hover.</> },
+  { k: "Hosted", v: <>Includes network. <b>Rate limits and parallel throughput not measured.</b></> },
+  { k: "Local", v: <>Laya and Gemma on <b>one A100</b>; no network.</> },
 ];
-/** What a document is on each corpus, for the Cost hint's per-document line. */
+/** What a document is on each corpus, for the Cost hint's basis line. */
 const DOC_NOUN: Record<string, string> = { trec: "email", mnk: "email" };
 /**
  * The Cost hint for the rows the card shows: the per-100k basis, then the mean billed tokens per document across the shown LLM rows
@@ -192,12 +191,12 @@ function costItems(recs: Rec[]): HintItem[] {
   const mean = (f: (r: Rec) => number | null) => { const v = llm.map(f).filter((x): x is number => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
   const tin = mean((r) => r.ops.tokens_in_per_doc), tout = mean((r) => r.ops.tokens_out_per_doc);
   const noun = DOC_NOUN[recs[0]?.corpus ?? ""] ?? "document";
-  const tokens = tin == null ? null : `${fmtInt(Math.round(tin / 100) * 100)} input and ${fmtInt(Math.max(10, Math.round((tout ?? 0) / 10) * 10))} output tokens`;
+  const tokens = tin == null ? null : `${fmtInt(Math.round(tin / 100) * 100)} in / ${fmtInt(Math.max(10, Math.round((tout ?? 0) / 10) * 10))} out`;
   return [
-    { k: "Measures", v: <><b>API price as paid</b>, per document, multiplied by 100,000.</> },
-    { k: "Per document", v: <>The <b>actual tokens billed</b> for each document in this corpus: the issue criteria and matter context plus the {noun}{tokens ? <>, about <b>{tokens}</b> on average for the LLMs (tokenizers differ by vendor)</> : null}, at each vendor's per-token price. So the figure is for <b>100,000 {noun}s of this corpus's average length</b>.</> },
-    { k: "Pricing", v: <>OpenAI on <b>flex pricing (half of list)</b>; Anthropic with prompt caching on the all-issues arm.</> },
-    { k: "GPU rows", v: <mark>Laya and Gemma: a rented {GPU_NAME} at ${GPU_USD_PER_HOUR.toFixed(2)}/h times the median latency, one request at a time, so <b>an upper bound</b>.</mark> },
+    { k: "Measures", v: <><b>API price as paid</b> × 100,000 documents.</> },
+    { k: "Basis", v: <>This corpus's average billed tokens per {noun}{tokens ? <>: <b>≈{tokens}</b> for the LLMs</> : null}.</> },
+    { k: "Pricing", v: <>OpenAI <b>flex (half of list)</b>; Anthropic prompt caching.</> },
+    { k: "Local", v: <mark>Laya and Gemma: A100 rental at ${GPU_USD_PER_HOUR.toFixed(2)}/h × latency, <b>an upper bound</b>.</mark> },
   ];
 }
 
