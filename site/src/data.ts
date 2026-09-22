@@ -102,6 +102,15 @@ export const HIDDEN_MODELS: string[] = [
   "tar@t1_1000", "tar@t1_1000_f1", "tar@t1_1000_noisy", "tar@t1_5000", "tar@t1_5000_f1", "tar@t1_5000_noisy",
 ];
 export const isHidden = (key: string): boolean => HIDDEN_MODELS.includes(key);
+/**
+ * Rows that ran but are not plotted on one corpus: the record stays in findings.json and the details modal still opens on it, but the
+ * Compare page charts drop it and the Models picker shows it disabled with the reason. Keyed by model key, one entry per corpus.
+ */
+export const UNSHOWN: Record<string, { corpus: string; why: string }[]> = {
+  "laya-ft": [{ corpus: "cuad", why: "Not shown on CUAD: the fine-tune collapsed, labelling every paragraph not-responsive (recall 0%, precision undefined)." }],
+};
+/** The reason a model is not shown on a corpus, or undefined when it is plotted as usual. */
+export const unshownWhy = (model: string, corpus: string): string | undefined => UNSHOWN[model]?.find((u) => u.corpus === corpus)?.why;
 /** The kind of a model key (headline roster or configuration), from the models map or the first record that ran it. */
 export const modelKind = (key: string): string | undefined => DATA.models[key]?.kind ?? DATA.records.find((r) => r.model === key)?.kind;
 
