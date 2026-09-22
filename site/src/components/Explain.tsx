@@ -261,6 +261,7 @@ const clip = (s: string, n = 120) => {
 function TitleMenu({ label, value, items, onPick, muted, wide, ariaLabel, foot }: {
   label: string; value: string; items: MenuItem[]; onPick: (id: string) => void; muted?: boolean; wide?: boolean; ariaLabel: string; foot?: string;
 }) {
+  // ariaLabel doubles as the small caption over the control ("Family", "Configuration", "Model") so it reads as a selector, not a title
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLSpanElement>(null);
   const btn = useRef<HTMLButtonElement>(null);
@@ -293,11 +294,12 @@ function TitleMenu({ label, value, items, onPick, muted, wide, ariaLabel, foot }
   };
   return (
     <span ref={wrap} className={`ex-menu${open ? " open" : ""}`} onKeyDown={onKey}>
+      <span className="ex-menu-cap" aria-hidden="true">{ariaLabel}</span>
       <button
         ref={btn} type="button" className={`ex-menu-b${muted ? " muted" : ""}`} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? id : undefined} aria-label={`${ariaLabel}: ${label}`}
         onClick={() => setOpen((o) => !o)}
       >
-        {label}<svg className="ex-chev" aria-hidden="true" viewBox="0 0 10 10" width="10" height="10"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        <span className="ex-menu-v">{label}</span><svg className="ex-chev" aria-hidden="true" viewBox="0 0 10 10" width="11" height="11"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
       </button>
       {open && (
         <div ref={pop} id={id} role="menu" aria-label={ariaLabel} className={`ex-menu-pop${wide ? " wide" : ""}`} style={{ left: place?.left ?? 0, top: place?.top ?? 0, visibility: place ? "visible" : "hidden" }}>
@@ -386,13 +388,10 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
             <h2 className="ex-title">
               <TitleMenu label={G.label} value={group} items={familyItems} ariaLabel="Family" onPick={(g) => { setGroup(g); setKey(membersOf(corpus, g)[0]); }} />
               {cfg && members.length > 1 && (
-                <>
-                  <span className="ex-title-dot" aria-hidden="true">·</span>
-                  <TitleMenu
-                    label={memberLabel(active)} value={active} items={memberItems} muted wide ariaLabel={group === "llm" ? "Model" : "Configuration"}
-                    onPick={setKey} foot={`← → cycle ${group === "llm" ? "models" : "configurations"}`}
-                  />
-                </>
+                <TitleMenu
+                  label={memberLabel(active)} value={active} items={memberItems} wide ariaLabel={group === "llm" ? "Model" : "Configuration"}
+                  onPick={setKey} foot={`← → cycle ${group === "llm" ? "models" : "configurations"}`}
+                />
               )}
               {active && isDecider(modelKind(active)) && <DeciderTag />}
             </h2>

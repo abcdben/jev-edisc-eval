@@ -362,21 +362,23 @@ svg text { user-select: none; font-family: var(--sans); }
   display: flex; flex-direction: column; box-shadow: 0 30px 80px rgba(0,0,0,0.45); overflow: hidden;
 }
 .ex-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 18px 24px 14px; border-bottom: 1px solid var(--line); }
-.ex-head h2 { margin: 2px 0 0; font-size: 20px; font-weight: 500; letter-spacing: -0.015em; }
-/* the details modal's title is two menu buttons, [family ▾] · [configuration ▾], styled as the title text */
-.ex-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 8px; }
-.ex-title-dot { color: var(--ink-4); font-weight: 400; }
-.ex-menu { position: relative; display: inline-flex; align-items: baseline; }
+.ex-head h2 { margin: 8px 0 0; font-size: 20px; font-weight: 500; letter-spacing: -0.015em; }
+.ex-title > .decider-tag { align-self: flex-end; margin-bottom: 9px; }
+/* the details modal's title is two labelled selectors, FAMILY [Jev ▾]  CONFIGURATION [Choice form ▾], drawn as select-style fields so they read as controls */
+.ex-title { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 6px 14px; }
+.ex-menu { position: relative; display: inline-flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.ex-menu-cap { font-size: 10.5px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-4); line-height: 1; }
 .ex-menu-b {
-  border: 0; background: none; padding: 0; margin: 0; font: inherit; color: inherit; letter-spacing: inherit; cursor: pointer; text-align: left;
-  border-radius: 3px; text-decoration: underline transparent; text-decoration-thickness: 1px; text-underline-offset: 4px; transition: text-decoration-color 120ms;
+  display: inline-flex; align-items: center; gap: 10px; margin: 0; padding: 6px 10px 6px 12px; font: inherit; font-size: 16px; font-weight: 500; letter-spacing: -0.01em;
+  color: var(--ink); background: var(--panel); border: 1px solid var(--line-2); border-radius: 7px; cursor: pointer; text-align: left; line-height: 1.2;
+  transition: border-color 120ms, background-color 120ms, box-shadow 120ms;
 }
-.ex-menu-b.muted { color: var(--ink-3); font-weight: 400; }
-.ex-menu-b:hover, .ex-menu.open .ex-menu-b { text-decoration-color: var(--ink-3); }
-.ex-menu-b:focus-visible { outline: 1.5px solid var(--ink-3); outline-offset: 3px; }
-.ex-chev { display: inline-block; margin-left: 5px; color: var(--ink-4); vertical-align: 0.05em; transition: transform 120ms, color 120ms; }
-.ex-menu-b:hover .ex-chev, .ex-menu.open .ex-chev { color: var(--ink-3); }
-.ex-menu.open .ex-chev { transform: translateY(1px); }
+.ex-menu-b:hover, .ex-menu.open .ex-menu-b { border-color: var(--ink-3); }
+.ex-menu.open .ex-menu-b { box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink-3) 14%, transparent); }
+.ex-menu-b:focus-visible { outline: 1.5px solid var(--ink-3); outline-offset: 2px; }
+.ex-chev { display: inline-block; flex: none; color: var(--ink-3); transition: transform 120ms, color 120ms; }
+.ex-menu-b:hover .ex-chev, .ex-menu.open .ex-chev { color: var(--ink); }
+.ex-menu.open .ex-chev { transform: rotate(180deg); }
 /* the menu: position: fixed (the modal box clips overflow), placed by usePopPlace; .wide is the configuration menu with definitions */
 .ex-menu-pop {
   position: fixed; z-index: 240; min-width: 200px; max-width: calc(100vw - 16px); background: var(--panel); color: var(--ink); border: 1px solid var(--line);
