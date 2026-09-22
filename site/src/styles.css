@@ -216,6 +216,9 @@ svg text { user-select: none; font-family: var(--sans); }
 .card-t h3 { margin: 0; font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; }
 .card-t .unit { color: var(--ink-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; }
 .card-t .right { margin-left: auto; display: flex; align-items: center; gap: 8px; flex: none; }
+/* quiet text button in a card head (the "stop pulse" / "pulse" toggle of the Compare map): muted, no chrome, full ink on hover */
+.btn-q { border: 0; background: none; padding: 2px 4px; font: inherit; font-size: 11.5px; color: var(--ink-3); cursor: pointer; white-space: nowrap; transition: color 120ms; }
+.btn-q:hover { color: var(--ink); }
 .card [data-tip-host] { min-width: 0; }
 
 /* hint (i): click opens a small popover below the icon, right-aligned to it; .l flips it to left-aligned, .up puts it above */
@@ -282,9 +285,15 @@ svg text { user-select: none; font-family: var(--sans); }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes rise-2 { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
 @keyframes rise-4 { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+/* decider boxes on the Compare map (PRScatter `pulse`): the shaded 95% box breathes between its resting fill and 1.6x that over 3.8 s;
+   the animation overrides the rect's inline fill-opacity, so the rest state is exactly the still look. Size, mark and label are untouched.
+   PRScatter drops the class from a highlighted box so the deeper hover fill stays steady. The "stop pulse" button in the card head turns it off. */
+.pr-box.pulse { animation: box-breathe 3.8s ease-in-out infinite; }
+@keyframes box-breathe { 0%, 100% { fill-opacity: var(--box-alpha); } 50% { fill-opacity: calc(var(--box-alpha) * 1.6); } }
 /* reduced motion: every CSS transition and animation on the page completes at once (the hooks snap on the same media query) */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; }
+  .pr-box.pulse { animation: none; }
 }
 
 /* decider marker (data.ts isDecider): the name a step heavier and in full ink; the charts do the same in SVG (ui.tsx DECIDER_TEXT) */

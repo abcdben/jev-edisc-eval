@@ -22,10 +22,17 @@ type Chart = "map" | "ranked";
 const PICK_ORDER: Kind[] = ["system1", "system1_ft", "baseline", "llm", "local_llm", "tar"];
 const KIND_SHORT: Record<Kind, string> = { system1: "Deciders", system1_ft: "Supervised", llm: "LLM", local_llm: "Local LLM", tar: "Classical TAR", baseline: "Floor" };
 
+/** The decider-box pulse on the Compare map (PRScatter `pulse`) remembers being stopped; on by default. */
+const PULSE_KEY = "prPulse";
+const readPulse = (): boolean => localStorage.getItem(PULSE_KEY) !== "off";
+
 /** Recall/precision card with a map (scatter with interval boxes) or ranked (rows with whiskers) view. The chart mode is owned by the section so it can switch the dashboard layout. `explain` opens the details modal for a clicked mark or row (item ids are model keys). */
-function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain }: { items: PRItem[]; hint: HintItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void }) {
+/** `pulse` (Compare models only: the Configurations page shows one family, so no decider to single out) lets the deciders' interval boxes breathe on the map and adds the quiet "stop pulse" / "pulse" button to the card head. */
+function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false }: { items: PRItem[]; hint: HintItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean }) {
   const setChart = onChart;
   const [zoom, setZoom] = useState(defaultZoom);
+  const [pulsing, setPulsing] = useState<boolean>(() => readPulse());
+  useEffect(() => { if (pulse) localStorage.setItem(PULSE_KEY, pulsing ? "on" : "off"); }, [pulsing, pulse]);
   const onSelect = explain && ((it: PRItem) => explain(it.id));
   const hover = useHover();
   return (
@@ -35,10 +42,15 @@ function PRCard({ items, hint, chart, onChart, defaultZoom, emptyText, logos = t
         <span className="right">
           <Seg value={chart} onChange={setChart} options={[{ id: "map", label: "map", title: "Recall against precision, one box per model" }, { id: "ranked", label: "ranked", title: "Rows sorted by F1, whiskers for the intervals" }]} />
           <Seg value={zoom ? "zoom" : "full"} onChange={(z) => setZoom(z === "zoom")} options={[{ id: "full", label: "0–100%" }, { id: "zoom", label: "fit to data" }]} />
+          {pulse && chart === "map" && (
+            <button type="button" className="btn-q" onClick={() => setPulsing((p) => !p)} aria-pressed={pulsing} title={pulsing ? "Stop the deciders' interval boxes breathing" : "Let the deciders' interval boxes breathe"}>
+              {pulsing ? "stop pulse" : "pulse"}
+            </button>
+          )}
           <Hint items={hint} more="About" />
         </span>
       </div>
-      {chart === "map" ? <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill onSelect={onSelect} highlight={hover.id} onHover={hover.set} /></div> : <PRRows items={items} zoom={zoom} sortBy="recall" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />}
+      {chart === "map" ? <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill onSelect={onSelect} highlight={hover.id} onHover={hover.set} pulse={pulse && pulsing} /></div> : <PRRows items={items} zoom={zoom} sortBy="recall" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />}
       <div className="legend-note">
         {chart === "map" ? <span>Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span> : <span>Sorted by recall. Dot: point estimate. Whisker: 95% interval.</span>}
         {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
@@ -337,7 +349,7 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
         <div className={`dash${chart === "ranked" ? " ranked" : ""}`}>
           <PRCard
             items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
-            hint={PR_ITEMS}
+            hint={PR_ITEMS} pulse
           />
           <div className="stack">
             <OpsCards recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} explain={explain} decider={decider} />

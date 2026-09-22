@@ -4,7 +4,7 @@ import { Logo, LogoGlyph, logoFor } from "../logos";
 import { CLICK_HINT, TipBox, fadeStyle, selectable, usePresence, useSize, useTip, useTween, type TipContent } from "./ui";
 import { hoverable } from "./hover";
 
-/** `sub` is the one secondary line of the hover tooltip (what the point was scored on); the full figures live in the details modal. `decider` is kept on the item for the tables; the map draws every mark alike. */
+/** `sub` is the one secondary line of the hover tooltip (what the point was scored on); the full figures live in the details modal. `decider` sets the row's name heavier in the tables; on the map it only selects which interval boxes breathe when `pulse` is on (the mark and label are drawn like every other). */
 export type PRItem = { id: string; name: string; color: string; recall: CI; precision: CI; dashed?: boolean; subset?: string | null; sub?: string; decider?: boolean };
 
 /** The compact hover tooltip of a recall/precision mark or row: both intervals and the scoring line. */
@@ -25,7 +25,8 @@ function niceTicks(lo: number, hi: number): number[] {
 /** `onSelect` makes each mark (dot, label and interval box) a button: click, Enter or Space. */
 /** `highlight` (cross-chart hover, see hover.tsx) gives that item a subtle emphasis: a deeper box fill, its label forced visible and the item drawn on top; the mark itself is unchanged. `onHover` reports the mark or box under the pointer or keyboard focus. */
 /** Motion (ui.tsx): marks, boxes and labels ease to their new place over 320 ms when the corpus, scope, gold or zoom changes; items fade in and out over 150 ms. */
-export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover }: { items: PRItem[]; zoom: boolean; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
+/** `pulse` lets the interval boxes of decider items (`decider: true`) breathe: a slow fill-opacity cycle (styles.css .pr-box.pulse) on the shaded box only, never the mark or label; a highlighted box keeps its steady deeper fill instead. Off by default and under prefers-reduced-motion. */
+export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover, pulse = false }: { items: PRItem[]; zoom: boolean; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickMark = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const sz = useSize(hostRef, { w: 760, h: height });
@@ -129,7 +130,8 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
             <g key={`b${p.id}`} className="fd" style={fadeStyle(stateOf[p.id] ?? "exit")}>{/* fade in / out (ui.tsx usePresence) */}
             <g {...hoverable(onHover, p.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
             <g onMouseMove={(e) => show(e, mark, prTip(p, logos ? <Logo model={p.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)} tabIndex={-1}>
-              <rect x={g(p.id, "x0")} y={g(p.id, "y0")} width={g(p.id, "w")} height={g(p.id, "h")} fill={p.color} style={{ fillOpacity: hl === p.id ? 0.35 : "var(--box-alpha)", transition: "fill-opacity 120ms" }} rx={1} />
+              {/* the pulse class is dropped while this box is highlighted, so the deeper hover fill is steady and wins */}
+              <rect className={pulse && p.decider && hl !== p.id ? "pr-box pulse" : "pr-box"} x={g(p.id, "x0")} y={g(p.id, "y0")} width={g(p.id, "w")} height={g(p.id, "h")} fill={p.color} style={{ fillOpacity: hl === p.id ? 0.35 : "var(--box-alpha)", transition: "fill-opacity 120ms" }} rx={1} />
             </g>
             </g>
             </g>
