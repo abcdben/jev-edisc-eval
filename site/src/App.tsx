@@ -182,14 +182,14 @@ const readOpsMode = (k: keyof typeof OPS_MODE_KEYS): OpsMode => (localStorage.ge
  * Everything the details modal's Metrics block lists for one row on one corpus: the recall/precision, review time and cost, and determinism
  * facts that the chart tooltips used to carry. `shown` picks the page's selection out of the corpus rows, the referent of "vs. lowest shown".
  */
-function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) => Rec[]): Metrics | null {
+function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) => Rec[], machineOnly = false): Metrics | null {
   const tag = corpus === "trec" ? v.tag : "";
   const rows = DATA.records.filter((r) => r.corpus === corpus && r.tag === tag && r.arm === v.arm);
   const r = rows.find((x) => x.model === key);
   if (!r) return null;
   const vv: View = { ...v, corpus, tag, issue: corpus === v.corpus ? v.issue : null };
   const meta = DATA.corpora[corpusKey(corpus, tag)];
-  const timeMode = readOpsMode("time"), costMode = readOpsMode("cost");
+  const timeMode: OpsMode = machineOnly ? "machine" : readOpsMode("time"), costMode: OpsMode = machineOnly ? "machine" : readOpsMode("cost");
   const group = ABLATION_GROUPS.find((g) => g.id === r.group);
   const name = PRIMARY_BY_KEY[r.model]?.short ?? (r.variant ? `${group?.label ?? r.family} · ${VARIANT_LABEL[r.variant] ?? r.variant}` : r.name);
   const color = PRIMARY_BY_KEY[r.model]?.color ?? (r.variant ? variantColor(r.variant, group?.recipe ?? "") : "var(--ink)");
@@ -251,14 +251,19 @@ const COST_ITEMS: HintItem[] = [
   ...HUMAN_ITEMS,
 ];
 
-/** `decider` sets a row's name a step heavier (data.ts isDecider); Compare models passes it, the Configurations page (one family per chart) does not. */
-function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean; explain?: (k: string) => void; decider?: (r: Rec) => boolean }) {
-  const [timeMode, setTimeMode] = useState<OpsMode>(() => readOpsMode("time"));
-  const [costMode, setCostMode] = useState<OpsMode>(() => readOpsMode("cost"));
+/**
+ * `decider` sets a row's name a step heavier (data.ts isDecider); Compare models passes it, the Configurations page (one family per chart) does not.
+ * `machineOnly` pins both cards to machine time with no toggle: the Configurations page compares one family's configurations, where the fixed
+ * human development cost would only shift every bar by the same amount.
+ */
+function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider, machineOnly = false }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean; explain?: (k: string) => void; decider?: (r: Rec) => boolean; machineOnly?: boolean }) {
+  const [timeModeSaved, setTimeMode] = useState<OpsMode>(() => readOpsMode("time"));
+  const [costModeSaved, setCostMode] = useState<OpsMode>(() => readOpsMode("cost"));
+  const timeMode: OpsMode = machineOnly ? "machine" : timeModeSaved, costMode: OpsMode = machineOnly ? "machine" : costModeSaved;
   const onSelect = explain && ((it: BarItem) => explain(it.id));
   const hover = useHover();
-  useEffect(() => { localStorage.setItem(OPS_MODE_KEYS.time, timeMode); }, [timeMode]);
-  useEffect(() => { localStorage.setItem(OPS_MODE_KEYS.cost, costMode); }, [costMode]);
+  useEffect(() => { if (!machineOnly) localStorage.setItem(OPS_MODE_KEYS.time, timeModeSaved); }, [timeModeSaved, machineOnly]);
+  useEffect(() => { if (!machineOnly) localStorage.setItem(OPS_MODE_KEYS.cost, costModeSaved); }, [costModeSaved, machineOnly]);
   const empty = (r: Rec, mode: OpsMode) => (r.tar && mode === "machine" ? "human only" : undefined);
   const time: BarItem[] = recs.map((r) => {
     const { hours } = opsValues(r, timeMode);
@@ -273,14 +278,14 @@ function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider }: { r
       <div className="card">
         <div className="card-t">
           <h3>Review time</h3><span className="unit">per 100k docs</span>
-          <span className="right"><Seg value={timeMode} onChange={setTimeMode} options={OPS_MODE_OPTIONS} /><Hint items={TIME_ITEMS} more="About" /></span>
+          <span className="right">{!machineOnly && <Seg value={timeMode} onChange={setTimeMode} options={OPS_MODE_OPTIONS} />}<Hint items={machineOnly ? TIME_ITEMS.filter((i) => i.k !== "+ human time") : TIME_ITEMS} more="About" /></span>
         </div>
         <OpsBars items={time} axis="hours" unit="per 100k docs" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
       </div>
       <div className="card">
         <div className="card-t">
           <h3>Cost</h3><span className="unit">per 100k docs</span>
-          <span className="right"><Seg value={costMode} onChange={setCostMode} options={OPS_MODE_OPTIONS} /><Hint items={COST_ITEMS} more="About" /></span>
+          <span className="right">{!machineOnly && <Seg value={costMode} onChange={setCostMode} options={OPS_MODE_OPTIONS} />}<Hint items={machineOnly ? COST_ITEMS.filter((i) => i.k !== "+ human time") : COST_ITEMS} more="About" /></span>
         </div>
         <OpsBars items={cost} axis="US dollars" unit="per 100k docs" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
       </div>
@@ -416,7 +421,7 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
             logos={false}
             hint={CONFIG_PR_ITEMS}
           />
-          <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} explain={explain} /></div>
+          <div className="stack"><OpsCards recs={sel} colorOf={color} nameOf={name} logos={false} explain={explain} machineOnly /></div>
         </div>
       </HoverProvider>
     </section>
@@ -524,7 +529,7 @@ export default function App() {
       {explain && (
         <ExplainModal
           initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)}
-          metrics={(k, c) => metricsFor(k, c, v, (rows) => (pageId === "compare" ? rows.filter((r) => r.primary && on.has(r.model)) : rows.filter((r) => r.group === grp && !!r.variant && !isHidden(r.model) && !off.has(r.variant))))}
+          metrics={(k, c) => metricsFor(k, c, v, (rows) => (pageId === "compare" ? rows.filter((r) => r.primary && on.has(r.model)) : rows.filter((r) => r.group === grp && !!r.variant && !isHidden(r.model) && !off.has(r.variant))), pageId !== "compare")}
         />
       )}
 
