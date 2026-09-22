@@ -136,8 +136,6 @@ svg text { user-select: none; font-family: var(--sans); }
 }
 .seg button:hover { color: var(--ink); }
 .seg button.on { background: var(--ink); color: var(--bg); }
-/* the accented option of a toggle (ui.tsx Seg `accent`; the Recall and precision card's `ranked` view) while it is not selected: the --hl tint behind the label at
-   the emphasised table row's rest strength, breathing with the same double pulse (`.pulse`, row-breathe below) when the card mounts or its corpus changes; hover brings it to full */
 /* the accented Seg option (the "ranked" view): a chartreuse tint that pulses twice on page arrival and then fades out entirely; no resting tint */
 .seg button.seg-hl { position: relative; z-index: 0; }
 .seg button.seg-hl::before { content: ""; position: absolute; inset: 0; border-radius: 4px; background: var(--hl); opacity: 0; z-index: -1; }
@@ -293,9 +291,10 @@ svg text { user-select: none; font-family: var(--sans); }
    --hl highlight (the same tint as the modals' <mark>, themed per light/dark above), resting at about half strength; `.pulse` breathes it from that faint
    rest to the full tint and back, a quick double pulse of two 0.65 s cycles (ui.tsx ROW_PULSE_CYCLES) after the table loads or its rows change, then it settles. The band sits
    under the row's hover hit area and fades out while the row is hovered, focused or highlighted from another card, so the grey hover band alone shows. */
-.row-dm { fill: var(--hl); fill-opacity: 1; opacity: 0.55; pointer-events: none; transition: fill-opacity 0.12s; }
+/* no resting tint: the band flashes twice when the card mounts or its rows change, then is gone */
+.row-dm { fill: var(--hl); fill-opacity: 1; opacity: 0; pointer-events: none; transition: fill-opacity 0.12s; }
 .row-dm.pulse { animation: row-breathe 0.65s ease-in-out 2; }
-@keyframes row-breathe { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+@keyframes row-breathe { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
 .sel:hover .row-dm, .sel:focus-visible .row-dm, .hl .row-dm { fill-opacity: 0; }
 /* the reference row of the Configurations page's "vs default" ranked view (components/PRHeat.tsx): the same --hl band at rest strength, no pulse; it too yields to the grey hover band */
 .row-ref { fill: var(--hl); fill-opacity: 1; opacity: 0.55; pointer-events: none; transition: fill-opacity 0.12s; }
