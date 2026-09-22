@@ -8,7 +8,7 @@ export type Ops = {
   n_docs: number; n_decisions: number; errors: number;
   cost_per_doc: number | null; list_cost_per_doc: number | null;
   tokens_in_per_doc: number | null; tokens_out_per_doc: number | null;
-  doc_latency_p50_ms: number | null; doc_latency_p95_ms: number | null; hours_per_100k_docs: number | null;
+  doc_latency_p50_ms: number | null; doc_latency_p95_ms: number | null; hours_per_100k_docs: number | null; // hours_per_100k_docs is p50 × 100k, in the export only; the site reads the latencies
   latency_source: string; pricing_modes: string[]; model_resolved: string[];
 };
 export type Rec = {
@@ -101,18 +101,18 @@ export const DEFAULT_ON = new Set(["jev@base", "laya-ft", "claude-haiku-4.5", "c
 
 /**
  * GPU rental for the rows that ran on our own hardware rather than an API (Laya checkpoints, Gemma 3 12B).
- * Both were measured on a Lambda Cloud 1× A100 (Laya single-stream latency samples; Gemma via Ollama with 4 concurrent requests).
+ * Both were measured on a Lambda Cloud 1× A100 (Laya single-request latency samples; Gemma via Ollama with 4 concurrent requests).
  * Lambda on-demand list price, lambda.ai/pricing, checked 2026-09-21: 1× A100 40 GB SXM $1.99/GPU-h; 1× H100 PCIe $3.29/GPU-h (H100 SXM $4.29).
- * Cost per document = hours_per_100k_docs × GPU_USD_PER_HOUR / 100,000, i.e. the GPU time for the single-stream review time shown.
+ * Cost per document = median latency (h) × GPU_USD_PER_HOUR, i.e. the GPU time for the one-request-at-a-time latency shown.
  */
 export const GPU_USD_PER_HOUR = 1.99;
 export const GPU_USD_PER_HOUR_H100 = 3.29;
 export const GPU_NAME = "Lambda Cloud 1× A100";
 /** Rows whose cost is GPU rental rather than an API bill. */
 export const isGpuRow = (r: Rec) => r.kind === "local_llm" || r.family === "Laya";
-/** Cost per document under the site's accounting: API rows as paid, GPU rows as rental for their review time. */
+/** Cost per document under the site's accounting: API rows as paid, GPU rows as rental for their median latency. */
 export const costPerDoc = (r: Rec): number | null => {
-  if (isGpuRow(r)) return r.ops.hours_per_100k_docs == null ? null : (r.ops.hours_per_100k_docs * GPU_USD_PER_HOUR) / 1e5;
+  if (isGpuRow(r)) return r.ops.doc_latency_p50_ms == null ? null : (r.ops.doc_latency_p50_ms / 3.6e6) * GPU_USD_PER_HOUR;
   return r.ops.cost_per_doc;
 };
 
@@ -182,12 +182,6 @@ export const fmtCI = (ci: CI, d = 1) => (ci ? `${fmtPct(ci[0], d)}  [${fmtPct(ci
 /** The interval alone, as whole points for the ranked rows' range column: "82–91". */
 export const fmtRange = (ci: CI) => (ci ? `${Math.round(ci[1] * 100)}–${Math.round(ci[2] * 100)}` : "—");
 export const fmtInt = (v: number) => v.toLocaleString("en-US");
-export const fmtHours = (h: number | null) => {
-  if (h == null) return "—";
-  if (h < 0.05) return "< 0.1 h";
-  if (h < 10) return `${h.toFixed(1)} h`;
-  return `${fmtInt(Math.round(h))} h`;
-};
 export const fmtUSD = (v: number | null) => {
   if (v == null) return "—";
   if (v === 0) return "$0";

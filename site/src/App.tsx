@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
-  corpusKey, costPerDoc, fmtCI, fmtHours, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, issueLabel, pick, siteCorpus, starOf, variantColor,
+  corpusKey, costPerDoc, fmtCI, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, issueLabel, pick, siteCorpus, starOf, variantColor,
   type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
 import { Control, Hint, MethodContext, ROW_PULSE_MS, Seg, usePulseWindow, type HintItem, type TipLine } from "./components/ui";
@@ -95,41 +95,47 @@ function qualityLines(r: Rec, v: View): { lines: TipLine[]; notes: string[] } {
   return { lines, notes };
 }
 
-/** The model's own hours and dollars per 100k documents; null when not measured. */
-function opsValues(r: Rec): { hours: number | null; usd: number | null } {
+/** The model's median per-document latency (ms) and dollars per 100k documents; null when not measured. */
+function opsValues(r: Rec): { ms: number | null; usd: number | null } {
   const c = costPerDoc(r);
-  return { hours: r.ops.hours_per_100k_docs, usd: c == null ? null : c * 1e5 };
+  return { ms: r.ops.doc_latency_p50_ms, usd: c == null ? null : c * 1e5 };
 }
 
-/** The one secondary line of a Review time or Cost hover: the per-document time, or where the money went. */
-function opsSub(r: Rec, kind: "time" | "cost"): string {
-  if (kind === "time") return `${fmtMs(r.ops.doc_latency_p50_ms)} per doc`;
+/** The export's `latency_source` as a short phrase for the hover; null for a source the site does not describe. */
+function latencySource(s: string): string | null {
+  if (s === "per-call latency from the main run") return "per-call, main run";
+  if (/same forward pass/.test(s)) return "same forward pass as the zero-shot Laya recipe";
+  if (/concurrency-1/.test(s)) return "dedicated single-request run";
+  return null;
+}
+
+/** The one secondary line of an Inference latency or Cost hover: the p95 and how the latency was measured, or where the money went. */
+function opsSub(r: Rec, kind: "latency" | "cost"): string {
+  if (kind === "latency") return [`p95 ${fmtMs(r.ops.doc_latency_p95_ms)}`, latencySource(r.ops.latency_source)].filter(Boolean).join(" · ");
   return `as paid · ${isGpuRow(r) ? "GPU rental" : "API"}`;
 }
 
 function opsLines(r: Rec): { lines: TipLine[]; notes: string[] } {
   const o = r.ops;
   const c = costPerDoc(r);
-  const usd100k = c == null ? "—" : fmtUSD(c * 1e5);
   const lines: TipLine[] = [
-    ["Time per 100k docs", fmtHours(o.hours_per_100k_docs)],
-    ["Cost per 100k docs", usd100k],
+    ["Median latency", fmtMs(o.doc_latency_p50_ms)],
+    ["p95 latency", fmtMs(o.doc_latency_p95_ms)],
+    ["Cost per 100k docs", c == null ? "—" : fmtUSD(c * 1e5)],
+    ["Cost per document", c == null ? "—" : c === 0 ? "$0" : `$${c.toFixed(c < 0.001 ? 5 : 4)}`],
+    ["Input tokens per document", o.tokens_in_per_doc == null ? "—" : fmtInt(Math.round(o.tokens_in_per_doc))],
+    ["Output tokens per document", o.tokens_out_per_doc == null ? "—" : fmtInt(Math.round(o.tokens_out_per_doc))],
   ];
   const notes: string[] = [];
-  if (isGpuRow(r) && o.hours_per_100k_docs != null) {
-    lines.push(["GPU rental", `${GPU_NAME} at $${GPU_USD_PER_HOUR.toFixed(2)}/h × ${fmtHours(o.hours_per_100k_docs)} = ${usd100k} per 100k`]);
-    notes.push("Cost is the rented GPU time for the single-stream review time shown; serving many documents concurrently would lower it.");
-  }
+  const src = latencySource(o.latency_source);
+  if (src) notes.push(`Latency: ${src}.`);
+  if (isGpuRow(r) && c != null) notes.push(`Cost is rented GPU time: ${GPU_NAME} at $${GPU_USD_PER_HOUR.toFixed(2)}/h for the median latency, one request at a time; serving documents concurrently would lower it.`);
   if (r.model === "laya-ft") notes.push("The labeled training data this checkpoint needed is not counted here.");
-  lines.push(
-    ["Median time per doc", fmtMs(o.doc_latency_p50_ms)],
-    ["Tokens in / out per doc", o.tokens_in_per_doc == null ? "—" : `${fmtInt(Math.round(o.tokens_in_per_doc))} / ${fmtInt(Math.round(o.tokens_out_per_doc ?? 0))}`],
-  );
   return { lines, notes };
 }
 
 /**
- * Everything the details modal's Metrics block lists for one row on one corpus: the recall/precision, review time and cost, and determinism
+ * Everything the details modal's Metrics block lists for one row on one corpus: the recall/precision, inference latency and cost, and determinism
  * facts that the chart tooltips used to carry. `shown` picks the page's selection out of the corpus rows, the referent of "vs. lowest shown".
  */
 function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) => Rec[]): Metrics | null {
@@ -157,8 +163,8 @@ function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) =
   const sections: MetricSection[] = [
     { title: "Recall and precision", lines: q.lines, notes: q.notes },
     {
-      title: "Review time and cost",
-      lines: [...o.lines, ...ratio("Time vs. lowest shown", mine.hours, lowest((x) => opsValues(x).hours)), ...ratio("Cost vs. lowest shown", mine.usd, lowest((x) => opsValues(x).usd))],
+      title: "Inference latency and cost",
+      lines: [...o.lines, ...ratio("Latency vs. fastest shown", mine.ms, lowest((x) => opsValues(x).ms)), ...ratio("Cost vs. cheapest shown", mine.usd, lowest((x) => opsValues(x).usd))],
       notes: o.notes,
     },
   ];
@@ -175,12 +181,12 @@ function useRows(v: View) {
   return useMemo(() => DATA.records.filter((r) => r.corpus === v.corpus && r.tag === v.tag && r.arm === v.arm && !isHidden(r.model)), [v.corpus, v.tag, v.arm]);
 }
 
-/** The Review time and Cost hints: machine time and price only. */
-const TIME_ITEMS: HintItem[] = [
-  { k: "Measures", v: <><b>Median</b> wall-clock time per document for the model's own calls, one request at a time, multiplied out to 100,000 documents in a single sequential stream.</> },
-  { k: "Arms", v: <><b>All issues per call</b>: one call per document. One issue per call: the sum over issues.</> },
-  { k: "Parallelism", v: <>Every service accepts parallel requests, so hours shrink for all models alike; <b>compare the ratios, not the absolutes</b>.</> },
-  { k: "GPU rows", v: <>Laya and Gemma ran on <b>one rented A100</b>.</> },
+/** The Inference latency and Cost hints: machine time and price only. */
+const LATENCY_ITEMS: HintItem[] = [
+  { k: "Measures", v: <><b>Median round-trip time to score one document</b> (all issues in one request), one request at a time; p95 in the hover.</> },
+  { k: "Hosted models", v: <>Includes network and the vendor's per-request overhead as observed from the client; <b>rate limits and parallel throughput are not measured</b>, so this is per-request latency, not capacity.</> },
+  { k: "GPU rows", v: <>Laya and Gemma ran locally on <b>one rented A100</b>, so no network is included.</> },
+  { k: "Laya", v: <>Its latency is the same forward pass as the zero-shot Compact + Chunked configuration, measured in a dedicated single-request run.</> },
 ];
 const COST_ITEMS: HintItem[] = [
   { k: "Measures", v: <><b>API price as paid</b> to the vendor, summed over the model's decisions and scaled to 100,000 documents.</> },
@@ -195,9 +201,9 @@ const COST_ITEMS: HintItem[] = [
 function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider, emphasis }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; logos?: boolean; explain?: (k: string) => void; decider?: (r: Rec) => boolean; emphasis?: (r: Rec) => boolean }) {
   const onSelect = explain && ((it: BarItem) => explain(it.id));
   const hover = useHover();
-  const time: BarItem[] = recs.map((r) => {
-    const { hours } = opsValues(r);
-    return { id: r.model, name: nameOf(r), color: colorOf(r), value: hours, label: fmtHours(hours), sub: opsSub(r, "time"), subset: starOf(r), decider: decider?.(r), emphasis: emphasis?.(r) };
+  const latency: BarItem[] = recs.map((r) => {
+    const { ms } = opsValues(r);
+    return { id: r.model, name: nameOf(r), color: colorOf(r), value: ms, label: fmtMs(ms), sub: opsSub(r, "latency"), subset: starOf(r), decider: decider?.(r), emphasis: emphasis?.(r) };
   });
   const cost: BarItem[] = recs.map((r) => {
     const { usd } = opsValues(r);
@@ -207,10 +213,10 @@ function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider, empha
     <>
       <div className="card">
         <div className="card-t">
-          <h3>Review time</h3><span className="unit">per 100k docs</span>
-          <span className="right"><Hint items={TIME_ITEMS} more="About" /></span>
+          <h3>Inference latency</h3><span className="unit">per document · median</span>
+          <span className="right"><Hint items={LATENCY_ITEMS} more="About" /></span>
         </div>
-        <OpsBars items={time} axis="hours" unit="per 100k docs" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
+        <OpsBars items={latency} axis="milliseconds" unit="per document, median" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
       </div>
       <div className="card">
         <div className="card-t">
@@ -324,7 +330,7 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
     return { id: r.model, name: name(r), color: color(r), recall: p.recall, precision: p.precision, subset: starOf(r), sub: qualitySub(r, v) };
   });
 
-  // Only the Recall and precision card on this page (the Review time and Cost cards belong to Compare models); `.dash.ranked` lets it span the full width in both views.
+  // Only the Recall and precision card on this page (the Inference latency and Cost cards belong to Compare models); `.dash.ranked` lets it span the full width in both views.
   return (
     <section className="section">
       <HoverProvider>
