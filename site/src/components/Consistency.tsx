@@ -6,14 +6,11 @@ import { hoverable } from "./hover";
 
 /** The Determinism card's "i" popover. */
 const DET_ITEMS: HintItem[] = [
+  { k: "What", v: <mark><b>Whether a model gives the same answer when asked the same question again.</b> Each model coded the same documents five times under identical settings; the bar is how often two runs disagreed on a decision.</mark> },
+  { k: "Why", v: <>A review has to be <b>defensible and repeatable</b>: a document coded responsive today should be coded responsive tomorrow, and a validation sample measures a process that will not drift. A model that flips answers adds noise a team cannot audit away.</> },
   { k: "Sample", v: <><b>300 Mallinckrodt emails</b>: 100 with a debatable gold label, 100 clear positives, 100 clear negatives; shown for every corpus.</> },
-  { k: "Runs", v: <><b>Five</b> under identical settings; the benchmark run is the first.</> },
-  { k: "Bar", v: <mark><b>Pairwise disagreement</b>: the probability that two runs give a different label for the same (document, issue) decision.</mark> },
-  { k: "Whisker", v: <><b>95% bootstrap</b> interval over decisions.</> },
+  { k: "Bar", v: <><b>Pairwise disagreement</b>: the probability that two runs give a different label for the same (document, issue) decision, with a 95% bootstrap whisker.</> },
   { k: "t = 0", v: <>The same models at <b>temperature 0</b> where the API accepts it; Sonnet 5 rejects it and is marked not measured.</> },
-  { k: "Deciders", v: <>Jev and Laya <b>expose no sampling controls</b>, so one bar serves both views.</> },
-  { k: "TAR rows", v: <><b>0 by construction</b>: the classifier and the simulated reviewer make the same call on every pass.</> },
-  { k: "Click a row", v: "The details modal lists the runs, decisions compared, flip rate and how much recall and precision moved between runs." },
 ];
 
 const LABEL_W = 168, ROW = 20;
