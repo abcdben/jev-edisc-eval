@@ -12,10 +12,44 @@ import { toBlob } from "html-to-image";
  *    onto every SVG descendant of the clone (which, being in the document, has the real computed styles) before html-to-image runs.
  *  - html-to-image's per-node property list comes from :root, so custom properties set only on the panel (--sw-mult, --fs-legend, …) are not
  *    copied; inlining the resolved values sidesteps that for the SVG, and HTML nodes get their resolved standard properties as usual.
+ *  - The serialised document cannot see the page's web fonts (the <img> that rasterises the SVG is its own context), so without an embedded
+ *    @font-face every label falls back to a system face with other metrics and text lands where the live layout never put it (an axis title
+ *    over a tick label). `webFontCss` fetches the Google Fonts stylesheet(s) linked from the page, keeps the Latin @font-face blocks, inlines
+ *    their files as data URLs and hands the result to html-to-image as `fontEmbedCSS`. The result is cached for the page's lifetime; offline
+ *    or blocked, it is empty and the export uses the system fallback as before.
  * Vendor marks are inline <path>s, or a bundled PNG in an SVG <mask>; html-to-image turns <image href> into a data URL, so nothing taints the canvas.
  */
 
 export type ExportBackground = "panel" | "transparent";
+
+const blobToDataUrl = (b: Blob) => new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result as string); r.onerror = () => rej(r.error); r.readAsDataURL(b); });
+
+async function fetchWebFontCss(): Promise<string> {
+  const links = [...document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"][href*="fonts.googleapis.com"]')];
+  const blocks: string[] = [];
+  for (const link of links) {
+    const css = await (await fetch(link.href)).text();
+    for (const m of css.matchAll(/@font-face\s*\{[^}]*\}/g)) {
+      const block = m[0];
+      // Google serves one block per script subset; the charts are Latin (digits, %, ·, – and —, all in the "latin" range).
+      const range = /unicode-range:\s*([^;]+);/.exec(block)?.[1];
+      if (range && !/U\+0000-00FF/i.test(range)) continue;
+      const src = /url\(["']?([^"')]+)["']?\)/.exec(block);
+      if (!src) continue;
+      const font = await fetch(src[1]);
+      if (!font.ok) continue;
+      blocks.push(block.replace(src[1], await blobToDataUrl(await font.blob())));
+    }
+  }
+  return blocks.join("\n");
+}
+
+let webFontCssCache: Promise<string> | undefined;
+/** The page's web fonts as self-contained @font-face CSS, fetched once; "" when none is linked or they cannot be fetched. */
+function webFontCss(): Promise<string> {
+  webFontCssCache ??= fetchWebFontCss().catch((e) => { console.warn("Studio export: web fonts not embedded", e); webFontCssCache = undefined; return ""; });
+  return webFontCssCache;
+}
 
 const SVG_PROPS = [
   "fill", "fill-opacity", "fill-rule", "stroke", "stroke-width", "stroke-dasharray", "stroke-opacity", "stroke-linecap", "stroke-linejoin",
@@ -52,8 +86,9 @@ export async function renderPanelPng(panel: HTMLElement, scale: number, backgrou
   document.body.appendChild(wrap);
   try {
     inlineSvgStyles(clone);
+    // fontEmbedCSS (even empty) replaces html-to-image's own stylesheet walk, which cannot read the cross-origin Google Fonts sheet
     const blob = await toBlob(clone, {
-      width: W, height: H, pixelRatio: scale, skipFonts: true,
+      width: W, height: H, pixelRatio: scale, fontEmbedCSS: await webFontCss(),
       backgroundColor: background === "panel" ? panelColour : undefined,
       filter: (n) => !(n instanceof Element && n.classList.contains("no-export")),
     });

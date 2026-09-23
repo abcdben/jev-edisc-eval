@@ -1,6 +1,7 @@
 import { useMemo, useRef } from "react";
 import type { CI } from "../data";
 import { LogoGlyph, logoFor } from "../logos";
+import { axisMargins } from "./PRScatter";
 import { DECIDER_TEXT, useSize, useWidth } from "./ui";
 
 /**
@@ -157,17 +158,19 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
   const hostRef = useRef<HTMLDivElement>(null);
   const sz = useSize(hostRef, { w: 900, h: 520 });
   const W = sz.w, H = Math.max(300, sz.h);
-  // the left and bottom margins hold the tick labels, so they grow with the text scale (60 and 50 at scale 1)
-  const s = textScale, PL = Math.round(44 + 16 * s), PB = Math.round(26 + 24 * s);
+  const s = textScale;
   const drawn = pts.filter((p): p is StudioScatterPt & { x: number; y: NonNullable<CI> } => p.x != null && p.x > 0 && !!p.y);
   const xs = drawn.map((p) => p.x);
   const xd: [number, number] = xs.length ? [10 ** Math.floor(Math.log10(Math.min(...xs))), 10 ** Math.ceil(Math.log10(Math.max(...xs)) - 1e-9)] : [0.01, 100];
   const ylo = Math.min(1, ...drawn.map((p) => p.y[1])), yhi = Math.max(0, ...drawn.map((p) => p.y[2]));
   const pad = Math.max(0.02, (yhi - ylo) * 0.12);
   const yd: [number, number] = drawn.length ? [Math.max(0, ylo - pad), Math.min(1, yhi + pad)] : [0, 1];
+  const xt = logTicks(xd[0], xd[1]), yt = linTicks(yd[0], yd[1]);
+  const yTickLabel = (t: number) => `${+(t * 100).toFixed(1)}%`;
+  // the left and bottom margins hold the y tick labels and the axis titles, sized from them and the text scale (PRScatter.tsx axisMargins)
+  const { PL, PB, titleX } = axisMargins(yt.map(yTickLabel), s);
   const X = (v: number) => PL + ((Math.log10(v) - Math.log10(xd[0])) / (Math.log10(xd[1]) - Math.log10(xd[0]) || 1)) * (W - PL - PR);
   const Y = (v: number) => PT + (1 - (v - yd[0]) / (yd[1] - yd[0] || 1)) * (H - PT - PB);
-  const xt = logTicks(xd[0], xd[1]), yt = linTicks(yd[0], yd[1]);
   // labels: right of the mark, else left, above, below; skipped when nothing fits
   const placed: { x: number; y: number; w: number; h: number }[] = [];
   const dots = drawn.map((p) => ({ x: X(p.x), y: Y(p.y[0]) }));
@@ -191,7 +194,7 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
         {yt.map((t) => (
           <g key={`y${t}`}>
             <line className="gl" x1={PL} x2={W - PR} y1={Y(t)} y2={Y(t)} stroke="var(--grid)" />
-            <text x={PL - 8} y={Y(t) + 3.5 * s} fontSize={10.5 * s} textAnchor="end" fill="var(--ink-3)" className="mono">{`${+(t * 100).toFixed(1)}%`}</text>
+            <text x={PL - 8} y={Y(t) + 3.5 * s} fontSize={10.5 * s} textAnchor="end" fill="var(--ink-3)" className="mono">{yTickLabel(t)}</text>
           </g>
         ))}
         <g stroke="var(--axis)" style={SW(1)}>
@@ -199,7 +202,7 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
           <line x1={PL} x2={PL} y1={PT} y2={H - PB} />
         </g>
         <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
-        <text x={14 * s} y={(PT + H - PB) / 2} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${14 * s} ${(PT + H - PB) / 2})`}>{yLabel}</text>
+        <text x={titleX} y={(PT + H - PB) / 2} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(PT + H - PB) / 2})`}>{yLabel}</text>
         {drawn.map((p, i) => {
           const x = X(p.x), y = Y(p.y[0]), y1 = Y(p.y[2]), y2 = Y(p.y[1]);
           const l = labels[i];

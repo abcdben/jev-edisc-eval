@@ -11,8 +11,24 @@ export type PRItem = { id: string; name: string; color: string; recall: CI; prec
 export const prTip = (p: PRItem, icon?: ReactNode): TipContent => ({ title: p.name, color: p.color, icon, lines: [["Recall", fmtCI(p.recall)], ["Precision", fmtCI(p.precision)]], sub: p.sub });
 
 const PR = 20, PT = 18;
-/** Left and bottom margins hold the tick labels, so they grow with the text scale (56 and 48 at scale 1). */
-const padL = (s: number) => Math.round(40 + 16 * s), padB = (s: number) => Math.round(24 + 24 * s);
+/** Tick and axis-title font sizes at text scale 1 (the studio's Text control multiplies them). */
+const TICK_FS = 10.5, TITLE_FS = 12;
+
+/**
+ * Axis margins, derived from what they hold rather than fixed, so the axis title never lands on a tick label at any text scale or face
+ * (styles.css --sans; the export PNG, exportPng.ts, uses the same layout). Tick text is estimated at 0.78 em per character, on the wide side for
+ * every face the studio offers (Inter's tabular digits and % are the widest, at about 0.76). Left, from the edge: pad, the rotated y title (its
+ * baseline at `titleX`, its box one em to the left and a quarter em to the right of that), a gap, the widest tick label, then 8 px to the axis.
+ * Bottom, from the axis: 16 s to the tick baseline, its descent, a gap of 8 px, the x title's box, then a pad; the title's baseline sits 10 s
+ * above the bottom edge. At scale 1 with two-digit ticks this gives the site's 56 and 48.
+ */
+export const tickTextW = (labels: string[], s: number) => Math.max(0, ...labels.map((l) => l.length)) * 0.78 * TICK_FS * s;
+export function axisMargins(yTickLabels: string[], s: number) {
+  const titleX = 2 + TITLE_FS * s;
+  const PL = Math.round(titleX + 0.25 * TITLE_FS * s + Math.max(6, 5 * s) + tickTextW(yTickLabels, s) + 8);
+  const PB = Math.round(16 * s + 3 * s + 8 + TITLE_FS * s + 9 * s);
+  return { PL, PB, titleX };
+}
 
 function niceTicks(lo: number, hi: number): number[] {
   const span = hi - lo;
@@ -39,7 +55,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
   const pickMark = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const sz = useSize(hostRef, { w: 760, h: height });
   const W = sz.w, H = fill ? Math.max(300, sz.h) : height;
-  const s = textScale, PL = padL(s), PB = padB(s);
+  const s = textScale;
   type Pt = PRItem & { recall: NonNullable<CI>; precision: NonNullable<CI> };
   const hasPt = (it: PRItem): it is Pt => !!it.recall && !!it.precision;
   const pts = items.filter(hasPt);
@@ -69,9 +85,11 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
     };
   }, [pts, zoom, domain]);
 
+  const xt = niceTicks(dom.x[0], dom.x[1]), yt = niceTicks(dom.y[0], dom.y[1]);
+  const tickLabel = (t: number) => `${Math.round(t * 100)}%`;
+  const { PL, PB, titleX } = axisMargins(yt.map(tickLabel), s);
   const X = (v: number) => PL + ((v - dom.x[0]) / (dom.x[1] - dom.x[0] || 1)) * (W - PL - PR);
   const Y = (v: number) => PT + (1 - (v - dom.y[0]) / (dom.y[1] - dom.y[0] || 1)) * (H - PT - PB);
-  const xt = niceTicks(dom.x[0], dom.x[1]), yt = niceTicks(dom.y[0], dom.y[1]);
 
   // label placement: try several offsets; avoid other dots and labels; give up (hover only) when nothing fits
   const labels = useMemo(() => {
@@ -123,21 +141,21 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
         {xt.map((t) => (
           <g key={`x${t}`}>
             <line className="gl" x1={X(t)} x2={X(t)} y1={PT} y2={H - PB} stroke="var(--grid)" />
-            <text x={X(t)} y={H - PB + 16 * s} fontSize={10.5 * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>
+            <text x={X(t)} y={H - PB + 16 * s} fontSize={TICK_FS * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{tickLabel(t)}</text>
           </g>
         ))}
         {yt.map((t) => (
           <g key={`y${t}`}>
             <line className="gl" x1={PL} x2={W - PR} y1={Y(t)} y2={Y(t)} stroke="var(--grid)" />
-            <text x={PL - 8} y={Y(t) + 3.5 * s} fontSize={10.5 * s} textAnchor="end" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>
+            <text x={PL - 8} y={Y(t) + 3.5 * s} fontSize={TICK_FS * s} textAnchor="end" fill="var(--ink-3)" className="mono">{tickLabel(t)}</text>
           </g>
         ))}
         <g stroke="var(--axis)" style={{ strokeWidth: "var(--sw-mult, 1)" }}>
           <line x1={PL} x2={W - PR} y1={H - PB} y2={H - PB} />
           <line x1={PL} x2={PL} y1={PT} y2={H - PB} />
         </g>
-        <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
-        <text x={14 * s} y={(PT + H - PB) / 2} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${14 * s} ${(PT + H - PB) / 2})`}>{yLabel}</text>
+        <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={TITLE_FS * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
+        <text x={titleX} y={(PT + H - PB) / 2} fontSize={TITLE_FS * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(PT + H - PB) / 2})`}>{yLabel}</text>
 
         {/* CI boxes first so dots sit on top; every box is the same stroke-less shade, the highlighted one a little deeper */}
         {drawn.map((p) => {
