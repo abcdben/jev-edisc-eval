@@ -6,6 +6,7 @@ import { PRRail } from "./components/PRRail";
 import { detFor } from "./components/Consistency";
 import { StudioBars, StudioScatter, type StudioRow, type StudioScatterPt } from "./components/StudioCharts";
 import { Control, Seg } from "./components/ui";
+import { copyPng, downloadBlob, renderPanelPng, slug, type ExportBackground } from "./exportPng";
 
 /**
  * Screenshot studio (studio.html → studio.tsx → this page; unlinked from the site): one Compare models chart alone, on a plain panel whose size
@@ -41,6 +42,10 @@ const TEXT_SCALE: Record<TextSize, number> = { s: 0.9, m: 1, l: 1.2, xl: 1.45 };
 const isTextSize = (s: string | null): s is TextSize => s != null && s in TEXT_SCALE;
 /** Contrast: `high` (styles.css .studio-plot[data-contrast="high"]) puts every label in full ink, thickens axes and whiskers, raises the bar and box alphas and enlarges the marks, on top of whichever Style preset is on. */
 type Contrast = "normal" | "high";
+
+/** PNG export scale: device pixels per CSS pixel of the panel (a 1200 × 675 panel at 2× is a 2400 × 1350 PNG). */
+type ExportScale = "1" | "2" | "3";
+const isExportScale = (s: string | null): s is ExportScale => s === "1" || s === "2" || s === "3";
 
 /** The four plots. `pr` is the site's recall/precision chart (map or ranked); the others are the studio's own bar, dot and scatter charts. */
 type Plot = "pr" | "cost" | "speed" | "stability";
@@ -105,6 +110,28 @@ export default function StudioPage() {
   const ts = TEXT_SCALE[text];
   const [contrast, setContrast] = useState<Contrast>(() => (localStorage.getItem("studio-contrast") === "high" ? "high" : "normal"));
   useEffect(() => { localStorage.setItem("studio-contrast", contrast); }, [contrast]);
+
+  // PNG export (exportPng.ts): the panel as shown, minus frame, corner radius and resize grip, at 1–3× on the panel colour or transparent.
+  const [exScale, setExScale] = useState<ExportScale>(() => { const s = localStorage.getItem("studio-export-scale"); return isExportScale(s) ? s : "2"; });
+  useEffect(() => { localStorage.setItem("studio-export-scale", exScale); }, [exScale]);
+  const [exBg, setExBg] = useState<ExportBackground>(() => (localStorage.getItem("studio-export-bg") === "transparent" ? "transparent" : "panel"));
+  useEffect(() => { localStorage.setItem("studio-export-bg", exBg); }, [exBg]);
+  const [exStatus, setExStatus] = useState<{ msg: string; busy?: boolean; err?: boolean } | null>(null);
+  const exTimer = useRef(0);
+  const flash = (msg: string, err = false) => { setExStatus({ msg, err }); window.clearTimeout(exTimer.current); exTimer.current = window.setTimeout(() => setExStatus(null), err ? 6000 : 1500); };
+  const errText = (e: unknown) => (e instanceof Error && e.message ? e.message : "Export failed.");
+  const renderPng = () => renderPanelPng(plotRef.current!, Number(exScale), exBg);
+  const onDownload = async () => {
+    const el = plotRef.current; if (!el) return;
+    setExStatus({ msg: "Rendering…", busy: true });
+    try { const blob = await renderPng(); downloadBlob(blob, exportName(el)); flash("Downloaded"); } catch (e) { flash(errText(e), true); }
+  };
+  // The blob promise, not the blob, goes to the clipboard so the write stays inside the click's user-gesture window (Safari); Chrome accepts either.
+  const onCopy = async () => {
+    if (!plotRef.current) return;
+    setExStatus({ msg: "Rendering…", busy: true });
+    try { await copyPng(renderPng()); flash("Copied"); } catch (e) { flash(errText(e), true); }
+  };
 
   // Which charts fill the panel's height (the map-like ones); the row-based ones take their height from the rows (the panel's `auto` mode).
   const fills = (plot === "pr" && chart === "map") || (plot === "cost" && costChart === "scatter");
@@ -181,6 +208,11 @@ export default function StudioPage() {
   };
   const legendLines = legendText();
   const showIssue = plot === "pr" || (plot === "cost" && costChart === "scatter");
+  /** e.g. jev-recall-precision-map-trec-linkedin-1200x675@2x.png; the size is the panel's rendered CSS size (the PNG is that × scale). */
+  const exportName = (el: HTMLElement) => {
+    const chartId = plot === "pr" ? chart : plot === "cost" ? costChart : plot === "speed" ? speedChart : stabChart;
+    return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, corpus, style].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
+  };
 
   return (
     <div className="page studio">
@@ -305,6 +337,21 @@ export default function StudioPage() {
         </Control>
         <Control label="Contrast">
           <Seg value={contrast} onChange={setContrast} options={[{ id: "normal", label: "normal" }, { id: "high", label: "high", title: "Full-ink labels, darker and thicker axes and whiskers, stronger fills, larger marks" }]} />
+        </Control>
+      </div>
+
+      <div className="controls studio-row2 studio-export">
+        <Control label="Export">
+          <button type="button" className="studio-btn" onClick={onDownload} disabled={exStatus?.busy} title="Save the chart area as a PNG file">Download PNG</button>
+          <button type="button" className="studio-btn" onClick={onCopy} disabled={exStatus?.busy} title="Copy the chart area as a PNG image">Copy PNG</button>
+          {exStatus && <span className={`studio-status${exStatus.err ? " err" : ""}`} role="status">{exStatus.msg}</span>}
+        </Control>
+        <Control label="Scale">
+          <Seg value={exScale} onChange={setExScale} options={[{ id: "1", label: "1×", title: "PNG at the panel's size" }, { id: "2", label: "2×", title: "Twice the panel's size (retina)" }, { id: "3", label: "3×", title: "Three times the panel's size" }]} />
+          <span className="studio-hint small">{w * Number(exScale)} × {fills ? h * Number(exScale) : "auto"} px, no frame</span>
+        </Control>
+        <Control label="Background">
+          <Seg value={exBg} onChange={setExBg} options={[{ id: "panel", label: "panel", title: "Filled with the style's panel colour" }, { id: "transparent", label: "transparent", title: "Alpha where the panel would be" }]} />
         </Control>
       </div>
 
