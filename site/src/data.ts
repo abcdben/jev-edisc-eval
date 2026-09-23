@@ -84,9 +84,10 @@ export const isHidden = (key: string): boolean => HIDDEN_MODELS.includes(key) ||
 export const modelKind = (key: string): string | undefined => DATA.models[key]?.kind ?? DATA.records.find((r) => r.model === key)?.kind;
 
 /** Headline roster, in display order, with a stable colour each. `kind` overrides the record's kind for grouping on the Compare page. HIDDEN_MODELS are filtered out below.
- * Compare models lists a few Jev configurations (the three question forms, plus Flat-Text State, the selected recipe) so a reader can switch them on; only `jev@state_string` starts checked. */
+ * Compare models lists a few Jev configurations (the three question forms, Flat-Text State, and Decomposed Sub-Questions, the strongest Jev row on TREC) so a reader can switch them on; only `jev@state_string` starts checked. */
 const ALL_PRIMARY: { key: string; color: string; short: string; note: string; kind?: Kind }[] = [
-  { key: "jev@state_string", color: "var(--c-jev)", short: "Jev", note: "TypeSafe Jev 1.13, Flat-Text State: the selected configuration. Same Noul question as Our Default, but the state is one string (matter background + document) instead of a structured object. On by default." },
+  { key: "jev@state_string", color: "var(--c-jev)", short: "Jev", note: "TypeSafe Jev 1.13, Flat-Text State: the selected configuration. Same Noul question as Our Default, but the state is one string (matter background + document) instead of a structured object. Strongest Jev row on Mallinckrodt. On by default." },
+  { key: "jev@decompose", color: "var(--v1)", short: "Jev · Decomposed Sub-Questions", note: "TypeSafe Jev 1.13, Decomposed Sub-Questions: each issue is split into the atomic sub-questions in the task file; each is asked as its own Noul and the issue probability is the maximum (logical OR). Strongest Jev row on TREC 2016." },
   { key: "jev@base", color: "var(--c-jev-2)", short: "Jev · Our Default", note: "TypeSafe Jev 1.13, default configuration: Noul question form, prose criteria, RFP phrasing, matter context as a structured object." },
   { key: "jev@choice", color: "var(--v3)", short: "Jev · Choice Question", note: "TypeSafe Jev 1.13, Choice Question: the same instruction and criteria, asked as a Choice between the two labels rather than a yes/no Noul." },
   { key: "jev@score", color: "var(--v5)", short: "Jev · Five-Point Score", note: "TypeSafe Jev 1.13, Five-Point Score: the issue is asked as a Score from 'clearly not responsive' to 'clearly responsive'; the scored probability is the level divided by four." },
