@@ -13,8 +13,8 @@ const ROW = 26, NUM_W = 54, RANGE_W = 52, RAIL = 3, RANK_W = 26, TOP = 20;
 /**
  * Ranked rows on a rank rail (the Compare models `ranked` view): recall and precision side by side, dot at the point estimate, whisker
  * across the 95% interval, on a dot-matrix. A thin uniform rail at the left edge, with muted `01`–`12` numerals; hairline
- * separators and faint alternate banding; the top row's name a step heavier with its whiskers on a translucent band. After each value the interval's
- * ends are printed in muted ink. Hover tooltip, click-to-details, cross-card highlight (hover.tsx), presence fades and the emphasis tint (ui.tsx RowTint)
+ * separators and faint alternate banding. After each value the interval's ends are printed in muted ink. Every row is drawn the same.
+ * Hover tooltip, click-to-details, cross-card highlight (hover.tsx), presence fades and the emphasis tint (ui.tsx RowTint)
  * follow the same contract as OpsBars and Consistency.
  */
 export function PRRail({ items, zoom, sortBy = "recall", logos = false, onSelect, highlight, onHover }: { items: PRItem[]; zoom: boolean; sortBy?: "recall" | "precision" | "f1"; logos?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
@@ -45,7 +45,6 @@ export function PRRail({ items, zoom, sortBy = "recall", logos = false, onSelect
   const ticks: number[] = [];
   for (let t = Math.ceil(lo / step) * step; t <= hi + 1e-9; t += step) ticks.push(Math.round(t * 1000) / 1000);
   const h = n * ROW + 44;
-  const topId = rows[0]?.id;
   // rows drawn in first-appearance order and placed by rank with a transform (ui.tsx usePresence), so a re-sort slides them
   const presence = usePresence(items, (it) => it.id);
   const lastTop = useRef(new Map<string, number>());
@@ -91,28 +90,26 @@ export function PRRail({ items, zoom, sortBy = "recall", logos = false, onSelect
             </g>
           ))}
           {drawn.map(({ r, state }) => {
-            const top = lastTop.current.get(r.id) ?? TOP, y = ROW / 2, label = `${r.name}${r.subset ? " *" : ""}`, first = r.id === topId;
-            const nameStyle = first ? { fill: "var(--ink)", fontWeight: 500 } : r.decider ? DECIDER_TEXT : undefined;
+            const top = lastTop.current.get(r.id) ?? TOP, y = ROW / 2, label = `${r.name}${r.subset ? " *" : ""}`;
             return (
-              <g key={r.id} className={`mv fd${highlight === r.id ? " hl" : ""}`} style={{ transform: `translate(0px, ${top}px)`, ...fadeStyle(state) }} {...hoverable(onHover, r.id)}>
+              <g key={r.id} className={`mv fd${highlight === r.id ? " hl" : ""}`} transform={`translate(0 ${top})`} style={fadeStyle(state)} {...hoverable(onHover, r.id)}>
                 <g onMouseMove={(e) => show(e, { kind: "row", top, height: ROW, clearX: W }, prTip(r, logos ? <Logo model={r.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
                   {r.emphasis && <RowTint sig={sig} pulsing={pulsing} width={W} height={ROW} />}
                   <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
                   {logos ? (
                     <>
                       <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={RANK_W + 12} cy={y} /></g>
-                      <text x={RANK_W + 26} y={y + 4} fontSize={first ? 12.5 : 12} fill="var(--ink-2)" style={nameStyle}>{label}</text>
+                      <text x={RANK_W + 26} y={y + 4} fontSize={12} fill="var(--ink-2)" style={r.decider ? DECIDER_TEXT : undefined}>{label}</text>
                     </>
                   ) : (
-                    <text x={LABEL_W - 12} y={y + 4} textAnchor="end" fontSize={first ? 12.5 : 12} fill="var(--ink-2)" style={nameStyle}>{label}</text>
+                    <text x={LABEL_W - 12} y={y + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)" style={r.decider ? DECIDER_TEXT : undefined}>{label}</text>
                   )}
                   {([r.recall, r.precision] as CI[]).map((ci, col) =>
                     ci ? (
                       <g key={col}>
-                        {first && <rect x={g(`${r.id}:${col}:lo`)} y={y - 6} width={Math.max(0, g(`${r.id}:${col}:hi`) - g(`${r.id}:${col}:lo`))} height={12} rx={6} fill={r.color} fillOpacity={0.18} />}
-                        <line x1={g(`${r.id}:${col}:lo`)} x2={g(`${r.id}:${col}:hi`)} y1={y} y2={y} stroke={r.color} strokeWidth={first ? 2 : 1.5} />
-                        <circle cx={g(`${r.id}:${col}:v`)} cy={y} r={first ? 4 : 3.2} fill={r.color} />
-                        <text x={x0[col] + colW + NUM_W} y={y + 4} textAnchor="end" fontSize={first ? 12.5 : 11.5} fontWeight={first ? 500 : 400} fill="var(--ink)" className="mono">{fmtPct(ci[0])}</text>
+                        <line x1={g(`${r.id}:${col}:lo`)} x2={g(`${r.id}:${col}:hi`)} y1={y} y2={y} stroke={r.color} strokeWidth={1.5} />
+                        <circle cx={g(`${r.id}:${col}:v`)} cy={y} r={3.2} fill={r.color} />
+                        <text x={x0[col] + colW + NUM_W} y={y + 4} textAnchor="end" fontSize={11.5} fill="var(--ink)" className="mono">{fmtPct(ci[0])}</text>
                         <text x={x0[col] + colW + NUMS - 2} y={y + 4} textAnchor="end" fontSize={10.5} fill="var(--ink-4)" className="mono">{fmtRange(ci)}</text>
                       </g>
                     ) : (
