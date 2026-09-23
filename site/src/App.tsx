@@ -17,7 +17,7 @@ import { DisclaimerLink, DisclaimerModal, useDisclaimer } from "./components/Dis
 import { Logo } from "./logos";
 
 /** The recall/precision card's views. `ranked` is drawn by PRRail on Compare models (rank rail) and by PRHeat on Compare configurations (vs default), chosen by PRCard's `ranked` prop. */
-type Chart = "map" | "ranked";
+export type Chart = "map" | "ranked";
 
 /** Short group names for the one-line picker. */
 /** Picker order: decision models first, then the LLMs (API and local share one group via the PRIMARY `kind` override). Kinds with no roster member (`baseline`, `local_llm`) are dropped before rendering. */
@@ -62,7 +62,7 @@ function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, h
   );
 }
 
-type View = { corpus: string; tag: string; arm: "multi" | "single"; gray: Gray; level: Level; issue: string | null };
+export type View = { corpus: string; tag: string; arm: "multi" | "single"; gray: Gray; level: Level; issue: string | null };
 
 // ------------------------------------------------------------------------------------------------
 // Metrics: the full figures for a row. Shown in the details modal's Metrics block; the chart hovers carry only the plotted value and one
@@ -240,8 +240,8 @@ function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider, empha
 /** A headline row's kind for grouping: the roster's override (Laya's fine-tuned row sits with the deciders) or the record's own. */
 const kindOf = (r: Rec): Kind => PRIMARY_BY_KEY[r.model]?.kind ?? (r.kind as Kind);
 
-/** The model multi-select for Compare models, rendered in the control bar. */
-function ModelPicker({ v, on, setOn, explain }: { v: View; on: Set<string>; setOn: (s: Set<string>) => void; explain: (k: string) => void }) {
+/** The model multi-select for Compare models, rendered in the control bar (also used by the screenshot studio, Studio.tsx). */
+export function ModelPicker({ v, on, setOn, explain }: { v: View; on: Set<string>; setOn: (s: Set<string>) => void; explain?: (k: string) => void }) {
   const rows = useRows(v);
   const primary = rosterOf(rows);
   const byKind = PICK_ORDER.map((k) => ({ kind: k, recs: primary.filter((r) => kindOf(r) === k) })).filter((g) => g.recs.length);
@@ -250,26 +250,34 @@ function ModelPicker({ v, on, setOn, explain }: { v: View; on: Set<string>; setO
     id: g.kind, label: KIND_SHORT[g.kind as Kind],
     items: g.recs.map((r) => {
       const m = PRIMARY_BY_KEY[r.model];
-      return { id: r.model, label: m.short, title: m.note, mark: <span style={{ color: m.color }}><Logo model={r.model} /></span>, suffix: starOf(r) ? <span className="sub" title={`scored on ${r.subset}`}>*</span> : undefined, detail: () => explain(r.model), accent: isDecider(kindOf(r)) ? m.color : undefined };
+      return { id: r.model, label: m.short, title: m.note, mark: <span style={{ color: m.color }}><Logo model={r.model} /></span>, suffix: starOf(r) ? <span className="sub" title={`scored on ${r.subset}`}>*</span> : undefined, detail: explain ? () => explain(r.model) : undefined, accent: isDecider(kindOf(r)) ? m.color : undefined };
     }),
   }));
   return <Picker label="Models" summary={`${avail} of ${primary.length}`} groups={groups} on={on} onChange={setOn} onReset={() => setOn(new Set(DEFAULT_ON))} />;
 }
 
-function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain: (k: string) => void }) {
-  const rows = useRows(v);
-  const sel = rosterOf(rows).filter((r) => on.has(r.model));
-  const [chart, setChart] = useState<Chart>("map");
-  // the decider marker (data.ts isDecider: heavier name on rows) on every chart of this page, by the roster's kind (Laya's fine-tuned row is grouped with the deciders)
-  const decider = (r: Rec) => isDecider(kindOf(r));
-  // the emphasised rows on this page's tables (ui.tsx RowTint, the --hl tint): the decision models, Jev and Laya, by the same kind rule as `decider`
-  const emphasis = (r: Rec) => isDecider(kindOf(r));
+// the decider marker (data.ts isDecider: heavier name on rows) on every chart of Compare models, by the roster's kind (Laya's fine-tuned row is grouped with the deciders)
+const decider = (r: Rec) => isDecider(kindOf(r));
+// the emphasised rows on Compare models' tables (ui.tsx RowTint, the --hl tint): the decision models, Jev and Laya, by the same kind rule as `decider`
+const emphasis = (r: Rec) => isDecider(kindOf(r));
 
-  const items: PRItem[] = sel.map((r) => {
-    const p = pick(r, v.level, v.gray, v.issue);
-    const meta = PRIMARY_BY_KEY[r.model];
-    return { id: r.model, name: meta.short, color: meta.color, recall: p.recall, precision: p.precision, dashed: r.kind === "system1_ft", subset: starOf(r), sub: qualitySub(r, v), decider: decider(r), emphasis: emphasis(r) };
-  });
+/** The Compare models selection on a view: the roster rows that are switched on, and the recall/precision items drawn for them (shared with Studio.tsx). */
+export function useCompareItems(v: View, on: Set<string>): { sel: Rec[]; items: PRItem[] } {
+  const rows = useRows(v);
+  return useMemo(() => {
+    const sel = rosterOf(rows).filter((r) => on.has(r.model));
+    const items: PRItem[] = sel.map((r) => {
+      const p = pick(r, v.level, v.gray, v.issue);
+      const meta = PRIMARY_BY_KEY[r.model];
+      return { id: r.model, name: meta.short, color: meta.color, recall: p.recall, precision: p.precision, dashed: r.kind === "system1_ft", subset: starOf(r), sub: qualitySub(r, v), decider: decider(r), emphasis: emphasis(r) };
+    });
+    return { sel, items };
+  }, [rows, on, v]);
+}
+
+function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain: (k: string) => void }) {
+  const { sel, items } = useCompareItems(v, on);
+  const [chart, setChart] = useState<Chart>("map");
 
   return (
     <section className="section">

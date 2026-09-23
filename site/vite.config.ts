@@ -9,5 +9,6 @@ export default defineConfig({
   plugins: [react()],
   base: "./",
   server: { fs: { allow: [path.resolve(root, "..")] } },
-  build: { outDir: "dist", emptyOutDir: true },
+  // Two pages: the site (index.html) and the unlinked screenshot studio (studio.html → src/studio.tsx → src/StudioPage.tsx).
+  build: { outDir: "dist", emptyOutDir: true, rollupOptions: { input: { main: path.resolve(root, "index.html"), studio: path.resolve(root, "studio.html") } } },
 });

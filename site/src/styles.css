@@ -565,3 +565,26 @@ svg text { user-select: none; font-family: var(--sans); }
 
 .logo { border-radius: 3px; object-fit: contain; display: inline-block; }
 /* the tinted vendor mark is the colour key; a deselected row goes grey */
+
+/* Screenshot studio (studio.html, src/Studio.tsx): the recall/precision chart alone on a sized panel, every control in the bars above.
+   The panel is CSS-resizable by its corner (Studio.tsx mirrors the dragged size into the fields); the bars are not sticky here so two rows never overlap. */
+.page.studio { max-width: none; }
+.studio .controls { position: static; backdrop-filter: none; }
+.studio .controls.studio-row2 { border-bottom: 1px solid var(--line); }
+.studio-hint { color: var(--ink-3); font-size: 13px; }
+.studio-size { display: inline-flex; align-items: center; gap: 6px; }
+.studio-size input { width: 76px; font: inherit; font-variant-numeric: tabular-nums; color: var(--ink); background: var(--panel); border: 1px solid var(--line-2); border-radius: 6px; padding: 4px 8px; }
+.studio-size input:disabled { color: var(--ink-4); }
+.studio-size .x { color: var(--ink-3); }
+.studio-size .unit { color: var(--ink-3); font-size: 12px; }
+.studio-stage { overflow: auto; padding: 18px 0 8px; }
+.studio-plot {
+  position: relative; display: flex; flex-direction: column;
+  background: var(--panel); border: 1px solid transparent; border-radius: 8px; padding: 14px 14px 10px;
+  min-width: 320px; min-height: 240px; max-width: 4000px;
+  resize: both; overflow: hidden;
+}
+.studio-plot.framed { border-color: var(--line); }
+.studio-plot.auto { resize: horizontal; min-height: 0; }
+.studio-canvas { flex: 1; position: relative; min-height: 0; }
+.studio-foot { color: var(--ink-3); font-size: 12px; margin: 10px 0 0; font-variant-numeric: tabular-nums; }
