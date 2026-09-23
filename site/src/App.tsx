@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, PRIMARY, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER,
+  ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER, rosterOf,
   corpusKey, costPerDoc, fmtCI, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, issueLabel, pick, siteCorpus, starOf, variantColor,
   type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
@@ -243,8 +243,8 @@ const kindOf = (r: Rec): Kind => PRIMARY_BY_KEY[r.model]?.kind ?? (r.kind as Kin
 /** The model multi-select for Compare models, rendered in the control bar. */
 function ModelPicker({ v, on, setOn, explain }: { v: View; on: Set<string>; setOn: (s: Set<string>) => void; explain: (k: string) => void }) {
   const rows = useRows(v);
-  const primary = rows.filter((r) => r.primary && PRIMARY_BY_KEY[r.model]);
-  const byKind = PICK_ORDER.map((k) => ({ kind: k, recs: PRIMARY.map((p) => primary.find((r) => r.model === p.key)).filter((r): r is Rec => !!r && kindOf(r) === k) })).filter((g) => g.recs.length);
+  const primary = rosterOf(rows);
+  const byKind = PICK_ORDER.map((k) => ({ kind: k, recs: primary.filter((r) => kindOf(r) === k) })).filter((g) => g.recs.length);
   const avail = primary.filter((r) => on.has(r.model)).length;
   const groups: PickGroup[] = byKind.map((g) => ({
     id: g.kind, label: KIND_SHORT[g.kind as Kind],
@@ -258,8 +258,7 @@ function ModelPicker({ v, on, setOn, explain }: { v: View; on: Set<string>; setO
 
 function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain: (k: string) => void }) {
   const rows = useRows(v);
-  const primary = rows.filter((r) => r.primary);
-  const sel = PRIMARY.map((p) => primary.find((r) => r.model === p.key)).filter((r): r is Rec => !!r && on.has(r.model));
+  const sel = rosterOf(rows).filter((r) => on.has(r.model));
   const [chart, setChart] = useState<Chart>("map");
   // the decider marker (data.ts isDecider: heavier name on rows) on every chart of this page, by the roster's kind (Laya's fine-tuned row is grouped with the deciders)
   const decider = (r: Rec) => isDecider(kindOf(r));
@@ -425,7 +424,7 @@ export default function App() {
       {explain && (
         <ExplainModal
           initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)}
-          metrics={(k, c) => metricsFor(k, c, v, (rows) => (pageId === "compare" ? rows.filter((r) => r.primary && on.has(r.model)) : rows.filter((r) => r.group === grp && !!r.variant && !isHidden(r.model) && !off.has(r.variant))))}
+          metrics={(k, c) => metricsFor(k, c, v, (rows) => (pageId === "compare" ? rosterOf(rows).filter((r) => on.has(r.model)) : rows.filter((r) => r.group === grp && !!r.variant && !isHidden(r.model) && !off.has(r.variant))))}
         />
       )}
 

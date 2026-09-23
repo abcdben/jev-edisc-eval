@@ -83,9 +83,13 @@ export const isHidden = (key: string): boolean => HIDDEN_MODELS.includes(key) ||
 /** The kind of a model key (headline roster or configuration), from the models map or the first record that ran it. */
 export const modelKind = (key: string): string | undefined => DATA.models[key]?.kind ?? DATA.records.find((r) => r.model === key)?.kind;
 
-/** Headline roster, in display order, with a stable colour each. `kind` overrides the record's kind for grouping on the Compare page. HIDDEN_MODELS are filtered out below. */
+/** Headline roster, in display order, with a stable colour each. `kind` overrides the record's kind for grouping on the Compare page. HIDDEN_MODELS are filtered out below.
+ * Compare models lists a few Jev configurations (the three question forms, plus Flat-Text State, the selected recipe) so a reader can switch them on; only `jev@state_string` starts checked. */
 const ALL_PRIMARY: { key: string; color: string; short: string; note: string; kind?: Kind }[] = [
-  { key: "jev@base", color: "var(--c-jev)", short: "Jev", note: "TypeSafe Jev 1.13, default configuration: Noul question form, prose criteria, RFP phrasing, matter context." },
+  { key: "jev@state_string", color: "var(--c-jev)", short: "Jev", note: "TypeSafe Jev 1.13, Flat-Text State: the selected configuration. Same Noul question as Our Default, but the state is one string (matter background + document) instead of a structured object. On by default." },
+  { key: "jev@base", color: "var(--c-jev-2)", short: "Jev · Our Default", note: "TypeSafe Jev 1.13, default configuration: Noul question form, prose criteria, RFP phrasing, matter context as a structured object." },
+  { key: "jev@choice", color: "var(--v3)", short: "Jev · Choice Question", note: "TypeSafe Jev 1.13, Choice Question: the same instruction and criteria, asked as a Choice between the two labels rather than a yes/no Noul." },
+  { key: "jev@score", color: "var(--v5)", short: "Jev · Five-Point Score", note: "TypeSafe Jev 1.13, Five-Point Score: the issue is asked as a Score from 'clearly not responsive' to 'clearly responsive'; the scored probability is the level divided by four." },
   { key: "laya-ft", color: "var(--c-laya-ft)", short: "Laya", kind: "system1", note: "ConvAI Laya, fine-tuned: the one supervised row in this zero-shot comparison. Fine-tuned (RLCD) on a 30% document-level dev split of the same corpus and scored on the held-out 70%; every other row is zero-shot. The labeled data it needed is not counted in the time and cost panels. Zero-shot Laya configurations are on the Configurations page." },
   { key: "claude-haiku-4.5", color: "var(--c-haiku)", short: "Haiku 4.5", note: "Anthropic Claude Haiku 4.5, structured JSON output, default effort." },
   { key: "claude-sonnet-5", color: "var(--c-sonnet)", short: "Sonnet 5", note: "Anthropic Claude Sonnet 5, structured JSON output, default effort, prompt caching on the all-issues arm." },
@@ -97,7 +101,9 @@ const ALL_PRIMARY: { key: string; color: string; short: string; note: string; ki
 ];
 export const PRIMARY = ALL_PRIMARY.filter((p) => !isHidden(p.key));
 export const PRIMARY_BY_KEY = Object.fromEntries(PRIMARY.map((p) => [p.key, p]));
-export const DEFAULT_ON = new Set(["jev@base", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash"].filter((k) => !isHidden(k)));
+export const DEFAULT_ON = new Set(["jev@state_string", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash"].filter((k) => !isHidden(k)));
+/** Compare-models rows for a corpus, in roster order. Membership is the roster, not the export's `primary` flag: Choice and Score are on the picker even though the export only flags base and Flat-Text State. */
+export const rosterOf = (rows: Rec[]) => PRIMARY.map((p) => rows.find((r) => r.model === p.key)).filter((r): r is Rec => !!r);
 
 /**
  * GPU rental for the rows that ran on our own hardware rather than an API (Laya checkpoints, Gemma 3 12B).
