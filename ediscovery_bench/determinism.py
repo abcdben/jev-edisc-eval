@@ -73,7 +73,7 @@ import numpy as np
 Key = tuple[str, str]  # (doc_id, question)
 
 MODELS = [
-    "jev@base", "jev@state_string", "laya@base", "laya@recipe",
+    "jev@base", "jev@choice", "jev@score", "jev@state_string", "laya@base", "laya@recipe",
     "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash",
     "gemma3-12b", "lexical",
 ]
