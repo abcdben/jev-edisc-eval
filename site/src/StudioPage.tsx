@@ -126,9 +126,10 @@ export default function StudioPage() {
   });
   const costPts: StudioScatterPt[] = sel.map((r) => { const c = costPerDoc(r); return { ...base(r), x: c == null ? null : c * cu.mult(r), y: pick(r, v.level, v.gray, v.issue).recall }; });
   const speedRows: StudioRow[] = sel.map((r) => {
-    const p50 = r.ops.doc_latency_p50_ms, p95 = r.ops.doc_latency_p95_ms;
+    const p50 = r.ops.doc_latency_p50_ms;
     if (speedChart === "throughput") { const val = p50 == null ? null : 3.6e6 / p50; return { ...base(r), value: val, label: val == null ? "" : `${fmtInt(Math.round(val))} docs/h` }; }
-    return { ...base(r), value: p50, lo: p50, hi: speedChart === "bars" ? p95 : null, label: p50 == null ? "" : fmtLatency(p50, speedUnit), sub: speedChart === "bars" && p95 != null ? `p95 ${fmtLatency(p95, speedUnit)}` : undefined };
+    // Median only: the p95 tail whisker was dropped as noise for a headline chart.
+    return { ...base(r), value: p50, label: p50 == null ? "" : fmtLatency(p50, speedUnit) };
   });
   // Stability: the card's rule. At t = 0 a decider keeps its default cell (no sampling control); an LLM without a t = 0 cell rejected the parameter.
   const isLLM = (r: Rec) => r.kind === "llm" || r.kind === "local_llm";
@@ -159,7 +160,7 @@ export default function StudioPage() {
     }
     if (plot === "speed") {
       if (speedChart === "throughput") return ["Sequential documents per hour: 3,600,000 ÷ median wall-clock milliseconds per document, one request at a time. Every service accepts parallel requests, so compare ratios, not absolutes."];
-      return [speedChart === "bars" ? "Bar: median latency per document, one request at a time; whisker: to the p95." : "Dot: median latency per document, one request at a time, on a log axis."];
+      return [speedChart === "bars" ? "Bar: median latency per document, one request at a time." : "Dot: median latency per document, one request at a time, on a log axis."];
     }
     const t0 = stabSetting === "t0" ? " Temperature 0 where the API accepts it; deciders expose no sampling control." : "";
     const where = `Measured on ${measuredOn}${sameRuns ? ` (${sameRuns} per model)` : " scored 5 times"}; the same cells are shown for every corpus.`;
@@ -244,7 +245,7 @@ export default function StudioPage() {
         {plot === "speed" && (
           <>
             <Control label="Chart">
-              <Seg value={speedChart} onChange={setSpeedChart} options={[{ id: "bars", label: "bars · p95 whisker" }, { id: "dots", label: "dots · log" }, { id: "throughput", label: "docs per hour" }]} />
+              <Seg value={speedChart} onChange={setSpeedChart} options={[{ id: "bars", label: "bars" }, { id: "dots", label: "dots · log" }, { id: "throughput", label: "docs per hour" }]} />
             </Control>
             {speedChart !== "throughput" && (
               <Control label="Units">
@@ -313,7 +314,7 @@ export default function StudioPage() {
           {plot === "speed" && (
             <StudioBars
               rows={speedRows} kind={speedChart === "dots" ? "dot" : "bar"} scale={speedChart === "dots" ? "log" : "linear"} sort={speedChart === "throughput" ? "desc" : "asc"}
-              axis={speedChart === "throughput" ? "sequential documents per hour (3,600,000 ÷ median ms per document)" : `median latency per document${speedChart === "bars" ? ", whisker to p95" : ""}${speedChart === "dots" ? " (log)" : ""}`}
+              axis={speedChart === "throughput" ? "sequential documents per hour (3,600,000 ÷ median ms per document)" : `median latency per document${speedChart === "dots" ? " (log)" : ""}`}
               fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos}
             />
           )}
