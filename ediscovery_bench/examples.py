@@ -18,6 +18,7 @@ from .providers.lexical import _terms
 from .providers.llm_common import SYSTEM_PROMPT, build_decision_model, build_prefix
 from .providers.typesafe import SCORE_LEVELS, VARIANTS, JevConfig, TypeSafeProvider
 from .runner import load_predictions
+from .scope import in_scope
 from .tasks import Document, TaskSet, load_corpus
 
 CORPORA = [
@@ -248,7 +249,7 @@ def export(out: Path = Path("results"), dest: Path = Path("results/examples.json
     payload: dict = {"corpora": {}, "notes": {"jev": JEV_NOTES, "laya": LAYA_NOTES, "llm": LLM_NOTE}, "score_levels": SCORE_LEVELS}
     for corpus, task_path, data_path in CORPORA:
         ts = TaskSet.load(task_path)
-        docs = load_corpus(data_path)
+        docs = in_scope(corpus, load_corpus(data_path))  # same document scope as export.py (TREC drops the 404 stratum)
         qid, ex_docs = _pick_examples(ts, docs, out, corpus)
         q = ts.questions[qid]
         c: dict = {

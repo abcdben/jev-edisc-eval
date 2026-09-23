@@ -15,6 +15,7 @@ import json
 from pathlib import Path
 
 from .metrics import macro_f1, op_metrics, pooled_metrics, question_metrics
+from .scope import in_scope
 from .tasks import TaskSet, load_corpus
 from .writeup import _f, collect, md_table
 
@@ -79,7 +80,7 @@ def write_recipe(out: Path, dest: Path, arms=("single", "multi")) -> Path:
 
     for corpus, task, data, _ in CORPORA:
         ts = TaskSet.load(root / task)
-        docs = load_corpus(root / data)
+        docs = in_scope(corpus, load_corpus(root / data))
         found = collect(out, corpus, list(arms), docs, ts)
         for (mk, arm, _tag), preds in found.items():
             if not mk.startswith("jev@"):

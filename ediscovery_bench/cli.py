@@ -374,9 +374,11 @@ def report(
     data: Optional[Path] = typer.Option(None, "--data", "-d", help="Rebind gold/gray from this corpus file"),
 ):
     """Recompute tables from saved predictions."""
+    from .scope import in_scope
+
     ts = TaskSet.load(task)
     keys = _expand_models(model) if model else None
-    docs = load_corpus(data) if data else None
+    docs = in_scope(corpus, load_corpus(data)) if data else None
     _report(ts, out, corpus, arm, keys, tag, exclude_gray, per_question, docs)
 
 
@@ -385,7 +387,7 @@ def rebind_gold(preds, docs, ts):
     out = []
     for p in preds:
         d = by.get(p.doc_id)
-        if d is None:
+        if d is None or p.question not in ts.questions:  # dropped question (TREC eminent_domain): not scored
             continue
         p.gold = d.gold(p.question, ts.negative_label)
         p.gray = p.question in d.gray
@@ -503,7 +505,7 @@ def _report(ts, out: Path, corpus: str, arms, keys, tag="", exclude_gray=False, 
                 continue
             if keys and mk not in keys:
                 continue
-            preds = load_predictions(f)
+            preds = [p for p in load_predictions(f) if p.question in ts.questions]
             if docs is not None:
                 preds = rebind_gold(preds, docs, ts)
             if preds:

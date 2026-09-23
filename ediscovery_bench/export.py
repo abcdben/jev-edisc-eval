@@ -14,6 +14,9 @@ Definitions
                 document in the multi arm, the sum of the per-issue calls in the single arm. Laya's
                 figure comes from the dedicated concurrency-1 latency runs where they exist.
   cost          sum of the model's per-decision cost over the documents, divided by documents.
+  scope         only questions in the task file are scored and only documents scope.in_scope keeps
+                (TREC: topic 404 `eminent_domain` dropped 2026-09-23, with its 100-email `pos:eminent_domain`
+                stratum; 11 topics, 3,016 emails). Predictions and corpora are left as saved.
 """
 
 from __future__ import annotations
@@ -26,6 +29,7 @@ import numpy as np
 
 from .metrics import wilson
 from .runner import load_predictions, parse_job_stem
+from .scope import in_scope
 from .tasks import TaskSet, load_corpus
 
 CORPORA = [
@@ -181,15 +185,22 @@ def _score(preds, ts, docs_by_id, exclude_gray: bool) -> dict:
     return {"decision": dec, "doc": doc, "per_issue": per_q}
 
 
-def _ops(preds, arm: str, latency_preds=None, latency_note: str | None = None, latency_scale: float | None = 1.0) -> dict:
+def _ops(preds, arm: str, latency_preds=None, latency_note: str | None = None, latency_scale: float | None = 1.0, call_preds=None) -> dict:
+    """`preds` are the scored decisions (task-set questions only). `call_preds`, when given, are every
+    non-error row the model produced for the in-scope documents, dropped questions included: cost,
+    tokens and latency are measured per document from the calls that actually happened. In the multi
+    arm one call covered every question in the run (TREC: 12, of which 11 are now scored), and its
+    cost was split evenly over the rows, so summing all rows recovers the call; nothing is scaled by
+    11/12. `n_decisions` counts scored decisions only."""
     ok = [p for p in preds if p.error is None]
+    calls = [p for p in call_preds if p.error is None] if call_preds is not None else ok
     by_doc: dict[str, list] = defaultdict(list)
-    for p in ok:
+    for p in calls:
         by_doc[p.doc_id].append(p)
     n_docs = len(by_doc)
-    cost = sum(p.cost_usd for p in ok); lcost = sum(p.list_cost_usd for p in ok)
-    tin = sum(p.input_tokens for p in ok); tout = sum(p.output_tokens for p in ok)
-    src = latency_preds if latency_preds else ok
+    cost = sum(p.cost_usd for p in calls); lcost = sum(p.list_cost_usd for p in calls)
+    tin = sum(p.input_tokens for p in calls); tout = sum(p.output_tokens for p in calls)
+    src = latency_preds if latency_preds else calls
     lb: dict[str, list] = defaultdict(list)
     for p in src:
         if p.error is None and p.latency_ms is not None:
@@ -262,15 +273,25 @@ def _tar_ops(t: dict) -> dict:
     }
 
 
-def _rebind(preds, docs_by_id, ts):
+def _rebind(preds, docs_by_id, ts, calls: list | None = None):
+    """Gold re-bound from the corpus for the in-scope documents and the task set's questions. Rows for
+    documents outside `docs_by_id` (e.g. TREC's dropped stratum, a fine-tune's train split) are ignored;
+    rows for questions no longer in the task set (TREC `eminent_domain`) are not scored, but are appended
+    to `calls` when given so _ops can charge the document's real cost and latency."""
     out = []
     for p in preds:
         d = docs_by_id.get(p.doc_id)
         if d is None:
             continue
+        if p.question not in ts.questions:
+            if calls is not None:
+                calls.append(p)
+            continue
         p.gold = d.gold(p.question, ts.negative_label); p.gray = p.question in d.gray
         if p.gold is not None:
             out.append(p)
+            if calls is not None:
+                calls.append(p)
     return out
 
 
@@ -280,7 +301,7 @@ def export(out: Path = Path("results"), dest: Path = Path("results/findings.json
     corpora_meta = {}
     for corpus, task, data, tag, display, gold_kind in CORPORA:
         ts = TaskSet.load(root / task)
-        docs = load_corpus(root / data)
+        docs = in_scope(corpus, load_corpus(root / data))  # TREC: minus the 100 `pos:eminent_domain` emails (scope.py)
         docs_by_id = {d.id: d for d in docs}
         pos = ts.positive_label
         n_pos_docs = sum(1 for d in docs if any(d.labels.get(q) == pos for q in ts.qids))
@@ -307,9 +328,14 @@ def export(out: Path = Path("results"), dest: Path = Path("results/findings.json
                 f = files.get((mk, tag))
                 if f is None:
                     continue
-                preds = _rebind(load_predictions(f), docs_by_id, ts)
+                calls: list = []
+                preds = _rebind(load_predictions(f), docs_by_id, ts, calls)
                 if not preds:
                     continue
+                if arm == "single":
+                    # one call per (document, question): a dropped question's calls are separable and are
+                    # not part of the 11-topic workflow, so they are not charged either
+                    calls = preds
                 if not primary and not mk.startswith("tar@") and len({p.doc_id for p in preds}) < 0.98 * len(docs):
                     continue  # stalled single-arm cells: partial files are not comparable (TAR/CAL pools are subsets by design)
                 lat = files.get((mk, "latency"))
@@ -355,7 +381,7 @@ def export(out: Path = Path("results"), dest: Path = Path("results/findings.json
                     "corpus": corpus, "tag": tag, "arm": arm, "model": key, "model_key": mk, **meta, "primary": primary,
                     "group": var_meta.get("group"), "variant": var_meta.get("variant"), "lever": var_meta.get("lever"),
                     "subset": None if len(ids) >= 0.98 * len(docs) else f"{len(ids)} of {len(docs)} docs",
-                    "ops": _ops(preds, arm, lat_preds, lat_note, lat_scale),
+                    "ops": _ops(preds, arm, lat_preds, lat_note, lat_scale, call_preds=calls),
                     "all": _score(preds, ts, docs_by_id, False),
                     "nogray": _score(preds, ts, docs_by_id, True),
                 }
@@ -393,6 +419,8 @@ def export(out: Path = Path("results"), dest: Path = Path("results/findings.json
             n_rows = 0
             for line in f.open():
                 r = json.loads(line); n_rows += 1
+                if r["question"] not in ts.questions:
+                    continue  # dropped topic (eminent_domain): not scored on the full collection either
                 if r.get("error") is None and r["label"] == pos:
                     flagged[r["question"]].add(r["doc_id"]); any_doc.add(r["doc_id"])
             per_q = {}

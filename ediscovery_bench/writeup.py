@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .metrics import agreement, macro_f1, op_metrics, pooled_metrics, question_metrics
 from .runner import load_predictions, parse_job_stem
+from .scope import in_scope
 from .tasks import TaskSet, load_corpus
 
 
@@ -21,7 +22,7 @@ def _rebind(preds, docs, ts):
     out = []
     for p in preds:
         d = by.get(p.doc_id)
-        if d is None:
+        if d is None or p.question not in ts.questions:  # out-of-scope document or dropped question
             continue
         p.gold = d.gold(p.question, ts.negative_label); p.gray = p.question in d.gray
         out.append(p)
@@ -53,7 +54,7 @@ def md_table(header: list[str], rows: list[list[str]]) -> str:
 
 def write_report(task: Path, data: Path, out: Path, corpus: str, arms=("single", "multi"), tags=("",), title: str | None = None) -> Path:
     ts = TaskSet.load(task)
-    docs = load_corpus(data)
+    docs = in_scope(corpus, load_corpus(data))
     pos = ts.positive_label
     found = collect(out, corpus, list(arms), docs, ts, tags)
     n_docs = len(docs)

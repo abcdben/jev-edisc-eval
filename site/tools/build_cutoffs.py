@@ -47,6 +47,10 @@ CORPORA = {
     "trec": dict(data="data/trec/eval.jsonl", display="TREC 2016 (Jeb Bush email)", label="TREC 2016"),
     "mnk": dict(data="data/mallinckrodt/mnk.jsonl", display="Mallinckrodt (opioid emails)", label="Mallinckrodt"),
 }
+# Documents excluded from scoring by meta.stratum, mirroring ediscovery_bench/scope.py: TREC topic 404 (eminent_domain) was
+# dropped from the study on 2026-09-23 and the 100 eval emails drawn as its positives are not scored (3,016 of 3,116).
+# The question itself is absent from findings.json's issue list, so its prediction rows are skipped below.
+DROPPED_STRATA = {"trec": {"pos:eminent_domain"}}
 # Short issue labels for the page's table (the findings title minus its "(broad)"/"(narrow)" suffix is the fallback).
 SHORT = {
     "gw_bush": "George W. Bush", "movie_gallery": "Movie Gallery", "rilya_wilson": "Rilya Wilson", "faith_based": "Faith-based initiatives",
@@ -133,6 +137,8 @@ def main() -> int:
             if not line:
                 continue
             row = json.loads(line)
+            if (row.get("meta") or {}).get("stratum") in DROPPED_STRATA.get(corpus, ()):
+                continue
             labels = {str(k): str(v) for k, v in (row.get("labels") or {}).items()}
             g = set(row.get("gray") or [])
             docs.append(str(row["id"]))
@@ -168,7 +174,7 @@ def main() -> int:
                 r = json.loads(line); n_rows += 1
                 d = di.get(str(r["doc_id"])); q = qi.get(r["question"])
                 if d is None or q is None:
-                    continue  # export.py _rebind drops rows whose document is not in the corpus file
+                    continue  # export.py _rebind drops rows whose document is out of scope or whose question left the task set
                 if r.get("error") is not None:
                     n_err += 1
                     continue

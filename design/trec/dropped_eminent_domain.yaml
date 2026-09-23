@@ -1,0 +1,56 @@
+# TREC 2016 topic 404 "Eminent domain" (question id `eminent_domain`): DROPPED FROM THE STUDY on 2026-09-23.
+#
+# This is the v1 question block moved verbatim out of tasks/trec.yaml (criteria_version v1; the v0 text is
+# in criteria_v0.yaml). It is kept so the dropped topic can be restored or re-scored: nothing else was
+# deleted. The gold labels stay in data/trec/{dev,eval,full}.jsonl, the `pos:eminent_domain` stratum stays
+# in eval.jsonl, and every saved prediction file still carries its `eminent_domain` rows.
+#
+# Why it was dropped: the gold is unreliable. NIST had three alternate assessors re-judge a weighted sample
+# per topic (data/trec/raw/prels.tr2016.alt{1,2,3}). On the 29 sampled documents for topic 404 that the
+# primary assessor had judged (data/trec/raw/athome4.facetsandqrels), the alternates agreed with the primary
+# on 27.6% / 10.3% / 6.9% of documents, and their precision against the primary's positives was 9.1% / 4.0% /
+# 3.8% (the primary judged 3 of those 29 relevant; the alternates judged 22-26 relevant). No other topic is
+# close (design/trec/calibration.md, "Human ceiling"; the means shown there are 46% / 44% / 5%). Scoring any
+# model against a label that a second human reproduces this poorly measures the assessor, not the model.
+#
+# What changed at scoring time (ediscovery_bench/scope.py; export.py, examples.py, writeup.py, cli.py):
+#   - predictions for `eminent_domain` are ignored (decision level, per-issue, and the any-issue document level);
+#   - the 100 eval emails with meta.stratum == "pos:eminent_domain" are excluded from TREC scoring, so the
+#     scored sample is 3,016 of the 3,116 emails; the hard_neg and random strata are unchanged;
+#   - documents in other strata that also carry an `eminent_domain` label simply lose that label;
+#   - per-document cost and latency in the multi arm stay as measured (the one call covered 12 questions);
+#     `n_decisions` counts the 11 scored questions.
+# The study is 11 topics. Nothing was re-run. `laya-ft-trec` was fine-tuned on dev.jsonl with the 404 labels
+# present; it is simply no longer scored on 404. ediscovery_bench/trec/build.py still lists 404 in TOPICS_2016
+# because the sampler must keep reproducing the existing files.
+
+  eminent_domain:
+    title: Eminent domain
+    # v1: gold covers government acquisition or taking of private land and property-rights fights broadly:
+    #     Kelo, eminent domain bills, state land acquisition (CARL, Florida Forever, Everglades), billboard
+    #     removal compensation. Broadened accordingly.
+    rfp_text: |
+      All documents concerning the legality or morality of expropriating land in Florida for commercial development.
+    literal: |
+      Does this email concern the legality or morality of expropriating land in Florida for commercial development?
+    positive_desc: |
+      The email concerns government taking or acquisition of private land in Florida and the property-rights
+      questions it raises: eminent domain for private or commercial development, the Kelo decision and Florida's
+      response (legislation, constitutional amendment); state or local acquisition of private land for
+      conservation or public purposes (CARL, Florida Forever, Everglades land buying) and disputes over such
+      purchases; compensation for regulatory takings, including billboard-removal compensation; and debate over
+      whether such takings are legal or fair.
+    negative_desc: |
+      The email does not concern government taking or acquisition of private land or property-rights disputes.
+      Zoning and growth management without a taking, ordinary road projects, environmental restoration with no land
+      acquisition, and property taxes are not responsive.
+    structured:
+      responsive:
+        what: Government taking or acquisition of private land in Florida and the property-rights debate around it
+        includes: [Kelo and Florida's response, eminent domain bills or amendments, takings for private or commercial development, CARL or Florida Forever or Everglades land acquisition, disputes over state land purchases, billboard removal compensation, regulatory takings and property-rights legislation]
+      not_responsive:
+        what: No taking or acquisition of private land
+        includes: [zoning or growth management without a taking, road projects, environmental restoration with no land purchase, property tax]
+    subparts:
+      - Does this email concern the legality or fairness of expropriating private land in Florida (eminent domain, Kelo, takings legislation or amendments)?
+      - Does this email concern government acquisition of private land in Florida (state land-buying programs, Everglades land acquisition, billboard or regulatory-takings compensation)?

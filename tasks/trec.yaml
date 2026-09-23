@@ -1,6 +1,13 @@
 # TREC 2016 Total Recall track, "athome4" (Jeb Bush gubernatorial email, 290,099 messages).
-# Twelve of the 34 official topics. `rfp_text` is the official NIST topic description verbatim.
+# Eleven of the 34 official topics. `rfp_text` is the official NIST topic description verbatim.
 # Gold = NIST assessor judgments (rel 1 or 2); unjudged = not responsive, per TREC convention.
+#
+# Dropped topic (2026-09-23): 404 Eminent domain (`eminent_domain`) was the twelfth topic sampled and run;
+# it was dropped from the study at scoring time because its gold is unreliable (NIST's alternate assessors
+# agreed with the primary on 7-28% of the re-judged sample, precision vs the primary 4-9%). Its question
+# block is kept verbatim in design/trec/dropped_eminent_domain.yaml; the data files and saved predictions
+# are untouched, and ediscovery_bench/scope.py excludes eval.jsonl's `pos:eminent_domain` stratum
+# (100 emails) from scoring. See design/trec/calibration.md, "Dropped topic".
 #
 # criteria_version: v1
 # v0 (design/trec/criteria_v0.yaml): criteria written from the official sentence alone.
@@ -309,37 +316,6 @@ questions:
     subparts:
       - Does this email concern a proposal, plan, waiver, pilot, or legislation to reform or restructure Medicaid?
       - Does this email concern Medicaid financing, cuts, program changes, leadership, or debate about changing how Medicaid works?
-
-  eminent_domain:
-    title: Eminent domain
-    # v1: gold covers government acquisition or taking of private land and property-rights fights broadly:
-    #     Kelo, eminent domain bills, state land acquisition (CARL, Florida Forever, Everglades), billboard
-    #     removal compensation. Broadened accordingly.
-    rfp_text: |
-      All documents concerning the legality or morality of expropriating land in Florida for commercial development.
-    literal: |
-      Does this email concern the legality or morality of expropriating land in Florida for commercial development?
-    positive_desc: |
-      The email concerns government taking or acquisition of private land in Florida and the property-rights
-      questions it raises: eminent domain for private or commercial development, the Kelo decision and Florida's
-      response (legislation, constitutional amendment); state or local acquisition of private land for
-      conservation or public purposes (CARL, Florida Forever, Everglades land buying) and disputes over such
-      purchases; compensation for regulatory takings, including billboard-removal compensation; and debate over
-      whether such takings are legal or fair.
-    negative_desc: |
-      The email does not concern government taking or acquisition of private land or property-rights disputes.
-      Zoning and growth management without a taking, ordinary road projects, environmental restoration with no land
-      acquisition, and property taxes are not responsive.
-    structured:
-      responsive:
-        what: Government taking or acquisition of private land in Florida and the property-rights debate around it
-        includes: [Kelo and Florida's response, eminent domain bills or amendments, takings for private or commercial development, CARL or Florida Forever or Everglades land acquisition, disputes over state land purchases, billboard removal compensation, regulatory takings and property-rights legislation]
-      not_responsive:
-        what: No taking or acquisition of private land
-        includes: [zoning or growth management without a taking, road projects, environmental restoration with no land purchase, property tax]
-    subparts:
-      - Does this email concern the legality or fairness of expropriating private land in Florida (eminent domain, Kelo, takings legislation or amendments)?
-      - Does this email concern government acquisition of private land in Florida (state land-buying programs, Everglades land acquisition, billboard or regulatory-takings compensation)?
 
   nra_rifle:
     title: National Rifle Association (NRA)

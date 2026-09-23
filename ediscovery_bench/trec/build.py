@@ -32,6 +32,11 @@ RAW = Path("data/trec/raw")
 COLL = Path("TREC/Jeb Bush TXT")
 MAX_CHARS = 12000  # ~3k tokens; longer emails are excluded (same rule as Mallinckrodt)
 
+# Historical sampling definition: the 12 topics dev/eval/full were drawn and labeled with. Do not edit;
+# the seeded draws must keep reproducing the existing files. Topic 404 (eminent_domain) was dropped from
+# the STUDY at scoring time on 2026-09-23 (unreliable gold; design/trec/dropped_eminent_domain.yaml):
+# its question block left tasks/trec.yaml and ediscovery_bench/scope.py excludes eval's
+# `pos:eminent_domain` stratum. The label and stratum stay in the data files.
 TOPICS_2016 = {  # topic -> question id
     "415": "gw_bush",
     "417": "movie_gallery",

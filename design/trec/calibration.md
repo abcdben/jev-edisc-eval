@@ -13,7 +13,9 @@ the evaluation sample.**
 - `data/trec/seen_ids.txt`: 696 ids = dev ∪ every document opened during exploration. Excluded from eval and full.
 - `data/trec/eval.jsonl`: 3,116 emails, disjoint from the above: 100 gold positives per topic (all 16 remaining
   for non-resident aliens), 1,000 judged-non-relevant "hard" negatives, 1,000 uniformly random emails.
-  Positives per question after cross-labeling: 101–182 (nra_aliens 18).
+  Positives per question after cross-labeling: 101–182 (nra_aliens 18). (Since 2026-09-23 the 100 emails
+  of the `pos:eminent_domain` stratum are excluded at scoring time, so 3,016 emails are scored; see
+  "Dropped topic" below. The file itself is unchanged.)
 - Emails over 12,000 characters (~3k tokens) are excluded throughout, as for Mallinckrodt.
 
 Gold is NIST's primary-assessor judgment (rel 1 or 2 → responsive; judged-non-relevant and unjudged →
@@ -123,6 +125,44 @@ A second human, given the same sentence, recovers roughly half to two-thirds of 
 positives on most of these topics, and essentially disagrees with the primary on eminent domain. Model
 recall against this gold should be read with that ceiling in mind; the model-vs-model comparison is
 unaffected because every model faces the same gold.
+
+With eminent domain dropped (below), the ceiling reads differently: on the eleven scored topics a second
+assessor agrees with the primary on 71–99% of documents (mean 84%), recovers 49–100% of the primary's
+positives (mean 70%), and is 49–100% precise against them (mean 81%). The one topic where the gold was
+essentially a single assessor's idiosyncratic reading is gone; what remains is ordinary inter-assessor
+disagreement, concentrated in recall (gw_bush 58%, nra_rifle 49%, rilya_wilson 58%, nra_aliens 57%).
+
+## Dropped topic: 404 Eminent domain (2026-09-23)
+
+Topic 404 (`eminent_domain`) was sampled, calibrated and run as the twelfth topic, and is dropped from
+the study at scoring time. The reason is the row above: on the 29 documents of NIST's alternate-assessor
+sample for 404 that the primary assessor had judged, the three alternates agreed with the primary on
+27.6% / 10.3% / 6.9% of documents, and their precision against the primary's positives was
+9.1% / 4.0% / 3.8% (the primary judged 3 of the 29 relevant; the alternates judged 22–26 relevant;
+`prels.tr2016.alt{1,2,3}` vs `athome4.facetsandqrels`). The next-worst topic agrees at 71%. A label that
+a second human reproduces this poorly measures the assessor, not the model, and the dev round already
+showed the gold reaching far beyond the sentence (CARL and Everglades land buying, billboard compensation).
+
+What changed, and what did not:
+
+- `tasks/trec.yaml` has eleven questions. The v1 `eminent_domain` block is kept verbatim in
+  `dropped_eminent_domain.yaml` (v0 in `criteria_v0.yaml`); `criteria_v1.yaml` is the historical v1 file.
+- Nothing was re-run and nothing was deleted: `data/trec/{dev,eval,full}.jsonl` keep the 404 labels and
+  eval's `pos:eminent_domain` stratum, and every prediction file keeps its `eminent_domain` rows.
+  `ediscovery_bench/trec/build.py` still lists 404 in `TOPICS_2016` so the sampler reproduces the files.
+- Scoring (`ediscovery_bench/scope.py`, used by `export.py`, `examples.py`, `writeup.py`, `cli.py`,
+  `site/tools/build_cutoffs.py`): predictions for `eminent_domain` are ignored at decision, per-issue and
+  any-issue document level; the 100 eval emails with `meta.stratum == "pos:eminent_domain"` are excluded
+  (they entered the sample only as 404 positives and would otherwise be unintended extra hard negatives),
+  so 3,016 of 3,116 emails are scored. Documents in the `hard_neg` and `random` strata that also carried a
+  404 label lose that label (one such email). Dev and the full collection have no strata; there the 404
+  question is simply not scored.
+- Cost and latency per document are as measured. In the multi arm one call covered all 12 questions and
+  the call happened; its cost is not scaled by 11/12. `n_decisions` counts the 11 scored questions. In the
+  single arm each question was its own call, so the 404 calls are not charged either.
+- `laya-ft-trec` was fine-tuned on `dev.jsonl` with the 404 labels present (one of twelve label columns);
+  it is not retrained, it is just no longer scored on 404.
+- The tables above are history and still say 12 topics.
 
 ## Decision
 

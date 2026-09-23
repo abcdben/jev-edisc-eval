@@ -60,7 +60,7 @@ const DATASET_ROWS: FactRow[] = [
     k: "Issues",
     cells: {
       mnk: <><b><N v={8} /></b>: four broad / narrow pairs (suspicious order monitoring, marketing, distribution data, DEA) written for this study from the opioid MDL record.</>,
-      trec: <><b><N v={12} /></b> of the 34 NIST topics; the official topic sentence is the request, verbatim.</>,
+      trec: <><b><N v={11} /></b> of the 34 NIST topics; the official topic sentence is the request, verbatim. A twelfth, Eminent domain (404), was run but is not scored: NIST's alternate assessors agreed with the primary on 7–28% of its re-judged sample.</>,
     },
   },
   {
@@ -88,7 +88,7 @@ const DATASET_ROWS: FactRow[] = [
     k: "Sampling",
     cells: {
       mnk: <><b>Stratified</b>: keyword-doped strata per issue pair, adjacent-product hard negatives, 700 random; near-duplicate threads thinned. Keyword strata are not labels.</>,
-      trec: <><b>Stratified</b> from the collection: 100 gold positives per topic, 1,000 judged non-relevant, 1,000 random; excludes the calibration set and 696 documents read while exploring.</>,
+      trec: <><b>Stratified</b> from the collection: 100 gold positives per topic, 1,000 judged non-relevant, 1,000 random; excludes the calibration set and 696 documents read while exploring. The 100 drawn as Eminent domain positives are not scored.</>,
     },
   },
   {
@@ -122,7 +122,7 @@ const MEASURE_ROWS: [string, ReactNode][] = [
   ["GPU rows", <>Laya and Gemma 3 12B ran on a rented {GPU_NAME}: ${GPU_USD_PER_HOUR.toFixed(2)}/h (Lambda list, September 2026) × single-stream review time, <b>an upper bound</b>. Gemma via Ollama on 400–600-document subsets.</>],
   ["Stability", <><b>300 Mallinckrodt emails</b> (100 gray, 100 clear positive, 100 clear negative) scored five times, both arms; the benchmark run is repeat one. Shown for every corpus.</>],
   ["Stability metric", <><b>Probability that two runs disagree</b> on a decision (pairwise), 95% bootstrap interval over decisions. Temperature 0 where the API accepts it; Sonnet 5 rejects sampling parameters; Jev and Laya expose none.</>],
-  ["Laya fine-tuned", <>RLCD recipe on a 30% document-level split of the same corpus (TREC: the 668-email calibration set), scored on the held-out rest. Its labeled data is <b>not counted in time or cost</b>.</>],
+  ["Laya fine-tuned", <>RLCD recipe on a 30% document-level split of the same corpus (TREC: the 668-email calibration set, with the dropped Eminent domain labels present), scored on the held-out rest. Its labeled data is <b>not counted in time or cost</b>.</>],
   ["Optimized configurations", <mark>Jev Flat-Text State and Laya Compact + Chunked (★) were selected on the <b>Veridian synthetic dev split</b> before any other corpus was scored.</mark>],
   ["Absent cells", "Some one-issue-per-call Laya configurations stalled and are omitted from that view."],
 ];

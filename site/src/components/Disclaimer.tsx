@@ -44,7 +44,7 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         <h4>Data sets</h4>
         <ul>
           <li><b>Mallinckrodt</b>: 1,840 emails from the opioid litigation archive; eight issues written for this study in broad and narrow pairs; gold labels from a three‑model panel.</li>
-          <li><b>TREC 2016</b>: 3,116 emails drawn from the 286,000‑message Jeb Bush collection; twelve NIST topics; assessor judgments as gold.</li>
+          <li><b>TREC 2016</b>: 3,016 emails drawn from the 286,000‑message Jeb Bush collection; eleven NIST topics; assessor judgments as gold.</li>
         </ul>
         <h4>Set‑up</h4>
         <p>
