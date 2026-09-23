@@ -11,8 +11,8 @@ import { hoverable } from "./hover";
 const ROW = 26, NUM_W = 54, RANGE_W = 52, RAIL = 3, RANK_W = 26, TOP = 20;
 
 /**
- * Ranked rows on a gradient rank rail (the Compare models `ranked` view): recall and precision side by side, dot at the point estimate, whisker
- * across the 95% interval, on a dot-matrix. A thin rail at the left edge darkens toward the top rank, with muted `01`–`12` numerals; hairline
+ * Ranked rows on a rank rail (the Compare models `ranked` view): recall and precision side by side, dot at the point estimate, whisker
+ * across the 95% interval, on a dot-matrix. A thin uniform rail at the left edge, with muted `01`–`12` numerals; hairline
  * separators and faint alternate banding; the top row's name a step heavier with its whiskers on a translucent band. After each value the interval's
  * ends are printed in muted ink. Hover tooltip, click-to-details, cross-card highlight (hover.tsx), presence fades and the emphasis tint (ui.tsx RowTint)
  * follow the same contract as OpsBars and Consistency.
@@ -55,7 +55,6 @@ export function PRRail({ items, zoom, sortBy = "recall", logos = false, onSelect
   for (const { r } of drawn) ([r.recall, r.precision] as CI[]).forEach((ci, col) => { if (ci) { target[`${r.id}:${col}:lo`] = sx(col, ci[1]); target[`${r.id}:${col}:hi`] = sx(col, ci[2]); target[`${r.id}:${col}:v`] = sx(col, ci[0]); } });
   const geo = useTween(target, undefined, undefined, W);
   const g = (k: string) => geo[k] ?? target[k];
-  const sortLabel = sortBy === "f1" ? "F1" : sortBy;
   // An emphasised row (`emphasis: true`, the decision-model rows on Compare models) carries a faint tint that breathes for a few cycles when the table loads or its rows change (ui.tsx usePulseWindow, RowTint).
   const sig = items.map((it) => `${it.id}:${it.recall?.[0].toFixed(4) ?? "-"}:${it.precision?.[0].toFixed(4) ?? "-"}`).join("|");
   const pulsing = usePulseWindow(sig, items.some((it) => it.emphasis), ROW_PULSE_MS);
@@ -73,7 +72,7 @@ export function PRRail({ items, zoom, sortBy = "recall", logos = false, onSelect
             <g key={i}>
               {i % 2 === 1 && <rect x={RAIL + 4} y={TOP + i * ROW} width={Math.max(0, W - RAIL - 4)} height={ROW} fill="var(--ink)" fillOpacity={0.018} />}
               <line x1={RAIL + 4} x2={W} y1={TOP + (i + 1) * ROW} y2={TOP + (i + 1) * ROW} stroke="var(--line)" />
-              <rect x={0} y={TOP + i * ROW + 1} width={RAIL} height={ROW - 2} rx={1.5} fill="var(--ink)" fillOpacity={(0.9 - (n > 1 ? i / (n - 1) : 0) * 0.8).toFixed(3)} />
+              <rect x={0} y={TOP + i * ROW + 1} width={RAIL} height={ROW - 2} rx={1.5} fill="var(--ink)" fillOpacity={0.45} />
               <text x={RAIL + 10} y={TOP + i * ROW + ROW / 2 + 4} fontSize={10.5} fill="var(--ink-4)" className="mono">{String(i + 1).padStart(2, "0")}</text>
             </g>
           ))}
@@ -129,7 +128,7 @@ export function PRRail({ items, zoom, sortBy = "recall", logos = false, onSelect
         <TipBox tip={tip} hint={onSelect ? CLICK_HINT : undefined} />
       </div>
       <div className="legend-note">
-        <span>Sorted by {sortLabel}; the rail darkens toward the top rank. Dot: point estimate. Whisker and range: 95% interval.</span>
+        <span>Dot: point estimate. Whisker and range: 95% interval.</span>
         {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
       </div>
     </>
