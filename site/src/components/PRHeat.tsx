@@ -134,6 +134,7 @@ export function PRHeat({ items, zoom, sortBy = "recall", logos = false, onSelect
       </div>
       <div className="legend-note">
         <span>Dot: point estimate. Whisker: 95% interval.</span>
+        {onSelect && <span><b>Click a row</b> to see what that configuration is: the exact request sent and the output returned.</span>}
         {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
       </div>
     </>
