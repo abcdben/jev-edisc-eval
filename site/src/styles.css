@@ -764,6 +764,7 @@ svg text { user-select: none; font-family: var(--sans); }
 .cut-split-note b { font-weight: 500; }
 .empty.small { padding: 18px 0; }
 /* export fallback when the clipboard is refused */
+.cut-fault { max-width: 520px; margin: 48px auto; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
 .cut-fallback { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .cut-fallback textarea { width: 100%; font: 11.5px/1.45 ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink-2); background: var(--bg); border: 1px solid var(--line-2); border-radius: 6px; padding: 8px 10px; resize: vertical; }
 @media (max-width: 900px) {

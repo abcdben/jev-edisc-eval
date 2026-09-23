@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { CORPORA, DEFAULT_CORPUS, PRIMARY, PRIMARY_BY_KEY, fmtInt, fmtPct } from "./data";
 import { Control, Hint, Seg } from "./components/ui";
 import { IssueSpark, PRCurveChart, type PRPoint } from "./components/CutoffCharts";
@@ -28,6 +28,7 @@ const freshState = (nIssues: number): CorpusState => ({
 });
 
 const pts = (v: number | null | undefined, d = 1) => (v == null ? "—" : `${(v * 100).toFixed(d)}`);
+const EMPTY_METRICS: Metrics = metrics({ tp: 0, fp: 0, fn: 0, tn: 0 });
 /** A change in percentage points with its direction; `good` says which direction is the improvement (null: neither). */
 function Delta({ cur, ref, good = "up", d = 1 }: { cur: number | null | undefined; ref: number | null | undefined; good?: "up" | "down" | null; d?: number }) {
   if (cur == null || ref == null) return <span className="cut-delta none">—</span>;
@@ -112,6 +113,16 @@ export default function CutoffsPage() {
     }
     setStates(next);
   }, [data]);
+  // The write is debounced: a slider drag fires hundreds of changes a second, and Safari throws a SecurityError past 100 replaceState calls
+  // in 30 s (Chrome silently drops them). It is also wrapped, so a refused write can never take the page down; the hash is a convenience.
+  const pendingHash = useRef<string | null>(null);
+  const hashTimer = useRef(0);
+  const flushHash = () => {
+    window.clearTimeout(hashTimer.current);
+    const h = pendingHash.current; pendingHash.current = null;
+    if (h == null || location.hash === h) return;
+    try { history.replaceState(null, "", h); } catch { /* throttled by the browser; the next flush will carry the latest state */ }
+  };
   useEffect(() => {
     if (!data || !hashRead.current) return;
     const h = new URLSearchParams();
@@ -122,8 +133,16 @@ export default function CutoffsPage() {
       if (cs.compare) h.set(`x.${ck}`, cs.compare);
       if (cs.cutoffs.some((v) => v !== DEFAULT_CUTOFF_IDX) && cs.cutoffs.length === cd.issues.length) h.set(`cut.${ck}`, cs.cutoffs.join(","));
     }
-    history.replaceState(null, "", `#${h.toString()}`);
+    pendingHash.current = `#${h.toString()}`;
+    window.clearTimeout(hashTimer.current);
+    hashTimer.current = window.setTimeout(flushHash, 400);
   }, [data, corpus, gray, level, states]);
+  useEffect(() => {
+    // settle the address as soon as the pointer lifts or the page is left, so a copied link is never stale
+    const flush = () => flushHash();
+    window.addEventListener("pointerup", flush); window.addEventListener("pagehide", flush); window.addEventListener("blur", flush);
+    return () => { window.removeEventListener("pointerup", flush); window.removeEventListener("pagehide", flush); window.removeEventListener("blur", flush); window.clearTimeout(hashTimer.current); };
+  }, []);
 
   // ---- the model and its precomputed structures ----
   const roster = useMemo(() => (c ? PRIMARY.filter((p) => c.models[p.key]) : []), [c]);
@@ -163,12 +182,18 @@ export default function CutoffsPage() {
   const cmpKey = c && st.compare && c.models[st.compare] && st.compare !== modelKey ? st.compare : null;
   const cm = c && cmpKey ? c.models[cmpKey] : null;
   const cmpStats = useMemo(() => (c && cm ? c.issues.map((_, q) => buildIssueStats(c, cm, q)) : []), [c, cm]);
+  // the comparison model's sweep and default do not move with the sliders; only its point at the current cutoffs does
+  const cmpCurve = useMemo(() => (c && cm ? sweepCurve(level, c, cm, cmpStats, gray) : []), [c, cm, cmpStats, gray, level]);
+  const cmpDef = useMemo(() => (c && cm ? metrics(pooledCountsLabel(level, c, cm, gray)) : null), [c, cm, gray, level]);
   const ghost = useMemo(() => {
-    if (!c || !cm || !cmpKey) return null;
+    if (!c || !cm || !cmpKey || !cmpDef) return null;
     const p = PRIMARY_BY_KEY[cmpKey];
-    const gd = metrics(pooledCountsLabel(level, c, cm, gray)), gc = metrics(pooledCounts(level, c, cm, cmpStats, cutVals, gray));
-    return { curve: sweepCurve(level, c, cm, cmpStats, gray), color: p.color, def: { id: cmpKey, name: p.short, color: p.color, recall: gd.recall, precision: gd.precision, f1: gd.f1 }, cur: { id: cmpKey, name: p.short, color: p.color, recall: gc.recall, precision: gc.precision, f1: gc.f1 } };
-  }, [c, cm, cmpKey, cmpStats, cutVals, gray, level]);
+    const gc = metrics(pooledCounts(level, c, cm, cmpStats, cutVals, gray));
+    return { curve: cmpCurve, color: p.color, def: { id: cmpKey, name: p.short, color: p.color, recall: cmpDef.recall, precision: cmpDef.precision, f1: cmpDef.f1 }, cur: { id: cmpKey, name: p.short, color: p.color, recall: gc.recall, precision: gc.precision, f1: gc.f1 } };
+  }, [c, cm, cmpKey, cmpStats, cmpCurve, cmpDef, cutVals, gray, level]);
+  // the chart follows the sliders a beat behind: the tables update on every tick, the SVG may skip intermediate frames of a fast drag
+  const chartCur = useDeferredValue(cur ?? EMPTY_METRICS);
+  const chartGhost = useDeferredValue(ghost);
   const rosterPts: PRPoint[] = useMemo(() => {
     if (!c || !ghosts) return [];
     return roster.filter((p) => p.key !== modelKey && p.key !== cmpKey).map((p) => { const x = metrics(pooledCountsLabel(level, c, c.models[p.key], gray)); return { id: p.key, name: p.short, color: p.color, recall: x.recall, precision: x.precision, f1: x.f1 }; });
@@ -307,9 +332,9 @@ export default function CutoffsPage() {
                   </span>
                 </div>
                 <PRCurveChart
-                  curve={curve} color={color} zoom={zoom} ghost={ghost} roster={rosterPts}
+                  curve={curve} color={color} zoom={zoom} ghost={chartGhost} roster={rosterPts}
                   def={{ id: modelKey!, name: meta.short, color, recall: def.recall, precision: def.precision, f1: def.f1 }}
-                  cur={{ id: modelKey!, name: meta.short, color, recall: cur.recall, precision: cur.precision, f1: cur.f1 }}
+                  cur={{ id: modelKey!, name: meta.short, color, recall: chartCur.recall, precision: chartCur.precision, f1: chartCur.f1 }}
                   xLabel={`Recall · ${levelWord}`} yLabel={`Precision · ${levelWord}`}
                 />
                 <div className="legend-note"><span>Per-issue cutoffs can leave the shared-cutoff line: the current point above it means the issues have been tuned past what one cutoff reaches.</span></div>

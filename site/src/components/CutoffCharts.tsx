@@ -35,8 +35,11 @@ export function PRCurveChart({ curve, def, cur, color, ghost, roster, zoom, heig
     // the frontier's middle (shared cutoffs 0.2–0.8) sets the frame; its tails run to recall 0 and to precision = prevalence
     const cx = curve.slice(GRID_N * 0.2, GRID_N * 0.8 + 1).filter((m) => m.recall != null && m.precision != null);
     xs.push(...cx.map((m) => m.recall!)); ys.push(...cx.map((m) => m.precision!));
+    const fin = (v: number[]) => v.filter(Number.isFinite);
+    const fx = fin(xs), fy = fin(ys);
+    if (!fx.length || !fy.length) return { x: [0, 1] as [number, number], y: [0, 1] as [number, number] };
     const pad = (lo: number, hi: number): [number, number] => { const p = Math.max(0.03, (hi - lo) * 0.12); return [Math.max(0, lo - p), Math.min(1, hi + p)]; };
-    return { x: pad(Math.min(...xs), Math.max(...xs)), y: pad(Math.min(...ys), Math.max(...ys)) };
+    return { x: pad(Math.min(...fx), Math.max(...fx)), y: pad(Math.min(...fy), Math.max(...fy)) };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zoom, pts.map((p) => `${p.recall},${p.precision}`).join("|"), curve]);
   const X = (v: number) => PL + ((v - dom.x[0]) / (dom.x[1] - dom.x[0] || 1)) * (W - PL - PR);
