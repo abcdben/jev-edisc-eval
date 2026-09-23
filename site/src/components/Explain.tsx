@@ -345,9 +345,10 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
   const [corpus, setCorpus] = useState(exCorpus(initialCorpus));
   const [group, setGroup] = useState(groupOf(initialKey));
   const [key, setKey] = useState(initialKey);
-  const [docIdx, setDocIdx] = useState(0);
 
   const C = EX.corpora[corpus];
+  const found = C.documents.findIndex((dd) => dd.gold === "responsive");
+  const docIdx = found >= 0 ? found : 0;
   const members = useMemo(() => sortMembers(membersOf(corpus, group)), [corpus, group]);
   const G = EX_GROUPS.find((g) => g.id === group)!;
   const active = members.includes(key) ? key : members[0];
@@ -437,17 +438,13 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
               </section>
             )}
 
-            {/* the corpus and document toggles live in this band: they change only the example (and, via the corpus, the metrics) */}
+            {/* the corpus toggle lives in this band: it changes only the example (and, via the corpus, the metrics) */}
             <section className="ex-example" aria-label="Example">
               <div className="ex-band">
                 <span className="ex-band-t">Example</span>
                 <span className="ex-band-s">one document from this corpus: the exact request that was sent, and the output that came back</span>
                 <span className="ex-band-ctl">
                   <Seg value={corpus} onChange={(c) => setCorpus(c)} options={CORPORA.filter((c) => EX.corpora[c.id]).map((c) => ({ id: c.id, label: c.label, title: c.short }))} />
-                  <Seg
-                    value={String(docIdx)} onChange={(v) => setDocIdx(Number(v))}
-                    options={C.documents.map((dd, i) => ({ id: String(i), label: dd.gold === "responsive" ? "gold-responsive" : "gold-not-responsive", title: `${dd.gold === "responsive" ? "a gold-responsive" : "a gold-not-responsive"} document (${dd.id})` }))}
-                  />
                 </span>
               </div>
               {cfg && base && d.changed.size === 0 && d.removed.length === 0 && (
