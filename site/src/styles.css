@@ -298,7 +298,7 @@ svg text { user-select: none; font-family: var(--sans); }
    PRScatter drops the class from a highlighted box so the deeper hover fill stays steady. */
 .pr-box.pulse { animation: box-breathe 0.65s ease-in-out 2; }
 @keyframes box-breathe { 0%, 100% { fill-opacity: var(--box-alpha); } 50% { fill-opacity: calc(var(--box-alpha) * 1.6); } }
-/* the emphasised table row on Compare models (ui.tsx RowTint: the decision-model rows, Jev and Laya, of the ranked, Inference latency, Cost and Determinism cards): a full-width band on the
+/* the emphasised table row on Compare models (ui.tsx RowTint: the decision-model rows, Jev and Laya, of the ranked, Inference latency, Cost and Flip rate cards): a full-width band on the
    --hl highlight (the same tint as the modals' <mark>, themed per light/dark above), resting at about half strength; `.pulse` breathes it from that faint
    rest to the full tint and back, a quick double pulse of two 0.65 s cycles (ui.tsx ROW_PULSE_CYCLES) after the table loads or its rows change, then it settles. The band sits
    under the row's hover hit area and fades out while the row is hovered, focused or highlighted from another card, so the grey hover band alone shows. */

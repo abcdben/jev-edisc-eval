@@ -58,7 +58,7 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
           <li><b>Recall and precision</b>, with 95% confidence intervals.</li>
           <li><b>Speed</b>: median latency to score one document, one request at a time.</li>
           <li><b>Cost</b> per 100,000 documents, as paid, at each corpus's average document length.</li>
-          <li><b>Determinism</b>: how often a model changes its answer on the same document across repeated runs.</li>
+          <li><b>Flip rate</b>: how often a model changes its answer on the same document across repeated identical runs.</li>
         </ul>
         <p>
           <b>Zero‑shot means nothing was iterated.</b> In practice a review team refines its criteria against sample documents many times before
