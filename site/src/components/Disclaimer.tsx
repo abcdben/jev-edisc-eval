@@ -32,7 +32,7 @@ export function useDisclaimer() {
 
 export function DisclaimerModal({ onClose }: { onClose: () => void }) {
   return (
-    <Modal className="disclaimer" eyebrow="About this comparison" title="A zero-shot bake-off: decision models against LLMs on relevance review" onClose={onClose}>
+    <Modal className="disclaimer" eyebrow="About this comparison" title="A single-shot showdown: decision models against LLMs on relevance review" onClose={onClose}>
       <div className="disc-body">
         <h4>What was tested</h4>
         <p>
@@ -71,7 +71,7 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         </p>
         <h4>What this is</h4>
         <p>
-          <mark>This is a point‑in‑time snapshot of a zero‑shot bake‑off on established industry data sets</mark>, showing where these new decision
+          <mark>This is a point‑in‑time snapshot of a single‑shot showdown on established industry data sets</mark>, showing where these new decision
           models stand on relevance review next to the models people already use. The same criteria and scoring were applied to every model, and
           nothing was tuned against the test data; even so, <mark>assumptions and decisions were made that are not documented on this site</mark>, and
           each result rests on choices about criteria, configurations, pricing and sampling that could shift on another matter.
