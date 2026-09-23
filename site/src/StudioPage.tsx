@@ -7,10 +7,11 @@ import { detFor } from "./components/Consistency";
 import { StudioBars, StudioScatter, type StudioRow, type StudioScatterPt } from "./components/StudioCharts";
 import { Control, Seg } from "./components/ui";
 import { copyPng, downloadBlob, renderPanelPng, slug, type ExportBackground } from "./exportPng";
+import { PALETTES, isPaletteId, toHex, toVars, varOf, type PaletteId } from "./palettes";
 
 /**
  * Screenshot studio (studio.html → studio.tsx → this page; unlinked from the site): one Compare models chart alone, on a plain panel whose size
- * you set, with every control (corpus, models, issue, plot and chart type, units, axis range, size, theme, frame, legend, style) in the bars above
+ * you set, with every control (corpus, models, issue, plot and chart type, units, axis range, size, theme, frame, legend, style, model colours) in the bars above
  * and none on the plot. Plots: recall/precision (the site's map and ranked views), Cost, Speed and Stability (components/StudioCharts.tsx).
  * Drag the panel's bottom-right corner or type a size; pick a preset for LinkedIn's usual aspect ratios. Nothing pulses and nothing opens on click.
  */
@@ -42,6 +43,10 @@ const TEXT_SCALE: Record<TextSize, number> = { s: 0.9, m: 1, l: 1.2, xl: 1.45 };
 const isTextSize = (s: string | null): s is TextSize => s != null && s in TEXT_SCALE;
 /** Contrast: `high` (styles.css .studio-plot[data-contrast="high"]) puts every label in full ink, thickens axes and whiskers, raises the bar and box alphas and enlarges the marks, on top of whichever Style preset is on. */
 type Contrast = "normal" | "high";
+/** Colors (palettes.ts): `style` leaves the Style preset's own model colours; a palette id writes that palette over them; `custom` writes the user's swatches, seeded from whatever was showing when they switched. */
+type ColorMode = "style" | PaletteId | "custom";
+const isColorMode = (s: string | null): s is ColorMode => s === "style" || s === "custom" || isPaletteId(s);
+const readCustom = (): Record<string, string> => { try { const o = JSON.parse(localStorage.getItem("studio-colors-custom") || "{}"); return o && typeof o === "object" ? o : {}; } catch { return {}; } };
 
 /** PNG export scale: device pixels per CSS pixel of the panel (a 1200 × 675 panel at 2× is a 2400 × 1350 PNG). */
 type ExportScale = "1" | "2" | "3";
@@ -110,6 +115,28 @@ export default function StudioPage() {
   const ts = TEXT_SCALE[text];
   const [contrast, setContrast] = useState<Contrast>(() => (localStorage.getItem("studio-contrast") === "high" ? "high" : "normal"));
   useEffect(() => { localStorage.setItem("studio-contrast", contrast); }, [contrast]);
+
+  // Model colours: a palette over the Style preset, or per-model swatches. Dark panels (Slate, or Site in Dark) get the palette lifted (palettes.ts forDark).
+  const [colorMode, setColorMode] = useState<ColorMode>(() => { const s = localStorage.getItem("studio-colors"); return isColorMode(s) ? s : "style"; });
+  useEffect(() => { localStorage.setItem("studio-colors", colorMode); }, [colorMode]);
+  const [custom, setCustom] = useState<Record<string, string>>(readCustom);
+  useEffect(() => { localStorage.setItem("studio-colors-custom", JSON.stringify(custom)); }, [custom]);
+  const darkPanel = style === "slate" || (style === "site" && theme === "dark");
+  const colorVars: Record<string, string> = colorMode === "style" ? {} : colorMode === "custom" ? toVars(custom, false) : toVars(PALETTES.find((p) => p.id === colorMode)!.colors, darkPanel);
+  /** Every roster model's colour as the panel currently resolves it (the preset's, or the palette or swatch over it). */
+  const currentColors = (): Record<string, string> => {
+    const el = plotRef.current, out: Record<string, string> = {};
+    if (!el) return out;
+    const cs = getComputedStyle(el);
+    for (const k of Object.keys(PRIMARY_BY_KEY)) { const v = varOf(k); const hex = v ? toHex(cs.getPropertyValue(v)) : null; if (hex) out[k] = hex; }
+    return out;
+  };
+  const onColorMode = (m: ColorMode) => {
+    // Entering custom starts from the colours on screen, so "pick a palette, then tweak" works.
+    if (m === "custom" && colorMode !== "custom") setCustom(currentColors());
+    setColorMode(m);
+  };
+  const resetCustom = () => { setCustom({}); setColorMode("style"); };
 
   // PNG export (exportPng.ts): the panel as shown, minus frame, corner radius and resize grip, at 1–3× on the panel colour or transparent.
   const [exScale, setExScale] = useState<ExportScale>(() => { const s = localStorage.getItem("studio-export-scale"); return isExportScale(s) ? s : "2"; });
@@ -211,7 +238,7 @@ export default function StudioPage() {
   /** e.g. jev-recall-precision-map-trec-linkedin-1200x675@2x.png; the size is the panel's rendered CSS size (the PNG is that × scale). */
   const exportName = (el: HTMLElement) => {
     const chartId = plot === "pr" ? chart : plot === "cost" ? costChart : plot === "speed" ? speedChart : stabChart;
-    return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, corpus, style].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
+    return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, corpus, style, colorMode === "style" ? "" : colorMode].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
   };
 
   return (
@@ -332,6 +359,31 @@ export default function StudioPage() {
           <Seg value={style} onChange={setStyle} options={STYLES.map((s) => ({ id: s.id, label: s.label, title: s.title }))} />
           {style !== "site" && <span className="studio-hint small">{STYLES.find((s) => s.id === style)?.title}; ignores Dark/Light.</span>}
         </Control>
+        <Control label="Colors">
+          <Seg
+            value={colorMode} onChange={onColorMode}
+            options={[
+              { id: "style" as ColorMode, label: "style's own", title: "The model colours the Style preset defines" },
+              ...PALETTES.map((p) => ({ id: p.id as ColorMode, label: p.label, title: p.title })),
+              { id: "custom" as ColorMode, label: "custom", title: "Pick each model's colour; starts from the colours on screen" },
+            ]}
+          />
+          {colorMode !== "style" && colorMode !== "custom" && <span className="studio-hint small">{PALETTES.find((p) => p.id === colorMode)?.title}{darkPanel ? "; lifted for the dark panel" : ""}.</span>}
+          {colorMode === "custom" && (
+            <span className="studio-swatches">
+              {sel.map((r) => {
+                const m = PRIMARY_BY_KEY[r.model], hex = custom[r.model] ?? "#888888";
+                return (
+                  <label key={r.model} className="studio-swatch" title={`${m.short}: ${hex}`}>
+                    <input type="color" value={hex} onChange={(e) => { const c = e.target.value; setCustom((p) => ({ ...p, [r.model]: c })); }} aria-label={`${m.short} colour`} />
+                    <span>{m.short}</span>
+                  </label>
+                );
+              })}
+              <button type="button" className="studio-btn small" onClick={resetCustom} title="Drop the swatches and go back to the style's own colours">reset</button>
+            </span>
+          )}
+        </Control>
         <Control label="Text">
           <Seg value={text} onChange={setText} options={[{ id: "s", label: "S", title: "90% of the site's text size" }, { id: "m", label: "M", title: "The site's text size" }, { id: "l", label: "L", title: "120%" }, { id: "xl", label: "XL", title: "145%, for phone-sized viewing" }]} />
         </Control>
@@ -361,7 +413,7 @@ export default function StudioPage() {
           className={`studio-plot${frame ? " framed" : ""}${fills ? "" : " auto"}`}
           data-style={style}
           data-contrast={contrast}
-          style={{ width: w, height: fills ? h : undefined, "--fs-legend": `${12 * ts}px` } as React.CSSProperties}
+          style={{ ...colorVars, width: w, height: fills ? h : undefined, "--fs-legend": `${12 * ts}px` } as React.CSSProperties}
         >
           {plot === "pr" && chart === "map" && (
             <div className="studio-canvas">

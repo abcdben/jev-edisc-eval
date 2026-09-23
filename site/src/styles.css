@@ -597,6 +597,13 @@ svg text { user-select: none; font-family: var(--sans); }
 .studio-btn:disabled { color: var(--ink-4); cursor: default; border-color: var(--line-2); }
 .studio-status { font-size: 12.5px; color: var(--ink-2); }
 .studio-status.err { color: #b3261e; }
+.studio-btn.small { font-size: 12px; padding: 2px 9px; }
+/* Colors → custom: one native colour input per selected model; the value is written onto the panel as that model's custom property (palettes.ts) */
+.studio-swatches { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.studio-swatch { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-2); cursor: pointer; }
+.studio-swatch input[type="color"] { width: 24px; height: 24px; padding: 0; border: 1px solid var(--line-2); border-radius: 6px; background: none; cursor: pointer; }
+.studio-swatch input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
+.studio-swatch input[type="color"]::-webkit-color-swatch { border: none; border-radius: 4px; }
 
 /* Studio plot style presets (StudioPage.tsx STYLES → data-style on .studio-plot). Each preset redefines, inside the panel only, the surface
    and ink variables, the grid, the box fill/outline alphas, the face (svg text and .legend-note read --sans) and the model palette
