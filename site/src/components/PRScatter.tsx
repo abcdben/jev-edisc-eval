@@ -29,7 +29,9 @@ function niceTicks(lo: number, hi: number): number[] {
 const PULSE_CYCLES = 2, PULSE_CYCLE_MS = 650;
 
 /** `pulse` lets the interval boxes of decider items (`decider: true`) breathe for a few cycles whenever the plot loads or its set of points changes: a fill-opacity cycle (styles.css .pr-box.pulse) on the shaded box only, never the mark or label; a highlighted box keeps its steady deeper fill instead. Off by default and under prefers-reduced-motion. */
-export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover, pulse = false }: { items: PRItem[]; zoom: boolean; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean }) {
+/** `domain` (the screenshot studio) fixes both axes to explicit 0–1 ranges, overriding `zoom`. */
+export type PRDomain = { x: [number, number]; y: [number, number] };
+export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover, pulse = false }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickMark = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const sz = useSize(hostRef, { w: 760, h: height });
@@ -51,6 +53,7 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
   const pulsing = usePulseWindow(sig, pulse, PULSE_CYCLES * PULSE_CYCLE_MS);
 
   const dom = useMemo(() => {
+    if (domain) return domain;
     if (!zoom || pts.length === 0) return { x: [0, 1] as [number, number], y: [0, 1] as [number, number] };
     const pad = (lo: number, hi: number): [number, number] => {
       const p = Math.max(0.02, (hi - lo) * 0.12);
@@ -60,7 +63,7 @@ export function PRScatter({ items, zoom, xLabel = "Recall", yLabel = "Precision"
       x: pad(Math.min(...pts.map((p) => p.recall[1])), Math.max(...pts.map((p) => p.recall[2]))),
       y: pad(Math.min(...pts.map((p) => p.precision[1])), Math.max(...pts.map((p) => p.precision[2]))),
     };
-  }, [pts, zoom]);
+  }, [pts, zoom, domain]);
 
   const X = (v: number) => PL + ((v - dom.x[0]) / (dom.x[1] - dom.x[0] || 1)) * (W - PL - PR);
   const Y = (v: number) => PT + (1 - (v - dom.y[0]) / (dom.y[1] - dom.y[0] || 1)) * (H - PT - PB);

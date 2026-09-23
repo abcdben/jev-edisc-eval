@@ -17,7 +17,8 @@ const ROW = 26, NUM_W = 54, RANGE_W = 52, RAIL = 3, RANK_W = 26, TOP = 20;
  * Hover tooltip, click-to-details, cross-card highlight (hover.tsx), presence fades and the emphasis tint (ui.tsx RowTint)
  * follow the same contract as OpsBars and Consistency.
  */
-export function PRRail({ items, zoom, sortBy = "recall", logos = false, onSelect, highlight, onHover }: { items: PRItem[]; zoom: boolean; sortBy?: "recall" | "precision" | "f1"; logos?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
+/** `range` (the screenshot studio) fixes both panels' axis to an explicit 0–1 range, overriding `zoom`. */
+export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, onSelect, highlight, onHover }: { items: PRItem[]; zoom: boolean; range?: [number, number]; sortBy?: "recall" | "precision" | "f1"; logos?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickRow = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const W = useWidth(hostRef, 760);
@@ -35,7 +36,8 @@ export function PRRail({ items, zoom, sortBy = "recall", logos = false, onSelect
   const x0 = [LABEL_W, LABEL_W + colW + NUMS + GAP];
   const all = rows.flatMap((r) => [r.recall, r.precision]).filter((c): c is NonNullable<CI> => !!c);
   let lo = 0, hi = 1;
-  if (zoom && all.length) {
+  if (range) [lo, hi] = range;
+  else if (zoom && all.length) {
     lo = Math.max(0, Math.min(...all.map((c) => c[1])) - 0.02);
     hi = Math.min(1, Math.max(...all.map((c) => c[2])) + 0.02);
   }

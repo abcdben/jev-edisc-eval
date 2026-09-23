@@ -577,6 +577,8 @@ svg text { user-select: none; font-family: var(--sans); }
 .studio-size input:disabled { color: var(--ink-4); }
 .studio-size .x { color: var(--ink-3); }
 .studio-size .unit { color: var(--ink-3); font-size: 12px; }
+.studio-axes { display: inline-flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.studio-axes .studio-size input { width: 60px; }
 .studio-stage { overflow: auto; padding: 18px 0 8px; }
 .studio-plot {
   position: relative; display: flex; flex-direction: column;

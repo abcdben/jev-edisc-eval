@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { DATA, DEFAULT_CORPUS, DEFAULT_ON, corpusKey, issueLabel, siteCorpus, CORPORA } from "./data";
 import { ModelPicker, useCompareItems, type Chart, type View } from "./App";
-import { PRScatter } from "./components/PRScatter";
+import { PRScatter, type PRDomain } from "./components/PRScatter";
 import { PRRail } from "./components/PRRail";
 import { Control, Seg } from "./components/ui";
 
@@ -33,7 +33,17 @@ export default function StudioPage() {
   const { items } = useCompareItems(v, on);
 
   const [chart, setChart] = useState<Chart>("map");
-  const [zoom, setZoom] = useState(true);
+  // Axes: the site's two modes, plus `custom`, explicit percent bounds per axis (the ranked view shares one range across both panels).
+  const [axes, setAxes] = useState<"full" | "zoom" | "custom">("zoom");
+  const [ax, setAx] = useState({ xlo: 50, xhi: 100, ylo: 50, yhi: 100 });
+  const setBound = (k: keyof typeof ax) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const n = Number(e.target.value);
+    if (Number.isFinite(n)) setAx((p) => ({ ...p, [k]: clamp(n, 0, 100) }));
+  };
+  const span = (lo: number, hi: number): [number, number] => (hi > lo ? [lo / 100, hi / 100] : [Math.min(lo, hi) / 100, Math.min(lo, hi) / 100 + 0.01]);
+  const domain: PRDomain | undefined = axes === "custom" ? { x: span(ax.xlo, ax.xhi), y: span(ax.ylo, ax.yhi) } : undefined;
+  const range: [number, number] | undefined = axes === "custom" ? span(ax.xlo, ax.xhi) : undefined;
+  const zoom = axes === "zoom";
   const [logos, setLogos] = useState(true);
   const [legend, setLegend] = useState(true);
   const [frame, setFrame] = useState(true);
@@ -91,7 +101,27 @@ export default function StudioPage() {
           <Seg value={chart} onChange={setChart} options={[{ id: "map", label: "map" }, { id: "ranked", label: "ranked" }]} />
         </Control>
         <Control label="Axes">
-          <Seg value={zoom ? "zoom" : "full"} onChange={(z) => setZoom(z === "zoom")} options={[{ id: "full", label: "0–100%" }, { id: "zoom", label: "fit to data" }]} />
+          <Seg value={axes} onChange={setAxes} options={[{ id: "full", label: "0–100%" }, { id: "zoom", label: "fit to data" }, { id: "custom", label: "custom" }]} />
+          {axes === "custom" && (
+            <span className="studio-axes">
+              <span className="studio-size">
+                <span className="unit">{chart === "map" ? "recall" : "both panels"}</span>
+                <input type="number" min={0} max={100} step={5} value={ax.xlo} onChange={setBound("xlo")} aria-label="recall axis minimum, percent" />
+                <span className="x">–</span>
+                <input type="number" min={0} max={100} step={5} value={ax.xhi} onChange={setBound("xhi")} aria-label="recall axis maximum, percent" />
+                <span className="unit">%</span>
+              </span>
+              {chart === "map" && (
+                <span className="studio-size">
+                  <span className="unit">precision</span>
+                  <input type="number" min={0} max={100} step={5} value={ax.ylo} onChange={setBound("ylo")} aria-label="precision axis minimum, percent" />
+                  <span className="x">–</span>
+                  <input type="number" min={0} max={100} step={5} value={ax.yhi} onChange={setBound("yhi")} aria-label="precision axis maximum, percent" />
+                  <span className="unit">%</span>
+                </span>
+              )}
+            </span>
+          )}
         </Control>
         <Control label="Size">
           <span className="select">
@@ -122,10 +152,10 @@ export default function StudioPage() {
         >
           {chart === "map" && (
             <div className="studio-canvas">
-              <PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill />
+              <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill />
             </div>
           )}
-          {chart === "ranked" && <PRRail items={items} zoom={zoom} sortBy="recall" logos={logos} />}
+          {chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} />}
           {legend && chart === "map" && (
             <div className="legend-note">
               <span>Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span>
