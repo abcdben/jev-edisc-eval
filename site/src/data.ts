@@ -84,16 +84,14 @@ export const isHidden = (key: string): boolean => HIDDEN_MODELS.includes(key) ||
 export const modelKind = (key: string): string | undefined => DATA.models[key]?.kind ?? DATA.records.find((r) => r.model === key)?.kind;
 
 /** Headline roster, in display order, with a stable colour each. `kind` overrides the record's kind for grouping on the Compare page. HIDDEN_MODELS are filtered out below.
- * Compare models lists a curated set of Jev configurations. The three question forms (Noul, Choice, Score) start checked; the others are off. */
+ * Compare models lists a curated set of Jev configurations. The three question forms (Noul, Choice, Score) start checked; the others are off. Flat-Text State and No Criteria stay on the Configurations page. */
 const ALL_PRIMARY: { key: string; color: string; short: string; note: string; kind?: Kind }[] = [
   { key: "jev@base", color: "var(--c-jev)", short: "Jev · Noul", note: "TypeSafe Jev 1.13, Noul: one yes/no Noul per issue, prose criteria, RFP phrasing, matter context as a structured object. On by default." },
   { key: "jev@choice", color: "var(--v3)", short: "Jev · Choice", note: "TypeSafe Jev 1.13, Choice: the same instruction and criteria, asked as a Choice between the two labels rather than a yes/no Noul. On by default." },
   { key: "jev@score", color: "var(--v5)", short: "Jev · Score", note: "TypeSafe Jev 1.13, Score: the issue is asked as a five-point Score from 'clearly not responsive' to 'clearly responsive'; the scored probability is the level divided by four. On by default." },
-  { key: "jev@state_string", color: "var(--c-jev-2)", short: "Jev · Flat-Text State", note: "TypeSafe Jev 1.13, Flat-Text State: the selected configuration. Same yes/no Noul as Noul Question, but the state is one string (matter background + document) instead of a structured object. Strongest Jev row on Mallinckrodt." },
   { key: "jev@decompose", color: "var(--v1)", short: "Jev · Decomposed Sub-Questions", note: "TypeSafe Jev 1.13, Decomposed Sub-Questions: each issue is split into the atomic sub-questions in the task file; each is asked as its own Noul and the issue probability is the maximum (logical OR). Strongest Jev row on TREC 2016." },
   { key: "jev@ensemble", color: "var(--v9)", short: "Jev · Three-Phrasing Ensemble", note: "TypeSafe Jev 1.13, Three-Phrasing Ensemble: the same issue is asked three ways (RFP text, literal, title + positive description) and the probabilities are averaged." },
   { key: "jev@gate", color: "var(--v14)", short: "Jev · Relevance Gate", note: "TypeSafe Jev 1.13, Relevance Gate: an extra Noul first asks whether the document has anything to do with the matter; each issue probability is multiplied by that gate. Trades recall for precision." },
-  { key: "jev@crit_none", color: "var(--v12)", short: "Jev · No Criteria", note: "TypeSafe Jev 1.13, No Criteria: the Noul is sent with only the instruction, no true/false descriptions. The control for how much the written criteria are doing." },
   { key: "laya-ft", color: "var(--c-laya-ft)", short: "Laya", kind: "system1", note: "ConvAI Laya, fine-tuned: the one supervised row in this zero-shot comparison. Fine-tuned (RLCD) on a 30% document-level dev split of the same corpus and scored on the held-out 70%; every other row is zero-shot. The labeled data it needed is not counted in the time and cost panels. Zero-shot Laya configurations are on the Configurations page." },
   { key: "claude-haiku-4.5", color: "var(--c-haiku)", short: "Haiku 4.5", note: "Anthropic Claude Haiku 4.5, structured JSON output, default effort." },
   { key: "claude-sonnet-5", color: "var(--c-sonnet)", short: "Sonnet 5", note: "Anthropic Claude Sonnet 5, structured JSON output, default effort, prompt caching on the all-issues arm." },
@@ -106,7 +104,7 @@ const ALL_PRIMARY: { key: string; color: string; short: string; note: string; ki
 export const PRIMARY = ALL_PRIMARY.filter((p) => !isHidden(p.key));
 export const PRIMARY_BY_KEY = Object.fromEntries(PRIMARY.map((p) => [p.key, p]));
 export const DEFAULT_ON = new Set(["jev@base", "jev@choice", "jev@score", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash"].filter((k) => !isHidden(k)));
-/** Compare-models rows for a corpus, in roster order. Membership is the roster, not the export's `primary` flag: Choice and Score are on the picker even though the export only flags base and Flat-Text State. */
+/** Compare-models rows for a corpus, in roster order. Membership is the roster, not the export's `primary` flag: Choice, Score and the other listed Jev configurations are on the picker even though the export only flags some of them as primary. */
 export const rosterOf = (rows: Rec[]) => PRIMARY.map((p) => rows.find((r) => r.model === p.key)).filter((r): r is Rec => !!r);
 
 /**
