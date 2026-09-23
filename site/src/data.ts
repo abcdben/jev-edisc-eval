@@ -8,7 +8,7 @@ export type Ops = {
   n_docs: number; n_decisions: number; errors: number;
   cost_per_doc: number | null; list_cost_per_doc: number | null;
   tokens_in_per_doc: number | null; tokens_out_per_doc: number | null;
-  doc_latency_p50_ms: number | null; doc_latency_p95_ms: number | null; hours_per_100k_docs: number | null; // hours_per_100k_docs is p50 × 100k, in the export only; the site reads the latencies
+  doc_latency_p50_ms: number | null; doc_latency_p95_ms: number | null; doc_latency_p50_ci_ms?: [number, number] | null; hours_per_100k_docs: number | null; // hours_per_100k_docs is p50 × 100k, in the export only; the site reads the latencies
   latency_source: string; pricing_modes: string[]; model_resolved: string[];
 };
 export type Rec = {

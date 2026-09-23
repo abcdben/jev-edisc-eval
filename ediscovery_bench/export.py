@@ -199,11 +199,17 @@ def _ops(preds, arm: str, latency_preds=None, latency_note: str | None = None, l
         per_doc = []  # no trustworthy per-call latency for this cell
     p50 = float(np.percentile(per_doc, 50)) * (latency_scale or 1) if per_doc else None
     p95 = float(np.percentile(per_doc, 95)) * (latency_scale or 1) if per_doc else None
+    # 95% bootstrap interval for the median (documents resampled, 1000 draws, fixed seed): uncertainty in the typical latency, not its spread.
+    p50_ci = None
+    if len(per_doc) >= 2:
+        arr = np.asarray(per_doc); rng = np.random.default_rng(7)
+        meds = np.median(arr[rng.integers(0, len(arr), (1000, len(arr)))], axis=1) * (latency_scale or 1)
+        p50_ci = [round(float(np.percentile(meds, 2.5)), 2), round(float(np.percentile(meds, 97.5)), 2)]
     return {
         "n_docs": n_docs, "n_decisions": len(ok), "errors": sum(1 for p in preds if p.error),
         "cost_per_doc": cost / n_docs if n_docs else None, "list_cost_per_doc": lcost / n_docs if n_docs else None,
         "tokens_in_per_doc": tin / n_docs if n_docs else None, "tokens_out_per_doc": tout / n_docs if n_docs else None,
-        "doc_latency_p50_ms": p50, "doc_latency_p95_ms": p95,
+        "doc_latency_p50_ms": p50, "doc_latency_p95_ms": p95, "doc_latency_p50_ci_ms": p50_ci,
         "hours_per_100k_docs": (p50 * 100_000 / 3.6e6) if p50 else None,
         "latency_source": latency_note or ("dedicated concurrency-1 run" if latency_preds else "per-call latency from the main run"),
         "pricing_modes": sorted({p.pricing_mode for p in ok if p.pricing_mode}),
@@ -248,7 +254,7 @@ def _tar_ops(t: dict) -> dict:
     return {
         "cost_per_doc": t["cost_usd"] / n, "list_cost_per_doc": t["cost_usd"] / n,
         "tokens_in_per_doc": None, "tokens_out_per_doc": None,
-        "doc_latency_p50_ms": t["hours"] * 3.6e6 / n, "doc_latency_p95_ms": None,
+        "doc_latency_p50_ms": t["hours"] * 3.6e6 / n, "doc_latency_p95_ms": None, "doc_latency_p50_ci_ms": None,
         "hours_per_100k_docs": t["hours"] * 1e5 / n,
         "latency_source": f"simulated reviewer at {t['reviewer']['docs_per_hour']:.0f} docs/hour, ${t['reviewer']['usd_per_hour']:.0f}/hour: "
                           f"{t['docs_reviewed']:,} of {n:,} documents reviewed ({t['hours']:.1f} h); compute not charged",

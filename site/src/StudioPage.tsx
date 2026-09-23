@@ -126,10 +126,10 @@ export default function StudioPage() {
   });
   const costPts: StudioScatterPt[] = sel.map((r) => { const c = costPerDoc(r); return { ...base(r), x: c == null ? null : c * cu.mult(r), y: pick(r, v.level, v.gray, v.issue).recall }; });
   const speedRows: StudioRow[] = sel.map((r) => {
-    const p50 = r.ops.doc_latency_p50_ms;
+    const p50 = r.ops.doc_latency_p50_ms, ci = r.ops.doc_latency_p50_ci_ms ?? null;
     if (speedChart === "throughput") { const val = p50 == null ? null : 3.6e6 / p50; return { ...base(r), value: val, label: val == null ? "" : `${fmtInt(Math.round(val))} docs/h` }; }
-    // Median only: the p95 tail whisker was dropped as noise for a headline chart.
-    return { ...base(r), value: p50, label: p50 == null ? "" : fmtLatency(p50, speedUnit) };
+    // Whisker: the 95% bootstrap interval for the median (two-sided), not the p95 tail.
+    return { ...base(r), value: p50, lo: ci?.[0] ?? null, hi: ci?.[1] ?? null, label: p50 == null ? "" : fmtLatency(p50, speedUnit) };
   });
   // Stability: the card's rule. At t = 0 a decider keeps its default cell (no sampling control); an LLM without a t = 0 cell rejected the parameter.
   const isLLM = (r: Rec) => r.kind === "llm" || r.kind === "local_llm";
@@ -160,7 +160,7 @@ export default function StudioPage() {
     }
     if (plot === "speed") {
       if (speedChart === "throughput") return ["Sequential documents per hour: 3,600,000 ÷ median wall-clock milliseconds per document, one request at a time. Every service accepts parallel requests, so compare ratios, not absolutes."];
-      return [speedChart === "bars" ? "Bar: median latency per document, one request at a time." : "Dot: median latency per document, one request at a time, on a log axis."];
+      return [`${speedChart === "bars" ? "Bar" : "Dot"}: median latency per document, one request at a time${speedChart === "dots" ? ", on a log axis" : ""}; whisker: 95% bootstrap interval for the median.`];
     }
     const t0 = stabSetting === "t0" ? " Temperature 0 where the API accepts it; deciders expose no sampling control." : "";
     const where = `Measured on ${measuredOn}${sameRuns ? ` (${sameRuns} per model)` : " scored 5 times"}; the same cells are shown for every corpus.`;

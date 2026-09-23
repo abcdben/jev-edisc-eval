@@ -10,7 +10,7 @@ import { DECIDER_TEXT, useSize, useWidth } from "./ui";
  * Gridlines carry className="gl" like PRScatter's so a preset can dot them.
  */
 
-/** One row of a StudioBars chart. `lo`/`hi` draw a whisker (an interval, or p50→p95); `sub` is a muted secondary figure after the label; `empty` replaces "not measured". */
+/** One row of a StudioBars chart. `lo`/`hi` draw a whisker (an interval around `value`); `sub` is a muted secondary figure after the label; `empty` replaces "not measured". */
 export type StudioRow = { id: string; name: string; color: string; value: number | null; lo?: number | null; hi?: number | null; label: string; sub?: string; empty?: string; decider?: boolean; subset?: string | null };
 
 const ROW = 30, TOP = 8, VALUE_W = 150;
