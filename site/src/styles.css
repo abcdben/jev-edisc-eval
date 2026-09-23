@@ -590,3 +590,74 @@ svg text { user-select: none; font-family: var(--sans); }
 .studio-plot.auto { resize: horizontal; min-height: 0; }
 .studio-canvas { flex: 1; position: relative; min-height: 0; }
 .studio-foot { color: var(--ink-3); font-size: 12px; margin: 10px 0 0; font-variant-numeric: tabular-nums; }
+.studio-hint.small { font-size: 11.5px; color: var(--ink-4); }
+
+/* Studio plot style presets (StudioPage.tsx STYLES → data-style on .studio-plot). Each preset redefines, inside the panel only, the surface
+   and ink variables, the grid, the box fill/outline alphas, the face (svg text and .legend-note read --sans) and the model palette
+   (data.ts ALL_PRIMARY colours: --c-jev, --v3, --v5 the three default Jev rows; --v1/--v9/--v14 the other Jev rows; --c-laya-ft; the LLM --c-*).
+   Every preset but `site` sets all of them, so the page's Dark/Light theme never leaks into the panel. */
+.studio-plot { font-family: var(--sans); color: var(--ink); }
+
+/* Journal: an academic figure. White, black hairline axes, serif labels, no grid, boxes as thin outlines. Okabe–Ito colorblind-safe palette (yellow darkened for white paper). */
+.studio-plot[data-style="journal"] {
+  --sans: "Times New Roman", Times, Georgia, serif;
+  --panel: #ffffff; --ink: #000000; --ink-2: #111111; --ink-3: #333333; --ink-4: #6b6b6b;
+  --line: #d0d0d0; --line-2: #9a9a9a; --grid: transparent; --dots: transparent; --axis: #000000;
+  --box-alpha: 0.07; --box-stroke: 0.9; --hl: #f4f4f4;
+  --c-jev: #0072b2; --v3: #56b4e9; --v5: #cc79a7; --v1: #8c510a; --v9: #762a83; --v14: #1b7837; --c-laya-ft: #5e3c99;
+  --c-haiku: #e69f00; --c-sonnet: #d55e00; --c-luna: #009e73; --c-terra: #000000; --c-flashlite: #c8b400; --c-flash: #999999; --c-gemma: #4d4d4d;
+  border-radius: 0;
+}
+.studio-plot[data-style="journal"].framed { border-color: #000000; }
+
+/* Newsroom: an editorial data graphic. White, warm dark-grey text, light dotted grid, Franklin/Helvetica-like sans, a muted news palette (red-orange, blues, teals, golds, plum). */
+.studio-plot[data-style="newsroom"] {
+  --sans: "Helvetica Neue", Helvetica, Arial, "Liberation Sans", sans-serif;
+  --panel: #ffffff; --ink: #121212; --ink-2: #363636; --ink-3: #727272; --ink-4: #a3a3a3;
+  --line: #e2e2e2; --line-2: #cccccc; --grid: #b8b8b8; --dots: transparent; --axis: #121212;
+  --box-alpha: 0.13; --box-stroke: 0; --hl: #f7f7f5;
+  --c-jev: #c8553d; --v3: #3d6b9a; --v5: #8b3a62; --v1: #d99a6c; --v9: #7a9a5a; --v14: #305f72; --c-laya-ft: #8f8f8f;
+  --c-haiku: #e3b655; --c-sonnet: #9c6b2e; --c-luna: #5fa8a0; --c-terra: #2e7d74; --c-flashlite: #8a7bb5; --c-flash: #4b7b3f; --c-gemma: #6b6b6b;
+  border-radius: 2px;
+}
+.studio-plot[data-style="newsroom"].framed { border-color: #e2e2e2; }
+.studio-plot[data-style="newsroom"] line.gl { stroke-dasharray: 1 3; }
+
+/* LinkedIn: brand blues for the Jev rows (#0A66C2, #004182, #70B5F9), LinkedIn accent colours for the LLMs, black-90 text, #86888A secondary, warm neutrals, soft corners. */
+.studio-plot[data-style="linkedin"] {
+  --sans: -apple-system, "system-ui", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --panel: #ffffff; --ink: rgba(0, 0, 0, 0.9); --ink-2: rgba(0, 0, 0, 0.75); --ink-3: #86888a; --ink-4: #b0b2b4;
+  --line: #e0dfdc; --line-2: #c9c8c5; --grid: #ebebe9; --dots: #dcdbd8; --axis: #c9c8c5;
+  --box-alpha: 0.14; --box-stroke: 0; --hl: #f3f2ef;
+  --c-jev: #0a66c2; --v3: #004182; --v5: #70b5f9; --v1: #378fe9; --v9: #915907; --v14: #44712e; --c-laya-ft: #666666;
+  --c-haiku: #e7a33e; --c-sonnet: #b24020; --c-luna: #5f9b41; --c-terra: #057642; --c-flashlite: #f5987e; --c-flash: #8c4a6f; --c-gemma: #8f5849;
+  border-radius: 10px;
+}
+.studio-plot[data-style="linkedin"].framed { border-color: #e0dfdc; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04); }
+
+/* Slate: dark slate, Jev in one saturated sky-blue accent (three shades for the three Jev rows), every LLM in a distinct shade of grey so the Jev rows carry the chart. */
+.studio-plot[data-style="slate"] {
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --panel: #1e293b; --ink: #f1f5f9; --ink-2: #cbd5e1; --ink-3: #94a3b8; --ink-4: #64748b;
+  --line: #334155; --line-2: #475569; --grid: #2b3849; --dots: #3b4a5f; --axis: #475569;
+  --box-alpha: 0.18; --box-stroke: 0; --hl: rgba(56, 189, 248, 0.12);
+  --c-jev: #38bdf8; --v3: #0ea5e9; --v5: #7dd3fc; --v1: #0284c7; --v9: #bae6fd; --v14: #22d3ee; --c-laya-ft: #a5b4fc;
+  --c-haiku: #e2e8f0; --c-sonnet: #94a3b8; --c-luna: #cbd5e1; --c-terra: #64748b; --c-flashlite: #b6c2d1; --c-flash: #7c8a9c; --c-gemma: #526270;
+  border-radius: 8px;
+}
+.studio-plot[data-style="slate"].framed { border-color: #334155; }
+
+/* Economist: a financial weekly's chart. White, near-black text, thin grey rules, black baseline, the red accent tab at the top-left, the Economist data palette (red, blue, cyan, teal, yellow, olive, purple, tan, slate). */
+.studio-plot[data-style="economist"] {
+  --sans: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --panel: #ffffff; --ink: #0c0c0c; --ink-2: #2a2a2a; --ink-3: #5f6a72; --ink-4: #9aa5ad;
+  --line: #d9d9d9; --line-2: #b7b7b7; --grid: #d9d9d9; --dots: transparent; --axis: #0c0c0c;
+  --box-alpha: 0.12; --box-stroke: 0; --hl: #f2f5f7;
+  --c-jev: #e3120b; --v3: #006ba2; --v5: #9a607f; --v1: #00588d; --v9: #a81829; --v14: #1dc9a4; --c-laya-ft: #6f4e7c;
+  --c-haiku: #ebb434; --c-sonnet: #b4ba39; --c-luna: #3ebcd2; --c-terra: #379a8b; --c-flashlite: #758d99; --c-flash: #d1b07c; --c-gemma: #8e9b3c;
+  border-radius: 0;
+  padding-top: 20px;
+}
+.studio-plot[data-style="economist"]::before { content: ""; position: absolute; top: 0; left: 0; width: 44px; height: 4px; background: #e3120b; }
+.studio-plot[data-style="economist"].framed { border-color: #d9d9d9; border-top: 1px solid #0c0c0c; }
+.studio-plot[data-style="economist"] .legend-note { border-top: 1px solid #d9d9d9; padding-top: 8px; }

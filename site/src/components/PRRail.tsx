@@ -85,7 +85,7 @@ export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, o
               <text x={x0[col] + colW + NUMS - 2} y={12} textAnchor="end" fontSize={10} fontWeight={500} letterSpacing=".06em" fill="var(--ink-3)">95% CI</text>
               {ticks.map((t) => (
                 <g key={t}>
-                  <line x1={sx(col, t)} x2={sx(col, t)} y1={TOP} y2={TOP + n * ROW} stroke="var(--line)" />
+                  <line className="gl" x1={sx(col, t)} x2={sx(col, t)} y1={TOP} y2={TOP + n * ROW} stroke="var(--line)" />
                   <text x={sx(col, t)} y={TOP + n * ROW + 14} fontSize={10} textAnchor="middle" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>
                 </g>
               ))}

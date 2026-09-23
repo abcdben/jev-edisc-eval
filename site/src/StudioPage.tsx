@@ -21,6 +21,18 @@ const PRESETS: Preset[] = [
   { id: "banner", label: "1584 × 396 (banner)", w: 1584, h: 396 },
 ];
 
+/** Plot style presets (styles.css `.studio-plot[data-style=…]`): every one but `site` fully specifies its own panel, ink, grid and model palette, so the masthead Dark/Light theme does not reach the panel. */
+type PlotStyle = "site" | "journal" | "newsroom" | "linkedin" | "slate" | "economist";
+const STYLES: { id: PlotStyle; label: string; title: string }[] = [
+  { id: "site", label: "Site", title: "The site's own look; follows the Dark/Light theme" },
+  { id: "journal", label: "Journal", title: "Academic figure: white, black hairline axes, serif labels, Okabe–Ito colorblind-safe palette" },
+  { id: "newsroom", label: "Newsroom", title: "Editorial data graphic: warm greys, dotted grid, muted news palette" },
+  { id: "linkedin", label: "LinkedIn", title: "LinkedIn brand: #0A66C2 blues for Jev, LinkedIn accent colours for the LLMs" },
+  { id: "slate", label: "Slate", title: "Dark slate, Jev in one saturated accent, every LLM in a shade of grey" },
+  { id: "economist", label: "Economist", title: "Financial weekly: red accent tab, thin grey rules, the Economist data palette" },
+];
+const isPlotStyle = (s: string | null): s is PlotStyle => STYLES.some((x) => x.id === s);
+
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, Math.round(n)));
 
 export default function StudioPage() {
@@ -49,6 +61,8 @@ export default function StudioPage() {
   const [frame, setFrame] = useState(true);
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "light");
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
+  const [style, setStyle] = useState<PlotStyle>(() => { const s = localStorage.getItem("studio-style"); return isPlotStyle(s) ? s : "site"; });
+  useEffect(() => { localStorage.setItem("studio-style", style); }, [style]);
 
   // Panel size in CSS pixels. The panel is also CSS-resizable by its corner; a ResizeObserver writes the dragged size back into the fields.
   // In the ranked view the height follows the rows, so only the width is synced and the chosen map height is kept for when the map returns.
@@ -142,12 +156,17 @@ export default function StudioPage() {
           <Seg value={legend ? "on" : "off"} onChange={(x) => setLegend(x === "on")} options={[{ id: "on", label: "legend" }, { id: "off", label: "no legend" }]} />
           <Seg value={logos ? "on" : "off"} onChange={(x) => setLogos(x === "on")} options={[{ id: "on", label: "logos" }, { id: "off", label: "names only" }]} />
         </Control>
+        <Control label="Style">
+          <Seg value={style} onChange={setStyle} options={STYLES.map((s) => ({ id: s.id, label: s.label, title: s.title }))} />
+          {style !== "site" && <span className="studio-hint small">{STYLES.find((s) => s.id === style)?.title}; ignores Dark/Light.</span>}
+        </Control>
       </div>
 
       <section className="section studio-stage">
         <div
           ref={plotRef}
           className={`studio-plot${frame ? " framed" : ""}${chart === "ranked" ? " auto" : ""}`}
+          data-style={style}
           style={{ width: w, height: chart === "map" ? h : undefined }}
         >
           {chart === "map" && (

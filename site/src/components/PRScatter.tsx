@@ -118,13 +118,13 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
         <rect x={PL} y={PT} width={W - PR - PL} height={H - PB - PT} fill="url(#dotgrid)" />
         {xt.map((t) => (
           <g key={`x${t}`}>
-            <line x1={X(t)} x2={X(t)} y1={PT} y2={H - PB} stroke="var(--grid)" />
+            <line className="gl" x1={X(t)} x2={X(t)} y1={PT} y2={H - PB} stroke="var(--grid)" />
             <text x={X(t)} y={H - PB + 16} fontSize={10.5} textAnchor="middle" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>
           </g>
         ))}
         {yt.map((t) => (
           <g key={`y${t}`}>
-            <line x1={PL} x2={W - PR} y1={Y(t)} y2={Y(t)} stroke="var(--grid)" />
+            <line className="gl" x1={PL} x2={W - PR} y1={Y(t)} y2={Y(t)} stroke="var(--grid)" />
             <text x={PL - 8} y={Y(t) + 3.5} fontSize={10.5} textAnchor="end" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>
           </g>
         ))}
@@ -141,7 +141,8 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
             <g {...hoverable(onHover, p.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
             <g onMouseMove={(e) => show(e, mark, prTip(p, logos ? <Logo model={p.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)} tabIndex={-1}>
               {/* the pulse class is dropped while this box is highlighted, so the deeper hover fill is steady and wins */}
-              <rect key={`${p.id}:${sig}`} className={pulsing && p.decider && hl !== p.id ? "pr-box pulse" : "pr-box"} x={g(p.id, "x0")} y={g(p.id, "y0")} width={g(p.id, "w")} height={g(p.id, "h")} fill={p.color} style={{ fillOpacity: hl === p.id ? 0.35 : "var(--box-alpha)", transition: "fill-opacity 120ms" }} rx={1} />
+              {/* `--box-stroke` (0 on the site) lets a studio style preset draw the box as a hairline outline in the item's colour */}
+              <rect key={`${p.id}:${sig}`} className={pulsing && p.decider && hl !== p.id ? "pr-box pulse" : "pr-box"} x={g(p.id, "x0")} y={g(p.id, "y0")} width={g(p.id, "w")} height={g(p.id, "h")} fill={p.color} stroke={p.color} strokeWidth={0.75} style={{ fillOpacity: hl === p.id ? 0.35 : "var(--box-alpha)", strokeOpacity: "var(--box-stroke, 0)", transition: "fill-opacity 120ms" }} rx={1} />
             </g>
             </g>
             </g>
