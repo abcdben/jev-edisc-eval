@@ -64,8 +64,14 @@ export function PRHeat({ items, zoom, sortBy = "recall", logos = false, onSelect
     <>
       <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
         <svg viewBox={`0 0 ${W} ${h}`} width={W} height={h} style={{ display: "block", overflow: "visible" }}>
+          <defs>
+            <pattern id="dotgrid-heat" width={10} height={10} patternUnits="userSpaceOnUse">
+              <circle cx={1} cy={1} r={0.7} fill="var(--dots)" fillOpacity={0.8} />
+            </pattern>
+          </defs>
           {[0, 1].map((col) => (
             <g key={col}>
+              <rect x={x0[col]} y={HDR} width={Math.max(0, colW)} height={n * ROW} fill="url(#dotgrid-heat)" />
               <text x={x0[col]} y={10} fontSize={10} fontWeight={500} letterSpacing=".07em" fill="var(--ink)">{col === 0 ? "RECALL" : "PRECISION"}</text>
               <text x={x0[col] + colW + 8} y={10} fontSize={10} fontWeight={500} letterSpacing=".07em" fill="var(--ink-3)">VALUE</text>
               {ref && (
