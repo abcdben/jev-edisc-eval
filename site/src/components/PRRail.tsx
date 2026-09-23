@@ -8,7 +8,7 @@ import { CLICK_HINT, DECIDER_TEXT, ROW_PULSE_MS, RowTint, TipBox, fadeStyle, sel
 import { hoverable } from "./hover";
 
 /** Row geometry (row height, value column) shared with PRHeat so the two ranked views keep rows in place; RAIL is the rank rail at the left edge, RANK_W the `01`–`12` numerals, RANGE_W the muted "82–91" interval column after each value. */
-const ROW = 26, NUM_W = 54, RANGE_W = 52, RAIL = 3, RANK_W = 26, TOP = 20;
+const ROW0 = 26, NUM_W0 = 54, RANGE_W0 = 52, RAIL = 3, RANK_W0 = 26, TOP0 = 20;
 
 /**
  * Ranked rows on a rank rail (the Compare models `ranked` view): recall and precision side by side, dot at the point estimate, whisker
@@ -18,12 +18,14 @@ const ROW = 26, NUM_W = 54, RANGE_W = 52, RAIL = 3, RANK_W = 26, TOP = 20;
  * follow the same contract as OpsBars and Consistency.
  */
 /** `range` (the screenshot studio) fixes both panels' axis to an explicit 0–1 range, overriding `zoom`. */
-export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, onSelect, highlight, onHover }: { items: PRItem[]; zoom: boolean; range?: [number, number]; sortBy?: "recall" | "precision" | "f1"; logos?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
+/** `textScale` (the studio's Text control; 1 on the site) multiplies every font size and the row geometry (row height, label and value columns) with it. Whisker width and dot radius read --sw-mult / --r-add (styles.css, the studio's high-contrast block). */
+export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, onSelect, highlight, onHover, textScale = 1 }: { items: PRItem[]; zoom: boolean; range?: [number, number]; sortBy?: "recall" | "precision" | "f1"; logos?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; textScale?: number }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickRow = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const W = useWidth(hostRef, 760);
+  const s = textScale, ROW = ROW0 * s, NUM_W = NUM_W0 * s, RANGE_W = RANGE_W0 * s, RANK_W = RANK_W0 * s, TOP = TOP0 * s;
   const wide = Math.min(1, Math.max(0, W - 760) / 340);
-  const LABEL_W = Math.round((logos ? 196 : 190) + wide * 44) + RANK_W;
+  const LABEL_W = Math.round(((logos ? 196 : 190) + wide * 44) * s) + RANK_W;
   const GAP = Math.round(26 + wide * 22);
   const NUMS = NUM_W + RANGE_W;
   const f1 = (it: PRItem) => (it.recall && it.precision ? (2 * it.recall[0] * it.precision[0]) / (it.recall[0] + it.precision[0] || 1) : -1);
@@ -46,7 +48,7 @@ export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, o
   const step = span > 0.6 ? 0.25 : span > 0.3 ? 0.1 : span > 0.12 ? 0.05 : 0.02;
   const ticks: number[] = [];
   for (let t = Math.ceil(lo / step) * step; t <= hi + 1e-9; t += step) ticks.push(Math.round(t * 1000) / 1000);
-  const h = n * ROW + 44;
+  const h = n * ROW + 44 * s;
   // rows drawn in first-appearance order and placed by rank with a transform (ui.tsx usePresence), so a re-sort slides them
   const presence = usePresence(items, (it) => it.id);
   const lastTop = useRef(new Map<string, number>());
@@ -74,19 +76,19 @@ export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, o
               {i % 2 === 1 && <rect x={RAIL + 4} y={TOP + i * ROW} width={Math.max(0, W - RAIL - 4)} height={ROW} fill="var(--ink)" fillOpacity={0.018} />}
               <line x1={RAIL + 4} x2={W} y1={TOP + (i + 1) * ROW} y2={TOP + (i + 1) * ROW} stroke="var(--line)" />
               <rect x={0} y={TOP + i * ROW + 1} width={RAIL} height={ROW - 2} rx={1.5} fill="var(--ink)" fillOpacity={0.45} />
-              <text x={RAIL + 10} y={TOP + i * ROW + ROW / 2 + 4} fontSize={10.5} fill="var(--ink-4)" className="mono">{String(i + 1).padStart(2, "0")}</text>
+              <text x={RAIL + 10 * s} y={TOP + i * ROW + ROW / 2 + 4 * s} fontSize={10.5 * s} fill="var(--ink-4)" className="mono">{String(i + 1).padStart(2, "0")}</text>
             </g>
           ))}
           {n > 0 && <line x1={RAIL + 4} x2={W} y1={TOP} y2={TOP} stroke="var(--line-2)" />}
           {[0, 1].map((col) => (
             <g key={col}>
               <rect x={x0[col]} y={TOP} width={Math.max(0, colW)} height={n * ROW} fill="url(#dotgrid-rail)" />
-              <text x={x0[col]} y={12} fontSize={12} fontWeight={500} fill="var(--ink)">{col === 0 ? "Recall" : "Precision"}</text>
-              <text x={x0[col] + colW + NUMS - 2} y={12} textAnchor="end" fontSize={10} fontWeight={500} letterSpacing=".06em" fill="var(--ink-3)">95% CI</text>
+              <text x={x0[col]} y={12 * s} fontSize={12 * s} fontWeight={500} fill="var(--ink)" className="ax">{col === 0 ? "Recall" : "Precision"}</text>
+              <text x={x0[col] + colW + NUMS - 2} y={12 * s} textAnchor="end" fontSize={10 * s} fontWeight={500} letterSpacing=".06em" fill="var(--ink-3)">95% CI</text>
               {ticks.map((t) => (
                 <g key={t}>
                   <line className="gl" x1={sx(col, t)} x2={sx(col, t)} y1={TOP} y2={TOP + n * ROW} stroke="var(--line)" />
-                  <text x={sx(col, t)} y={TOP + n * ROW + 14} fontSize={10} textAnchor="middle" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>
+                  <text x={sx(col, t)} y={TOP + n * ROW + 14 * s} fontSize={10 * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>
                 </g>
               ))}
             </g>
@@ -100,29 +102,29 @@ export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, o
                   <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
                   {logos ? (
                     <>
-                      <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={RANK_W + 12} cy={y} /></g>
-                      <text x={RANK_W + 26} y={y + 4} fontSize={12} fill="var(--ink-2)" style={r.decider ? DECIDER_TEXT : undefined}>{label}</text>
+                      <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={RANK_W + 12 * s} cy={y} size={13 * s} /></g>
+                      <text x={RANK_W + 26 * s} y={y + 4 * s} fontSize={12 * s} fill="var(--ink-2)" className="nm" style={r.decider ? DECIDER_TEXT : undefined}>{label}</text>
                     </>
                   ) : (
-                    <text x={LABEL_W - 12} y={y + 4} textAnchor="end" fontSize={12} fill="var(--ink-2)" style={r.decider ? DECIDER_TEXT : undefined}>{label}</text>
+                    <text x={LABEL_W - 12 * s} y={y + 4 * s} textAnchor="end" fontSize={12 * s} fill="var(--ink-2)" className="nm" style={r.decider ? DECIDER_TEXT : undefined}>{label}</text>
                   )}
                   {([r.recall, r.precision] as CI[]).map((ci, col) =>
                     ci ? (
                       <g key={col}>
-                        <line x1={g(`${r.id}:${col}:lo`)} x2={g(`${r.id}:${col}:hi`)} y1={y} y2={y} stroke={r.color} strokeWidth={1.5} />
-                        <circle cx={g(`${r.id}:${col}:v`)} cy={y} r={3.2} fill={r.color} />
-                        <text x={x0[col] + colW + NUM_W} y={y + 4} textAnchor="end" fontSize={11.5} fill="var(--ink)" className="mono">{fmtPct(ci[0])}</text>
-                        <text x={x0[col] + colW + NUMS - 2} y={y + 4} textAnchor="end" fontSize={10.5} fill="var(--ink-4)" className="mono">{fmtRange(ci)}</text>
+                        <line x1={g(`${r.id}:${col}:lo`)} x2={g(`${r.id}:${col}:hi`)} y1={y} y2={y} stroke={r.color} strokeWidth={1.5} style={{ strokeWidth: "calc(1.5 * var(--sw-mult, 1))" }} />
+                        <circle cx={g(`${r.id}:${col}:v`)} cy={y} r={3.2} fill={r.color} style={{ r: "calc(3.2px + var(--r-add, 0px))" } as React.CSSProperties} />
+                        <text x={x0[col] + colW + NUM_W} y={y + 4 * s} textAnchor="end" fontSize={11.5 * s} fill="var(--ink)" className="mono">{fmtPct(ci[0])}</text>
+                        <text x={x0[col] + colW + NUMS - 2} y={y + 4 * s} textAnchor="end" fontSize={10.5 * s} fill="var(--ink-4)" className="mono">{fmtRange(ci)}</text>
                       </g>
                     ) : (
-                      <text key={col} x={x0[col] + colW + NUM_W} y={y + 4} textAnchor="end" fontSize={11.5} fill="var(--ink-4)" className="mono">—</text>
+                      <text key={col} x={x0[col] + colW + NUM_W} y={y + 4 * s} textAnchor="end" fontSize={11.5 * s} fill="var(--ink-4)" className="mono">—</text>
                     ),
                   )}
                 </g>
               </g>
             );
           })}
-          {n === 0 && <text x={W / 2} y={40} textAnchor="middle" fontSize={13} fill="var(--ink-4)">Select at least one model.</text>}
+          {n === 0 && <text x={W / 2} y={40} textAnchor="middle" fontSize={13 * s} fill="var(--ink-4)">Select at least one model.</text>}
         </svg>
         <TipBox tip={tip} hint={onSelect ? CLICK_HINT : undefined} />
       </div>

@@ -35,6 +35,13 @@ const STYLES: { id: PlotStyle; label: string; title: string }[] = [
 ];
 const isPlotStyle = (s: string | null): s is PlotStyle => STYLES.some((x) => x.id === s);
 
+/** Text sizes: one factor on every font size in the panel (axis titles, ticks, names, values, point labels, legend note), passed to the charts as `textScale`, which also scales their label-width estimates and margins. M is the site's own size. */
+type TextSize = "s" | "m" | "l" | "xl";
+const TEXT_SCALE: Record<TextSize, number> = { s: 0.9, m: 1, l: 1.2, xl: 1.45 };
+const isTextSize = (s: string | null): s is TextSize => s != null && s in TEXT_SCALE;
+/** Contrast: `high` (styles.css .studio-plot[data-contrast="high"]) puts every label in full ink, thickens axes and whiskers, raises the bar and box alphas and enlarges the marks, on top of whichever Style preset is on. */
+type Contrast = "normal" | "high";
+
 /** The four plots. `pr` is the site's recall/precision chart (map or ranked); the others are the studio's own bar, dot and scatter charts. */
 type Plot = "pr" | "cost" | "speed" | "stability";
 type CostChart = "bars" | "dots" | "scatter";
@@ -93,6 +100,11 @@ export default function StudioPage() {
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
   const [style, setStyle] = useState<PlotStyle>(() => { const s = localStorage.getItem("studio-style"); return isPlotStyle(s) ? s : "site"; });
   useEffect(() => { localStorage.setItem("studio-style", style); }, [style]);
+  const [text, setText] = useState<TextSize>(() => { const s = localStorage.getItem("studio-text"); return isTextSize(s) ? s : "m"; });
+  useEffect(() => { localStorage.setItem("studio-text", text); }, [text]);
+  const ts = TEXT_SCALE[text];
+  const [contrast, setContrast] = useState<Contrast>(() => (localStorage.getItem("studio-contrast") === "high" ? "high" : "normal"));
+  useEffect(() => { localStorage.setItem("studio-contrast", contrast); }, [contrast]);
 
   // Which charts fill the panel's height (the map-like ones); the row-based ones take their height from the rows (the panel's `auto` mode).
   const fills = (plot === "pr" && chart === "map") || (plot === "cost" && costChart === "scatter");
@@ -288,6 +300,12 @@ export default function StudioPage() {
           <Seg value={style} onChange={setStyle} options={STYLES.map((s) => ({ id: s.id, label: s.label, title: s.title }))} />
           {style !== "site" && <span className="studio-hint small">{STYLES.find((s) => s.id === style)?.title}; ignores Dark/Light.</span>}
         </Control>
+        <Control label="Text">
+          <Seg value={text} onChange={setText} options={[{ id: "s", label: "S", title: "90% of the site's text size" }, { id: "m", label: "M", title: "The site's text size" }, { id: "l", label: "L", title: "120%" }, { id: "xl", label: "XL", title: "145%, for phone-sized viewing" }]} />
+        </Control>
+        <Control label="Contrast">
+          <Seg value={contrast} onChange={setContrast} options={[{ id: "normal", label: "normal" }, { id: "high", label: "high", title: "Full-ink labels, darker and thicker axes and whiskers, stronger fills, larger marks" }]} />
+        </Control>
       </div>
 
       <section className="section studio-stage">
@@ -295,34 +313,35 @@ export default function StudioPage() {
           ref={plotRef}
           className={`studio-plot${frame ? " framed" : ""}${fills ? "" : " auto"}`}
           data-style={style}
-          style={{ width: w, height: fills ? h : undefined }}
+          data-contrast={contrast}
+          style={{ width: w, height: fills ? h : undefined, "--fs-legend": `${12 * ts}px` } as React.CSSProperties}
         >
           {plot === "pr" && chart === "map" && (
             <div className="studio-canvas">
-              <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill />
+              <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} />
             </div>
           )}
-          {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} />}
+          {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} />}
           {plot === "cost" && costChart === "scatter" && (
             <div className="studio-canvas">
-              <StudioScatter pts={costPts} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} />
+              <StudioScatter pts={costPts} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} />
             </div>
           )}
           {plot === "cost" && costChart !== "scatter" && (
-            <StudioBars rows={costRows} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={cu.axis + (costChart === "dots" || costScale === "log" ? " (log)" : "")} fmtTick={fmtMoneyTick} logos={logos} />
+            <StudioBars rows={costRows} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={cu.axis + (costChart === "dots" || costScale === "log" ? " (log)" : "")} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} />
           )}
           {plot === "speed" && (
             <StudioBars
               rows={speedRows} kind={speedChart === "dots" ? "dot" : "bar"} scale={speedChart === "dots" ? "log" : "linear"} sort={speedChart === "throughput" ? "desc" : "asc"}
               axis={speedChart === "throughput" ? "sequential documents per hour (3,600,000 ÷ median ms per document)" : `median latency per document${speedChart === "dots" ? " (log)" : ""}`}
-              fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos}
+              fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos} textScale={ts}
             />
           )}
           {plot === "stability" && (
             <StudioBars
               rows={stabRows} kind={stabChart === "dots" ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? agreeDomain : undefined}
               axis={stabChart === "agree" ? `agreement: probability two identical runs give the same decision${stabSetting === "t0" ? " · temperature 0" : ""}` : `probability two identical runs disagree${stabSetting === "t0" ? " · temperature 0" : ""}`}
-              fmtTick={fmtPctTick} logos={logos}
+              fmtTick={fmtPctTick} logos={logos} textScale={ts}
             />
           )}
           {legend && legendLines.length > 0 && (

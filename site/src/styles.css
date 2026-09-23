@@ -661,3 +661,27 @@ svg text { user-select: none; font-family: var(--sans); }
 .studio-plot[data-style="economist"]::before { content: ""; position: absolute; top: 0; left: 0; width: 44px; height: 4px; background: #e3120b; }
 .studio-plot[data-style="economist"].framed { border-color: #d9d9d9; border-top: 1px solid #0c0c0c; }
 .studio-plot[data-style="economist"] .legend-note { border-top: 1px solid #d9d9d9; padding-top: 8px; }
+
+/* Studio Text control: the charts scale their SVG text from the textScale prop; the HTML legend note follows through --fs-legend (StudioPage.tsx sets it on the panel). */
+.studio-plot .legend-note { font-size: var(--fs-legend, 12px); }
+
+/* Studio Contrast control, `high` (StudioPage.tsx data-contrast on .studio-plot). Composes with every Style preset: it comes after the preset blocks and
+   redefines, relative to the preset's own --ink and --panel, the secondary inks (all labels in full ink; the "not measured" rows a clear mid-tone),
+   the axis, rule and grid colours, the bar and interval-box alphas, and the stroke/mark variables the charts read (--sw-mult, --r-add, --op-whisker).
+   Names, values and ticks go to weight 600 (over the DECIDER_TEXT inline weight, hence !important). */
+.studio-plot[data-contrast="high"] {
+  --ink-2: var(--ink); --ink-3: var(--ink);
+  --ink-4: color-mix(in srgb, var(--ink) 70%, var(--panel));
+  --axis: var(--ink);
+  --line: color-mix(in srgb, var(--ink) 30%, var(--panel)); --line-2: color-mix(in srgb, var(--ink) 45%, var(--panel));
+  --grid: color-mix(in srgb, var(--ink) 20%, var(--panel));
+  --dots: color-mix(in srgb, var(--ink) 28%, var(--panel));
+  --bar-alpha: 0.92; --box-alpha: 0.26;
+  --sw-mult: 1.6; --r-add: 1px; --op-whisker: 0.95; --mark-scale: 1.3;
+}
+.studio-plot[data-contrast="high"] svg text { font-weight: 500 !important; }
+.studio-plot[data-contrast="high"] svg text.nm, .studio-plot[data-contrast="high"] svg text.mono, .studio-plot[data-contrast="high"] svg text.ax { font-weight: 600 !important; }
+.studio-plot[data-contrast="high"] .legend-note { color: var(--ink); font-weight: 500; }
+.studio-plot[data-contrast="high"] .pr-box { stroke-opacity: max(var(--box-stroke, 0), 0.55) !important; }
+/* Journal keeps its gridless figure; the other presets keep their dotted / hairline grids, just darker. */
+.studio-plot[data-style="journal"][data-contrast="high"] { --grid: transparent; --dots: transparent; }

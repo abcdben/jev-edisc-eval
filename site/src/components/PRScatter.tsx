@@ -10,7 +10,9 @@ export type PRItem = { id: string; name: string; color: string; recall: CI; prec
 /** The compact hover tooltip of a recall/precision mark or row: both intervals and the scoring line. */
 export const prTip = (p: PRItem, icon?: ReactNode): TipContent => ({ title: p.name, color: p.color, icon, lines: [["Recall", fmtCI(p.recall)], ["Precision", fmtCI(p.precision)]], sub: p.sub });
 
-const PL = 56, PR = 20, PT = 18, PB = 48;
+const PR = 20, PT = 18;
+/** Left and bottom margins hold the tick labels, so they grow with the text scale (56 and 48 at scale 1). */
+const padL = (s: number) => Math.round(40 + 16 * s), padB = (s: number) => Math.round(24 + 24 * s);
 
 function niceTicks(lo: number, hi: number): number[] {
   const span = hi - lo;
@@ -30,12 +32,14 @@ const PULSE_CYCLES = 2, PULSE_CYCLE_MS = 650;
 
 /** `pulse` lets the interval boxes of decider items (`decider: true`) breathe for a few cycles whenever the plot loads or its set of points changes: a fill-opacity cycle (styles.css .pr-box.pulse) on the shaded box only, never the mark or label; a highlighted box keeps its steady deeper fill instead. Off by default and under prefers-reduced-motion. */
 /** `domain` (the screenshot studio) fixes both axes to explicit 0–1 ranges, overriding `zoom`. */
+/** `textScale` (the studio's Text control; 1 on the site) multiplies every font size, the label-placement estimates and the margins that hold tick labels. Axis stroke width, dot radius and the vendor-glyph size read the --sw-mult / --r-add / --mark-scale CSS variables (styles.css, the studio's high-contrast block; unset on the site). */
 export type PRDomain = { x: [number, number]; y: [number, number] };
-export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover, pulse = false }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean }) {
+export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1 }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickMark = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const sz = useSize(hostRef, { w: 760, h: height });
   const W = sz.w, H = fill ? Math.max(300, sz.h) : height;
+  const s = textScale, PL = padL(s), PB = padB(s);
   type Pt = PRItem & { recall: NonNullable<CI>; precision: NonNullable<CI> };
   const hasPt = (it: PRItem): it is Pt => !!it.recall && !!it.precision;
   const pts = items.filter(hasPt);
@@ -77,13 +81,13 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
       placed.some((b) => a.x < b.x + b.w + 2 && a.x + a.w + 2 > b.x && a.y < b.y + b.h + 1 && a.y + a.h + 1 > b.y) ||
       dots.some((d) => d.x > a.x - 5 && d.x < a.x + a.w + 5 && d.y > a.y - 5 && d.y < a.y + a.h + 5);
     return pts.map((p, i) => {
-      const w = p.name.length * 6.3 + 4, h = 13;
+      const w = p.name.length * 6.3 * s + 4, h = 13 * s, o = 9 * s, d = 22 * s;
       const { x, y } = dots[i];
       const cands: { x: number; y: number }[] = [
-        { x: x + 9, y: y - h / 2 }, { x: x - 9 - w, y: y - h / 2 },
-        { x: x - w / 2, y: y - 11 - h }, { x: x - w / 2, y: y + 11 },
-        { x: x + 8, y: y - h - 4 }, { x: x + 8, y: y + 4 }, { x: x - 8 - w, y: y - h - 4 }, { x: x - 8 - w, y: y + 4 },
-        { x: x + 9, y: y - h / 2 - 22 }, { x: x + 9, y: y - h / 2 + 22 }, { x: x - 9 - w, y: y - h / 2 - 22 }, { x: x - 9 - w, y: y - h / 2 + 22 },
+        { x: x + o, y: y - h / 2 }, { x: x - o - w, y: y - h / 2 },
+        { x: x - w / 2, y: y - 11 * s - h }, { x: x - w / 2, y: y + 11 * s },
+        { x: x + o - s, y: y - h - 4 }, { x: x + o - s, y: y + 4 }, { x: x - o + s - w, y: y - h - 4 }, { x: x - o + s - w, y: y + 4 },
+        { x: x + o, y: y - h / 2 - d }, { x: x + o, y: y - h / 2 + d }, { x: x - o - w, y: y - h / 2 - d }, { x: x - o - w, y: y - h / 2 + d },
       ];
       const c = cands.find((cc) => cc.x >= PL && cc.x + w <= W - 2 && cc.y >= 0 && !overlaps({ ...cc, w, h }));
       if (!c) return null;
@@ -91,7 +95,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
       return { ...c, w, text: p.name + (p.subset ? " *" : "") };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pts, dom, W]);
+  }, [pts, dom, W, H, s]);
 
   // Where everything is heading, keyed by item so a move is continuous across re-sorts; `geo` is where it is drawn this frame.
   const target: Record<string, number> = {};
@@ -119,19 +123,21 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
         {xt.map((t) => (
           <g key={`x${t}`}>
             <line className="gl" x1={X(t)} x2={X(t)} y1={PT} y2={H - PB} stroke="var(--grid)" />
-            <text x={X(t)} y={H - PB + 16} fontSize={10.5} textAnchor="middle" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>
+            <text x={X(t)} y={H - PB + 16 * s} fontSize={10.5 * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>
           </g>
         ))}
         {yt.map((t) => (
           <g key={`y${t}`}>
             <line className="gl" x1={PL} x2={W - PR} y1={Y(t)} y2={Y(t)} stroke="var(--grid)" />
-            <text x={PL - 8} y={Y(t) + 3.5} fontSize={10.5} textAnchor="end" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>
+            <text x={PL - 8} y={Y(t) + 3.5 * s} fontSize={10.5 * s} textAnchor="end" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>
           </g>
         ))}
-        <line x1={PL} x2={W - PR} y1={H - PB} y2={H - PB} stroke="var(--axis)" />
-        <line x1={PL} x2={PL} y1={PT} y2={H - PB} stroke="var(--axis)" />
-        <text x={(PL + W - PR) / 2} y={H - 10} fontSize={12} textAnchor="middle" fill="var(--ink-2)">{xLabel}</text>
-        <text x={14} y={(PT + H - PB) / 2} fontSize={12} textAnchor="middle" fill="var(--ink-2)" transform={`rotate(-90 14 ${(PT + H - PB) / 2})`}>{yLabel}</text>
+        <g stroke="var(--axis)" style={{ strokeWidth: "var(--sw-mult, 1)" }}>
+          <line x1={PL} x2={W - PR} y1={H - PB} y2={H - PB} />
+          <line x1={PL} x2={PL} y1={PT} y2={H - PB} />
+        </g>
+        <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
+        <text x={14 * s} y={(PT + H - PB) / 2} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${14 * s} ${(PT + H - PB) / 2})`}>{yLabel}</text>
 
         {/* CI boxes first so dots sit on top; every box is the same stroke-less shade, the highlighted one a little deeper */}
         {drawn.map((p) => {
@@ -153,7 +159,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
           // a highlighted mark whose label found no room gets one anyway, at the first candidate position
           const tx = X(p.recall[0]), ty = Y(p.precision[0]), x = g(p.id, "x"), y = g(p.id, "y");
           const li = pts.indexOf(p), l0 = li >= 0 ? labels[li] : null;
-          const l = l0 ? { x: l0.x - tx, y: l0.y - ty, text: l0.text } : hl === p.id ? { x: 9, y: -6.5, text: p.name + (p.subset ? " *" : "") } : null;
+          const l = l0 ? { x: l0.x - tx, y: l0.y - ty, text: l0.text } : hl === p.id ? { x: 9 * s, y: -6.5 * s, text: p.name + (p.subset ? " *" : "") } : null;
           const hasLogo = logos && logoFor(p.id);
           return (
             <g key={`d${p.id}`} className="fd" style={fadeStyle(stateOf[p.id] ?? "exit")}>{/* fade in / out (ui.tsx usePresence) */}
@@ -161,12 +167,12 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
             <g transform={`translate(${x} ${y})`} onMouseMove={(e) => show(e, { kind: "mark", x: tx, y: ty, r: 9 }, prTip(p, logos ? <Logo model={p.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)}>
               <circle className="hit" r={9} fill="transparent" />
               {hasLogo ? (
-                <g color={p.color}><LogoGlyph model={p.id} cx={0} cy={0} size={glyph(p)} /></g>
+                <g color={p.color} style={{ transform: "scale(var(--mark-scale, 1))" }}><LogoGlyph model={p.id} cx={0} cy={0} size={glyph(p)} /></g>
               ) : (
-                <circle r={3.2} fill={p.color} />
+                <circle r={3.2} fill={p.color} style={{ r: "calc(3.2px + var(--r-add, 0px))" } as React.CSSProperties} />
               )}
               {l && (
-                <text x={l.x} y={l.y + 10} fontSize={11} fill="var(--ink)" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round", pointerEvents: onSelect ? "auto" : "none" }}>
+                <text x={l.x} y={l.y + 10 * s} fontSize={11 * s} fill="var(--ink)" className="nm" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round", pointerEvents: onSelect ? "auto" : "none" }}>
                   {l.text}
                 </text>
               )}
@@ -175,8 +181,8 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
             </g>
           );
         })}
-        {labels.some((l) => !l) && <text x={W - PR} y={PT - 6} fontSize={10.5} textAnchor="end" fill="var(--ink-4)">some labels hidden where marks overlap; hover to identify</text>}
-        {pts.length === 0 && <text x={W / 2} y={H / 2} textAnchor="middle" fontSize={13} fill="var(--ink-4)">{emptyText ?? "Select at least one model."}</text>}
+        {labels.some((l) => !l) && <text x={W - PR} y={PT - 6} fontSize={10.5 * s} textAnchor="end" fill="var(--ink-4)">some labels hidden where marks overlap; hover to identify</text>}
+        {pts.length === 0 && <text x={W / 2} y={H / 2} textAnchor="middle" fontSize={13 * s} fill="var(--ink-4)">{emptyText ?? "Select at least one model."}</text>}
       </svg>
       {undefinedOnes.length > 0 && (
         <div className="legend-note">
