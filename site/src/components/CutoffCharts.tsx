@@ -172,7 +172,7 @@ export function PRCurveChart({ curve, def, cur, own, color, ghosts, roster, zoom
         {has(cur) && inside(cur.recall, cur.precision) && (
           <g onMouseMove={(e) => show(e, { kind: "mark", x: X(cur.recall), y: Y(cur.precision), r: 6 }, ptTip(cur, "current cutoffs"))} onMouseLeave={hide}>
             <circle cx={X(cur.recall)} cy={Y(cur.precision)} r={5.5} fill={color} className="cut-cur" />
-            <text x={X(cur.recall) + 8} y={Y(cur.precision) + 13} fontSize={10.5} fontWeight={500} fill="var(--ink)" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round" }}>current</text>
+            <text x={X(cur.recall) + 8} y={Y(cur.precision) + 13} fontSize={10.5} fontWeight={500} fill="var(--ink)" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round" }}>{cur.name}</text>
           </g>
         )}
       </svg>
