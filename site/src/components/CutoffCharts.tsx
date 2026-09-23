@@ -5,6 +5,8 @@ import { TipBox, useTip, useWidth } from "./ui";
 
 /** A labelled point on the precision–recall plane. */
 export type PRPoint = { id: string; name: string; color: string; recall: number | null; precision: number | null; f1?: number | null };
+/** A comparison model on the chart: its shared-cutoff frontier (dashed), its benchmark default, its figures at the primary's cutoffs and, when shown, at its own per-issue optimum. */
+export type GhostCurve = { id: string; name: string; color: string; curve: Metrics[]; def: PRPoint; cur: PRPoint | null; own?: PRPoint | null };
 
 const PL = 56, PR = 20, PT = 18, PB = 48;
 
@@ -20,15 +22,20 @@ const has = (p: PRPoint): p is PRPoint & { recall: number; precision: number } =
 /**
  * Recall (x) against precision (y), the Cutoffs page's headline chart. `curve` is the model's pooled frontier traced by one shared cutoff
  * (index i is cutoff i/200); `def` the benchmark default (0.5, the published labels), `cur` the figures at the current per-issue cutoffs.
- * `ghost` is an optional comparison model (dashed curve, its default as a hollow mark) and `roster` the other models' published points, faint.
- * Iso-F1 contours sit behind everything. Hovering the curve reports the shared cutoff at that point.
+ * `ghosts` are the comparison models (dashed curves in their roster colours, defaults hollow, figures at the primary's cutoffs filled) and
+ * `roster` the other models' published points, faint. `own` marks (small squares) are each model's figures at its own per-issue optimum.
+ * Iso-F1 contours sit behind everything. Hovering a curve reports the model and the shared cutoff at that point. Past six curves the strokes thin.
  */
-export function PRCurveChart({ curve, def, cur, color, ghost, roster, zoom, height = 340, xLabel = "Recall", yLabel = "Precision" }: {
-  curve: Metrics[]; def: PRPoint; cur: PRPoint; color: string; ghost?: { curve: Metrics[]; def: PRPoint; cur: PRPoint; color: string } | null; roster?: PRPoint[]; zoom: boolean; height?: number; xLabel?: string; yLabel?: string;
+export function PRCurveChart({ curve, def, cur, own, color, ghosts, roster, zoom, height = 340, xLabel = "Recall", yLabel = "Precision" }: {
+  curve: Metrics[]; def: PRPoint; cur: PRPoint; own?: PRPoint | null; color: string; ghosts?: GhostCurve[]; roster?: PRPoint[]; zoom: boolean; height?: number; xLabel?: string; yLabel?: string;
 }) {
   const { tip, show, hide, hostRef } = useTip();
   const W = useWidth(hostRef, 720), H = height;
-  const pts = [def, cur, ...(ghost ? [ghost.def, ghost.cur] : []), ...(roster ?? [])].filter(has);
+  const gs = ghosts ?? [];
+  const thin = gs.length > 6;
+  // the frame fits the primary and every model's default and own optimum; a comparison model's point at the primary's cutoffs may sit far off
+  // (one model's cutoffs applied to another's probability scale) and is left out of the fit rather than stretching the frame, 0–100% shows it
+  const pts = [def, cur, ...(own ? [own] : []), ...gs.flatMap((g) => [g.def, g.own].filter((p): p is PRPoint => !!p)), ...(roster ?? [])].filter(has);
   const dom = useMemo(() => {
     if (!zoom) return { x: [0, 1] as [number, number], y: [0, 1] as [number, number] };
     const xs = pts.map((p) => p.recall), ys = pts.map((p) => p.precision);
@@ -131,21 +138,28 @@ export function PRCurveChart({ curve, def, cur, color, ghost, roster, zoom, heig
             <text x={X(p.recall) + 6} y={Y(p.precision) + 3.5} fontSize={9.5} fill="var(--ink-4)" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round" }}>{p.name}</text>
           </g>
         ))}
-        {/* comparison model: dashed frontier and its default */}
-        {ghost && (
-          <g>
-            <path d={path(ghost.curve)} fill="none" stroke={ghost.color} strokeWidth={1.4} strokeDasharray="4 3" opacity={0.6} onMouseMove={(e) => onCurveMove(e, ghost.curve, ghost.def.name, ghost.color)} onMouseLeave={hide} style={{ pointerEvents: "stroke" }} />
-            {has(ghost.def) && inside(ghost.def.recall, ghost.def.precision) && (
-              <circle cx={X(ghost.def.recall)} cy={Y(ghost.def.precision)} r={4} fill="var(--panel)" stroke={ghost.color} strokeWidth={1.4} opacity={0.8} onMouseMove={(e) => show(e, { kind: "mark", x: X(ghost.def.recall!), y: Y(ghost.def.precision!), r: 5 }, ptTip(ghost.def, "benchmark default"))} onMouseLeave={hide} />
+        {/* comparison models: dashed frontiers, defaults hollow, figures at the primary's cutoffs filled, own optimum as a square */}
+        {gs.map((g) => (
+          <g key={g.id}>
+            <path d={path(g.curve)} fill="none" stroke={g.color} strokeWidth={thin ? 1 : 1.4} strokeDasharray={thin ? "3 3" : "4 3"} opacity={thin ? 0.5 : 0.6} onMouseMove={(e) => onCurveMove(e, g.curve, g.name, g.color)} onMouseLeave={hide} style={{ pointerEvents: "stroke" }} />
+            <path d={path(g.curve)} fill="none" stroke="transparent" strokeWidth={8} onMouseMove={(e) => onCurveMove(e, g.curve, g.name, g.color)} onMouseLeave={hide} style={{ pointerEvents: "stroke" }} />
+            {has(g.def) && inside(g.def.recall, g.def.precision) && (
+              <circle cx={X(g.def.recall)} cy={Y(g.def.precision)} r={thin ? 3.2 : 4} fill="var(--panel)" stroke={g.color} strokeWidth={1.4} opacity={0.85} onMouseMove={(e) => show(e, { kind: "mark", x: X(g.def.recall!), y: Y(g.def.precision!), r: 5 }, ptTip(g.def, "benchmark default · 0.5"))} onMouseLeave={hide} />
             )}
-            {has(ghost.cur) && inside(ghost.cur.recall, ghost.cur.precision) && (
-              <circle cx={X(ghost.cur.recall)} cy={Y(ghost.cur.precision)} r={3.6} fill={ghost.color} opacity={0.55} onMouseMove={(e) => show(e, { kind: "mark", x: X(ghost.cur.recall!), y: Y(ghost.cur.precision!), r: 5 }, ptTip(ghost.cur, "current cutoffs"))} onMouseLeave={hide} />
+            {g.cur && has(g.cur) && inside(g.cur.recall, g.cur.precision) && (
+              <circle cx={X(g.cur.recall)} cy={Y(g.cur.precision)} r={thin ? 3 : 3.6} fill={g.color} opacity={0.7} onMouseMove={(e) => show(e, { kind: "mark", x: X(g.cur!.recall!), y: Y(g.cur!.precision!), r: 5 }, ptTip(g.cur!, "at these cutoffs"))} onMouseLeave={hide} />
+            )}
+            {g.own && has(g.own) && inside(g.own.recall, g.own.precision) && (
+              <rect x={X(g.own.recall) - 3} y={Y(g.own.precision) - 3} width={6} height={6} fill={g.color} stroke="var(--panel)" strokeWidth={1} opacity={0.9} onMouseMove={(e) => show(e, { kind: "mark", x: X(g.own!.recall!), y: Y(g.own!.precision!), r: 5 }, ptTip(g.own!, "own per-issue optimum"))} onMouseLeave={hide} />
             )}
           </g>
-        )}
+        ))}
         {/* the model: frontier, default, current */}
-        <path d={path(curve)} fill="none" stroke={color} strokeWidth={1.8} opacity={0.85} onMouseMove={(e) => onCurveMove(e, curve, cur.name, color)} onMouseLeave={hide} style={{ pointerEvents: "stroke" }} />
+        <path d={path(curve)} fill="none" stroke={color} strokeWidth={thin ? 1.6 : 1.8} opacity={0.9} onMouseMove={(e) => onCurveMove(e, curve, cur.name, color)} onMouseLeave={hide} style={{ pointerEvents: "stroke" }} />
         <path d={path(curve)} fill="none" stroke="transparent" strokeWidth={10} onMouseMove={(e) => onCurveMove(e, curve, cur.name, color)} onMouseLeave={hide} style={{ pointerEvents: "stroke" }} />
+        {own && has(own) && inside(own.recall, own.precision) && (
+          <rect x={X(own.recall) - 3.5} y={Y(own.precision) - 3.5} width={7} height={7} fill={color} stroke="var(--panel)" strokeWidth={1} onMouseMove={(e) => show(e, { kind: "mark", x: X(own.recall!), y: Y(own.precision!), r: 6 }, ptTip(own, "own per-issue optimum"))} onMouseLeave={hide} />
+        )}
         {has(def) && has(cur) && inside(def.recall, def.precision) && inside(cur.recall, cur.precision) && (
           <line x1={X(def.recall)} y1={Y(def.precision)} x2={X(cur.recall)} y2={Y(cur.precision)} stroke={color} strokeWidth={1} strokeDasharray="2 2" opacity={0.6} />
         )}
@@ -170,9 +184,11 @@ export function PRCurveChart({ curve, def, cur, color, ghost, roster, zoom, heig
 /**
  * Row sparkline, 120 × 48. `hist`: the issue's score histogram, gold-negative decisions above the midline and gold-positive below, each class
  * scaled to its own peak, the cutoff as a vertical rule with the flagged side tinted. `curve`: the issue's precision–recall curve with the
- * current point filled and the 0.5 point hollow.
+ * current point filled and the 0.5 point hollow; `marks` are the comparison models' points at the same cutoff, small, in their colours.
  */
-export function IssueSpark({ kind, hist, curve, cutoffIdx, color, w = 120, h = 48 }: { kind: "hist" | "pr"; hist: { neg: number[]; pos: number[] }; curve: Metrics[]; cutoffIdx: number; color: string; w?: number; h?: number }) {
+export function IssueSpark({ kind, hist, curve, cutoffIdx, color, marks, w = 120, h = 48 }: {
+  kind: "hist" | "pr"; hist: { neg: number[]; pos: number[] }; curve: Metrics[]; cutoffIdx: number; color: string; marks?: { id: string; name: string; color: string; recall: number | null; precision: number | null }[]; w?: number; h?: number;
+}) {
   if (kind === "hist") {
     const bins = hist.neg.length, bw = w / bins, mid = h / 2 - 1;
     const maxN = Math.max(1, ...hist.neg), maxP = Math.max(1, ...hist.pos);
@@ -195,6 +211,7 @@ export function IssueSpark({ kind, hist, curve, cutoffIdx, color, w = 120, h = 4
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="cut-spark" aria-hidden>
       <rect x={0.5} y={0.5} width={w - 1} height={h - 1} fill="none" stroke="var(--line)" />
       <path d={d} fill="none" stroke={color} strokeWidth={1.2} opacity={0.8} />
+      {marks?.map((k) => (k.recall != null && k.precision != null ? <circle key={k.id} cx={X(k.recall)} cy={Y(k.precision)} r={2.2} fill={k.color} opacity={0.75}><title>{k.name} at this cutoff</title></circle> : null))}
       {d5?.recall != null && d5.precision != null && <circle cx={X(d5.recall)} cy={Y(d5.precision)} r={2.6} fill="var(--panel)" stroke={color} strokeWidth={1.1} />}
       {c?.recall != null && c.precision != null && <circle cx={X(c.recall)} cy={Y(c.precision)} r={3} fill={color} className="cut-cur" />}
     </svg>
