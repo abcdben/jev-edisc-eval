@@ -9,6 +9,7 @@ export default defineConfig({
   plugins: [react()],
   base: "./",
   server: { fs: { allow: [path.resolve(root, "..")] } },
-  // Two pages: the site (index.html) and the unlinked screenshot studio (studio.html → src/studio.tsx → src/StudioPage.tsx).
-  build: { outDir: "dist", emptyOutDir: true, rollupOptions: { input: { main: path.resolve(root, "index.html"), studio: path.resolve(root, "studio.html") } } },
+  // Three pages: the site (index.html), the unlinked screenshot studio (studio.html → src/studio.tsx → src/StudioPage.tsx) and the unlinked
+  // cutoff explorer (cutoffs.html → src/cutoffs.tsx → src/CutoffsPage.tsx; its data, public/cutoffs.json, is fetched by the page, not bundled).
+  build: { outDir: "dist", emptyOutDir: true, rollupOptions: { input: { main: path.resolve(root, "index.html"), studio: path.resolve(root, "studio.html"), cutoffs: path.resolve(root, "cutoffs.html") } } },
 });

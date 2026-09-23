@@ -691,3 +691,83 @@ svg text { user-select: none; font-family: var(--sans); }
 .studio-plot[data-contrast="high"] .pr-box { stroke-opacity: max(var(--box-stroke, 0), 0.55) !important; }
 /* Journal keeps its gridless figure; the other presets keep their dotted / hairline grids, just darker. */
 .studio-plot[data-style="journal"][data-contrast="high"] { --grid: transparent; --dots: transparent; }
+
+/* Cutoffs page (cutoffs.html, src/CutoffsPage.tsx): per-issue probability cutoffs against the published 0.5. Reuses the card, control, Seg,
+   select, hint, legend-note and studio-btn idioms above; what follows is the page's own layout, the slider, the delta marks and the tables. */
+.cut-lede { margin: 14px 0 4px; }
+.cut-lede b { font-weight: 500; color: var(--ink); }
+.cut-grid { display: grid; grid-template-columns: minmax(300px, 420px) minmax(0, 1fr); gap: 14px; align-items: stretch; }
+.cut-grid .card { min-width: 0; }
+@media (max-width: 1000px) { .cut-grid { grid-template-columns: 1fr; } }
+/* the pooled figures: reference, current and the change, one row per metric */
+.cut-pool { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 4px; }
+.cut-pool th { font-weight: 500; color: var(--ink-3); text-align: right; padding: 4px 8px 6px 0; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.cut-pool thead th:first-child { text-align: left; }
+.cut-pool tbody th { text-align: left; color: var(--ink-2); font-size: 12.5px; letter-spacing: 0; text-transform: none; border-bottom: 0; padding: 5px 8px 5px 0; }
+.cut-pool td { text-align: right; padding: 5px 0 5px 8px; color: var(--ink); white-space: nowrap; }
+.cut-pool tr.f1 th, .cut-pool tr.f1 td { font-weight: 500; }
+.cut-pool tr.cnt th, .cut-pool tr.cnt td { color: var(--ink-3); font-size: 12px; font-weight: 400; border-top: 1px solid var(--line); }
+.cut-pool td.hl { background: var(--hl); border: 1px solid var(--hl-line); border-radius: 3px; padding: 2px 5px; }
+.cut-pool td.hl { display: table-cell; }
+.cut-pool td.num, .cut-table td.num, .cut-val, .cut-num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum", "cv11"; }
+/* a change in points: ▲ good in green-teal, ▼ bad in the sonnet orange the site already uses for a wrong call; neutral (review share) in muted ink */
+.cut-delta { font-size: 11.5px; font-variant-numeric: tabular-nums; font-feature-settings: "tnum", "cv11"; white-space: nowrap; }
+.cut-delta.good, .cut-split-note .good { color: var(--c-terra); }
+.cut-delta.bad, .cut-split-note .bad { color: var(--c-sonnet); }
+.cut-delta.neutral { color: var(--ink-3); }
+.cut-delta.none { color: var(--ink-4); }
+.cut-note { margin: 10px 0 0; color: var(--ink-3); font-size: 12px; line-height: 1.5; display: flex; gap: 7px; align-items: baseline; }
+.cut-note .sw { width: 9px; height: 9px; border-radius: 2px; display: inline-block; flex: none; transform: translateY(1px); }
+/* the action row: shared slider, optimize, target recall, reset */
+.cut-act-row { display: flex; gap: 22px 28px; flex-wrap: wrap; align-items: center; padding: 6px 0 2px; }
+.cut-act-row .control { gap: 10px; }
+.cut-shared { display: inline-flex; align-items: center; gap: 10px; }
+.cut-shared .cut-slider { width: 220px; }
+.cut-val { color: var(--ink-2); font-size: 12.5px; min-width: 42px; }
+.cut-status { color: var(--ink-3); font-size: 12px; }
+.cut-status.err { color: var(--c-sonnet); }
+.cut-actions .studio-btn { font-size: 12.5px; }
+/* the slider: a native range (transparent, on top, for input and keyboard) over a drawn track whose flagged side (p at or above the cutoff) is the
+   model's colour and whose thumb sits at the cutoff; while the table has `.anim` (a programmatic move) both ease to the new value */
+.cut-slider { position: relative; display: inline-block; width: 160px; height: 22px; vertical-align: middle; }
+.cut-slider .track { position: absolute; left: 0; right: 0; top: 9px; height: 4px; border-radius: 2px; background: var(--line-2); overflow: visible; }
+.cut-slider .fill { position: absolute; left: var(--v); right: 0; top: 0; height: 100%; border-radius: 2px; background: var(--c); opacity: 0.75; }
+.cut-slider .thumb { position: absolute; left: var(--v); top: -5px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: var(--panel); border: 1.5px solid var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.15); pointer-events: none; }
+.cut-slider input[type="range"] { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.cut-slider input[type="range"]:focus-visible + .track .thumb, .cut-slider:has(input:focus-visible) .thumb { outline: 2px solid var(--ink-3); outline-offset: 2px; }
+.cut-table.anim .cut-slider .fill { transition: left 420ms var(--ease); }
+.cut-table.anim .cut-slider .thumb { transition: left 420ms var(--ease); }
+.cut-table.anim .cut-rule, .cut-table.anim .cut-spark rect:first-child { transition: x 420ms var(--ease), x1 420ms var(--ease), x2 420ms var(--ease), width 420ms var(--ease); }
+/* the per-issue table */
+.cut-table-wrap { overflow-x: auto; }
+.cut-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.cut-table th { text-align: left; font-weight: 500; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-3); padding: 6px 10px 8px 0; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+.cut-table th.r, .cut-table td.r { text-align: right; }
+.cut-table td { padding: 7px 10px 7px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.cut-table tbody tr:last-child td { border-bottom: 0; }
+.cut-table tbody tr:hover td { background: color-mix(in srgb, var(--ink) 3%, transparent); }
+.cut-table tr.miss td.iss .s { color: var(--c-sonnet); }
+.cut-table td.iss { min-width: 170px; }
+.cut-table td.iss .t { color: var(--ink); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
+.cut-table .s { color: var(--ink-3); font-size: 11.5px; white-space: nowrap; }
+.cut-table td.cut { white-space: nowrap; min-width: 240px; }
+.cut-table td.cut .cut-slider { margin-right: 8px; }
+.cut-num { width: 64px; font: inherit; font-size: 12.5px; color: var(--ink); background: var(--panel); border: 1px solid var(--line-2); border-radius: 5px; padding: 3px 6px; }
+.cut-table td.f1 > div:first-child { font-weight: 500; }
+.cut-table td.sp { width: 128px; padding-right: 0; }
+.cut-spark { display: block; }
+.cut-cur { transition: cx 420ms var(--ease), cy 420ms var(--ease); }
+/* split-half: the two halves side by side */
+.cut-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px 28px; align-items: start; padding-top: 4px; }
+.cut-split .cut-pool thead th:first-child { text-transform: none; letter-spacing: 0; font-size: 12.5px; color: var(--ink); }
+.cut-split-note { grid-column: 1 / -1; color: var(--ink-3); font-size: 12px; line-height: 1.55; display: flex; flex-direction: column; gap: 3px; margin-top: 2px; }
+.cut-split-note b { font-weight: 500; }
+.empty.small { padding: 18px 0; }
+/* export fallback when the clipboard is refused */
+.cut-fallback { margin-top: 10px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.cut-fallback textarea { width: 100%; font: 11.5px/1.45 ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink-2); background: var(--bg); border: 1px solid var(--line-2); border-radius: 6px; padding: 8px 10px; resize: vertical; }
+@media (max-width: 900px) {
+  .cut-shared .cut-slider { width: 160px; }
+  .cut-table td.cut { min-width: 200px; }
+  .cut-table td.cut .cut-slider { width: 120px; }
+}
