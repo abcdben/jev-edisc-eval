@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { CLICK_HINT, DECIDER_TEXT, Hint, ROW_PULSE_MS, RowTint, Seg, TipBox, fadeStyle, selectable, usePresence, usePulseWindow, useTip, useTween, useWidth, type HintItem, type TipLine } from "./ui";
 import { hoverable } from "./hover";
 
-/** The Flip rate card's "i" popover. */
+/** The Stability card's "i" popover. */
 const DET_ITEMS: HintItem[] = [
   { k: "Question", v: <mark><b>How often does the exact same input produce a different answer?</b></mark> },
   { k: "How tested", v: <><b>300 documents scored 5 times</b> with identical inputs.</> },
@@ -87,7 +87,7 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
   return (
     <div className="card">
       <div className="card-t">
-        <h3>Flip rate</h3>
+        <h3>Stability</h3>
         <span className="unit">{det ? `how often ${rows.find((x) => x.d?.cell)?.d?.cell?.k ?? 5} identical runs on ${fmtInt(det.sample.n_docs)} emails disagree` : "not measured"}</span>
         <span className="right">
           {hasT0 && <Seg value={setting} onChange={setSetting} options={[{ id: "default", label: "default", title: "Vendor default sampling" }, { id: "t0", label: "t = 0", title: "Temperature 0 where the API accepts it" }]} />}

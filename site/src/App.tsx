@@ -162,8 +162,8 @@ function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) =
     },
   ];
   const det = detFor(r, vv.arm, "default"), t0 = detFor(r, vv.arm, "t0");
-  if (det) { const d = detLines(det, r, name); sections.push({ title: "Flip rate", lines: d.lines, notes: d.notes }); }
-  if (t0) { const d = detLines(t0, r, name); sections.push({ title: "Flip rate · temperature 0", lines: d.lines, notes: d.notes }); }
+  if (det) { const d = detLines(det, r, name); sections.push({ title: "Stability", lines: d.lines, notes: d.notes }); }
+  if (t0) { const d = detLines(t0, r, name); sections.push({ title: "Stability · temperature 0", lines: d.lines, notes: d.notes }); }
   return { name, color, context, sections };
 }
 
@@ -297,7 +297,7 @@ function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain:
   );
 }
 
-/** The Flip rate card wired to the section's cross-chart hover (hover.tsx). */
+/** The Stability card wired to the section's cross-chart hover (hover.tsx). */
 function ConsistencyCard(props: Parameters<typeof Consistency>[0]) {
   const hover = useHover();
   return <Consistency {...props} highlight={hover.id} onHover={hover.set} />;
