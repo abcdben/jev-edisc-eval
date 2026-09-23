@@ -6,9 +6,9 @@ import { hoverable } from "./hover";
 
 /** The Determinism card's "i" popover. */
 const DET_ITEMS: HintItem[] = [
-  { k: "Question", v: <mark><b>What share of decisions flip when the same document is scored again?</b></mark> },
-  { k: "How tested", v: <><b>300 documents coded 5 times</b>, identical settings. Bar: probability two runs disagree; 95% bootstrap interval.</> },
-  { k: "t = 0", v: <><b>Temperature 0</b> where the API allows it. Decision models have no sampling.</> },
+  { k: "Question", v: <mark><b>How often does the exact same input produce a different output?</b></mark> },
+  { k: "How tested", v: <><b>300 documents scored 5 times</b> with identical inputs.</> },
+  { k: "t = 0", v: <><b>Temperature 0</b> reduces sampling randomness in the model.</> },
 ];
 
 const LABEL_W = 168, ROW = 20;
