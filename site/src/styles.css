@@ -122,7 +122,7 @@ svg text { user-select: none; font-family: var(--sans); }
 .tabs button.on { color: var(--ink); background: var(--bg-2); }
 .eyebrow { font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
 .title { font-weight: 500; font-size: 24px; line-height: 1.2; letter-spacing: -0.015em; margin: 0; white-space: nowrap; }
-.title em { font-style: normal; color: var(--ink-3); font-size: 0.875em; }
+.title em { font-style: normal; color: var(--ink-3); }
 .lede { color: var(--ink-2); font-size: 14.5px; max-width: 760px; margin: 0; }
 .stats { display: flex; gap: 32px; flex-wrap: wrap; margin-top: 2px; }
 .stat { display: flex; flex-direction: column; gap: 2px; }

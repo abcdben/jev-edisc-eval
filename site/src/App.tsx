@@ -391,7 +391,7 @@ export default function App() {
   const page = (
     <div className="page">
       <header className="masthead">
-        <h1 className="title"><em>Zero-Shot Bake-Off:</em> Jev vs the Frontier LLMs</h1>
+        <h1 className="title">Jev vs Frontier LLMs: A Zero-Shot Bakeoff</h1>
         <nav className="tabs" aria-label="Pages">
           {PAGES.map((p) => (
             <button key={p.id} className={pageId === p.id ? "on" : ""} onClick={() => goPage(p.id)} aria-current={pageId === p.id ? "page" : undefined}>{p.label}</button>
