@@ -636,6 +636,8 @@ svg text { user-select: none; font-family: var(--sans); }
 .studio-plot.framed { border-color: var(--line); }
 .studio-plot.auto { resize: horizontal; min-height: 0; }
 .studio-canvas { flex: 1; position: relative; min-height: 0; }
+/* Canvas → Title (StudioPage.tsx `studio-title`): a bold line in the panel's ink at its top-left, above the chart (and so above a legend row); nothing is rendered while empty. Sized from the Text control like the legend note. */
+.studio-plot .studio-title { flex: none; font-weight: 600; font-size: calc(var(--fs-legend, 12px) * 1.25); line-height: 1.25; letter-spacing: -0.01em; color: var(--ink); margin: 0 0 10px; }
 .studio-foot { color: var(--ink-3); font-size: 12px; margin: 10px 0 0; font-variant-numeric: tabular-nums; }
 .studio-hint.small { font-size: 11.5px; color: var(--ink-4); }
 /* Buttons: the top bar's Download PNG (`.primary`, filled) and Copy PNG, the scheme editor's small ones; a brief status ("Rendering…", "Copied", or the browser's refusal) beside them */
@@ -663,6 +665,7 @@ svg text { user-select: none; font-family: var(--sans); }
 .studio-stage.custom { background: var(--bg); padding: 18px 18px 12px; border-radius: 8px; }
 .studio-swatch input.hex { width: 82px; font: inherit; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--ink); background: var(--panel); border: 1px solid var(--line-2); border-radius: 6px; padding: 3px 6px; }
 .studio-size input.name { width: 150px; font-variant-numeric: normal; }
+.studio-size input.ttl { width: 360px; font-variant-numeric: normal; }
 .studio-size input.font { width: 320px; font-variant-numeric: normal; font-size: 12px; }
 .studio-slider { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-2); }
 .studio-slider input[type="range"] { width: 88px; margin: 0; accent-color: var(--ink); }
@@ -753,6 +756,25 @@ label.studio-btn { display: inline-block; }
 }
 .studio-plot[data-style="epoch"].framed { border-color: #e6e6e6; }
 .studio-plot[data-style="epoch"] svg text.nm { font-weight: 400; }
+
+/* TypeSafe: TypeSafe AI's house chart (sampled from its "accuracy vs cost" plot). Charcoal #282828 panel, near-white ink, ticks and axis titles in a light
+   grey, a thin solid neutral grid on both axes, no dot matrix, a mid-grey axis, Inter with point labels and legend names at weight 500 (the legend names
+   in full ink, like the point labels). Vendor palette: every Jev row in the TypeSafe magenta family (the sampled #e84fb9 first), OpenAI teal (#0aad9f),
+   Anthropic orange (#ec9330), Fireworks grey (#abbab9, Gemma), Laya a muted violet, Google a blue family the reference has no colour for. Interval
+   boxes barely there (the reference has none), whiskers receding, bars at the dark theme's alpha whichever theme the page is in. StudioPage.tsx STYLES gives it a profile: Labels → legend, Marks → diamond at L,
+   plain background and panel, names only, the style's own colours, Text M, normal contrast. */
+.studio-plot[data-style="typesafe"] {
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --panel: #282828; --ink: #e9ebea; --ink-2: #c8cdcc; --ink-3: #b4bbba; --ink-4: #7d8483;
+  --line: #3a3a3a; --line-2: #4e504f; --grid: #3a3a3a; --dots: transparent; --axis: #4e504f;
+  --box-alpha: 0.08; --box-stroke: 0; --bar-alpha: 0.7; --op-whisker: 0.45; --hl: rgba(230, 80, 185, 0.14);
+  --c-jev: #e84fb9; --v3: #f48ad4; --v5: #b93b93; --v1: #ffb3e3; --v9: #a33383; --v14: #ee6fc6; --c-laya-ft: #a897dd;
+  --c-haiku: #f5b25a; --c-sonnet: #ec9330; --c-luna: #5fd1c5; --c-terra: #0aad9f; --c-flashlite: #8ab6ff; --c-flash: #4c8dff; --c-gemma: #abbab9;
+  border-radius: 8px;
+}
+.studio-plot[data-style="typesafe"].framed { border-color: #3a3a3a; }
+.studio-plot[data-style="typesafe"] svg text.nm, .studio-plot[data-style="typesafe"] svg text.lg { font-weight: 500; }
+.studio-plot[data-style="typesafe"] svg text.lg { fill: var(--ink); }
 
 /* Studio Text control: the charts scale their SVG text from the textScale prop; the HTML legend note follows through --fs-legend (StudioPage.tsx sets it on the panel). */
 .studio-plot .legend-note { font-size: var(--fs-legend, 12px); }

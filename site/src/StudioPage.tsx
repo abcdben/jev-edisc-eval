@@ -17,7 +17,7 @@ import type { LogosMode } from "./logos";
  * Screenshot studio (studio.html → studio.tsx → this page; unlinked from the site): one Compare models chart alone, on a plain panel whose size
  * you set, with every control above the plot and none on it. The top bar holds what is plotted (plot, corpus, models, issue) and the PNG export;
  * the inspector under it (components/Inspector.tsx) groups the rest into disclosure sections: Chart (the plot's own controls: view, axes, marks,
- * fill of the boxes and bars, labels), Canvas (size, frame, legend, logos, background pattern), Style (preset, colours, text, contrast), Scheme (the custom scheme
+ * fill of the boxes and bars, labels), Canvas (size, title, frame, legend, logos, background pattern), Style (preset, colours, text, contrast), Scheme (the custom scheme
  * editor, with Style → Custom) and Export (scale, backdrop). Plots: recall/precision (the site's map and ranked views), Cost, Speed and Stability
  * (components/StudioCharts.tsx). Drag the panel's bottom-right corner or type a size; pick a preset for LinkedIn's usual aspect ratios. Nothing pulses and nothing opens on click.
  */
@@ -36,9 +36,12 @@ const PRESETS: Preset[] = [
  * Dark/Light theme does not reach the panel. `custom` has no CSS block: its variables are the user's (the scheme editor below), written as inline custom
  * properties on the `.studio-scheme` wrapper around the panel, so the preset CSS, the high-contrast block and the PNG export read them unchanged;
  * the slider variables alone (SCHEME_SLIDERS) go inline on the panel itself, so the high-contrast block's own alphas do not overrule the user's.
+ * A preset may carry a `profile`: the companion settings (labels, marks, background, panel frame, logos, colours, text, contrast) that reproduce its reference
+ * look, applied once, when the preset is chosen (onStyle), never on reload or while it stays on, so every control still moves freely afterwards.
  */
-type PlotStyle = "site" | "journal" | "newsroom" | "linkedin" | "slate" | "economist" | "epoch" | "custom";
-const STYLES: { id: PlotStyle; label: string; title: string }[] = [
+type PlotStyle = "site" | "journal" | "newsroom" | "linkedin" | "slate" | "economist" | "epoch" | "typesafe" | "custom";
+type Profile = { labels?: LabelsMode; leaders?: boolean; mark?: MarkShape; markSize?: MarkSize; bg?: Bg; frame?: boolean; logos?: LogosMode; text?: TextSize; contrast?: Contrast; colors?: ColorMode };
+const STYLES: { id: PlotStyle; label: string; title: string; profile?: Profile }[] = [
   { id: "site", label: "Site", title: "The site's own look; follows the Dark/Light theme" },
   { id: "journal", label: "Journal", title: "Academic figure: white, black hairline axes, serif labels, Okabe–Ito colorblind-safe palette" },
   { id: "newsroom", label: "Newsroom", title: "Editorial data graphic: warm greys, dotted grid, muted news palette" },
@@ -46,9 +49,22 @@ const STYLES: { id: PlotStyle; label: string; title: string }[] = [
   { id: "slate", label: "Slate", title: "Dark slate, Jev in one saturated accent, every LLM in a shade of grey" },
   { id: "economist", label: "Economist", title: "Financial weekly: red accent tab, thin grey rules, the Economist data palette" },
   { id: "epoch", label: "Epoch", title: "Epoch AI-style chart: white, horizontal hairline grid only, flat saturated dots, no interval boxes; pairs with Labels → legend" },
+  {
+    id: "typesafe", label: "TypeSafe",
+    title: "TypeSafe AI's house chart: charcoal panel, white Inter labels, thin solid grid, Jev in TypeSafe magenta, OpenAI teal, Anthropic orange, Fireworks grey. Choosing it also sets Labels → legend, Marks → diamond L, Background → plain, Panel → plain, names only, Colors → style's own, Text M, normal contrast (each can be changed again after)",
+    profile: { labels: "legend", leaders: false, mark: "diamond", markSize: "l", bg: "off", frame: false, logos: "none", text: "m", contrast: "normal", colors: "style" },
+  },
   { id: "custom", label: "Custom", title: "Your own scheme: starts as a copy of the preset that was on, editable below, saved by name" },
 ];
 const isPlotStyle = (s: string | null): s is PlotStyle => STYLES.some((x) => x.id === s);
+/** Presets with a dark panel (the Colors palettes are lifted on them, palettes.ts forDark; Site follows the theme, Custom its own --panel). */
+const DARK_STYLES: PlotStyle[] = ["slate", "typesafe"];
+/**
+ * Built-in schemes (Scheme → Saved, the "built-in" group): a preset offered as a starting point in the editor under its own name, its variables read
+ * off the preset's CSS when chosen (presetVars), so the two never drift apart. Saving keeps a copy under the user's schemes; the built-in stays.
+ */
+const BUILTIN_SCHEMES: { name: string; style: PlotStyle }[] = [{ name: "TypeSafe", style: "typesafe" }];
+const BUILTIN_PREFIX = "builtin:";
 
 /**
  * Custom scheme (Style → Custom): the panel variables every preset block defines, exposed in the editor row, plus `--bg`, the page behind the panel
@@ -228,6 +244,9 @@ export default function StudioPage() {
   const [bg, setBg] = useState<Bg>(() => { const s = localStorage.getItem("studio-bg"); return isBg(s) ? s : "auto"; });
   useEffect(() => { localStorage.setItem("studio-bg", bg); }, [bg]);
   const [presetDots, setPresetDots] = useState(true);
+  // Title (Canvas → Title): an optional bold line at the panel's top-left, above the chart (styles.css .studio-title); empty draws nothing.
+  const [title, setTitle] = useState(() => localStorage.getItem("studio-title") ?? "");
+  useEffect(() => { localStorage.setItem("studio-title", title); }, [title]);
   // The inspector's sections (components/Inspector.tsx): Chart and Canvas open on a first visit, Scheme whenever Style → Custom is chosen.
   const sections = useSections({ chart: true, canvas: true, style: false, scheme: true, export: false });
 
@@ -252,7 +271,11 @@ export default function StudioPage() {
     setSchemeName(n);
     say(n in schemes ? `Overwrote “${n}”` : `Saved “${n}”`);
   };
-  const loadScheme = (n: string) => { const s = schemes[n]; if (!s) return; setScheme({ ...s }); setSchemeName(n); };
+  // a saved scheme by name, or a built-in one (BUILTIN_SCHEMES; the select's `builtin:` values) read off its preset's CSS
+  const loadScheme = (n: string) => {
+    if (n.startsWith(BUILTIN_PREFIX)) { const b = BUILTIN_SCHEMES.find((x) => x.name === n.slice(BUILTIN_PREFIX.length)); if (b) { setScheme(presetVars(b.style)); setSchemeName(b.name); } return; }
+    const s = schemes[n]; if (!s) return; setScheme({ ...s }); setSchemeName(n);
+  };
   const deleteScheme = () => { if (!savedName) return; setSchemes((p) => { const q = { ...p }; delete q[savedName]; return q; }); say(`Deleted “${savedName}”`); };
   const exportScheme = () => {
     const n = schemeName.trim() || "scheme";
@@ -280,7 +303,7 @@ export default function StudioPage() {
   const [custom, setCustom] = useState<Record<string, string>>(readCustom);
   useEffect(() => { localStorage.setItem("studio-colors-custom", JSON.stringify(custom)); }, [custom]);
   const customPanelHex = style === "custom" ? toHex(scheme["--panel"] ?? "") : null;
-  const darkPanel = customPanelHex ? luminance(customPanelHex) < 0.4 : style === "slate" || (style === "site" && theme === "dark");
+  const darkPanel = customPanelHex ? luminance(customPanelHex) < 0.4 : DARK_STYLES.includes(style) || (style === "site" && theme === "dark");
   const colorVars: Record<string, string> = colorMode === "style" ? {} : colorMode === "custom" ? toVars(custom, false) : toVars(PALETTES.find((p) => p.id === colorMode)!.colors, darkPanel);
   // The scheme's slider values, written inline on the panel itself (the rest of the scheme sits on the wrapper): the panel's own [data-contrast="high"]
   // block sets --box-alpha and --bar-alpha, and would otherwise silence the sliders whenever Contrast is high.
@@ -301,8 +324,26 @@ export default function StudioPage() {
     probe.remove();
     return out;
   };
+  // A preset's profile (STYLES): the companion settings it declares, set once as it is chosen; the controls are the user's again from then on.
+  const applyProfile = (p: Profile) => {
+    if (p.labels) setLabelsMode(p.labels);
+    if (p.leaders !== undefined) setLeaders(p.leaders);
+    if (p.mark) setMark(p.mark);
+    if (p.markSize) setMarkSize(p.markSize);
+    if (p.bg) setBg(p.bg);
+    if (p.frame !== undefined) setFrame(p.frame);
+    if (p.logos) setLogos(p.logos);
+    if (p.text) setText(p.text);
+    if (p.contrast) setContrast(p.contrast);
+    if (p.colors) setColorMode(p.colors);
+  };
   // Entering Custom copies the preset that was on, so the editor starts from real values; a reload into Custom with nothing stored copies Site.
-  const onStyle = (s: PlotStyle) => { if (s === "custom" && style !== "custom") { setScheme(presetVars(style)); sections.set("scheme", true); } setStyle(s); };
+  const onStyle = (s: PlotStyle) => {
+    if (s === "custom" && style !== "custom") { setScheme(presetVars(style)); sections.set("scheme", true); }
+    const profile = STYLES.find((x) => x.id === s)?.profile;
+    if (profile && s !== style) applyProfile(profile);
+    setStyle(s);
+  };
   useEffect(() => { if (style === "custom" && !Object.keys(scheme).length) setScheme(presetVars("site")); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   /** Every roster model's colour as the panel currently resolves it (the preset's, or the palette or swatch over it). */
   const currentColors = (): Record<string, string> => {
@@ -421,7 +462,7 @@ export default function StudioPage() {
     plot === "stability" && (stabChart === "agree" ? "agreement · zoomed" : stabChart === "dots" ? "dots" : "disagreement bars"), plot === "stability" && (stabSetting === "t0" ? "t = 0" : "default sampling"), plot === "stability" && hideUnmeasured && "unmeasured hidden",
     markText, showFill && `${FILL_MODES.find((m) => m.id === fillMode)?.label} ${hasBars ? "bars" : "boxes"}`, fills && `labels ${labelsMode}`, fills && labelsMode === "beside" && leaders && "leaders",
   );
-  const canvasSummary = summarize(`${w} × ${fills ? h : "auto"} px`, frame ? "framed" : "plain", legend ? "legend" : "no legend", LOGOS_OPTIONS.find((o) => o.id === logos)?.label, BG_SUMMARY[bg]);
+  const canvasSummary = summarize(`${w} × ${fills ? h : "auto"} px`, title.trim() && `“${title.trim()}”`, frame ? "framed" : "plain", legend ? "legend" : "no legend", LOGOS_OPTIONS.find((o) => o.id === logos)?.label, BG_SUMMARY[bg]);
   const styleSummary = summarize(
     STYLES.find((s) => s.id === style)?.label, style === "custom" && schemeName.trim(),
     colorMode === "style" ? null : colorMode === "custom" ? "custom colours" : PALETTES.find((p) => p.id === colorMode)?.label, `Text ${text.toUpperCase()}`, `${contrast} contrast`,
@@ -588,6 +629,11 @@ export default function StudioPage() {
               <span className="unit">px{fills ? "" : " · height follows the rows"}</span>
             </span>
           </Control>
+          <Control label="Title">
+            <span className="studio-size">
+              <input type="text" className="ttl" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="none" spellCheck={false} aria-label="chart title" title="A bold title at the panel's top-left, above the chart; leave empty for none. Part of the PNG export." />
+            </span>
+          </Control>
           <Control label="Panel">
             <Seg value={frame ? "card" : "plain"} onChange={(x) => setFrame(x === "card")} options={[{ id: "card", label: "framed" }, { id: "plain", label: "plain" }]} />
             <Seg value={legend ? "on" : "off"} onChange={(x) => setLegend(x === "on")} options={[{ id: "on", label: "legend" }, { id: "off", label: "no legend" }]} />
@@ -649,8 +695,11 @@ export default function StudioPage() {
             <Control label="Saved">
               <span className="select">
                 <select value={savedName} onChange={(e) => loadScheme(e.target.value)} aria-label="Saved schemes">
-                  <option value="">{Object.keys(schemes).length ? "—" : "none yet"}</option>
+                  <option value="">{Object.keys(schemes).length ? "—" : "none saved yet"}</option>
                   {Object.keys(schemes).sort().map((n) => <option key={n} value={n}>{n}</option>)}
+                  <optgroup label="Built-in">
+                    {BUILTIN_SCHEMES.map((b) => <option key={b.name} value={BUILTIN_PREFIX + b.name} title={`The ${b.name} preset's own values, as a starting point; Save keeps your copy`}>{b.name}</option>)}
+                  </optgroup>
                 </select>
               </span>
               <button type="button" className="studio-btn small" onClick={deleteScheme} disabled={!savedName} title="Remove the selected saved scheme from this browser">Delete</button>
@@ -716,6 +765,7 @@ export default function StudioPage() {
             data-contrast={contrast}
             style={{ ...colorVars, ...sliderVars, ...bgVars, width: w, height: fills ? h : undefined, "--fs-legend": `${12 * ts}px`, "--mark-user": ms, "--mark-jev": jms } as React.CSSProperties}
           >
+            {title.trim() ? <div className="studio-title">{title.trim()}</div> : null}
             {plot === "pr" && chart === "map" && (
               <div className="studio-canvas">
                 <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} boxes={fillMode} bg={plotBg("dots")} />
