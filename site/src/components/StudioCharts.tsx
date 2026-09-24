@@ -1,7 +1,7 @@
 import { useMemo, useRef } from "react";
 import type { CI } from "../data";
 import { LogoGlyph, logoFor } from "../logos";
-import { LEADER_STYLE, axisMargins, leaderFor } from "./PRScatter";
+import { LEADER_STYLE, LEGEND_GAP, Legend, axisMargins, leaderFor, legendLayout, type LabelsMode } from "./PRScatter";
 import { DECIDER_TEXT, useSize, useWidth } from "./ui";
 
 /**
@@ -153,8 +153,8 @@ export type StudioScatterPt = { id: string; name: string; color: string; x: numb
 
 const PR = 24, PT = 18;
 
-/** Cost (log x) against recall (y, 95% whisker). Sized to the host's box like PRScatter's `fill` mode (host must be positioned). `leaders` as on PRScatter: a hairline from a displaced label to its mark. */
-export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = true, emptyText = "Select at least one model.", textScale = 1, leaders = false }: { pts: StudioScatterPt[]; xLabel: string; yLabel?: string; fmtX: (v: number) => string; logos?: boolean; emptyText?: string; textScale?: number; leaders?: boolean }) {
+/** Cost (log x) against recall (y, 95% whisker). Sized to the host's box like PRScatter's `fill` mode (host must be positioned). `leaders` and `labels` as on PRScatter: a hairline from a displaced label to its mark; or a legend row at the top instead of point labels. */
+export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = true, emptyText = "Select at least one model.", textScale = 1, leaders = false, labels: labelsMode = "beside" }: { pts: StudioScatterPt[]; xLabel: string; yLabel?: string; fmtX: (v: number) => string; logos?: boolean; emptyText?: string; textScale?: number; leaders?: boolean; labels?: LabelsMode }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const sz = useSize(hostRef, { w: 900, h: 520 });
   const W = sz.w, H = Math.max(300, sz.h);
@@ -169,13 +169,17 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
   const yTickLabel = (t: number) => `${+(t * 100).toFixed(1)}%`;
   // the left and bottom margins hold the y tick labels and the axis titles, sized from them and the text scale (PRScatter.tsx axisMargins)
   const { PL, PB, titleX } = axisMargins(yt.map(yTickLabel), s);
+  const legendItems = drawn.map((p) => ({ id: p.id, name: `${p.name}${p.subset ? " *" : ""}`, color: p.color }));
+  const LEGEND_Y = 4, legendH = labelsMode === "legend" ? legendLayout(legendItems.map((i) => i.name), s, PL, W - PR).height : 0;
+  const top = labelsMode === "legend" ? Math.max(PT, LEGEND_Y + legendH + LEGEND_GAP * s) : PT;
   const X = (v: number) => PL + ((Math.log10(v) - Math.log10(xd[0])) / (Math.log10(xd[1]) - Math.log10(xd[0]) || 1)) * (W - PL - PR);
-  const Y = (v: number) => PT + (1 - (v - yd[0]) / (yd[1] - yd[0] || 1)) * (H - PT - PB);
+  const Y = (v: number) => top + (1 - (v - yd[0]) / (yd[1] - yd[0] || 1)) * (H - top - PB);
   // labels: right of the mark, else left, above, below; skipped when nothing fits
   const placed: { x: number; y: number; w: number; h: number }[] = [];
   const dots = drawn.map((p) => ({ x: X(p.x), y: Y(p.y[0]) }));
   const clash = (a: { x: number; y: number; w: number; h: number }) => placed.some((b) => a.x < b.x + b.w + 2 && a.x + a.w + 2 > b.x && a.y < b.y + b.h + 1 && a.y + a.h + 1 > b.y) || dots.some((d) => d.x > a.x - 6 && d.x < a.x + a.w + 6 && d.y > a.y - 6 && d.y < a.y + a.h + 6);
   const labels = drawn.map((p, i) => {
+    if (labelsMode === "legend") return null;
     const text = `${p.name}${p.subset ? " *" : ""}`, w = text.length * 6.6 * s + 4, h = 14 * s, o = 11 * s, { x, y } = dots[i];
     const cands = [{ x: x + o, y: y - h / 2 }, { x: x - o - w, y: y - h / 2 }, { x: x - w / 2, y: y - 14 * s - h }, { x: x - w / 2, y: y + 14 * s }];
     const c = cands.find((cc) => cc.x >= PL && cc.x + w <= W - 2 && cc.y >= 0 && !clash({ ...cc, w, h }));
@@ -187,7 +191,7 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
       <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ display: "block", overflow: "visible" }}>
         {xt.map((t) => (
           <g key={`x${t}`}>
-            <line className="gl" x1={X(t)} x2={X(t)} y1={PT} y2={H - PB} stroke="var(--grid)" />
+            <line className="gl" x1={X(t)} x2={X(t)} y1={top} y2={H - PB} stroke="var(--grid-x, var(--grid))" />
             <text x={X(t)} y={H - PB + 16 * s} fontSize={10.5 * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{fmtX(t)}</text>
           </g>
         ))}
@@ -199,12 +203,13 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
         ))}
         <g stroke="var(--axis)" style={SW(1)}>
           <line x1={PL} x2={W - PR} y1={H - PB} y2={H - PB} />
-          <line x1={PL} x2={PL} y1={PT} y2={H - PB} />
+          <line x1={PL} x2={PL} y1={top} y2={H - PB} stroke="var(--axis-y, var(--axis))" />
         </g>
         <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
-        <text x={titleX} y={(PT + H - PB) / 2} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(PT + H - PB) / 2})`}>{yLabel}</text>
+        <text x={titleX} y={(top + H - PB) / 2} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(top + H - PB) / 2})`}>{yLabel}</text>
+        {labelsMode === "legend" && <Legend items={legendItems} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} />}
         {/* leader lines: before every whisker, mark and label, so none crosses them */}
-        {leaders && drawn.map((p, i) => {
+        {leaders && labelsMode === "beside" && drawn.map((p, i) => {
           const l = labels[i];
           if (!l) return null;
           const { x, y } = dots[i];

@@ -56,6 +56,42 @@ export function leaderFor(l: { x: number; y: number; w: number; h: number }, r: 
 /** The leader's stroke: a 0.75 px hairline that the high-contrast block multiplies (--sw-mult); its opacity is the `stroke-opacity` attribute, so CSS (`.pr-leader`) can raise it. */
 export const LEADER_STYLE = { strokeWidth: "calc(0.75 * var(--sw-mult, 1))" } as const;
 
+/**
+ * Where a scatter names its points (the studio's Labels control; `beside` on the site): `beside` places a label next to each mark (and draws
+ * no legend); `legend` draws no point labels and instead a legend row at the top of the SVG, one square swatch and name per item, in
+ * display order, wrapped when the panel is too narrow, with the plot area moved down under it (legendLayout, Legend).
+ */
+export type LabelsMode = "beside" | "legend";
+/** Legend metrics at text scale `s`: a 10 px swatch, 6 px to the name, 18 px between items, 16 px rows; names estimated at 6.3 px per character at 11 px, as the label placement does. */
+export function legendLayout(names: string[], s: number, x0: number, x1: number): { pos: { x: number; y: number }[]; height: number; sw: number; gap: number; row: number; fs: number } {
+  const sw = 10 * s, gap = 6 * s, item = 18 * s, row = 16 * s, fs = 11 * s;
+  const pos: { x: number; y: number }[] = [];
+  let x = x0, r = 0;
+  for (const n of names) {
+    const w = sw + gap + n.length * 6.3 * s;
+    if (x > x0 && x + w > x1) { x = x0; r++; }
+    pos.push({ x, y: r * row });
+    x += w + item;
+  }
+  return { pos, height: names.length ? (r + 1) * row : 0, sw, gap, row, fs };
+}
+/** How far below a legend's rows the plot area starts. */
+export const LEGEND_GAP = 10;
+/** The legend row(s) (LabelsMode `legend`): square swatches in the item colour (never the vendor logo, whatever the logos toggle says) and the names in --ink-2, from (x0, y) rightward, wrapping before x1. */
+export function Legend({ items, s, x0, x1, y }: { items: { id: string; name: string; color: string }[]; s: number; x0: number; x1: number; y: number }) {
+  const L = legendLayout(items.map((i) => i.name), s, x0, x1);
+  return (
+    <g className="pr-legend">
+      {items.map((it, i) => (
+        <g key={it.id} transform={`translate(${L.pos[i].x} ${y + L.pos[i].y})`}>
+          <rect y={(L.row - L.sw) / 2} width={L.sw} height={L.sw} rx={1.5} fill={it.color} />
+          <text x={L.sw + L.gap} y={L.row / 2 + 4 * s} fontSize={L.fs} fill="var(--ink-2)" className="lg">{it.name}</text>
+        </g>
+      ))}
+    </g>
+  );
+}
+
 function niceTicks(lo: number, hi: number): number[] {
   const span = hi - lo;
   const step = span > 0.6 ? 0.2 : span > 0.3 ? 0.1 : span > 0.12 ? 0.05 : span > 0.06 ? 0.02 : 0.01;
@@ -76,8 +112,9 @@ const PULSE_CYCLES = 2, PULSE_CYCLE_MS = 650;
 /** `domain` (the screenshot studio) fixes both axes to explicit 0–1 ranges, overriding `zoom`. */
 /** `textScale` (the studio's Text control; 1 on the site) multiplies every font size, the label-placement estimates and the margins that hold tick labels. Axis stroke width, dot radius and the vendor-glyph size read the --sw-mult / --r-add / --mark-scale CSS variables (styles.css, the studio's high-contrast block; unset on the site). */
 /** `leaders` (the studio's Leaders control; off on the site) draws a hairline from each displaced label back to its mark (leaderFor), under every mark and label. */
+/** `labels` (the studio's Labels control; `beside` on the site): `legend` drops the point labels (and leaders) for a legend row at the top (Legend), the plot moved down under it. */
 export type PRDomain = { x: [number, number]; y: [number, number] };
-export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean }) {
+export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside" }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickMark = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const sz = useSize(hostRef, { w: 760, h: height });
@@ -115,8 +152,12 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
   const xt = niceTicks(dom.x[0], dom.x[1]), yt = niceTicks(dom.y[0], dom.y[1]);
   const tickLabel = (t: number) => `${Math.round(t * 100)}%`;
   const { PL, PB, titleX } = axisMargins(yt.map(tickLabel), s);
+  // legend mode: the legend rows sit at the top (from LEGEND_Y), and the plot area starts LEGEND_GAP below them instead of at PT
+  const LEGEND_Y = 4;
+  const legendH = labelsMode === "legend" ? legendLayout(pts.map((p) => p.name + (p.subset ? " *" : "")), s, PL, W - PR).height : 0;
+  const top = labelsMode === "legend" ? Math.max(PT, LEGEND_Y + legendH + LEGEND_GAP * s) : PT;
   const X = (v: number) => PL + ((v - dom.x[0]) / (dom.x[1] - dom.x[0] || 1)) * (W - PL - PR);
-  const Y = (v: number) => PT + (1 - (v - dom.y[0]) / (dom.y[1] - dom.y[0] || 1)) * (H - PT - PB);
+  const Y = (v: number) => top + (1 - (v - dom.y[0]) / (dom.y[1] - dom.y[0] || 1)) * (H - top - PB);
 
   // label placement: try several offsets; avoid other dots and labels; give up (hover only) when nothing fits
   const labels = useMemo(() => {
@@ -140,7 +181,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
       return { ...c, w, h, text: p.name + (p.subset ? " *" : "") };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pts, dom, W, H, s]);
+  }, [pts, dom, W, H, s, top]);
 
   // Where everything is heading, keyed by item so a move is continuous across re-sorts; `geo` is where it is drawn this frame.
   const target: Record<string, number> = {};
@@ -164,10 +205,11 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
             <circle cx={1} cy={1} r={0.7} fill="var(--dots)" />
           </pattern>
         </defs>
-        <rect x={PL} y={PT} width={W - PR - PL} height={H - PB - PT} fill="url(#dotgrid)" />
+        <rect x={PL} y={top} width={W - PR - PL} height={H - PB - top} fill="url(#dotgrid)" />
+        {/* vertical gridlines read --grid-x (falls back to --grid), so a preset can keep horizontal rules only (Epoch); the y-axis line likewise --axis-y */}
         {xt.map((t) => (
           <g key={`x${t}`}>
-            <line className="gl" x1={X(t)} x2={X(t)} y1={PT} y2={H - PB} stroke="var(--grid)" />
+            <line className="gl" x1={X(t)} x2={X(t)} y1={top} y2={H - PB} stroke="var(--grid-x, var(--grid))" />
             <text x={X(t)} y={H - PB + 16 * s} fontSize={TICK_FS * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{tickLabel(t)}</text>
           </g>
         ))}
@@ -179,10 +221,11 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
         ))}
         <g stroke="var(--axis)" style={{ strokeWidth: "var(--sw-mult, 1)" }}>
           <line x1={PL} x2={W - PR} y1={H - PB} y2={H - PB} />
-          <line x1={PL} x2={PL} y1={PT} y2={H - PB} />
+          <line x1={PL} x2={PL} y1={top} y2={H - PB} stroke="var(--axis-y, var(--axis))" />
         </g>
         <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={TITLE_FS * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
-        <text x={titleX} y={(PT + H - PB) / 2} fontSize={TITLE_FS * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(PT + H - PB) / 2})`}>{yLabel}</text>
+        <text x={titleX} y={(top + H - PB) / 2} fontSize={TITLE_FS * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(top + H - PB) / 2})`}>{yLabel}</text>
+        {labelsMode === "legend" && <Legend items={pts.map((p) => ({ id: p.id, name: p.name + (p.subset ? " *" : ""), color: p.color }))} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} />}
 
         {/* CI boxes first so dots sit on top; every box is the same stroke-less shade, the highlighted one a little deeper */}
         {drawn.map((p) => {
@@ -200,7 +243,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
           );
         })}
         {/* leader lines (studio): drawn after every box and before every mark and label, so none crosses a mark or a label */}
-        {leaders && drawn.map((p) => {
+        {leaders && labelsMode === "beside" && drawn.map((p) => {
           const li = pts.indexOf(p), l0 = li >= 0 ? labels[li] : null;
           if (!l0) return null;
           const tx = X(p.recall[0]), ty = Y(p.precision[0]);
@@ -217,7 +260,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
           // a highlighted mark whose label found no room gets one anyway, at the first candidate position
           const tx = X(p.recall[0]), ty = Y(p.precision[0]), x = g(p.id, "x"), y = g(p.id, "y");
           const li = pts.indexOf(p), l0 = li >= 0 ? labels[li] : null;
-          const l = l0 ? { x: l0.x - tx, y: l0.y - ty, text: l0.text } : hl === p.id ? { x: 9 * s, y: -6.5 * s, text: p.name + (p.subset ? " *" : "") } : null;
+          const l = labelsMode === "legend" ? null : l0 ? { x: l0.x - tx, y: l0.y - ty, text: l0.text } : hl === p.id ? { x: 9 * s, y: -6.5 * s, text: p.name + (p.subset ? " *" : "") } : null;
           const hasLogo = logos && logoFor(p.id);
           return (
             <g key={`d${p.id}`} className="fd" style={fadeStyle(stateOf[p.id] ?? "exit")}>{/* fade in / out (ui.tsx usePresence) */}
@@ -239,7 +282,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
             </g>
           );
         })}
-        {labels.some((l) => !l) && <text x={W - PR} y={PT - 6} fontSize={10.5 * s} textAnchor="end" fill="var(--ink-4)">some labels hidden where marks overlap; hover to identify</text>}
+        {labelsMode === "beside" && labels.some((l) => !l) && <text x={W - PR} y={PT - 6} fontSize={10.5 * s} textAnchor="end" fill="var(--ink-4)">some labels hidden where marks overlap; hover to identify</text>}
         {pts.length === 0 && <text x={W / 2} y={H / 2} textAnchor="middle" fontSize={13 * s} fill="var(--ink-4)">{emptyText ?? "Select at least one model."}</text>}
       </svg>
       {undefinedOnes.length > 0 && (

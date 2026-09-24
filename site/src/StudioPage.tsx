@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { DATA, DEFAULT_CORPUS, DEFAULT_ON, PRIMARY_BY_KEY, corpusKey, costPerDoc, fmtInt, fmtPct, isDecider, issueLabel, pick, siteCorpus, starOf, CORPORA, type Rec } from "./data";
 import { ModelPicker, useCompareItems, type Chart, type View } from "./App";
-import { PRScatter, type PRDomain } from "./components/PRScatter";
+import { PRScatter, type LabelsMode, type PRDomain } from "./components/PRScatter";
 import { PRRail } from "./components/PRRail";
 import { detFor } from "./components/Consistency";
 import { StudioBars, StudioScatter, type StudioRow, type StudioScatterPt } from "./components/StudioCharts";
@@ -30,7 +30,7 @@ const PRESETS: Preset[] = [
  * Dark/Light theme does not reach the panel. `custom` has no CSS block: its variables are the user's (the scheme editor below), written as inline custom
  * properties on the `.studio-scheme` wrapper around the panel, so the preset CSS, the high-contrast block and the PNG export read them unchanged.
  */
-type PlotStyle = "site" | "journal" | "newsroom" | "linkedin" | "slate" | "economist" | "custom";
+type PlotStyle = "site" | "journal" | "newsroom" | "linkedin" | "slate" | "economist" | "epoch" | "custom";
 const STYLES: { id: PlotStyle; label: string; title: string }[] = [
   { id: "site", label: "Site", title: "The site's own look; follows the Dark/Light theme" },
   { id: "journal", label: "Journal", title: "Academic figure: white, black hairline axes, serif labels, Okabe–Ito colorblind-safe palette" },
@@ -38,6 +38,7 @@ const STYLES: { id: PlotStyle; label: string; title: string }[] = [
   { id: "linkedin", label: "LinkedIn", title: "LinkedIn brand: #0A66C2 blues for Jev, LinkedIn accent colours for the LLMs" },
   { id: "slate", label: "Slate", title: "Dark slate, Jev in one saturated accent, every LLM in a shade of grey" },
   { id: "economist", label: "Economist", title: "Financial weekly: red accent tab, thin grey rules, the Economist data palette" },
+  { id: "epoch", label: "Epoch", title: "Epoch AI-style chart: white, horizontal hairline grid only, flat saturated dots, no interval boxes; pairs with Labels → legend" },
   { id: "custom", label: "Custom", title: "Your own scheme: starts as a copy of the preset that was on, editable below, saved by name" },
 ];
 const isPlotStyle = (s: string | null): s is PlotStyle => STYLES.some((x) => x.id === s);
@@ -60,7 +61,8 @@ const SCHEME_SLIDERS: (SchemeVar & { max: number; title: string })[] = [
   { v: "--box-stroke", label: "box outline", max: 1, title: "Outline opacity of the interval boxes" },
   { v: "--bar-alpha", label: "bar fill", max: 1, title: "Fill opacity of the bars" },
 ];
-const SCHEME_VARS = new Set([...SCHEME_SURFACE, ...SCHEME_MODELS, ...SCHEME_SLIDERS].map((x) => x.v).concat("--sans"));
+// --grid-x and --axis-y (vertical gridlines, y-axis line; unset they follow --grid / --axis) have no swatch but are copied, saved and imported, so a Custom made from Epoch keeps its horizontal-only grid
+const SCHEME_VARS = new Set([...SCHEME_SURFACE, ...SCHEME_MODELS, ...SCHEME_SLIDERS].map((x) => x.v).concat("--sans", "--grid-x", "--axis-y"));
 type Vars = Record<string, string>;
 const isVars = (o: unknown): o is Vars => !!o && typeof o === "object" && !Array.isArray(o) && Object.values(o).every((x) => typeof x === "string");
 const isSchemes = (o: unknown): o is Record<string, Vars> => !!o && typeof o === "object" && !Array.isArray(o) && Object.values(o).every(isVars);
@@ -166,6 +168,9 @@ export default function StudioPage() {
   // Leader lines (PRScatter.tsx / StudioCharts.tsx `leaders`): a hairline from a label the placement pushed away from its mark back to the mark.
   const [leaders, setLeaders] = useState(() => localStorage.getItem("studio-leaders") === "on");
   useEffect(() => { localStorage.setItem("studio-leaders", leaders ? "on" : "off"); }, [leaders]);
+  // Labels (PRScatter.tsx LabelsMode): names beside the marks, or a legend row at the top of the panel and no point labels.
+  const [labelsMode, setLabelsMode] = useState<LabelsMode>(() => (localStorage.getItem("studio-labels") === "legend" ? "legend" : "beside"));
+  useEffect(() => { localStorage.setItem("studio-labels", labelsMode); }, [labelsMode]);
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "light");
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
   const [style, setStyle] = useState<PlotStyle>(() => { const s = localStorage.getItem("studio-style"); return isPlotStyle(s) ? s : "site"; });
@@ -475,6 +480,11 @@ export default function StudioPage() {
           <Seg value={logos ? "on" : "off"} onChange={(x) => setLogos(x === "on")} options={[{ id: "on", label: "logos" }, { id: "off", label: "names only" }]} />
         </Control>
         {fills && (
+          <Control label="Labels">
+            <Seg value={labelsMode} onChange={setLabelsMode} options={[{ id: "beside", label: "beside", title: "Each model's name next to its mark" }, { id: "legend", label: "legend", title: "A legend row at the top of the panel (square swatches and names); no names on the plot" }]} />
+          </Control>
+        )}
+        {fills && labelsMode === "beside" && (
           <Control label="Leaders">
             <Seg value={leaders ? "on" : "off"} onChange={(x) => setLeaders(x === "on")} options={[{ id: "off", label: "off" }, { id: "on", label: "on", title: "A hairline in the model's colour from a label the layout pushed away from its mark back to the mark; labels beside their mark get none" }]} />
           </Control>
@@ -601,13 +611,13 @@ export default function StudioPage() {
           >
             {plot === "pr" && chart === "map" && (
               <div className="studio-canvas">
-                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} />
+                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} />
               </div>
             )}
             {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} />}
             {plot === "cost" && costChart === "scatter" && (
               <div className="studio-canvas">
-                <StudioScatter pts={costPts} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} />
+                <StudioScatter pts={costPts} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} />
               </div>
             )}
             {plot === "cost" && costChart !== "scatter" && (
@@ -636,8 +646,9 @@ export default function StudioPage() {
             )}
           </div>
         </div>
-        <p className="studio-foot">Drag the panel's bottom-right corner to resize, or type a size above. {w} × {fills ? h : "auto"} px.</p>
       </section>
+      {/* outside the stage, so it reads the theme's ink rather than sitting on a Custom scheme's page colour */}
+      <p className="studio-foot">Drag the panel's bottom-right corner to resize, or type a size above. {w} × {fills ? h : "auto"} px.</p>
     </div>
   );
 }

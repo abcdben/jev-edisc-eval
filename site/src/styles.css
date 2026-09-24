@@ -688,6 +688,21 @@ label.studio-btn { display: inline-block; }
 .studio-plot[data-style="economist"].framed { border-color: #d9d9d9; border-top: 1px solid #0c0c0c; }
 .studio-plot[data-style="economist"] .legend-note { border-top: 1px solid #d9d9d9; padding-top: 8px; }
 
+/* Epoch: an Epoch AI-style chart. White, horizontal hairline gridlines only (--grid-x, the scatters' vertical gridlines, transparent), a light grey x
+   baseline and no y-axis line (--axis-y), mid-grey ticks, charcoal titles and labels at weight 400, the site's sans. Marks are solid flat dots a
+   point larger (--r-add); the interval boxes are off and whiskers recede, as the reference has no uncertainty marks. Deciders take the two lead hues
+   (teal, magenta), the other Jev rows orange and blue, the rest a matching flat palette. Best with Labels → legend. */
+.studio-plot[data-style="epoch"] {
+  --panel: #ffffff; --ink: #1f1f1f; --ink-2: #1f1f1f; --ink-3: #6b6b6b; --ink-4: #9a9a9a;
+  --line: #e6e6e6; --line-2: #d0d0d0; --grid: #e6e6e6; --grid-x: transparent; --dots: transparent; --axis: #cfcfcf; --axis-y: transparent;
+  --box-alpha: 0; --box-stroke: 0; --op-whisker: 0.35; --r-add: 1px; --hl: #f4f4f4;
+  --c-jev: #1aa79c; --c-laya-ft: #d63c8a; --v3: #f26b21; --v5: #1f4fd8; --v1: #7b3fe4; --v9: #2e9e44; --v14: #e0a600;
+  --c-haiku: #d62828; --c-sonnet: #4a5568; --c-luna: #3aa0e8; --c-terra: #8c5a2b; --c-flashlite: #ef6f9a; --c-flash: #7f9c1f; --c-gemma: #8a8a8a;
+  border-radius: 4px;
+}
+.studio-plot[data-style="epoch"].framed { border-color: #e6e6e6; }
+.studio-plot[data-style="epoch"] svg text.nm { font-weight: 400; }
+
 /* Studio Text control: the charts scale their SVG text from the textScale prop; the HTML legend note follows through --fs-legend (StudioPage.tsx sets it on the panel). */
 .studio-plot .legend-note { font-size: var(--fs-legend, 12px); }
 
@@ -711,6 +726,8 @@ label.studio-btn { display: inline-block; }
 .studio-plot[data-contrast="high"] .pr-leader { stroke-opacity: 1; } /* leader lines (Leaders control) at full strength; their width already follows --sw-mult */
 /* Journal keeps its gridless figure; the other presets keep their dotted / hairline grids, just darker. */
 .studio-plot[data-style="journal"][data-contrast="high"] { --grid: transparent; --dots: transparent; }
+/* Epoch keeps its boxes off and its vertical gridlines away in high contrast too (the mark, whisker and label strengthening still applies). */
+.studio-plot[data-style="epoch"][data-contrast="high"] { --box-alpha: 0; --dots: transparent; }
 
 /* Cutoffs page (cutoffs.html, src/CutoffsPage.tsx): per-issue probability cutoffs against the published 0.5. Reuses the card, control, Seg,
    select, hint, legend-note and studio-btn idioms above; what follows is the page's own layout, the slider, the delta marks and the tables. */
