@@ -17,6 +17,8 @@ import { toBlob } from "html-to-image";
  *    over a tick label). `webFontCss` fetches the Google Fonts stylesheet(s) linked from the page, keeps the Latin @font-face blocks, inlines
  *    their files as data URLs and hands the result to html-to-image as `fontEmbedCSS`. The result is cached for the page's lifetime; offline
  *    or blocked, it is empty and the export uses the system fallback as before.
+ *  - Should the rasteriser still draw text in another face or size, every <text> in the clone carries textLength (its width on the page), so
+ *    the legend rows, point labels and columns the charts laid out from measured widths (components/measure.tsx) keep their places.
  * Vendor marks are inline <path>s, or a bundled PNG in an SVG <mask>; html-to-image turns <image href> into a data URL, so nothing taints the canvas.
  */
 
@@ -63,6 +65,14 @@ function inlineSvgStyles(clone: HTMLElement) {
     for (const p of SVG_PROPS) { const v = cs.getPropertyValue(p); if (v) el.style.setProperty(p, v); }
     // CSS transforms (the high-contrast --mark-scale on glyph groups) resolve to a matrix; only where the element carried one, so attribute transforms stay as authored
     if (el.style.transform) { el.style.transform = cs.transform; el.style.transformOrigin = cs.transformOrigin; }
+    // Pin every label to the width it has on the page (the clone is laid out in the document, so this is the live width): the charts place
+    // labels, legend items and columns from measured widths (components/measure.tsx), and the rasterised copy must keep them even if its
+    // text comes out in another face or size (a font that failed to embed, a browser setting the <img> context applies). With the same font
+    // the natural width equals textLength and nothing changes; with another, the glyphs are fitted to the space rather than run together.
+    if (el instanceof SVGTextElement && !el.hasAttribute("textLength") && el.childElementCount === 0 && el.textContent?.trim()) {
+      const len = el.getComputedTextLength();
+      if (len > 0) { el.setAttribute("textLength", len.toFixed(2)); el.setAttribute("lengthAdjust", "spacingAndGlyphs"); }
+    }
   });
 }
 
@@ -72,6 +82,8 @@ function inlineSvgStyles(clone: HTMLElement) {
  * them inline, so the panel's own `[data-contrast="high"]` block still overrides them exactly as it does on the page.
  */
 export async function renderPanelPng(panel: HTMLElement, scale: number, background: ExportBackground, inherited?: Record<string, string>): Promise<Blob> {
+  // the page's web fonts must be in before anything is measured or serialised: a label measured against the fallback face is another width
+  await document.fonts?.ready;
   const W = panel.offsetWidth, H = panel.offsetHeight;
   const panelColour = getComputedStyle(panel).backgroundColor;
   const clone = panel.cloneNode(true) as HTMLElement;

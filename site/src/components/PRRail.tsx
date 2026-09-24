@@ -3,9 +3,10 @@ import type { CI } from "../data";
 import { fmtPct, fmtRange } from "../data";
 import { Logo, LogoGlyph } from "../logos";
 import type { MarkShape, PRItem } from "./PRScatter";
-import { Mark, prTip } from "./PRScatter";
+import { Mark, NAME_CLS, prTip } from "./PRScatter";
 import { CLICK_HINT, DECIDER_TEXT, ROW_PULSE_MS, RowTint, TipBox, fadeStyle, selectable, usePresence, usePulseWindow, useTip, useTween, useWidth } from "./ui";
 import { hoverable } from "./hover";
+import { useTextMeasure } from "./measure";
 
 /** Row geometry (row height, value column) shared with PRHeat so the two ranked views keep rows in place; RAIL is the rank rail at the left edge, RANK_W the `01`–`12` numerals, RANGE_W the muted "82–91" interval column after each value. */
 const ROW0 = 26, NUM_W0 = 54, RANGE_W0 = 52, RAIL = 3, RANK_W0 = 26, TOP0 = 20;
@@ -25,7 +26,11 @@ export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, o
   const W = useWidth(hostRef, 760);
   const s = textScale, ROW = ROW0 * s, NUM_W = NUM_W0 * s, RANGE_W = RANGE_W0 * s, RANK_W = RANK_W0 * s, TOP = TOP0 * s;
   const wide = Math.min(1, Math.max(0, W - 760) / 340);
-  const LABEL_W = Math.round(((logos ? 196 : 190) + wide * 44) * s) + RANK_W;
+  // text widths as drawn (measure.tsx): the name column grows past its default when a name (with the glyph, or right-aligned after the rank numeral) would not fit it
+  const { measure, probes } = useTextMeasure([NAME_CLS, { key: "dec", className: NAME_CLS, style: DECIDER_TEXT }, "mono"]);
+  const labelOf = (it: PRItem) => `${it.name}${it.subset ? " *" : ""}`;
+  const nameW = Math.max(0, ...items.map((it) => measure(labelOf(it), 12 * s, it.decider ? "dec" : NAME_CLS)));
+  const LABEL_W = Math.max(Math.round(((logos ? 196 : 190) + wide * 44) * s) + RANK_W, Math.ceil(RANK_W + nameW + (logos ? 38 : 22) * s));
   const GAP = Math.round(26 + wide * 22);
   const NUMS = NUM_W + RANGE_W;
   const f1 = (it: PRItem) => (it.recall && it.precision ? (2 * it.recall[0] * it.precision[0]) / (it.recall[0] + it.precision[0] || 1) : -1);
@@ -48,6 +53,9 @@ export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, o
   const step = span > 0.6 ? 0.25 : span > 0.3 ? 0.1 : span > 0.12 ? 0.05 : 0.02;
   const ticks: number[] = [];
   for (let t = Math.ceil(lo / step) * step; t <= hi + 1e-9; t += step) ticks.push(Math.round(t * 1000) / 1000);
+  // every tick keeps its gridline; labels ("100%" at its measured width, 8 s apart) go on every n-th tick when adjacent ones would touch (large text in a narrow panel)
+  const tickW = measure("100%", 10 * s, "mono") + 8 * s;
+  const labelEvery = Math.max(1, Math.ceil(tickW / ((colW * step) / (span || 1))));
   const h = n * ROW + 44 * s;
   // rows drawn in first-appearance order and placed by rank with a transform (ui.tsx usePresence), so a re-sort slides them
   const presence = usePresence(items, (it) => it.id);
@@ -85,16 +93,16 @@ export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, o
               <rect x={x0[col]} y={TOP} width={Math.max(0, colW)} height={n * ROW} fill="url(#dotgrid-rail)" />
               <text x={x0[col]} y={12 * s} fontSize={12 * s} fontWeight={500} fill="var(--ink)" className="ax">{col === 0 ? "Recall" : "Precision"}</text>
               <text x={x0[col] + colW + NUMS - 2} y={12 * s} textAnchor="end" fontSize={10 * s} fontWeight={500} letterSpacing=".06em" fill="var(--ink-3)">95% CI</text>
-              {ticks.map((t) => (
+              {ticks.map((t, i) => (
                 <g key={t}>
                   <line className="gl" x1={sx(col, t)} x2={sx(col, t)} y1={TOP} y2={TOP + n * ROW} stroke="var(--line)" />
-                  <text x={sx(col, t)} y={TOP + n * ROW + 14 * s} fontSize={10 * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>
+                  {i % labelEvery === 0 && <text x={sx(col, t)} y={TOP + n * ROW + 14 * s} fontSize={10 * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>}
                 </g>
               ))}
             </g>
           ))}
           {drawn.map(({ r, state }) => {
-            const top = lastTop.current.get(r.id) ?? TOP, y = ROW / 2, label = `${r.name}${r.subset ? " *" : ""}`;
+            const top = lastTop.current.get(r.id) ?? TOP, y = ROW / 2, label = labelOf(r);
             return (
               <g key={r.id} className={`mv fd${highlight === r.id ? " hl" : ""}`} transform={`translate(0 ${top})`} style={fadeStyle(state)} {...hoverable(onHover, r.id)}>
                 <g onMouseMove={(e) => show(e, { kind: "row", top, height: ROW, clearX: W }, prTip(r, logos ? <Logo model={r.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
@@ -125,6 +133,7 @@ export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, o
             );
           })}
           {n === 0 && <text x={W / 2} y={40} textAnchor="middle" fontSize={13 * s} fill="var(--ink-4)">Select at least one model.</text>}
+          {probes}
         </svg>
         <TipBox tip={tip} hint={onSelect ? CLICK_HINT : undefined} />
       </div>

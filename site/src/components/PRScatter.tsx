@@ -3,6 +3,7 @@ import { fmtCI, type CI } from "../data";
 import { Logo, LogoGlyph, logoFor } from "../logos";
 import { CLICK_HINT, TipBox, fadeStyle, selectable, usePresence, usePulseWindow, useSize, useTip, useTween, type TipContent } from "./ui";
 import { hoverable } from "./hover";
+import { useTextMeasure, type Measure } from "./measure";
 
 /** `sub` is the one secondary line of the hover tooltip (what the point was scored on); the full figures live in the details modal. `decider` sets the row's name heavier in the tables; on the map it only selects which interval boxes breathe when `pulse` is on (the mark and label are drawn like every other). `emphasis` (Compare models: the decision-model rows, Jev and Laya) tints the row in the ranked table (ui.tsx RowTint); the map ignores it. */
 export type PRItem = { id: string; name: string; color: string; recall: CI; precision: CI; dashed?: boolean; subset?: string | null; sub?: string; decider?: boolean; emphasis?: boolean };
@@ -102,13 +103,15 @@ export function Mark({ shape = "dot", cx = 0, cy = 0, r, color, fixed = false, c
  * display order, wrapped when the panel is too narrow, with the plot area moved down under it (legendLayout, Legend).
  */
 export type LabelsMode = "beside" | "legend";
-/** Legend metrics at text scale `s`: a 10 px swatch, 6 px to the name, 18 px between items, 16 px rows; names estimated at 6.3 px per character at 11 px, as the label placement does. */
-export function legendLayout(names: string[], s: number, x0: number, x1: number): { pos: { x: number; y: number }[]; height: number; sw: number; gap: number; row: number; fs: number } {
+/** The legend text's class (styles.css has no rule for it; the presets' and high contrast's `svg text` rules reach it) and the point labels' (`.nm`), which the measurer's probes carry too. */
+export const LEGEND_CLS = "lg", NAME_CLS = "nm";
+/** Legend metrics at text scale `s`: a 10 px swatch, 6 px to the name, 18 px between items, 16 px rows; names at their measured width (measure.tsx) in the legend's 11 px × s face. */
+export function legendLayout(names: string[], s: number, x0: number, x1: number, measure: Measure): { pos: { x: number; y: number }[]; height: number; sw: number; gap: number; row: number; fs: number } {
   const sw = 10 * s, gap = 6 * s, item = 18 * s, row = 16 * s, fs = 11 * s;
   const pos: { x: number; y: number }[] = [];
   let x = x0, r = 0;
   for (const n of names) {
-    const w = sw + gap + n.length * 6.3 * s;
+    const w = sw + gap + measure(n, fs, LEGEND_CLS);
     if (x > x0 && x + w > x1) { x = x0; r++; }
     pos.push({ x, y: r * row });
     x += w + item;
@@ -118,8 +121,8 @@ export function legendLayout(names: string[], s: number, x0: number, x1: number)
 /** How far below a legend's rows the plot area starts. */
 export const LEGEND_GAP = 10;
 /** The legend row(s) (LabelsMode `legend`): a swatch in the item colour and the name in --ink-2, from (x0, y) rightward, wrapping before x1. The swatch is the chart's mark shape (`mark`) at a fixed size, or a rounded square when the chart draws vendor logos (never the logo itself). */
-export function Legend({ items, s, x0, x1, y, mark }: { items: { id: string; name: string; color: string }[]; s: number; x0: number; x1: number; y: number; mark?: MarkShape | "square-swatch" }) {
-  const L = legendLayout(items.map((i) => i.name), s, x0, x1);
+export function Legend({ items, s, x0, x1, y, mark, measure }: { items: { id: string; name: string; color: string }[]; s: number; x0: number; x1: number; y: number; mark?: MarkShape | "square-swatch"; measure: Measure }) {
+  const L = legendLayout(items.map((i) => i.name), s, x0, x1, measure);
   return (
     <g className="pr-legend">
       {items.map((it, i) => (
@@ -127,7 +130,7 @@ export function Legend({ items, s, x0, x1, y, mark }: { items: { id: string; nam
           {mark && mark !== "square-swatch"
             ? <Mark shape={mark} cx={L.sw / 2} cy={L.row / 2} r={mark === "dot" ? 0.45 * L.sw : 0.36 * L.sw} color={it.color} fixed />
             : <rect y={(L.row - L.sw) / 2} width={L.sw} height={L.sw} rx={1.5} fill={it.color} />}
-          <text x={L.sw + L.gap} y={L.row / 2 + 4 * s} fontSize={L.fs} fill="var(--ink-2)" className="lg">{it.name}</text>
+          <text x={L.sw + L.gap} y={L.row / 2 + 4 * s} fontSize={L.fs} fill="var(--ink-2)" className={LEGEND_CLS}>{it.name}</text>
         </g>
       ))}
     </g>
@@ -176,7 +179,7 @@ const PULSE_CYCLES = 2, PULSE_CYCLE_MS = 650;
 
 /** `pulse` lets the interval boxes of decider items (`decider: true`) breathe for a few cycles whenever the plot loads or its set of points changes: a fill-opacity cycle (styles.css .pr-box.pulse) on the shaded box only, never the mark or label; a highlighted box keeps its steady deeper fill instead. Off by default and under prefers-reduced-motion. */
 /** `domain` (the screenshot studio) fixes both axes to explicit 0–1 ranges, overriding `zoom`. */
-/** `textScale` (the studio's Text control; 1 on the site) multiplies every font size, the label-placement estimates and the margins that hold tick labels. Axis stroke width, dot radius and the vendor-glyph size read the --sw-mult / --r-add / --mark-scale CSS variables (styles.css, the studio's high-contrast block; unset on the site). */
+/** `textScale` (the studio's Text control; 1 on the site) multiplies every font size, the label placement's box heights and offsets (its widths are measured, measure.tsx) and the margins that hold tick labels. Axis stroke width, dot radius and the vendor-glyph size read the --sw-mult / --r-add / --mark-scale CSS variables (styles.css, the studio's high-contrast block; unset on the site). */
 /** `leaders` (the studio's Leaders control; off on the site) draws a hairline from each displaced label back to its mark (leaderFor), under every mark and label. */
 /** `labels` (the studio's Labels control; `beside` on the site): `legend` drops the point labels (and leaders) for a legend row at the top (Legend), the plot moved down under it. */
 /** `mark` (the studio's Marks control; `dot` on the site) is the point shape when logos are off; `markSize` is the studio's Mark size multiplier (the --mark-user the panel sets), which the label placement needs as a number to keep labels and leaders clear of a larger mark. */
@@ -184,6 +187,8 @@ const PULSE_CYCLES = 2, PULSE_CYCLE_MS = 650;
 export type PRDomain = { x: [number, number]; y: [number, number] };
 export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, boxes: boxMode = "filled" }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; boxes?: BoxMode }) {
   const { tip, show, hide, hostRef } = useTip();
+  // text widths as drawn (measure.tsx): the legend rows and the point labels are laid out from them
+  const { measure, probes } = useTextMeasure([LEGEND_CLS, NAME_CLS]);
   const hatched = boxMode === "hatched" || boxMode === "hatched-outline", outlined = boxMode === "outline" || boxMode === "hatched-outline";
   // pattern ids: this instance's useId (colons and the like stripped) and the item id reduced to url(#…)-safe characters
   const uid = useId().replace(/[^A-Za-z0-9_-]/g, "");
@@ -226,7 +231,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
   const { PL, PB, titleX } = axisMargins(yt.map(tickLabel), s);
   // legend mode: the legend rows sit at the top (from LEGEND_Y), and the plot area starts LEGEND_GAP below them instead of at PT
   const LEGEND_Y = 4;
-  const legendH = labelsMode === "legend" ? legendLayout(pts.map((p) => p.name + (p.subset ? " *" : "")), s, PL, W - PR).height : 0;
+  const legendH = labelsMode === "legend" ? legendLayout(pts.map((p) => p.name + (p.subset ? " *" : "")), s, PL, W - PR, measure).height : 0;
   const top = labelsMode === "legend" ? Math.max(PT, LEGEND_Y + legendH + LEGEND_GAP * s) : PT;
   const X = (v: number) => PL + ((v - dom.x[0]) / (dom.x[1] - dom.x[0] || 1)) * (W - PL - PR);
   const Y = (v: number) => top + (1 - (v - dom.y[0]) / (dom.y[1] - dom.y[0] || 1)) * (H - top - PB);
@@ -244,7 +249,8 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
       placed.some((b) => a.x < b.x + b.w + 2 && a.x + a.w + 2 > b.x && a.y < b.y + b.h + 1 && a.y + a.h + 1 > b.y) ||
       dots.some((d) => d.x > a.x - pad && d.x < a.x + a.w + pad && d.y > a.y - pad && d.y < a.y + a.h + pad);
     return pts.map((p, i) => {
-      const w = p.name.length * 6.3 * s + 4, h = 13 * s, o = O, d = 22 * s + grow;
+      const text = p.name + (p.subset ? " *" : "");
+      const w = measure(text, 11 * s, NAME_CLS) + 4, h = 13 * s, o = O, d = 22 * s + grow;
       const { x, y } = dots[i];
       const cands: { x: number; y: number }[] = [
         { x: x + o, y: y - h / 2 }, { x: x - o - w, y: y - h / 2 },
@@ -255,10 +261,10 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
       const c = cands.find((cc) => cc.x >= PL && cc.x + w <= W - 2 && cc.y >= 0 && !overlaps({ ...cc, w, h }));
       if (!c) return null;
       placed.push({ ...c, w, h });
-      return { ...c, w, h, text: p.name + (p.subset ? " *" : "") };
+      return { ...c, w, h, text };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pts, dom, W, H, s, top, O, logos]);
+  }, [pts, dom, W, H, s, top, O, logos, measure]);
 
   // Where everything is heading, keyed by item so a move is continuous across re-sorts; `geo` is where it is drawn this frame.
   const target: Record<string, number> = {};
@@ -311,7 +317,8 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
         </g>
         <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={TITLE_FS * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
         <text x={titleX} y={(top + H - PB) / 2} fontSize={TITLE_FS * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(top + H - PB) / 2})`}>{yLabel}</text>
-        {labelsMode === "legend" && <Legend items={pts.map((p) => ({ id: p.id, name: p.name + (p.subset ? " *" : ""), color: p.color }))} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={logos ? "square-swatch" : mark} />}
+        {labelsMode === "legend" && <Legend items={pts.map((p) => ({ id: p.id, name: p.name + (p.subset ? " *" : ""), color: p.color }))} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={logos ? "square-swatch" : mark} measure={measure} />}
+        {probes}
 
         {/* CI boxes first so dots sit on top; every box is drawn the same way (BoxMode), the highlighted one a little deeper */}
         {drawn.map((p) => {

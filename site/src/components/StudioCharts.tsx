@@ -1,7 +1,8 @@
 import { useMemo, useRef } from "react";
 import type { CI } from "../data";
 import { LogoGlyph, logoFor } from "../logos";
-import { GLYPH_SCALE, LEADER_STYLE, LEGEND_GAP, Legend, Mark, axisMargins, leaderFor, legendLayout, type LabelsMode, type MarkShape } from "./PRScatter";
+import { GLYPH_SCALE, LEADER_STYLE, LEGEND_CLS, LEGEND_GAP, Legend, Mark, NAME_CLS, axisMargins, leaderFor, legendLayout, type LabelsMode, type MarkShape } from "./PRScatter";
+import { useTextMeasure } from "./measure";
 import { DECIDER_TEXT, useSize, useWidth } from "./ui";
 
 /**
@@ -52,9 +53,14 @@ export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort 
   const hostRef = useRef<HTMLDivElement>(null);
   const W = useWidth(hostRef, 900);
   const s = textScale, ROW = ROW0 * s, TOP = TOP0 * s;
-  const LABEL_W = labelW ?? Math.min(260 * s, Math.max(170 * s, ...rows.map((r) => (r.name.length * 6.6 + (logos ? 44 : 24)) * s)));
-  // the value column after the longest bar: the figure, then the muted secondary figure when a row carries one
-  const VALUE_W = Math.max(90, ...rows.map((r) => (r.value == null ? (r.empty ?? "not measured").length * 6.3 : r.label.length * 7.6 + (r.sub ? r.sub.length * 6.2 + 10 : 0)) + 14)) * s;
+  // text widths as drawn (measure.tsx): names (.nm, the decider rows heavier), figures (.mono) and the plain "not measured"
+  const { measure, probes } = useTextMeasure([NAME_CLS, { key: "dec", className: NAME_CLS, style: DECIDER_TEXT }, "mono", ""]);
+  const labelOf = (r: StudioRow) => `${r.name}${r.subset ? " *" : ""}`;
+  const nameW = (r: StudioRow) => measure(labelOf(r), 12.5 * s, r.decider ? "dec" : NAME_CLS);
+  // the name column: the glyph (30 s to the name's start) or a 10 s pad, the widest name, 14 s to the axis; at least 170 s, at most 260 s
+  const LABEL_W = labelW ?? Math.min(260 * s, Math.max(170 * s, ...rows.map((r) => nameW(r) + (logos ? 44 : 24) * s)));
+  // the value column after the longest bar: the figure, then the muted secondary figure when a row carries one, and 14 s of air
+  const VALUE_W = Math.max(90 * s, ...rows.map((r) => (r.value == null ? measure(r.empty ?? "not measured", 11.5 * s) : measure(r.label, 12 * s, "mono") + (r.sub ? measure(r.sub, 10.5 * s, "mono") + 10 * s : 0)) + 14 * s));
   const sorted = sort === "none" ? rows : [...rows].sort((a, b) => {
     const va = a.value ?? (sort === "asc" ? Infinity : -Infinity), vb = b.value ?? (sort === "asc" ? Infinity : -Infinity);
     return sort === "asc" ? va - vb : vb - va;
@@ -96,7 +102,7 @@ export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort 
         {sorted.map((r, i) => {
           const cy = TOP + i * ROW + ROW / 2;
           const nameX = logos ? 30 * s : LABEL_W - 14 * s;
-          const label = `${r.name}${r.subset ? " *" : ""}`;
+          const label = labelOf(r);
           if (r.value == null) {
             return (
               <g key={r.id}>
@@ -132,7 +138,7 @@ export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort 
                 </>
               )}
               <text x={end} y={cy + 4.5 * s} fontSize={12 * s} fill="var(--ink)" className="mono">{r.label}</text>
-              {r.sub && <text x={end + (r.label.length * 7.6 + 10) * s} y={cy + 4.5 * s} fontSize={10.5 * s} fill="var(--ink-3)" className="mono">{r.sub}</text>}
+              {r.sub && <text x={end + measure(r.label, 12 * s, "mono") + 10 * s} y={cy + 4.5 * s} fontSize={10.5 * s} fill="var(--ink-3)" className="mono">{r.sub}</text>}
             </g>
           );
         })}
@@ -142,6 +148,7 @@ export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort 
         </g>
         <text x={x0} y={bottom + 36 * s} fontSize={11.5 * s} fill="var(--ink-3)" className="ax">{axis}</text>
         {n === 0 && <text x={W / 2} y={30} textAnchor="middle" fontSize={13 * s} fill="var(--ink-4)">Select at least one model.</text>}
+        {probes}
       </svg>
     </div>
   );
@@ -158,6 +165,7 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
   const sz = useSize(hostRef, { w: 900, h: 520 });
   const W = sz.w, H = Math.max(300, sz.h);
   const s = textScale;
+  const { measure, probes } = useTextMeasure([LEGEND_CLS, NAME_CLS]);
   const drawn = pts.filter((p): p is StudioScatterPt & { x: number; y: NonNullable<CI> } => p.x != null && p.x > 0 && !!p.y);
   const xs = drawn.map((p) => p.x);
   const xd: [number, number] = xs.length ? [10 ** Math.floor(Math.log10(Math.min(...xs))), 10 ** Math.ceil(Math.log10(Math.max(...xs)) - 1e-9)] : [0.01, 100];
@@ -169,7 +177,7 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
   // the left and bottom margins hold the y tick labels and the axis titles, sized from them and the text scale (PRScatter.tsx axisMargins)
   const { PL, PB, titleX } = axisMargins(yt.map(yTickLabel), s);
   const legendItems = drawn.map((p) => ({ id: p.id, name: `${p.name}${p.subset ? " *" : ""}`, color: p.color }));
-  const LEGEND_Y = 4, legendH = labelsMode === "legend" ? legendLayout(legendItems.map((i) => i.name), s, PL, W - PR).height : 0;
+  const LEGEND_Y = 4, legendH = labelsMode === "legend" ? legendLayout(legendItems.map((i) => i.name), s, PL, W - PR, measure).height : 0;
   const top = labelsMode === "legend" ? Math.max(PT, LEGEND_Y + legendH + LEGEND_GAP * s) : PT;
   const X = (v: number) => PL + ((Math.log10(v) - Math.log10(xd[0])) / (Math.log10(xd[1]) - Math.log10(xd[0]) || 1)) * (W - PL - PR);
   const Y = (v: number) => top + (1 - (v - yd[0]) / (yd[1] - yd[0] || 1)) * (H - top - PB);
@@ -182,7 +190,7 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
   const clash = (a: { x: number; y: number; w: number; h: number }) => placed.some((b) => a.x < b.x + b.w + 2 && a.x + a.w + 2 > b.x && a.y < b.y + b.h + 1 && a.y + a.h + 1 > b.y) || dots.some((d) => d.x > a.x - avoid && d.x < a.x + a.w + avoid && d.y > a.y - avoid && d.y < a.y + a.h + avoid);
   const labels = drawn.map((p, i) => {
     if (labelsMode === "legend") return null;
-    const text = `${p.name}${p.subset ? " *" : ""}`, w = text.length * 6.6 * s + 4, h = 14 * s, o = O, { x, y } = dots[i];
+    const text = `${p.name}${p.subset ? " *" : ""}`, w = measure(text, 11.5 * s, NAME_CLS) + 4, h = 14 * s, o = O, { x, y } = dots[i];
     const cands = [{ x: x + o, y: y - h / 2 }, { x: x - o - w, y: y - h / 2 }, { x: x - w / 2, y: y - 14 * s - h }, { x: x - w / 2, y: y + 14 * s }];
     const c = cands.find((cc) => cc.x >= PL && cc.x + w <= W - 2 && cc.y >= 0 && !clash({ ...cc, w, h }));
     if (c) placed.push({ ...c, w, h });
@@ -209,7 +217,8 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
         </g>
         <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
         <text x={titleX} y={(top + H - PB) / 2} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(top + H - PB) / 2})`}>{yLabel}</text>
-        {labelsMode === "legend" && <Legend items={legendItems} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={logos ? "square-swatch" : mark} />}
+        {labelsMode === "legend" && <Legend items={legendItems} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={logos ? "square-swatch" : mark} measure={measure} />}
+        {probes}
         {/* leader lines: before every whisker, mark and label, so none crosses them */}
         {leaders && labelsMode === "beside" && drawn.map((p, i) => {
           const l = labels[i];
