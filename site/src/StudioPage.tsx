@@ -11,8 +11,8 @@ import { PALETTES, isPaletteId, toHex, toVars, varOf, type PaletteId } from "./p
 
 /**
  * Screenshot studio (studio.html → studio.tsx → this page; unlinked from the site): one Compare models chart alone, on a plain panel whose size
- * you set, with every control (corpus, models, issue, plot and chart type, units, axis range, size, theme, frame, legend, style, model colours) in the bars above
- * and none on the plot. Plots: recall/precision (the site's map and ranked views), Cost, Speed and Stability (components/StudioCharts.tsx).
+ * you set, with every control (corpus, models, issue, plot and chart type, units, axis range, size, theme, frame, legend, style and a custom colour scheme
+ * you can save, load, export and import, model colours) in the bars above and none on the plot. Plots: recall/precision (the site's map and ranked views), Cost, Speed and Stability (components/StudioCharts.tsx).
  * Drag the panel's bottom-right corner or type a size; pick a preset for LinkedIn's usual aspect ratios. Nothing pulses and nothing opens on click.
  */
 
@@ -25,8 +25,12 @@ const PRESETS: Preset[] = [
   { id: "banner", label: "1584 × 396 (banner)", w: 1584, h: 396 },
 ];
 
-/** Plot style presets (styles.css `.studio-plot[data-style=…]`): every one but `site` fully specifies its own panel, ink, grid and model palette, so the masthead Dark/Light theme does not reach the panel. */
-type PlotStyle = "site" | "journal" | "newsroom" | "linkedin" | "slate" | "economist";
+/**
+ * Plot style presets (styles.css `.studio-plot[data-style=…]`): every one but `site` fully specifies its own panel, ink, grid and model palette, so the masthead
+ * Dark/Light theme does not reach the panel. `custom` has no CSS block: its variables are the user's (the scheme editor below), written as inline custom
+ * properties on the `.studio-scheme` wrapper around the panel, so the preset CSS, the high-contrast block and the PNG export read them unchanged.
+ */
+type PlotStyle = "site" | "journal" | "newsroom" | "linkedin" | "slate" | "economist" | "custom";
 const STYLES: { id: PlotStyle; label: string; title: string }[] = [
   { id: "site", label: "Site", title: "The site's own look; follows the Dark/Light theme" },
   { id: "journal", label: "Journal", title: "Academic figure: white, black hairline axes, serif labels, Okabe–Ito colorblind-safe palette" },
@@ -34,8 +38,60 @@ const STYLES: { id: PlotStyle; label: string; title: string }[] = [
   { id: "linkedin", label: "LinkedIn", title: "LinkedIn brand: #0A66C2 blues for Jev, LinkedIn accent colours for the LLMs" },
   { id: "slate", label: "Slate", title: "Dark slate, Jev in one saturated accent, every LLM in a shade of grey" },
   { id: "economist", label: "Economist", title: "Financial weekly: red accent tab, thin grey rules, the Economist data palette" },
+  { id: "custom", label: "Custom", title: "Your own scheme: starts as a copy of the preset that was on, editable below, saved by name" },
 ];
 const isPlotStyle = (s: string | null): s is PlotStyle => STYLES.some((x) => x.id === s);
+
+/**
+ * Custom scheme (Style → Custom): the panel variables every preset block defines, exposed in the editor row. Colours: the surface and ink set, then one
+ * per roster model through the custom property its colour is (data.ts ALL_PRIMARY `var(--…)`, palettes.ts varOf). Sliders: the interval-box fill and
+ * outline alphas and the bar alpha. `--sans` is the panel face. A colour's text field takes any CSS colour (`transparent` for no grid included); the
+ * native picker beside it shows the nearest hex.
+ */
+type SchemeVar = { v: string; label: string };
+const SCHEME_SURFACE: SchemeVar[] = [
+  { v: "--panel", label: "panel" }, { v: "--ink", label: "ink" }, { v: "--ink-2", label: "ink 2" }, { v: "--ink-3", label: "ink 3" }, { v: "--ink-4", label: "ink 4" },
+  { v: "--line", label: "line" }, { v: "--line-2", label: "line 2" }, { v: "--grid", label: "grid" }, { v: "--dots", label: "dots" }, { v: "--axis", label: "axis" }, { v: "--hl", label: "highlight" },
+];
+const SCHEME_MODELS: SchemeVar[] = Object.entries(PRIMARY_BY_KEY).flatMap(([k, m]) => { const v = varOf(k); return v ? [{ v, label: m.short }] : []; });
+const SCHEME_SLIDERS: (SchemeVar & { max: number; title: string })[] = [
+  { v: "--box-alpha", label: "box fill", max: 0.4, title: "Fill opacity of the 95% interval boxes (recall/precision map)" },
+  { v: "--box-stroke", label: "box outline", max: 1, title: "Outline opacity of the interval boxes" },
+  { v: "--bar-alpha", label: "bar fill", max: 1, title: "Fill opacity of the bars" },
+];
+const SCHEME_VARS = new Set([...SCHEME_SURFACE, ...SCHEME_MODELS, ...SCHEME_SLIDERS].map((x) => x.v).concat("--sans"));
+type Vars = Record<string, string>;
+const isVars = (o: unknown): o is Vars => !!o && typeof o === "object" && !Array.isArray(o) && Object.values(o).every((x) => typeof x === "string");
+const isSchemes = (o: unknown): o is Record<string, Vars> => !!o && typeof o === "object" && !Array.isArray(o) && Object.values(o).every(isVars);
+const readJson = <T,>(key: string, ok: (o: unknown) => o is T, dflt: T): T => { try { const o: unknown = JSON.parse(localStorage.getItem(key) || "null"); return ok(o) ? o : dflt; } catch { return dflt; } };
+/** Only the editor's variables, as short strings: what a saved or imported scheme may set on the panel. */
+const cleanVars = (o: Vars): Vars => Object.fromEntries(Object.entries(o).filter(([k, v]) => SCHEME_VARS.has(k) && v.length <= 200));
+/** A scheme file as Export JSON writes it (`{ name, vars }`), a bare variable map, or a `{ [name]: vars }` map (the localStorage form); null if none of those. */
+const parseSchemeFile = (text: string): Record<string, Vars> | null => {
+  let o: unknown; try { o = JSON.parse(text); } catch { return null; }
+  if (!o || typeof o !== "object") return null;
+  const r = o as Record<string, unknown>;
+  if (isVars(r.vars)) return { [typeof r.name === "string" && r.name.trim() ? r.name.trim() : "imported"]: cleanVars(r.vars) };
+  if (isVars(r)) return { imported: cleanVars(r) };
+  if (isSchemes(r)) return Object.fromEntries(Object.entries(r).map(([k, v]) => [k, cleanVars(v)]));
+  return null;
+};
+/** Relative luminance of a hex colour, 0–1. */
+const luminance = (hex: string): number => { const c = (i: number) => parseInt(hex.slice(i, i + 2), 16) / 255; return 0.2126 * c(1) + 0.7152 * c(3) + 0.0722 * c(5); };
+
+/** One scheme colour: the native picker (nearest hex) beside a text field that takes any CSS colour and commits once the browser accepts it. */
+function SchemeColor({ v, label, value, onChange }: { v: string; label: string; value: string; onChange: (val: string) => void }) {
+  const [txt, setTxt] = useState(value);
+  useEffect(() => setTxt(value), [value]);
+  const type = (t: string) => { setTxt(t); const c = t.trim(); if (c && CSS.supports("color", c)) onChange(c); };
+  return (
+    <span className="studio-swatch" title={`${v}: ${value}`}>
+      <input type="color" value={toHex(value) ?? "#000000"} onChange={(e) => onChange(e.target.value)} aria-label={`${label} colour`} />
+      <input type="text" className="hex" value={txt} onChange={(e) => type(e.target.value)} onBlur={() => setTxt(value)} spellCheck={false} aria-label={`${label} colour as CSS`} />
+      <span>{label}</span>
+    </span>
+  );
+}
 
 /** Text sizes: one factor on every font size in the panel (axis titles, ticks, names, values, point labels, legend note), passed to the charts as `textScale`, which also scales their label-width estimates and margins. M is the site's own size. */
 type TextSize = "s" | "m" | "l" | "xl";
@@ -110,6 +166,44 @@ export default function StudioPage() {
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
   const [style, setStyle] = useState<PlotStyle>(() => { const s = localStorage.getItem("studio-style"); return isPlotStyle(s) ? s : "site"; });
   useEffect(() => { localStorage.setItem("studio-style", style); }, [style]);
+
+  // Custom scheme: the variables on the panel (`studio-custom`), the schemes saved by name (`studio-schemes`) and the name in the field / the
+  // saved scheme selected (`studio-scheme`, one value: the select shows it while it matches a saved name).
+  const [scheme, setScheme] = useState<Vars>(() => readJson("studio-custom", isVars, {}));
+  useEffect(() => { localStorage.setItem("studio-custom", JSON.stringify(scheme)); }, [scheme]);
+  const [schemes, setSchemes] = useState<Record<string, Vars>>(() => readJson("studio-schemes", isSchemes, {}));
+  useEffect(() => { localStorage.setItem("studio-schemes", JSON.stringify(schemes)); }, [schemes]);
+  const [schemeName, setSchemeName] = useState(() => localStorage.getItem("studio-scheme") ?? "");
+  useEffect(() => { localStorage.setItem("studio-scheme", schemeName); }, [schemeName]);
+  const [showModels, setShowModels] = useState(false);
+  const [scMsg, setScMsg] = useState<string | null>(null);
+  const scTimer = useRef(0);
+  const say = (msg: string) => { setScMsg(msg); window.clearTimeout(scTimer.current); scTimer.current = window.setTimeout(() => setScMsg(null), 1800); };
+  const setVar = (v: string, val: string) => setScheme((p) => ({ ...p, [v]: val }));
+  const savedName = schemeName.trim() in schemes ? schemeName.trim() : "";
+  const saveScheme = () => {
+    const n = schemeName.trim();
+    if (!n) { say("Name the scheme first."); return; }
+    setSchemes((p) => ({ ...p, [n]: { ...scheme } }));
+    setSchemeName(n);
+    say(n in schemes ? `Overwrote “${n}”` : `Saved “${n}”`);
+  };
+  const loadScheme = (n: string) => { const s = schemes[n]; if (!s) return; setScheme({ ...s }); setSchemeName(n); };
+  const deleteScheme = () => { if (!savedName) return; setSchemes((p) => { const q = { ...p }; delete q[savedName]; return q; }); say(`Deleted “${savedName}”`); };
+  const exportScheme = () => {
+    const n = schemeName.trim() || "scheme";
+    downloadBlob(new Blob([JSON.stringify({ name: n, vars: scheme }, null, 2)], { type: "application/json" }), `${slug(n) || "scheme"}.json`);
+  };
+  const importScheme = async (file: File | undefined) => {
+    if (!file) return;
+    const got = parseSchemeFile(await file.text());
+    const names = got ? Object.keys(got) : [];
+    if (!got || !names.length) { say("Not a scheme file."); return; }
+    setSchemes((p) => ({ ...p, ...got }));
+    setScheme({ ...got[names[0]] });
+    setSchemeName(names[0]);
+    say(names.length === 1 ? `Imported “${names[0]}”` : `Imported ${names.length} schemes`);
+  };
   const [text, setText] = useState<TextSize>(() => { const s = localStorage.getItem("studio-text"); return isTextSize(s) ? s : "m"; });
   useEffect(() => { localStorage.setItem("studio-text", text); }, [text]);
   const ts = TEXT_SCALE[text];
@@ -121,8 +215,28 @@ export default function StudioPage() {
   useEffect(() => { localStorage.setItem("studio-colors", colorMode); }, [colorMode]);
   const [custom, setCustom] = useState<Record<string, string>>(readCustom);
   useEffect(() => { localStorage.setItem("studio-colors-custom", JSON.stringify(custom)); }, [custom]);
-  const darkPanel = style === "slate" || (style === "site" && theme === "dark");
+  const customPanelHex = style === "custom" ? toHex(scheme["--panel"] ?? "") : null;
+  const darkPanel = customPanelHex ? luminance(customPanelHex) < 0.4 : style === "slate" || (style === "site" && theme === "dark");
   const colorVars: Record<string, string> = colorMode === "style" ? {} : colorMode === "custom" ? toVars(custom, false) : toVars(PALETTES.find((p) => p.id === colorMode)!.colors, darkPanel);
+  /**
+   * Every scheme variable as a `.studio-plot` in `forStyle` resolves it, with the Colors layer on and no contrast override: read off a hidden probe
+   * panel, not the live one, because in high contrast the live panel's --ink-2, --grid… are color-mix() expressions that the editor cannot show.
+   */
+  const presetVars = (forStyle: PlotStyle): Vars => {
+    const probe = document.createElement("div");
+    probe.className = "studio-plot";
+    probe.dataset.style = forStyle;
+    Object.assign(probe.style, { position: "fixed", left: "-9999px", top: "0", width: "10px", height: "10px" } as Partial<CSSStyleDeclaration>);
+    for (const [k, val] of Object.entries(colorVars)) probe.style.setProperty(k, val);
+    document.body.appendChild(probe);
+    const cs = getComputedStyle(probe), out: Vars = {};
+    for (const v of SCHEME_VARS) { const val = cs.getPropertyValue(v).trim(); if (val) out[v] = val; }
+    probe.remove();
+    return out;
+  };
+  // Entering Custom copies the preset that was on, so the editor starts from real values; a reload into Custom with nothing stored copies Site.
+  const onStyle = (s: PlotStyle) => { if (s === "custom" && style !== "custom") setScheme(presetVars(style)); setStyle(s); };
+  useEffect(() => { if (style === "custom" && !Object.keys(scheme).length) setScheme(presetVars("site")); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   /** Every roster model's colour as the panel currently resolves it (the preset's, or the palette or swatch over it). */
   const currentColors = (): Record<string, string> => {
     const el = plotRef.current, out: Record<string, string> = {};
@@ -147,7 +261,7 @@ export default function StudioPage() {
   const exTimer = useRef(0);
   const flash = (msg: string, err = false) => { setExStatus({ msg, err }); window.clearTimeout(exTimer.current); exTimer.current = window.setTimeout(() => setExStatus(null), err ? 6000 : 1500); };
   const errText = (e: unknown) => (e instanceof Error && e.message ? e.message : "Export failed.");
-  const renderPng = () => renderPanelPng(plotRef.current!, Number(exScale), exBg);
+  const renderPng = () => renderPanelPng(plotRef.current!, Number(exScale), exBg, style === "custom" ? scheme : undefined);
   const onDownload = async () => {
     const el = plotRef.current; if (!el) return;
     setExStatus({ msg: "Rendering…", busy: true });
@@ -238,7 +352,8 @@ export default function StudioPage() {
   /** e.g. jev-recall-precision-map-trec-linkedin-1200x675@2x.png; the size is the panel's rendered CSS size (the PNG is that × scale). */
   const exportName = (el: HTMLElement) => {
     const chartId = plot === "pr" ? chart : plot === "cost" ? costChart : plot === "speed" ? speedChart : stabChart;
-    return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, corpus, style, colorMode === "style" ? "" : colorMode].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
+    const styleId = style === "custom" && schemeName.trim() ? `custom-${schemeName.trim()}` : style;
+    return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, corpus, styleId, colorMode === "style" ? "" : colorMode].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
   };
 
   return (
@@ -356,9 +471,24 @@ export default function StudioPage() {
           <Seg value={logos ? "on" : "off"} onChange={(x) => setLogos(x === "on")} options={[{ id: "on", label: "logos" }, { id: "off", label: "names only" }]} />
         </Control>
         <Control label="Style">
-          <Seg value={style} onChange={setStyle} options={STYLES.map((s) => ({ id: s.id, label: s.label, title: s.title }))} />
-          {style !== "site" && <span className="studio-hint small">{STYLES.find((s) => s.id === style)?.title}; ignores Dark/Light.</span>}
+          <Seg value={style} onChange={onStyle} options={STYLES.map((s) => ({ id: s.id, label: s.label, title: s.title }))} />
+          {style !== "site" && style !== "custom" && <span className="studio-hint small">{STYLES.find((s) => s.id === style)?.title}; ignores Dark/Light.</span>}
         </Control>
+        {style === "custom" && (
+          <Control label="Saved">
+            <span className="select">
+              <select value={savedName} onChange={(e) => loadScheme(e.target.value)} aria-label="Saved schemes">
+                <option value="">{Object.keys(schemes).length ? "—" : "none yet"}</option>
+                {Object.keys(schemes).sort().map((n) => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </span>
+            <button type="button" className="studio-btn small" onClick={deleteScheme} disabled={!savedName} title="Remove the selected saved scheme from this browser">Delete</button>
+            <label className="studio-btn small" title="Load a scheme file written by Export JSON (or a bare variable map)">
+              Import JSON
+              <input type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; void importScheme(f); }} />
+            </label>
+          </Control>
+        )}
         <Control label="Colors">
           <Seg
             value={colorMode} onChange={onColorMode}
@@ -392,6 +522,50 @@ export default function StudioPage() {
         </Control>
       </div>
 
+      {style === "custom" && (
+        <div className="controls studio-row2 studio-scheme-row">
+          <Control label="Scheme">
+            <span className="studio-size">
+              <input type="text" className="name" value={schemeName} onChange={(e) => setSchemeName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") saveScheme(); }} placeholder="name" spellCheck={false} aria-label="scheme name" />
+            </span>
+            <button type="button" className="studio-btn small" onClick={saveScheme} title="Store these values under this name in this browser; an existing name is overwritten">Save</button>
+            <button type="button" className="studio-btn small" onClick={exportScheme} title="Download these values as <name>.json, for another browser">Export JSON</button>
+            {scMsg && <span className="studio-status" role="status">{scMsg}</span>}
+          </Control>
+          <Control label="Surface">
+            <span className="studio-swatches">
+              {SCHEME_SURFACE.map((x) => <SchemeColor key={x.v} v={x.v} label={x.label} value={scheme[x.v] ?? ""} onChange={(val) => setVar(x.v, val)} />)}
+            </span>
+          </Control>
+          <Control label="Alpha">
+            {SCHEME_SLIDERS.map((x) => {
+              const n = Number(scheme[x.v]); const val = Number.isFinite(n) ? n : 0;
+              return (
+                <label key={x.v} className="studio-slider" title={x.title}>
+                  <span>{x.label}</span>
+                  <input type="range" min={0} max={x.max} step={0.01} value={val} onChange={(e) => setVar(x.v, e.target.value)} aria-label={x.label} />
+                  <span className="val">{val.toFixed(2)}</span>
+                </label>
+              );
+            })}
+          </Control>
+          <Control label="Font">
+            <span className="studio-size">
+              <input type="text" className="font" value={scheme["--sans"] ?? ""} onChange={(e) => setVar("--sans", e.target.value)} spellCheck={false} aria-label="panel font family, CSS" title="The panel's font-family list, as CSS" />
+            </span>
+          </Control>
+          <Control label="Models">
+            <button type="button" className="studio-btn small" onClick={() => setShowModels((s) => !s)} aria-expanded={showModels}>{showModels ? "hide" : "show"} {SCHEME_MODELS.length} colours</button>
+            {showModels && (
+              <span className="studio-swatches">
+                {SCHEME_MODELS.map((x) => <SchemeColor key={x.v} v={x.v} label={x.label} value={scheme[x.v] ?? ""} onChange={(val) => setVar(x.v, val)} />)}
+              </span>
+            )}
+            {showModels && colorMode !== "style" && <span className="studio-hint small">Colors is on “{colorMode === "custom" ? "custom" : PALETTES.find((p) => p.id === colorMode)?.label}”, which paints over these; set it to style's own to see them.</span>}
+          </Control>
+        </div>
+      )}
+
       <div className="controls studio-row2 studio-export">
         <Control label="Export">
           <button type="button" className="studio-btn" onClick={onDownload} disabled={exStatus?.busy} title="Save the chart area as a PNG file">Download PNG</button>
@@ -408,48 +582,51 @@ export default function StudioPage() {
       </div>
 
       <section className="section studio-stage">
-        <div
-          ref={plotRef}
-          className={`studio-plot${frame ? " framed" : ""}${fills ? "" : " auto"}`}
-          data-style={style}
-          data-contrast={contrast}
-          style={{ ...colorVars, width: w, height: fills ? h : undefined, "--fs-legend": `${12 * ts}px` } as React.CSSProperties}
-        >
-          {plot === "pr" && chart === "map" && (
-            <div className="studio-canvas">
-              <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} />
-            </div>
-          )}
-          {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} />}
-          {plot === "cost" && costChart === "scatter" && (
-            <div className="studio-canvas">
-              <StudioScatter pts={costPts} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} />
-            </div>
-          )}
-          {plot === "cost" && costChart !== "scatter" && (
-            <StudioBars rows={costRows} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={cu.axis + (costChart === "dots" || costScale === "log" ? " (log)" : "")} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} />
-          )}
-          {plot === "speed" && (
-            <StudioBars
-              rows={speedRows} kind={speedChart === "dots" ? "dot" : "bar"} scale={speedChart === "dots" ? "log" : "linear"} sort={speedChart === "throughput" ? "desc" : "asc"}
-              axis={speedChart === "throughput" ? "sequential documents per hour (3,600,000 ÷ median ms per document)" : `median latency per document${speedChart === "dots" ? " (log)" : ""}`}
-              fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos} textScale={ts}
-            />
-          )}
-          {plot === "stability" && (
-            <StudioBars
-              rows={stabRows} kind={stabChart === "dots" ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? agreeDomain : undefined}
-              axis={stabChart === "agree" ? `agreement: probability two identical runs give the same decision${stabSetting === "t0" ? " · temperature 0" : ""}` : `probability two identical runs disagree${stabSetting === "t0" ? " · temperature 0" : ""}`}
-              fmtTick={fmtPctTick} logos={logos} textScale={ts}
-            />
-          )}
-          {legend && legendLines.length > 0 && (
-            <div className="legend-note">
-              {legendLines.map((t, i) => <span key={i}>{t}</span>)}
-              {plot === "pr" && chart === "map" && items.some((i) => i.subset) && <span>* scored on a stratified subset</span>}
-              {plot !== "pr" && sel.some((r) => starOf(r)) && <span>* scored on a stratified subset</span>}
-            </div>
-          )}
+        {/* The custom scheme sits on this wrapper, not the panel: inline on the panel it would beat .studio-plot[data-contrast="high"], which must still recolour relative to --ink and --panel. */}
+        <div className="studio-scheme" style={style === "custom" ? (scheme as React.CSSProperties) : undefined}>
+          <div
+            ref={plotRef}
+            className={`studio-plot${frame ? " framed" : ""}${fills ? "" : " auto"}`}
+            data-style={style}
+            data-contrast={contrast}
+            style={{ ...colorVars, width: w, height: fills ? h : undefined, "--fs-legend": `${12 * ts}px` } as React.CSSProperties}
+          >
+            {plot === "pr" && chart === "map" && (
+              <div className="studio-canvas">
+                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} />
+              </div>
+            )}
+            {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} />}
+            {plot === "cost" && costChart === "scatter" && (
+              <div className="studio-canvas">
+                <StudioScatter pts={costPts} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} />
+              </div>
+            )}
+            {plot === "cost" && costChart !== "scatter" && (
+              <StudioBars rows={costRows} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={cu.axis + (costChart === "dots" || costScale === "log" ? " (log)" : "")} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} />
+            )}
+            {plot === "speed" && (
+              <StudioBars
+                rows={speedRows} kind={speedChart === "dots" ? "dot" : "bar"} scale={speedChart === "dots" ? "log" : "linear"} sort={speedChart === "throughput" ? "desc" : "asc"}
+                axis={speedChart === "throughput" ? "sequential documents per hour (3,600,000 ÷ median ms per document)" : `median latency per document${speedChart === "dots" ? " (log)" : ""}`}
+                fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos} textScale={ts}
+              />
+            )}
+            {plot === "stability" && (
+              <StudioBars
+                rows={stabRows} kind={stabChart === "dots" ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? agreeDomain : undefined}
+                axis={stabChart === "agree" ? `agreement: probability two identical runs give the same decision${stabSetting === "t0" ? " · temperature 0" : ""}` : `probability two identical runs disagree${stabSetting === "t0" ? " · temperature 0" : ""}`}
+                fmtTick={fmtPctTick} logos={logos} textScale={ts}
+              />
+            )}
+            {legend && legendLines.length > 0 && (
+              <div className="legend-note">
+                {legendLines.map((t, i) => <span key={i}>{t}</span>)}
+                {plot === "pr" && chart === "map" && items.some((i) => i.subset) && <span>* scored on a stratified subset</span>}
+                {plot !== "pr" && sel.some((r) => starOf(r)) && <span>* scored on a stratified subset</span>}
+              </div>
+            )}
+          </div>
         </div>
         <p className="studio-foot">Drag the panel's bottom-right corner to resize, or type a size above. {w} × {fills ? h : "auto"} px.</p>
       </section>

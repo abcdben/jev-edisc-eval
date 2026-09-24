@@ -66,8 +66,12 @@ function inlineSvgStyles(clone: HTMLElement) {
   });
 }
 
-/** Render the panel to a PNG blob. `scale` is the device-pixel ratio relative to the panel's CSS size. */
-export async function renderPanelPng(panel: HTMLElement, scale: number, background: ExportBackground): Promise<Blob> {
+/**
+ * Render the panel to a PNG blob. `scale` is the device-pixel ratio relative to the panel's CSS size. `inherited` is custom properties the live
+ * panel inherits from an ancestor (the studio's custom-scheme wrapper): the off-screen clone is placed under a wrapper carrying them, not given
+ * them inline, so the panel's own `[data-contrast="high"]` block still overrides them exactly as it does on the page.
+ */
+export async function renderPanelPng(panel: HTMLElement, scale: number, background: ExportBackground, inherited?: Record<string, string>): Promise<Blob> {
   const W = panel.offsetWidth, H = panel.offsetHeight;
   const panelColour = getComputedStyle(panel).backgroundColor;
   const clone = panel.cloneNode(true) as HTMLElement;
@@ -82,7 +86,14 @@ export async function renderPanelPng(panel: HTMLElement, scale: number, backgrou
   // The clone sits in an off-screen wrapper (not offset itself: html-to-image copies the node's computed offsets, and an offset root renders blank)
   const wrap = document.createElement("div");
   Object.assign(wrap.style, { position: "fixed", left: "-100000px", top: "0", width: `${W}px`, height: `${H}px`, overflow: "hidden", pointerEvents: "none" } as Partial<CSSStyleDeclaration>);
-  wrap.appendChild(clone);
+  let mount: HTMLElement = wrap;
+  if (inherited && Object.keys(inherited).length) {
+    mount = document.createElement("div");
+    mount.style.display = "contents";
+    for (const [k, v] of Object.entries(inherited)) mount.style.setProperty(k, v);
+    wrap.appendChild(mount);
+  }
+  mount.appendChild(clone);
   document.body.appendChild(wrap);
   try {
     inlineSvgStyles(clone);

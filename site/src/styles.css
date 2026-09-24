@@ -604,6 +604,17 @@ svg text { user-select: none; font-family: var(--sans); }
 .studio-swatch input[type="color"] { width: 24px; height: 24px; padding: 0; border: 1px solid var(--line-2); border-radius: 6px; background: none; cursor: pointer; }
 .studio-swatch input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
 .studio-swatch input[type="color"]::-webkit-color-swatch { border: none; border-radius: 4px; }
+/* Style → Custom (StudioPage.tsx scheme editor): the scheme's variables sit as inline custom properties on the .studio-scheme wrapper around the panel
+   (display: contents, so the stage lays out as before) and reach the panel by inheritance, where the presets' consumers and the [data-contrast="high"]
+   block read them unchanged. The editor row: a hex/CSS text field beside each swatch, the alpha sliders, the font field and the Import/Export buttons. */
+.studio-scheme { display: contents; }
+.studio-swatch input.hex { width: 82px; font: inherit; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--ink); background: var(--panel); border: 1px solid var(--line-2); border-radius: 6px; padding: 3px 6px; }
+.studio-size input.name { width: 150px; font-variant-numeric: normal; }
+.studio-size input.font { width: 320px; font-variant-numeric: normal; font-size: 12px; }
+.studio-slider { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-2); }
+.studio-slider input[type="range"] { width: 88px; margin: 0; accent-color: var(--ink); }
+.studio-slider .val { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink-3); min-width: 4ch; }
+label.studio-btn { display: inline-block; }
 
 /* Studio plot style presets (StudioPage.tsx STYLES → data-style on .studio-plot). Each preset redefines, inside the panel only, the surface
    and ink variables, the grid, the box fill/outline alphas, the face (svg text and .legend-note read --sans) and the model palette
