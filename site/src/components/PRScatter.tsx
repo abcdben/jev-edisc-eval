@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useId, useMemo, type ReactNode } from "react";
 import { fmtCI, type CI } from "../data";
 import { Logo, LogoGlyph, logoFor } from "../logos";
 import { CLICK_HINT, TipBox, fadeStyle, selectable, usePresence, usePulseWindow, useSize, useTip, useTween, type TipContent } from "./ui";
@@ -134,6 +134,30 @@ export function Legend({ items, s, x0, x1, y, mark }: { items: { id: string; nam
   );
 }
 
+/**
+ * How the 95% interval boxes are drawn (the studio's Boxes control; `filled` on the site). The box variables the styles set are read as:
+ *   --box-alpha     fill opacity of a filled box; a hatched box draws its lines at 3 × this, capped at 1, so the same slider carries both looks
+ *                   (a 1 px line every 6 px covers about a sixth of the box, so the tripled alpha keeps the box's weight about the same);
+ *   --box-stroke    outline opacity in `filled` and `hatched` (0 on the site; Journal's hairline is 0.9); the outline modes draw the outline at 1;
+ *   --box-stroke-w  outline width in px (0.75 unset), × --sw-mult.
+ * The hatch is one SVG <pattern> per item in `<defs>` (a 45° line in the item's colour: pattern contents take their styles from the pattern's own
+ * ancestors, not from the rect that paints with it, so `currentColor` cannot carry the colour), spacing HATCH_GAP × textScale, line 1 × textScale × --sw-mult.
+ * Ids are prefixed with the component's useId so two scatters on one page never share a pattern.
+ */
+export type BoxMode = "filled" | "hatched" | "outline" | "hatched-outline";
+export const BOX_MODES: { id: BoxMode; label: string; title: string }[] = [
+  { id: "filled", label: "filled", title: "A shaded box at the box-fill opacity" },
+  { id: "hatched", label: "hatched", title: "45° hatch lines in the model's colour; their opacity follows the box-fill slider" },
+  { id: "outline", label: "outline", title: "The box's edge alone, in the model's colour" },
+  { id: "hatched-outline", label: "hatched + outline", title: "Hatch lines inside an outlined box" },
+];
+export const isBoxMode = (s: string | null): s is BoxMode => BOX_MODES.some((m) => m.id === s);
+const HATCH_GAP = 6;
+/** Hatch-line opacity for a box whose fill opacity is --box-alpha (see BoxMode). */
+const HATCH_ALPHA = "min(1, calc(var(--box-alpha, 0.14) * 3))";
+// × 1px: a unitless calc() that comes to 0 is computed as `0%` by Chrome and dropped (the 0.75 attribute would show through); a length is honoured
+const BOX_STROKE_W = "calc(var(--box-stroke-w, 0.75) * var(--sw-mult, 1) * 1px)";
+
 function niceTicks(lo: number, hi: number): number[] {
   const span = hi - lo;
   const step = span > 0.6 ? 0.2 : span > 0.3 ? 0.1 : span > 0.12 ? 0.05 : span > 0.06 ? 0.02 : 0.01;
@@ -156,9 +180,14 @@ const PULSE_CYCLES = 2, PULSE_CYCLE_MS = 650;
 /** `leaders` (the studio's Leaders control; off on the site) draws a hairline from each displaced label back to its mark (leaderFor), under every mark and label. */
 /** `labels` (the studio's Labels control; `beside` on the site): `legend` drops the point labels (and leaders) for a legend row at the top (Legend), the plot moved down under it. */
 /** `mark` (the studio's Marks control; `dot` on the site) is the point shape when logos are off; `markSize` is the studio's Mark size multiplier (the --mark-user the panel sets), which the label placement needs as a number to keep labels and leaders clear of a larger mark. */
+/** `boxes` (the studio's Boxes control; `filled` on the site) is how the interval boxes are drawn (BoxMode). */
 export type PRDomain = { x: [number, number]; y: [number, number] };
-export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1 }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number }) {
+export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, boxes: boxMode = "filled" }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; boxes?: BoxMode }) {
   const { tip, show, hide, hostRef } = useTip();
+  const hatched = boxMode === "hatched" || boxMode === "hatched-outline", outlined = boxMode === "outline" || boxMode === "hatched-outline";
+  // pattern ids: this instance's useId (colons and the like stripped) and the item id reduced to url(#…)-safe characters
+  const uid = useId().replace(/[^A-Za-z0-9_-]/g, "");
+  const hatchId = (id: string) => `hatch-${uid}-${id.replace(/[^A-Za-z0-9_-]/g, "-")}`;
   const pickMark = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const sz = useSize(hostRef, { w: 760, h: height });
   const W = sz.w, H = fill ? Math.max(300, sz.h) : height;
@@ -252,6 +281,15 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
           <pattern id="dotgrid" width={8} height={8} patternUnits="userSpaceOnUse">
             <circle cx={1} cy={1} r={0.7} fill="var(--dots)" />
           </pattern>
+          {/* hatch (BoxMode): one tile per item, a line down the tile's middle (at its edge it would be half clipped), the tile turned 45° */}
+          {hatched && drawn.map((p) => {
+            const gap = HATCH_GAP * s;
+            return (
+              <pattern key={`h${p.id}`} id={hatchId(p.id)} width={gap} height={gap} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <line x1={gap / 2} x2={gap / 2} y1={0} y2={gap} stroke={p.color} strokeWidth={s} style={{ strokeWidth: `calc(${s}px * var(--sw-mult, 1))` }} />
+              </pattern>
+            );
+          })}
         </defs>
         <rect x={PL} y={top} width={W - PR - PL} height={H - PB - top} fill="url(#dotgrid)" />
         {/* vertical gridlines read --grid-x (falls back to --grid), so a preset can keep horizontal rules only (Epoch); the y-axis line likewise --axis-y */}
@@ -275,16 +313,18 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
         <text x={titleX} y={(top + H - PB) / 2} fontSize={TITLE_FS * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(top + H - PB) / 2})`}>{yLabel}</text>
         {labelsMode === "legend" && <Legend items={pts.map((p) => ({ id: p.id, name: p.name + (p.subset ? " *" : ""), color: p.color }))} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={logos ? "square-swatch" : mark} />}
 
-        {/* CI boxes first so dots sit on top; every box is the same stroke-less shade, the highlighted one a little deeper */}
+        {/* CI boxes first so dots sit on top; every box is drawn the same way (BoxMode), the highlighted one a little deeper */}
         {drawn.map((p) => {
           const mark = { kind: "mark" as const, x: X(p.recall[0]), y: Y(p.precision[0]), r: 9 };
+          const boxFill = boxMode === "outline" ? "none" : hatched ? `url(#${hatchId(p.id)})` : p.color;
+          const boxFillOpacity = boxMode === "outline" ? undefined : hl === p.id ? (hatched ? 1 : 0.35) : hatched ? HATCH_ALPHA : "var(--box-alpha)";
           return (
             <g key={`b${p.id}`} className="fd" style={fadeStyle(stateOf[p.id] ?? "exit")}>{/* fade in / out (ui.tsx usePresence) */}
             <g {...hoverable(onHover, p.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
             <g onMouseMove={(e) => show(e, mark, prTip(p, logos ? <Logo model={p.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)} tabIndex={-1}>
               {/* the pulse class is dropped while this box is highlighted, so the deeper hover fill is steady and wins */}
-              {/* `--box-stroke` (0 on the site) lets a studio style preset draw the box as a hairline outline in the item's colour */}
-              <rect key={`${p.id}:${sig}`} className={pulsing && p.decider && hl !== p.id ? "pr-box pulse" : "pr-box"} x={g(p.id, "x0")} y={g(p.id, "y0")} width={g(p.id, "w")} height={g(p.id, "h")} fill={p.color} stroke={p.color} strokeWidth={0.75} style={{ fillOpacity: hl === p.id ? 0.35 : "var(--box-alpha)", strokeOpacity: "var(--box-stroke, 0)", transition: "fill-opacity 120ms" }} rx={1} />
+              {/* `--box-stroke` (0 on the site) lets a studio style preset draw the box as a hairline outline in the item's colour; the outline modes draw it regardless */}
+              <rect key={`${p.id}:${sig}`} className={pulsing && p.decider && hl !== p.id ? "pr-box pulse" : "pr-box"} x={g(p.id, "x0")} y={g(p.id, "y0")} width={g(p.id, "w")} height={g(p.id, "h")} fill={boxFill} stroke={p.color} strokeWidth={0.75} style={{ fillOpacity: boxFillOpacity, strokeOpacity: outlined ? 1 : "var(--box-stroke, 0)", strokeWidth: BOX_STROKE_W, transition: "fill-opacity 120ms" }} rx={1} />
             </g>
             </g>
             </g>

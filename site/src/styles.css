@@ -18,6 +18,8 @@
   --dots: #c6c7bf;
   --axis: #c9cac2;
   --box-alpha: 0.14;
+  /* the interval boxes' outline width, px (PRScatter.tsx BoxMode; the studio's scheme editor has a slider for it); its opacity, --box-stroke, is 0 on the site */
+  --box-stroke-w: 0.75;
   --bar-alpha: 0.55;
   /* key-section highlight: a very light chartreuse behind the details modal's definition, lever callout and headline figures */
   --hl: #f2fbc4;
@@ -606,7 +608,8 @@ svg text { user-select: none; font-family: var(--sans); }
 .studio-swatch input[type="color"]::-webkit-color-swatch { border: none; border-radius: 4px; }
 /* Style → Custom (StudioPage.tsx scheme editor): the scheme's variables sit as inline custom properties on the .studio-scheme wrapper around the panel
    (display: contents, so the stage lays out as before) and reach the panel by inheritance, where the presets' consumers and the [data-contrast="high"]
-   block read them unchanged. The editor row: a hex/CSS text field beside each swatch, the alpha sliders, the font field and the Import/Export buttons. */
+   block read them unchanged; the slider variables (--box-alpha, --box-stroke-w, --bar-alpha) alone go inline on the panel, over that block's own alphas.
+   The editor row: a hex/CSS text field beside each swatch, the box and bar sliders, the font field and the Import/Export buttons. */
 .studio-scheme { display: contents; }
 /* the stage paints the scheme's page colour (--bg, set inline on it by StudioPage.tsx) behind the panel while Custom is on; body keeps the theme's */
 .studio-stage.custom { background: var(--bg); padding: 18px 18px 12px; border-radius: 8px; }
@@ -717,7 +720,7 @@ label.studio-btn { display: inline-block; }
   --line: color-mix(in srgb, var(--ink) 30%, var(--panel)); --line-2: color-mix(in srgb, var(--ink) 45%, var(--panel));
   --grid: color-mix(in srgb, var(--ink) 20%, var(--panel));
   --dots: color-mix(in srgb, var(--ink) 28%, var(--panel));
-  --bar-alpha: 0.92; --box-alpha: 0.26; --box-stroke: 0; /* interval boxes carry the stronger fill alone: no outline, in every preset (Journal included) */
+  --bar-alpha: 0.92; --box-alpha: 0.26; --box-stroke: 0; /* interval boxes carry the stronger fill alone: no outline, in every preset (Journal included); a Custom scheme's sliders, inline on the panel, still win */
   --sw-mult: 1.6; --r-add: 1px; --op-whisker: 0.95; --mark-scale: 1.3;
 }
 .studio-plot[data-contrast="high"] svg text { font-weight: 500 !important; }

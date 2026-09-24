@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { DATA, DEFAULT_CORPUS, DEFAULT_ON, PRIMARY_BY_KEY, corpusKey, costPerDoc, fmtInt, fmtPct, isDecider, issueLabel, pick, siteCorpus, starOf, CORPORA, type Rec } from "./data";
 import { ModelPicker, useCompareItems, type Chart, type View } from "./App";
-import { MARK_SHAPES, PRScatter, type LabelsMode, type MarkShape, type PRDomain } from "./components/PRScatter";
+import { BOX_MODES, MARK_SHAPES, PRScatter, isBoxMode, type BoxMode, type LabelsMode, type MarkShape, type PRDomain } from "./components/PRScatter";
 import { PRRail } from "./components/PRRail";
 import { detFor } from "./components/Consistency";
 import { StudioBars, StudioScatter, type StudioRow, type StudioScatterPt } from "./components/StudioCharts";
@@ -28,7 +28,8 @@ const PRESETS: Preset[] = [
 /**
  * Plot style presets (styles.css `.studio-plot[data-style=…]`): every one but `site` fully specifies its own panel, ink, grid and model palette, so the masthead
  * Dark/Light theme does not reach the panel. `custom` has no CSS block: its variables are the user's (the scheme editor below), written as inline custom
- * properties on the `.studio-scheme` wrapper around the panel, so the preset CSS, the high-contrast block and the PNG export read them unchanged.
+ * properties on the `.studio-scheme` wrapper around the panel, so the preset CSS, the high-contrast block and the PNG export read them unchanged;
+ * the slider variables alone (SCHEME_SLIDERS) go inline on the panel itself, so the high-contrast block's own alphas do not overrule the user's.
  */
 type PlotStyle = "site" | "journal" | "newsroom" | "linkedin" | "slate" | "economist" | "epoch" | "custom";
 const STYLES: { id: PlotStyle; label: string; title: string }[] = [
@@ -46,9 +47,9 @@ const isPlotStyle = (s: string | null): s is PlotStyle => STYLES.some((x) => x.i
 /**
  * Custom scheme (Style → Custom): the panel variables every preset block defines, exposed in the editor row, plus `--bg`, the page behind the panel
  * (painted by the stage while Custom is on; the PNG export is the panel alone and never shows it). Colours: the surface and ink set, then one
- * per roster model through the custom property its colour is (data.ts ALL_PRIMARY `var(--…)`, palettes.ts varOf). Sliders: the interval-box fill and
- * outline alphas and the bar alpha. `--sans` is the panel face. A colour's text field takes any CSS colour (`transparent` for no grid included); the
- * native picker beside it shows the nearest hex.
+ * per roster model through the custom property its colour is (data.ts ALL_PRIMARY `var(--…)`, palettes.ts varOf). Sliders: the interval-box fill
+ * opacity (which also sets the hatch lines' in the hatched Boxes modes, PRScatter.tsx BoxMode), the box outline width in px and the bar fill opacity.
+ * `--sans` is the panel face. A colour's text field takes any CSS colour (`transparent` for no grid included); the native picker beside it shows the nearest hex.
  */
 type SchemeVar = { v: string; label: string };
 const SCHEME_SURFACE: SchemeVar[] = [
@@ -56,13 +57,15 @@ const SCHEME_SURFACE: SchemeVar[] = [
   { v: "--line", label: "line" }, { v: "--line-2", label: "line 2" }, { v: "--grid", label: "grid" }, { v: "--dots", label: "dots" }, { v: "--axis", label: "axis" }, { v: "--hl", label: "highlight" },
 ];
 const SCHEME_MODELS: SchemeVar[] = Object.entries(PRIMARY_BY_KEY).flatMap(([k, m]) => { const v = varOf(k); return v ? [{ v, label: m.short }] : []; });
-const SCHEME_SLIDERS: (SchemeVar & { max: number; title: string })[] = [
-  { v: "--box-alpha", label: "box fill", max: 0.4, title: "Fill opacity of the 95% interval boxes (recall/precision map)" },
-  { v: "--box-stroke", label: "box outline", max: 1, title: "Outline opacity of the interval boxes" },
-  { v: "--bar-alpha", label: "bar fill", max: 1, title: "Fill opacity of the bars" },
+/** `dflt` is shown, and drawn, while the scheme has no value for the variable (the charts' own fallback). */
+const SCHEME_SLIDERS: (SchemeVar & { min: number; max: number; step: number; dflt: number; title: string })[] = [
+  { v: "--box-alpha", label: "box fill", min: 0, max: 0.6, step: 0.01, dflt: 0.14, title: "Opacity of the 95% interval boxes on the recall/precision map: the shade of a filled box, or the lines of a hatched one (Boxes control)" },
+  { v: "--box-stroke-w", label: "outline px", min: 0, max: 3, step: 0.25, dflt: 0.75, title: "Width of the interval boxes' outline, in px (Boxes → outline or hatched + outline; also a preset's own hairline, as Journal's)" },
+  { v: "--bar-alpha", label: "bar fill", min: 0.1, max: 1, step: 0.01, dflt: 0.55, title: "Fill opacity of the bars (Cost, Speed and Stability bar charts)" },
 ];
-// --grid-x and --axis-y (vertical gridlines, y-axis line; unset they follow --grid / --axis) have no swatch but are copied, saved and imported, so a Custom made from Epoch keeps its horizontal-only grid
-const SCHEME_VARS = new Set([...SCHEME_SURFACE, ...SCHEME_MODELS, ...SCHEME_SLIDERS].map((x) => x.v).concat("--sans", "--grid-x", "--axis-y"));
+// --grid-x and --axis-y (vertical gridlines, y-axis line; unset they follow --grid / --axis) and --box-stroke (a preset's outline opacity in the filled and hatched
+// Boxes modes; Journal's hairline) have no control but are copied, saved and imported, so a Custom made from Epoch keeps its horizontal-only grid
+const SCHEME_VARS = new Set([...SCHEME_SURFACE, ...SCHEME_MODELS, ...SCHEME_SLIDERS].map((x) => x.v).concat("--sans", "--grid-x", "--axis-y", "--box-stroke"));
 type Vars = Record<string, string>;
 const isVars = (o: unknown): o is Vars => !!o && typeof o === "object" && !Array.isArray(o) && Object.values(o).every((x) => typeof x === "string");
 const isSchemes = (o: unknown): o is Record<string, Vars> => !!o && typeof o === "object" && !Array.isArray(o) && Object.values(o).every(isVars);
@@ -183,6 +186,10 @@ export default function StudioPage() {
   const [markSize, setMarkSize] = useState<MarkSize>(() => { const s = localStorage.getItem("studio-mark-scale"); return isMarkSize(s) ? s : "m"; });
   useEffect(() => { localStorage.setItem("studio-mark-scale", markSize); }, [markSize]);
   const ms = MARK_SCALE[markSize];
+  // Boxes (PRScatter.tsx BoxMode): how the map draws the 95% interval boxes: filled, hatched, outline only, or hatched inside an outline.
+  const [boxes, setBoxes] = useState<BoxMode>(() => { const s = localStorage.getItem("studio-boxes"); return isBoxMode(s) ? s : "filled"; });
+  useEffect(() => { localStorage.setItem("studio-boxes", boxes); }, [boxes]);
+  const boxOutlined = boxes === "outline" || boxes === "hatched-outline";
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "light");
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
   const [style, setStyle] = useState<PlotStyle>(() => { const s = localStorage.getItem("studio-style"); return isPlotStyle(s) ? s : "site"; });
@@ -239,6 +246,9 @@ export default function StudioPage() {
   const customPanelHex = style === "custom" ? toHex(scheme["--panel"] ?? "") : null;
   const darkPanel = customPanelHex ? luminance(customPanelHex) < 0.4 : style === "slate" || (style === "site" && theme === "dark");
   const colorVars: Record<string, string> = colorMode === "style" ? {} : colorMode === "custom" ? toVars(custom, false) : toVars(PALETTES.find((p) => p.id === colorMode)!.colors, darkPanel);
+  // The scheme's slider values, written inline on the panel itself (the rest of the scheme sits on the wrapper): the panel's own [data-contrast="high"]
+  // block sets --box-alpha and --bar-alpha, and would otherwise silence the sliders whenever Contrast is high.
+  const sliderVars: Record<string, string> = style === "custom" ? Object.fromEntries(SCHEME_SLIDERS.flatMap((x) => (scheme[x.v] ? [[x.v, scheme[x.v]]] : []))) : {};
   /**
    * Every scheme variable as a `.studio-plot` in `forStyle` resolves it, with the Colors layer on and no contrast override: read off a hidden probe
    * panel, not the live one, because in high contrast the live panel's --ink-2, --grid… are color-mix() expressions that the editor cannot show.
@@ -352,19 +362,22 @@ export default function StudioPage() {
 
   const emptyText = "Select at least one model.";
   const measuredOn = DATA.determinism ? `${fmtInt(DATA.determinism.sample.n_docs)} Mallinckrodt emails` : "a fixed sample";
-  // What the panel actually draws for the 95% interval, read off its computed variables after each style-affecting change (preset, Custom sliders and
-  // Contrast all folded in): the map's shaded boxes (--box-alpha / --box-stroke) and the whisker charts' whiskers (--op-whisker). The legend note names only what is drawn.
+  // What the panel actually draws for the 95% interval, read off its computed variables after each style-affecting change (preset, Custom sliders,
+  // Boxes mode and Contrast all folded in): the map's boxes (--box-alpha, or the outline: --box-stroke in the filled modes, --box-stroke-w in the outline
+  // modes) and the whisker charts' whiskers (--op-whisker). The legend note names only what is drawn.
   const [marks, setMarks] = useState({ boxes: true, whiskers: true });
   useEffect(() => {
     const el = plotRef.current; if (!el) return;
     const cs = getComputedStyle(el), num = (v: string, dflt: number) => { const n = parseFloat(cs.getPropertyValue(v)); return Number.isFinite(n) ? n : dflt; };
-    const boxes = num("--box-alpha", 0.14) > 0 || num("--box-stroke", 0) > 0, whiskers = num("--op-whisker", 0.75) > 0;
-    setMarks((p) => (p.boxes === boxes && p.whiskers === whiskers ? p : { boxes, whiskers }));
-  }, [style, scheme, contrast, theme]);
+    const outline = boxOutlined ? num("--box-stroke-w", 0.75) > 0 : num("--box-stroke", 0) > 0;
+    const drawn = (boxes !== "outline" && num("--box-alpha", 0.14) > 0) || outline, whiskers = num("--op-whisker", 0.75) > 0;
+    setMarks((p) => (p.boxes === drawn && p.whiskers === whiskers ? p : { boxes: drawn, whiskers }));
+  }, [style, scheme, contrast, theme, boxes, boxOutlined]);
   const legendText = (): string[] => {
     // the note names the mark drawn at the point (Marks control); with logos on it keeps the site's wording
     const what = logos || mark === "dot" ? "Dot" : mark === "x" ? "Cross" : mark[0].toUpperCase() + mark.slice(1);
-    if (plot === "pr") return chart === "map" ? [marks.boxes ? `${what}: point estimate. Shaded box: 95% interval on recall (width) and precision (height).` : `${what}: point estimate.`] : [];
+    const box = boxes === "filled" ? "Shaded box" : boxes === "hatched" ? "Hatched box" : boxes === "outline" ? "Outlined box" : "Hatched, outlined box";
+    if (plot === "pr") return chart === "map" ? [marks.boxes ? `${what}: point estimate. ${box}: 95% interval on recall (width) and precision (height).` : `${what}: point estimate.`] : [];
     const whisk = (clause: string) => (marks.whiskers ? clause : "");
     if (plot === "cost") {
       const basis = "Cost as paid for the benchmark run (OpenAI flex pricing, Anthropic prompt caching, Google and TypeSafe at list; GPU rows as A100 rental for their median latency)";
@@ -513,6 +526,11 @@ export default function StudioPage() {
           <Seg value={markSize} onChange={setMarkSize} options={[{ id: "s", label: "S", title: "0.75× the site's mark" }, { id: "m", label: "M", title: "The site's mark size" }, { id: "l", label: "L", title: "1.5×" }, { id: "xl", label: "XL", title: "2.2×, for logos inside wide interval boxes" }]} />
           {fills && logos && <span className="studio-hint small" title="Switch Panel to names only to choose a mark shape">logos are the marks</span>}
         </Control>
+        {plot === "pr" && chart === "map" && (
+          <Control label="Boxes">
+            <Seg value={boxes} onChange={setBoxes} options={BOX_MODES.map((m) => ({ id: m.id, label: m.label, title: m.title }))} />
+          </Control>
+        )}
         {fills && (
           <Control label="Labels">
             <Seg value={labelsMode} onChange={setLabelsMode} options={[{ id: "beside", label: "beside", title: "Each model's name next to its mark" }, { id: "legend", label: "legend", title: "A legend row at the top of the panel (square swatches and names); no names on the plot" }]} />
@@ -588,13 +606,13 @@ export default function StudioPage() {
               {SCHEME_SURFACE.map((x) => <SchemeColor key={x.v} v={x.v} label={x.label} value={scheme[x.v] ?? ""} onChange={(val) => setVar(x.v, val)} />)}
             </span>
           </Control>
-          <Control label="Alpha">
+          <Control label="Boxes & bars">
             {SCHEME_SLIDERS.map((x) => {
-              const n = Number(scheme[x.v]); const val = Number.isFinite(n) ? n : 0;
+              const n = parseFloat(scheme[x.v] ?? ""); const val = Number.isFinite(n) ? n : x.dflt;
               return (
                 <label key={x.v} className="studio-slider" title={x.title}>
                   <span>{x.label}</span>
-                  <input type="range" min={0} max={x.max} step={0.01} value={val} onChange={(e) => setVar(x.v, e.target.value)} aria-label={x.label} />
+                  <input type="range" min={x.min} max={x.max} step={x.step} value={val} onChange={(e) => setVar(x.v, e.target.value)} aria-label={x.label} />
                   <span className="val">{val.toFixed(2)}</span>
                 </label>
               );
@@ -634,18 +652,19 @@ export default function StudioPage() {
 
       {/* With Custom on, the stage paints the scheme's --bg behind the panel (styles.css .studio-stage.custom); body keeps the theme's. */}
       <section className={`section studio-stage${style === "custom" ? " custom" : ""}`} style={style === "custom" && scheme["--bg"] ? ({ "--bg": scheme["--bg"] } as React.CSSProperties) : undefined}>
-        {/* The custom scheme sits on this wrapper, not the panel: inline on the panel it would beat .studio-plot[data-contrast="high"], which must still recolour relative to --ink and --panel. */}
+        {/* The custom scheme's colours sit on this wrapper, not the panel: inline on the panel they would beat .studio-plot[data-contrast="high"], which must still recolour
+            relative to --ink and --panel. The sliders' variables do go inline on the panel (sliderVars), so that block's own --box-alpha / --bar-alpha never overrule them. */}
         <div className="studio-scheme" style={style === "custom" ? (scheme as React.CSSProperties) : undefined}>
           <div
             ref={plotRef}
             className={`studio-plot${frame ? " framed" : ""}${fills ? "" : " auto"}`}
             data-style={style}
             data-contrast={contrast}
-            style={{ ...colorVars, width: w, height: fills ? h : undefined, "--fs-legend": `${12 * ts}px`, "--mark-user": ms } as React.CSSProperties}
+            style={{ ...colorVars, ...sliderVars, width: w, height: fills ? h : undefined, "--fs-legend": `${12 * ts}px`, "--mark-user": ms } as React.CSSProperties}
           >
             {plot === "pr" && chart === "map" && (
               <div className="studio-canvas">
-                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} />
+                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} boxes={boxes} />
               </div>
             )}
             {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} mark={mark} />}
