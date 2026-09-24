@@ -2,8 +2,8 @@ import { useRef } from "react";
 import type { CI } from "../data";
 import { fmtPct, fmtRange } from "../data";
 import { Logo, LogoGlyph } from "../logos";
-import type { PRItem } from "./PRScatter";
-import { prTip } from "./PRScatter";
+import type { MarkShape, PRItem } from "./PRScatter";
+import { Mark, prTip } from "./PRScatter";
 import { CLICK_HINT, DECIDER_TEXT, ROW_PULSE_MS, RowTint, TipBox, fadeStyle, selectable, usePresence, usePulseWindow, useTip, useTween, useWidth } from "./ui";
 import { hoverable } from "./hover";
 
@@ -18,8 +18,8 @@ const ROW0 = 26, NUM_W0 = 54, RANGE_W0 = 52, RAIL = 3, RANK_W0 = 26, TOP0 = 20;
  * follow the same contract as OpsBars and Consistency.
  */
 /** `range` (the screenshot studio) fixes both panels' axis to an explicit 0–1 range, overriding `zoom`. */
-/** `textScale` (the studio's Text control; 1 on the site) multiplies every font size and the row geometry (row height, label and value columns) with it. Whisker width and dot radius read --sw-mult / --r-add (styles.css, the studio's high-contrast block). */
-export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, onSelect, highlight, onHover, textScale = 1 }: { items: PRItem[]; zoom: boolean; range?: [number, number]; sortBy?: "recall" | "precision" | "f1"; logos?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; textScale?: number }) {
+/** `textScale` (the studio's Text control; 1 on the site) multiplies every font size and the row geometry (row height, label and value columns) with it. Whisker width and dot radius read --sw-mult / --r-add (styles.css, the studio's high-contrast block); `mark` (the studio's Marks control; `dot` on the site) is the point shape (PRScatter.tsx Mark). */
+export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, onSelect, highlight, onHover, textScale = 1, mark = "dot" }: { items: PRItem[]; zoom: boolean; range?: [number, number]; sortBy?: "recall" | "precision" | "f1"; logos?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; textScale?: number; mark?: MarkShape }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickRow = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const W = useWidth(hostRef, 760);
@@ -112,7 +112,7 @@ export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, o
                     ci ? (
                       <g key={col}>
                         <line x1={g(`${r.id}:${col}:lo`)} x2={g(`${r.id}:${col}:hi`)} y1={y} y2={y} stroke={r.color} strokeWidth={1.5} style={{ strokeWidth: "calc(1.5 * var(--sw-mult, 1))" }} />
-                        <circle cx={g(`${r.id}:${col}:v`)} cy={y} r={3.2} fill={r.color} style={{ r: "calc(3.2px + var(--r-add, 0px))" } as React.CSSProperties} />
+                        <Mark shape={mark} cx={g(`${r.id}:${col}:v`)} cy={y} r={3.2} color={r.color} />
                         <text x={x0[col] + colW + NUM_W} y={y + 4 * s} textAnchor="end" fontSize={11.5 * s} fill="var(--ink)" className="mono">{fmtPct(ci[0])}</text>
                         <text x={x0[col] + colW + NUMS - 2} y={y + 4 * s} textAnchor="end" fontSize={10.5 * s} fill="var(--ink-4)" className="mono">{fmtRange(ci)}</text>
                       </g>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { DATA, DEFAULT_CORPUS, DEFAULT_ON, PRIMARY_BY_KEY, corpusKey, costPerDoc, fmtInt, fmtPct, isDecider, issueLabel, pick, siteCorpus, starOf, CORPORA, type Rec } from "./data";
 import { ModelPicker, useCompareItems, type Chart, type View } from "./App";
-import { PRScatter, type LabelsMode, type PRDomain } from "./components/PRScatter";
+import { MARK_SHAPES, PRScatter, type LabelsMode, type MarkShape, type PRDomain } from "./components/PRScatter";
 import { PRRail } from "./components/PRRail";
 import { detFor } from "./components/Consistency";
 import { StudioBars, StudioScatter, type StudioRow, type StudioScatterPt } from "./components/StudioCharts";
@@ -96,6 +96,12 @@ function SchemeColor({ v, label, value, onChange }: { v: string; label: string; 
   );
 }
 
+/** Mark sizes (Mark size control): the multiplier on every point mark and vendor glyph, written to the panel as --mark-user (PRScatter.tsx Mark, GLYPH_SCALE) and passed to the scatters so their label placement keeps clear of the larger mark. High contrast's own 1.3 (--mark-scale / --r-add) multiplies on top. */
+type MarkSize = "s" | "m" | "l" | "xl";
+const MARK_SCALE: Record<MarkSize, number> = { s: 0.75, m: 1, l: 1.5, xl: 2.2 };
+const isMarkSize = (s: string | null): s is MarkSize => s != null && s in MARK_SCALE;
+const isMarkShape = (s: string | null): s is MarkShape => MARK_SHAPES.some((m) => m.id === s);
+
 /** Text sizes: one factor on every font size in the panel (axis titles, ticks, names, values, point labels, legend note), passed to the charts as `textScale`, which also scales their label-width estimates and margins. M is the site's own size. */
 type TextSize = "s" | "m" | "l" | "xl";
 const TEXT_SCALE: Record<TextSize, number> = { s: 0.9, m: 1, l: 1.2, xl: 1.45 };
@@ -171,6 +177,12 @@ export default function StudioPage() {
   // Labels (PRScatter.tsx LabelsMode): names beside the marks, or a legend row at the top of the panel and no point labels.
   const [labelsMode, setLabelsMode] = useState<LabelsMode>(() => (localStorage.getItem("studio-labels") === "legend" ? "legend" : "beside"));
   useEffect(() => { localStorage.setItem("studio-labels", labelsMode); }, [labelsMode]);
+  // Marks: the point shape when logos are off (the glyph stands in for it otherwise), and the size of whichever is drawn.
+  const [mark, setMark] = useState<MarkShape>(() => { const s = localStorage.getItem("studio-mark"); return isMarkShape(s) ? s : "dot"; });
+  useEffect(() => { localStorage.setItem("studio-mark", mark); }, [mark]);
+  const [markSize, setMarkSize] = useState<MarkSize>(() => { const s = localStorage.getItem("studio-mark-scale"); return isMarkSize(s) ? s : "m"; });
+  useEffect(() => { localStorage.setItem("studio-mark-scale", markSize); }, [markSize]);
+  const ms = MARK_SCALE[markSize];
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "light");
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
   const [style, setStyle] = useState<PlotStyle>(() => { const s = localStorage.getItem("studio-style"); return isPlotStyle(s) ? s : "site"; });
@@ -350,7 +362,9 @@ export default function StudioPage() {
     setMarks((p) => (p.boxes === boxes && p.whiskers === whiskers ? p : { boxes, whiskers }));
   }, [style, scheme, contrast, theme]);
   const legendText = (): string[] => {
-    if (plot === "pr") return chart === "map" ? [marks.boxes ? "Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height)." : "Dot: point estimate."] : [];
+    // the note names the mark drawn at the point (Marks control); with logos on it keeps the site's wording
+    const what = logos || mark === "dot" ? "Dot" : mark === "x" ? "Cross" : mark[0].toUpperCase() + mark.slice(1);
+    if (plot === "pr") return chart === "map" ? [marks.boxes ? `${what}: point estimate. Shaded box: 95% interval on recall (width) and precision (height).` : `${what}: point estimate.`] : [];
     const whisk = (clause: string) => (marks.whiskers ? clause : "");
     if (plot === "cost") {
       const basis = "Cost as paid for the benchmark run (OpenAI flex pricing, Anthropic prompt caching, Google and TypeSafe at list; GPU rows as A100 rental for their median latency)";
@@ -489,6 +503,16 @@ export default function StudioPage() {
           <Seg value={legend ? "on" : "off"} onChange={(x) => setLegend(x === "on")} options={[{ id: "on", label: "legend" }, { id: "off", label: "no legend" }]} />
           <Seg value={logos ? "on" : "off"} onChange={(x) => setLogos(x === "on")} options={[{ id: "on", label: "logos" }, { id: "off", label: "names only" }]} />
         </Control>
+        {/* the shape control steps aside where the vendor glyph is the mark (a scatter with logos on); the size control scales either */}
+        {!(fills && logos) && (
+          <Control label="Marks">
+            <Seg value={mark} onChange={setMark} options={MARK_SHAPES.map((m) => ({ id: m.id, label: m.label }))} />
+          </Control>
+        )}
+        <Control label="Mark size">
+          <Seg value={markSize} onChange={setMarkSize} options={[{ id: "s", label: "S", title: "0.75× the site's mark" }, { id: "m", label: "M", title: "The site's mark size" }, { id: "l", label: "L", title: "1.5×" }, { id: "xl", label: "XL", title: "2.2×, for logos inside wide interval boxes" }]} />
+          {fills && logos && <span className="studio-hint small" title="Switch Panel to names only to choose a mark shape">logos are the marks</span>}
+        </Control>
         {fills && (
           <Control label="Labels">
             <Seg value={labelsMode} onChange={setLabelsMode} options={[{ id: "beside", label: "beside", title: "Each model's name next to its mark" }, { id: "legend", label: "legend", title: "A legend row at the top of the panel (square swatches and names); no names on the plot" }]} />
@@ -617,34 +641,34 @@ export default function StudioPage() {
             className={`studio-plot${frame ? " framed" : ""}${fills ? "" : " auto"}`}
             data-style={style}
             data-contrast={contrast}
-            style={{ ...colorVars, width: w, height: fills ? h : undefined, "--fs-legend": `${12 * ts}px` } as React.CSSProperties}
+            style={{ ...colorVars, width: w, height: fills ? h : undefined, "--fs-legend": `${12 * ts}px`, "--mark-user": ms } as React.CSSProperties}
           >
             {plot === "pr" && chart === "map" && (
               <div className="studio-canvas">
-                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} />
+                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} />
               </div>
             )}
-            {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} />}
+            {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} mark={mark} />}
             {plot === "cost" && costChart === "scatter" && (
               <div className="studio-canvas">
-                <StudioScatter pts={costPts} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} />
+                <StudioScatter pts={costPts} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} />
               </div>
             )}
             {plot === "cost" && costChart !== "scatter" && (
-              <StudioBars rows={costRows} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={cu.axis + (costChart === "dots" || costScale === "log" ? " (log)" : "")} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} />
+              <StudioBars rows={costRows} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={cu.axis + (costChart === "dots" || costScale === "log" ? " (log)" : "")} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} mark={mark} />
             )}
             {plot === "speed" && (
               <StudioBars
                 rows={speedRows} kind={speedChart === "dots" ? "dot" : "bar"} scale={speedChart === "dots" ? "log" : "linear"} sort={speedChart === "throughput" ? "desc" : "asc"}
                 axis={speedChart === "throughput" ? "sequential documents per hour (3,600,000 ÷ median ms per document)" : `median latency per document${speedChart === "dots" ? " (log)" : ""}`}
-                fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos} textScale={ts}
+                fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos} textScale={ts} mark={mark}
               />
             )}
             {plot === "stability" && (
               <StudioBars
                 rows={stabRows} kind={stabChart === "dots" ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? agreeDomain : undefined}
                 axis={stabChart === "agree" ? `agreement: probability two identical runs give the same decision${stabSetting === "t0" ? " · temperature 0" : ""}` : `probability two identical runs disagree${stabSetting === "t0" ? " · temperature 0" : ""}`}
-                fmtTick={fmtPctTick} logos={logos} textScale={ts}
+                fmtTick={fmtPctTick} logos={logos} textScale={ts} mark={mark}
               />
             )}
             {legend && legendLines.length > 0 && (

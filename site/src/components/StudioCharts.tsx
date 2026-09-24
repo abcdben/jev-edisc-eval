@@ -1,7 +1,7 @@
 import { useMemo, useRef } from "react";
 import type { CI } from "../data";
 import { LogoGlyph, logoFor } from "../logos";
-import { LEADER_STYLE, LEGEND_GAP, Legend, axisMargins, leaderFor, legendLayout, type LabelsMode } from "./PRScatter";
+import { GLYPH_SCALE, LEADER_STYLE, LEGEND_GAP, Legend, Mark, axisMargins, leaderFor, legendLayout, type LabelsMode, type MarkShape } from "./PRScatter";
 import { DECIDER_TEXT, useSize, useWidth } from "./ui";
 
 /**
@@ -17,8 +17,6 @@ export type StudioRow = { id: string; name: string; color: string; value: number
 const ROW0 = 30, TOP0 = 8;
 /** Stroke widths and mark radii read the studio's high-contrast variables (styles.css .studio-plot[data-contrast="high"]); unset, they are the defaults given here. */
 const SW = (base: number) => ({ strokeWidth: `calc(${base} * var(--sw-mult, 1))` });
-const R = (base: number) => ({ r: `calc(${base}px + var(--r-add, 0px))` } as React.CSSProperties);
-
 /** `nice` step for a linear axis with about five ticks. */
 function linTicks(d0: number, d1: number): number[] {
   const span = d1 - d0;
@@ -48,8 +46,9 @@ function logTicks(d0: number, d1: number): number[] {
  * `sort`: ascending, descending or the given order; rows without a value sink to the bottom in muted ink (or pass them filtered out).
  * The width follows the host; the height follows the rows (the studio panel's `auto` mode).
  * `textScale` (the studio's Text control) multiplies every font size and, with it, the row height, the label and value columns and the axis area.
+ * `mark` (the studio's Marks control) is the dot plot's point shape (PRScatter.tsx Mark).
  */
-export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort = "asc", axis, fmtTick, logos = true, labelW, textScale = 1 }: { rows: StudioRow[]; kind?: "bar" | "dot"; scale?: "linear" | "log"; domain?: [number, number]; sort?: "asc" | "desc" | "none"; axis: string; fmtTick: (v: number) => string; logos?: boolean; labelW?: number; textScale?: number }) {
+export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort = "asc", axis, fmtTick, logos = true, labelW, textScale = 1, mark = "dot" }: { rows: StudioRow[]; kind?: "bar" | "dot"; scale?: "linear" | "log"; domain?: [number, number]; sort?: "asc" | "desc" | "none"; axis: string; fmtTick: (v: number) => string; logos?: boolean; labelW?: number; textScale?: number; mark?: MarkShape }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const W = useWidth(hostRef, 900);
   const s = textScale, ROW = ROW0 * s, TOP = TOP0 * s;
@@ -129,7 +128,7 @@ export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort 
               ) : (
                 <>
                   {xhi - xlo > 0.5 && <line x1={xlo} x2={xhi} y1={cy} y2={cy} stroke={r.color} strokeWidth={1.75} style={SW(1.75)} />}
-                  <circle cx={xv} cy={cy} r={4.5} fill={r.color} style={R(4.5)} />
+                  <Mark shape={mark} cx={xv} cy={cy} r={4.5} color={r.color} />
                 </>
               )}
               <text x={end} y={cy + 4.5 * s} fontSize={12 * s} fill="var(--ink)" className="mono">{r.label}</text>
@@ -153,8 +152,8 @@ export type StudioScatterPt = { id: string; name: string; color: string; x: numb
 
 const PR = 24, PT = 18;
 
-/** Cost (log x) against recall (y, 95% whisker). Sized to the host's box like PRScatter's `fill` mode (host must be positioned). `leaders` and `labels` as on PRScatter: a hairline from a displaced label to its mark; or a legend row at the top instead of point labels. */
-export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = true, emptyText = "Select at least one model.", textScale = 1, leaders = false, labels: labelsMode = "beside" }: { pts: StudioScatterPt[]; xLabel: string; yLabel?: string; fmtX: (v: number) => string; logos?: boolean; emptyText?: string; textScale?: number; leaders?: boolean; labels?: LabelsMode }) {
+/** Cost (log x) against recall (y, 95% whisker). Sized to the host's box like PRScatter's `fill` mode (host must be positioned). `leaders`, `labels`, `mark` and `markSize` as on PRScatter: a hairline from a displaced label to its mark; a legend row at the top instead of point labels; the point shape and the Mark size multiplier the label placement allows for. */
+export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = true, emptyText = "Select at least one model.", textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1 }: { pts: StudioScatterPt[]; xLabel: string; yLabel?: string; fmtX: (v: number) => string; logos?: boolean; emptyText?: string; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const sz = useSize(hostRef, { w: 900, h: 520 });
   const W = sz.w, H = Math.max(300, sz.h);
@@ -174,13 +173,16 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
   const top = labelsMode === "legend" ? Math.max(PT, LEGEND_Y + legendH + LEGEND_GAP * s) : PT;
   const X = (v: number) => PL + ((Math.log10(v) - Math.log10(xd[0])) / (Math.log10(xd[1]) - Math.log10(xd[0]) || 1)) * (W - PL - PR);
   const Y = (v: number) => top + (1 - (v - yd[0]) / (yd[1] - yd[0] || 1)) * (H - top - PB);
+  // mark radius as drawn (glyph half-size or dot radius × the Mark size) and the beside-the-mark label offset, grown with the mark (PRScatter does the same)
+  const markR = (p: StudioScatterPt) => (logos && logoFor(p.id) ? 6.5 : 4) * markSize;
+  const grow = Math.max(0, 6.5 * markSize - 6.5), O = 11 * s + grow, avoid = 6 + grow;
   // labels: right of the mark, else left, above, below; skipped when nothing fits
   const placed: { x: number; y: number; w: number; h: number }[] = [];
   const dots = drawn.map((p) => ({ x: X(p.x), y: Y(p.y[0]) }));
-  const clash = (a: { x: number; y: number; w: number; h: number }) => placed.some((b) => a.x < b.x + b.w + 2 && a.x + a.w + 2 > b.x && a.y < b.y + b.h + 1 && a.y + a.h + 1 > b.y) || dots.some((d) => d.x > a.x - 6 && d.x < a.x + a.w + 6 && d.y > a.y - 6 && d.y < a.y + a.h + 6);
+  const clash = (a: { x: number; y: number; w: number; h: number }) => placed.some((b) => a.x < b.x + b.w + 2 && a.x + a.w + 2 > b.x && a.y < b.y + b.h + 1 && a.y + a.h + 1 > b.y) || dots.some((d) => d.x > a.x - avoid && d.x < a.x + a.w + avoid && d.y > a.y - avoid && d.y < a.y + a.h + avoid);
   const labels = drawn.map((p, i) => {
     if (labelsMode === "legend") return null;
-    const text = `${p.name}${p.subset ? " *" : ""}`, w = text.length * 6.6 * s + 4, h = 14 * s, o = 11 * s, { x, y } = dots[i];
+    const text = `${p.name}${p.subset ? " *" : ""}`, w = text.length * 6.6 * s + 4, h = 14 * s, o = O, { x, y } = dots[i];
     const cands = [{ x: x + o, y: y - h / 2 }, { x: x - o - w, y: y - h / 2 }, { x: x - w / 2, y: y - 14 * s - h }, { x: x - w / 2, y: y + 14 * s }];
     const c = cands.find((cc) => cc.x >= PL && cc.x + w <= W - 2 && cc.y >= 0 && !clash({ ...cc, w, h }));
     if (c) placed.push({ ...c, w, h });
@@ -207,13 +209,13 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
         </g>
         <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
         <text x={titleX} y={(top + H - PB) / 2} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(top + H - PB) / 2})`}>{yLabel}</text>
-        {labelsMode === "legend" && <Legend items={legendItems} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} />}
+        {labelsMode === "legend" && <Legend items={legendItems} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={logos ? "square-swatch" : mark} />}
         {/* leader lines: before every whisker, mark and label, so none crosses them */}
         {leaders && labelsMode === "beside" && drawn.map((p, i) => {
           const l = labels[i];
           if (!l) return null;
           const { x, y } = dots[i];
-          const ld = leaderFor({ x: l.x - x, y: l.y - y, w: l.w, h: l.h }, logos && logoFor(p.id) ? 6.5 : 4, 11 * s);
+          const ld = leaderFor({ x: l.x - x, y: l.y - y, w: l.w, h: l.h }, markR(p), O);
           return ld && <line key={`l${p.id}`} className="pr-leader" x1={x + ld.x1} y1={y + ld.y1} x2={x + ld.x2} y2={y + ld.y2} stroke={p.color} strokeOpacity={0.7} style={LEADER_STYLE} />;
         })}
         {drawn.map((p, i) => {
@@ -226,7 +228,7 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
                 <line x1={x - 4} x2={x + 4} y1={y1} y2={y1} />
                 <line x1={x - 4} x2={x + 4} y1={y2} y2={y2} />
               </g>
-              {logos && logoFor(p.id) ? <g color={p.color} style={{ transform: "scale(var(--mark-scale, 1))", transformOrigin: `${x}px ${y}px` }}><LogoGlyph model={p.id} cx={x} cy={y} size={13} /></g> : <circle cx={x} cy={y} r={4} fill={p.color} style={R(4)} />}
+              {logos && logoFor(p.id) ? <g color={p.color} style={{ transform: GLYPH_SCALE, transformOrigin: `${x}px ${y}px` }}><LogoGlyph model={p.id} cx={x} cy={y} size={13} /></g> : <Mark shape={mark} cx={x} cy={y} r={4} color={p.color} />}
               {l && <text x={l.x} y={l.y + 10.5 * s} fontSize={11.5 * s} fill="var(--ink)" className="nm" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round" }}>{l.text}</text>}
             </g>
           );
