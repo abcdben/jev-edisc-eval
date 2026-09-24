@@ -30,6 +30,32 @@ export function axisMargins(yTickLabels: string[], s: number) {
   return { PL, PB, titleX };
 }
 
+/**
+ * Leader line (the studio's Leaders control, `leaders` on PRScatter and StudioScatter) from a label the placement pushed away from its mark back to
+ * the mark. Everything is relative to the mark's centre: `l` is the label's box, `r` the mark's radius (dot, or half the vendor glyph), `o` the
+ * chart's beside-the-mark offset (the gap its default slot leaves between the centre and the label's near edge; 9 × text scale on PRScatter,
+ * about 6 px clear of a 3.2 px dot). The label is *adjacent*, and gets no line, when its nearest point is within `o + 1` of the centre: the
+ * default slot on either side and the diagonal slots (whose near corner is closer still). The centred above/below slots (11 s) and the far slots
+ * (22 s up or down the side) are displaced. The line runs from the midpoint of the label's edge facing the mark and stops `r + 1` short of the
+ * centre so it never enters the mark.
+ */
+export function leaderFor(l: { x: number; y: number; w: number; h: number }, r: number, o: number): { x1: number; y1: number; x2: number; y2: number } | null {
+  let ex: number, ey: number;
+  if (l.x > 0) { ex = l.x; ey = l.y + l.h / 2; }
+  else if (l.x + l.w < 0) { ex = l.x + l.w; ey = l.y + l.h / 2; }
+  else if (l.y > 0) { ex = l.x + l.w / 2; ey = l.y; }
+  else if (l.y + l.h < 0) { ex = l.x + l.w / 2; ey = l.y + l.h; }
+  else return null; // the mark is inside the label's box
+  const nx = Math.min(Math.max(0, l.x), l.x + l.w), ny = Math.min(Math.max(0, l.y), l.y + l.h); // nearest point of the box to the centre
+  if (Math.hypot(nx, ny) <= o + 1) return null;
+  const d = Math.hypot(ex, ey);
+  if (d <= r + 1) return null;
+  const k = (r + 1) / d;
+  return { x1: ex, y1: ey, x2: ex * k, y2: ey * k };
+}
+/** The leader's stroke: a 0.75 px hairline that the high-contrast block multiplies (--sw-mult); its opacity is the `stroke-opacity` attribute, so CSS (`.pr-leader`) can raise it. */
+export const LEADER_STYLE = { strokeWidth: "calc(0.75 * var(--sw-mult, 1))" } as const;
+
 function niceTicks(lo: number, hi: number): number[] {
   const span = hi - lo;
   const step = span > 0.6 ? 0.2 : span > 0.3 ? 0.1 : span > 0.12 ? 0.05 : span > 0.06 ? 0.02 : 0.01;
@@ -49,8 +75,9 @@ const PULSE_CYCLES = 2, PULSE_CYCLE_MS = 650;
 /** `pulse` lets the interval boxes of decider items (`decider: true`) breathe for a few cycles whenever the plot loads or its set of points changes: a fill-opacity cycle (styles.css .pr-box.pulse) on the shaded box only, never the mark or label; a highlighted box keeps its steady deeper fill instead. Off by default and under prefers-reduced-motion. */
 /** `domain` (the screenshot studio) fixes both axes to explicit 0–1 ranges, overriding `zoom`. */
 /** `textScale` (the studio's Text control; 1 on the site) multiplies every font size, the label-placement estimates and the margins that hold tick labels. Axis stroke width, dot radius and the vendor-glyph size read the --sw-mult / --r-add / --mark-scale CSS variables (styles.css, the studio's high-contrast block; unset on the site). */
+/** `leaders` (the studio's Leaders control; off on the site) draws a hairline from each displaced label back to its mark (leaderFor), under every mark and label. */
 export type PRDomain = { x: [number, number]; y: [number, number] };
-export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1 }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number }) {
+export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickMark = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const sz = useSize(hostRef, { w: 760, h: height });
@@ -110,7 +137,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
       const c = cands.find((cc) => cc.x >= PL && cc.x + w <= W - 2 && cc.y >= 0 && !overlaps({ ...cc, w, h }));
       if (!c) return null;
       placed.push({ ...c, w, h });
-      return { ...c, w, text: p.name + (p.subset ? " *" : "") };
+      return { ...c, w, h, text: p.name + (p.subset ? " *" : "") };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pts, dom, W, H, s]);
@@ -169,6 +196,19 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
               <rect key={`${p.id}:${sig}`} className={pulsing && p.decider && hl !== p.id ? "pr-box pulse" : "pr-box"} x={g(p.id, "x0")} y={g(p.id, "y0")} width={g(p.id, "w")} height={g(p.id, "h")} fill={p.color} stroke={p.color} strokeWidth={0.75} style={{ fillOpacity: hl === p.id ? 0.35 : "var(--box-alpha)", strokeOpacity: "var(--box-stroke, 0)", transition: "fill-opacity 120ms" }} rx={1} />
             </g>
             </g>
+            </g>
+          );
+        })}
+        {/* leader lines (studio): drawn after every box and before every mark and label, so none crosses a mark or a label */}
+        {leaders && drawn.map((p) => {
+          const li = pts.indexOf(p), l0 = li >= 0 ? labels[li] : null;
+          if (!l0) return null;
+          const tx = X(p.recall[0]), ty = Y(p.precision[0]);
+          const ld = leaderFor({ x: l0.x - tx, y: l0.y - ty, w: l0.w, h: l0.h }, logos && logoFor(p.id) ? glyph(p) / 2 : 3.2, 9 * s);
+          if (!ld) return null;
+          return (
+            <g key={`l${p.id}`} className="fd" style={fadeStyle(stateOf[p.id] ?? "exit")} transform={`translate(${g(p.id, "x")} ${g(p.id, "y")})`}>
+              <line className="pr-leader" x1={ld.x1} y1={ld.y1} x2={ld.x2} y2={ld.y2} stroke={p.color} strokeOpacity={0.7} style={LEADER_STYLE} />
             </g>
           );
         })}

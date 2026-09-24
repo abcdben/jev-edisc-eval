@@ -608,6 +608,8 @@ svg text { user-select: none; font-family: var(--sans); }
    (display: contents, so the stage lays out as before) and reach the panel by inheritance, where the presets' consumers and the [data-contrast="high"]
    block read them unchanged. The editor row: a hex/CSS text field beside each swatch, the alpha sliders, the font field and the Import/Export buttons. */
 .studio-scheme { display: contents; }
+/* the stage paints the scheme's page colour (--bg, set inline on it by StudioPage.tsx) behind the panel while Custom is on; body keeps the theme's */
+.studio-stage.custom { background: var(--bg); padding: 18px 18px 12px; border-radius: 8px; }
 .studio-swatch input.hex { width: 82px; font: inherit; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--ink); background: var(--panel); border: 1px solid var(--line-2); border-radius: 6px; padding: 3px 6px; }
 .studio-size input.name { width: 150px; font-variant-numeric: normal; }
 .studio-size input.font { width: 320px; font-variant-numeric: normal; font-size: 12px; }
@@ -706,6 +708,7 @@ label.studio-btn { display: inline-block; }
 .studio-plot[data-contrast="high"] svg text { font-weight: 500 !important; }
 .studio-plot[data-contrast="high"] svg text.nm, .studio-plot[data-contrast="high"] svg text.mono, .studio-plot[data-contrast="high"] svg text.ax { font-weight: 600 !important; }
 .studio-plot[data-contrast="high"] .legend-note { color: var(--ink); font-weight: 500; }
+.studio-plot[data-contrast="high"] .pr-leader { stroke-opacity: 1; } /* leader lines (Leaders control) at full strength; their width already follows --sw-mult */
 /* Journal keeps its gridless figure; the other presets keep their dotted / hairline grids, just darker. */
 .studio-plot[data-style="journal"][data-contrast="high"] { --grid: transparent; --dots: transparent; }
 

@@ -43,14 +43,15 @@ const STYLES: { id: PlotStyle; label: string; title: string }[] = [
 const isPlotStyle = (s: string | null): s is PlotStyle => STYLES.some((x) => x.id === s);
 
 /**
- * Custom scheme (Style → Custom): the panel variables every preset block defines, exposed in the editor row. Colours: the surface and ink set, then one
+ * Custom scheme (Style → Custom): the panel variables every preset block defines, exposed in the editor row, plus `--bg`, the page behind the panel
+ * (painted by the stage while Custom is on; the PNG export is the panel alone and never shows it). Colours: the surface and ink set, then one
  * per roster model through the custom property its colour is (data.ts ALL_PRIMARY `var(--…)`, palettes.ts varOf). Sliders: the interval-box fill and
  * outline alphas and the bar alpha. `--sans` is the panel face. A colour's text field takes any CSS colour (`transparent` for no grid included); the
  * native picker beside it shows the nearest hex.
  */
 type SchemeVar = { v: string; label: string };
 const SCHEME_SURFACE: SchemeVar[] = [
-  { v: "--panel", label: "panel" }, { v: "--ink", label: "ink" }, { v: "--ink-2", label: "ink 2" }, { v: "--ink-3", label: "ink 3" }, { v: "--ink-4", label: "ink 4" },
+  { v: "--bg", label: "page" }, { v: "--panel", label: "panel" }, { v: "--ink", label: "ink" }, { v: "--ink-2", label: "ink 2" }, { v: "--ink-3", label: "ink 3" }, { v: "--ink-4", label: "ink 4" },
   { v: "--line", label: "line" }, { v: "--line-2", label: "line 2" }, { v: "--grid", label: "grid" }, { v: "--dots", label: "dots" }, { v: "--axis", label: "axis" }, { v: "--hl", label: "highlight" },
 ];
 const SCHEME_MODELS: SchemeVar[] = Object.entries(PRIMARY_BY_KEY).flatMap(([k, m]) => { const v = varOf(k); return v ? [{ v, label: m.short }] : []; });
@@ -162,6 +163,9 @@ export default function StudioPage() {
   const [logos, setLogos] = useState(true);
   const [legend, setLegend] = useState(true);
   const [frame, setFrame] = useState(true);
+  // Leader lines (PRScatter.tsx / StudioCharts.tsx `leaders`): a hairline from a label the placement pushed away from its mark back to the mark.
+  const [leaders, setLeaders] = useState(() => localStorage.getItem("studio-leaders") === "on");
+  useEffect(() => { localStorage.setItem("studio-leaders", leaders ? "on" : "off"); }, [leaders]);
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "light");
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
   const [style, setStyle] = useState<PlotStyle>(() => { const s = localStorage.getItem("studio-style"); return isPlotStyle(s) ? s : "site"; });
@@ -470,9 +474,13 @@ export default function StudioPage() {
           <Seg value={legend ? "on" : "off"} onChange={(x) => setLegend(x === "on")} options={[{ id: "on", label: "legend" }, { id: "off", label: "no legend" }]} />
           <Seg value={logos ? "on" : "off"} onChange={(x) => setLogos(x === "on")} options={[{ id: "on", label: "logos" }, { id: "off", label: "names only" }]} />
         </Control>
+        {fills && (
+          <Control label="Leaders">
+            <Seg value={leaders ? "on" : "off"} onChange={(x) => setLeaders(x === "on")} options={[{ id: "off", label: "off" }, { id: "on", label: "on", title: "A hairline in the model's colour from a label the layout pushed away from its mark back to the mark; labels beside their mark get none" }]} />
+          </Control>
+        )}
         <Control label="Style">
           <Seg value={style} onChange={onStyle} options={STYLES.map((s) => ({ id: s.id, label: s.label, title: s.title }))} />
-          {style !== "site" && style !== "custom" && <span className="studio-hint small">{STYLES.find((s) => s.id === style)?.title}; ignores Dark/Light.</span>}
         </Control>
         {style === "custom" && (
           <Control label="Saved">
@@ -498,7 +506,6 @@ export default function StudioPage() {
               { id: "custom" as ColorMode, label: "custom", title: "Pick each model's colour; starts from the colours on screen" },
             ]}
           />
-          {colorMode !== "style" && colorMode !== "custom" && <span className="studio-hint small">{PALETTES.find((p) => p.id === colorMode)?.title}{darkPanel ? "; lifted for the dark panel" : ""}.</span>}
           {colorMode === "custom" && (
             <span className="studio-swatches">
               {sel.map((r) => {
@@ -581,7 +588,8 @@ export default function StudioPage() {
         </Control>
       </div>
 
-      <section className="section studio-stage">
+      {/* With Custom on, the stage paints the scheme's --bg behind the panel (styles.css .studio-stage.custom); body keeps the theme's. */}
+      <section className={`section studio-stage${style === "custom" ? " custom" : ""}`} style={style === "custom" && scheme["--bg"] ? ({ "--bg": scheme["--bg"] } as React.CSSProperties) : undefined}>
         {/* The custom scheme sits on this wrapper, not the panel: inline on the panel it would beat .studio-plot[data-contrast="high"], which must still recolour relative to --ink and --panel. */}
         <div className="studio-scheme" style={style === "custom" ? (scheme as React.CSSProperties) : undefined}>
           <div
@@ -593,13 +601,13 @@ export default function StudioPage() {
           >
             {plot === "pr" && chart === "map" && (
               <div className="studio-canvas">
-                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} />
+                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} />
               </div>
             )}
             {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} />}
             {plot === "cost" && costChart === "scatter" && (
               <div className="studio-canvas">
-                <StudioScatter pts={costPts} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} />
+                <StudioScatter pts={costPts} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} />
               </div>
             )}
             {plot === "cost" && costChart !== "scatter" && (

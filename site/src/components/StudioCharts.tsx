@@ -1,7 +1,7 @@
 import { useMemo, useRef } from "react";
 import type { CI } from "../data";
 import { LogoGlyph, logoFor } from "../logos";
-import { axisMargins } from "./PRScatter";
+import { LEADER_STYLE, axisMargins, leaderFor } from "./PRScatter";
 import { DECIDER_TEXT, useSize, useWidth } from "./ui";
 
 /**
@@ -153,8 +153,8 @@ export type StudioScatterPt = { id: string; name: string; color: string; x: numb
 
 const PR = 24, PT = 18;
 
-/** Cost (log x) against recall (y, 95% whisker). Sized to the host's box like PRScatter's `fill` mode (host must be positioned). */
-export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = true, emptyText = "Select at least one model.", textScale = 1 }: { pts: StudioScatterPt[]; xLabel: string; yLabel?: string; fmtX: (v: number) => string; logos?: boolean; emptyText?: string; textScale?: number }) {
+/** Cost (log x) against recall (y, 95% whisker). Sized to the host's box like PRScatter's `fill` mode (host must be positioned). `leaders` as on PRScatter: a hairline from a displaced label to its mark. */
+export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = true, emptyText = "Select at least one model.", textScale = 1, leaders = false }: { pts: StudioScatterPt[]; xLabel: string; yLabel?: string; fmtX: (v: number) => string; logos?: boolean; emptyText?: string; textScale?: number; leaders?: boolean }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const sz = useSize(hostRef, { w: 900, h: 520 });
   const W = sz.w, H = Math.max(300, sz.h);
@@ -180,7 +180,7 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
     const cands = [{ x: x + o, y: y - h / 2 }, { x: x - o - w, y: y - h / 2 }, { x: x - w / 2, y: y - 14 * s - h }, { x: x - w / 2, y: y + 14 * s }];
     const c = cands.find((cc) => cc.x >= PL && cc.x + w <= W - 2 && cc.y >= 0 && !clash({ ...cc, w, h }));
     if (c) placed.push({ ...c, w, h });
-    return c ? { ...c, text } : null;
+    return c ? { ...c, w, h, text } : null;
   });
   return (
     <div ref={hostRef} style={{ position: "absolute", inset: 0 }}>
@@ -203,6 +203,14 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
         </g>
         <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
         <text x={titleX} y={(PT + H - PB) / 2} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(PT + H - PB) / 2})`}>{yLabel}</text>
+        {/* leader lines: before every whisker, mark and label, so none crosses them */}
+        {leaders && drawn.map((p, i) => {
+          const l = labels[i];
+          if (!l) return null;
+          const { x, y } = dots[i];
+          const ld = leaderFor({ x: l.x - x, y: l.y - y, w: l.w, h: l.h }, logos && logoFor(p.id) ? 6.5 : 4, 11 * s);
+          return ld && <line key={`l${p.id}`} className="pr-leader" x1={x + ld.x1} y1={y + ld.y1} x2={x + ld.x2} y2={y + ld.y2} stroke={p.color} strokeOpacity={0.7} style={LEADER_STYLE} />;
+        })}
         {drawn.map((p, i) => {
           const x = X(p.x), y = Y(p.y[0]), y1 = Y(p.y[2]), y2 = Y(p.y[1]);
           const l = labels[i];
