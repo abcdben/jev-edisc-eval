@@ -11,6 +11,7 @@ import { Section, summarize, useSections } from "./components/Inspector";
 import type { PlotBg } from "./components/plotBg";
 import { copyPng, downloadBlob, renderPanelPng, slug, type ExportBackground } from "./exportPng";
 import { PALETTES, isPaletteId, toHex, toVars, varOf, type PaletteId } from "./palettes";
+import type { LogosMode } from "./logos";
 
 /**
  * Screenshot studio (studio.html → studio.tsx → this page; unlinked from the site): one Compare models chart alone, on a plain panel whose size
@@ -104,11 +105,26 @@ function SchemeColor({ v, label, value, onChange }: { v: string; label: string; 
   );
 }
 
-/** Mark sizes (Mark size control): the multiplier on every point mark and vendor glyph, written to the panel as --mark-user (PRScatter.tsx Mark, GLYPH_SCALE) and passed to the scatters so their label placement keeps clear of the larger mark. High contrast's own 1.3 (--mark-scale / --r-add) multiplies on top. */
+/** Mark sizes (Mark size control): the multiplier on every point mark and vendor glyph, written to the panel as --mark-user (PRScatter.tsx Mark, glyphScale) and passed to the scatters so their label placement keeps clear of the larger mark. High contrast's own 1.3 (--mark-scale / --r-add) multiplies on top. */
 type MarkSize = "s" | "m" | "l" | "xl";
 const MARK_SCALE: Record<MarkSize, number> = { s: 0.75, m: 1, l: 1.5, xl: 2.2 };
 const isMarkSize = (s: string | null): s is MarkSize => s != null && s in MARK_SCALE;
 const isMarkShape = (s: string | null): s is MarkShape => MARK_SHAPES.some((m) => m.id === s);
+/**
+ * Jev mark size (Jev mark size control): the Jev rows' own size (logos.tsx isJev; Laya and the LLMs keep the Mark size), the same steps plus 2XL, or
+ * `same`, the Mark size (the default, so nothing changes until it is set). Written to the panel as --mark-jev, an absolute factor the Jev marks and
+ * glyphs read in place of --mark-user (PRScatter.tsx Mark), and passed to the scatters as `jevMarkSize` for their label placement.
+ */
+type JevMarkSize = "same" | MarkSize | "xxl";
+const JEV_SCALE: Record<Exclude<JevMarkSize, "same">, number> = { ...MARK_SCALE, xxl: 3 };
+const isJevMarkSize = (s: string | null): s is JevMarkSize => s === "same" || (s != null && s in JEV_SCALE);
+/** Logos (Canvas → Panel): every item's vendor mark, the Jev rows' alone, or none (logos.tsx LogosMode). */
+const LOGOS_OPTIONS: { id: LogosMode; label: string; title: string }[] = [
+  { id: "all", label: "logos", title: "Every model's vendor mark: as the point mark on the map and cost scatter, before the name in the ranked and bar charts" },
+  { id: "jev", label: "Jev logos only", title: "The Jev rows keep their mark; the LLMs (and Laya) draw the plain mark shape and their name alone" },
+  { id: "none", label: "names only", title: "No vendor marks; every point is the Marks shape" },
+];
+const isLogosMode = (s: string | null): s is LogosMode => LOGOS_OPTIONS.some((o) => o.id === s);
 
 /** Text sizes: one factor on every font size in the panel (axis titles, ticks, names, values, point labels, legend note), passed to the charts as `textScale`, which also scales their label-width estimates and margins. M is the site's own size. */
 type TextSize = "s" | "m" | "l" | "xl";
@@ -178,7 +194,9 @@ export default function StudioPage() {
   const domain: PRDomain | undefined = axes === "custom" ? { x: span(ax.xlo, ax.xhi), y: span(ax.ylo, ax.yhi) } : undefined;
   const range: [number, number] | undefined = axes === "custom" ? span(ax.xlo, ax.xhi) : undefined;
   const zoom = axes === "zoom";
-  const [logos, setLogos] = useState(true);
+  // Logos (LOGOS_OPTIONS): `studio-logos`; `all` is what the studio always drew.
+  const [logos, setLogos] = useState<LogosMode>(() => { const s = localStorage.getItem("studio-logos"); return isLogosMode(s) ? s : "all"; });
+  useEffect(() => { localStorage.setItem("studio-logos", logos); }, [logos]);
   const [legend, setLegend] = useState(true);
   const [frame, setFrame] = useState(true);
   // Leader lines (PRScatter.tsx / StudioCharts.tsx `leaders`): a hairline from a label the placement pushed away from its mark back to the mark.
@@ -193,6 +211,10 @@ export default function StudioPage() {
   const [markSize, setMarkSize] = useState<MarkSize>(() => { const s = localStorage.getItem("studio-mark-scale"); return isMarkSize(s) ? s : "m"; });
   useEffect(() => { localStorage.setItem("studio-mark-scale", markSize); }, [markSize]);
   const ms = MARK_SCALE[markSize];
+  // Jev mark size (JevMarkSize): the Jev rows' factor; `same` follows the Mark size
+  const [jevSize, setJevSize] = useState<JevMarkSize>(() => { const s = localStorage.getItem("studio-jev-mark"); return isJevMarkSize(s) ? s : "same"; });
+  useEffect(() => { localStorage.setItem("studio-jev-mark", jevSize); }, [jevSize]);
+  const jms = jevSize === "same" ? ms : JEV_SCALE[jevSize];
   // Fill (components/hatch.tsx FillMode): how the map's 95% interval boxes and the Cost, Speed and Stability bars are drawn: filled, hatched, outline
   // only, or hatched inside an outline. One setting for whichever plot is shown; stored under the key the earlier Boxes control used.
   const [fillMode, setFillMode] = useState<FillMode>(() => { const s = localStorage.getItem("studio-boxes"); return isFillMode(s) ? s : "filled"; });
@@ -368,8 +390,8 @@ export default function StudioPage() {
   const inkPct = (darkPanel ? 13 : contrast === "high" ? 30 : 20) * (bg === "grid" ? 0.6 : 1);
   const bgVars: Record<string, string> = bg !== "auto" && bg !== "off" && !presetDots ? { "--plot-dots": `color-mix(in srgb, var(--ink) ${inkPct}%, transparent)` } : {};
   const legendText = (): string[] => {
-    // the note names the mark drawn at the point (Marks control); with logos on it keeps the site's wording
-    const what = logos || mark === "dot" ? "Dot" : mark === "x" ? "Cross" : mark[0].toUpperCase() + mark.slice(1);
+    // the note names the mark drawn at the point (Marks control); with every logo on it keeps the site's wording
+    const what = logos === "all" || mark === "dot" ? "Dot" : mark === "x" ? "Cross" : mark[0].toUpperCase() + mark.slice(1);
     const box = fillMode === "filled" ? "Shaded box" : fillMode === "hatched" ? "Hatched box" : fillMode === "outline" ? "Outlined box" : "Hatched, outlined box";
     if (plot === "pr") return chart === "map" ? [marks.boxes ? `${what}: point estimate. ${box}: 95% interval on recall (width) and precision (height).` : `${what}: point estimate.`] : [];
     if (plot === "cost") return barNote(costCaption(costChart, costUnit, costScale, marks.whiskers));
@@ -391,7 +413,7 @@ export default function StudioPage() {
   const exportSize = `${w * Number(exScale)} × ${fills ? h * Number(exScale) : "auto"} px`;
 
   // The sections' one-line summaries while closed (Inspector.tsx summarize): the values a closed section holds, in the order its controls come.
-  const markText = `${fills && logos ? "logos" : MARK_SHAPES.find((m) => m.id === mark)?.label} ${markSize.toUpperCase()}`;
+  const markText = `${fills && logos === "all" ? "logos" : MARK_SHAPES.find((m) => m.id === mark)?.label} ${markSize.toUpperCase()}${jevSize === "same" ? "" : ` · Jev ${jevSize === "xxl" ? "2XL" : jevSize.toUpperCase()}`}`;
   const chartSummary = summarize(
     plot === "pr" && chart, plot === "pr" && (axes === "full" ? "0–100%" : axes === "zoom" ? "fit to data" : `${ax.xlo}–${ax.xhi}%${chart === "map" ? ` × ${ax.ylo}–${ax.yhi}%` : ""}`),
     plot === "cost" && (costChart === "scatter" ? "cost vs recall" : costChart === "dots" ? "dots · log" : `bars · ${costScale}`), plot === "cost" && COST_UNIT[costUnit].axis,
@@ -399,7 +421,7 @@ export default function StudioPage() {
     plot === "stability" && (stabChart === "agree" ? "agreement · zoomed" : stabChart === "dots" ? "dots" : "disagreement bars"), plot === "stability" && (stabSetting === "t0" ? "t = 0" : "default sampling"), plot === "stability" && hideUnmeasured && "unmeasured hidden",
     markText, showFill && `${FILL_MODES.find((m) => m.id === fillMode)?.label} ${hasBars ? "bars" : "boxes"}`, fills && `labels ${labelsMode}`, fills && labelsMode === "beside" && leaders && "leaders",
   );
-  const canvasSummary = summarize(`${w} × ${fills ? h : "auto"} px`, frame ? "framed" : "plain", legend ? "legend" : "no legend", logos ? "logos" : "names only", BG_SUMMARY[bg]);
+  const canvasSummary = summarize(`${w} × ${fills ? h : "auto"} px`, frame ? "framed" : "plain", legend ? "legend" : "no legend", LOGOS_OPTIONS.find((o) => o.id === logos)?.label, BG_SUMMARY[bg]);
   const styleSummary = summarize(
     STYLES.find((s) => s.id === style)?.label, style === "custom" && schemeName.trim(),
     colorMode === "style" ? null : colorMode === "custom" ? "custom colours" : PALETTES.find((p) => p.id === colorMode)?.label, `Text ${text.toUpperCase()}`, `${contrast} contrast`,
@@ -511,15 +533,27 @@ export default function StudioPage() {
               </Control>
             </>
           )}
-          {/* the shape control steps aside where the vendor glyph is the mark (a scatter with logos on); the size control scales either */}
-          {!(fills && logos) && (
+          {/* the shape control steps aside where every point's mark is its vendor glyph (a scatter with all logos on); the size controls scale either */}
+          {!(fills && logos === "all") && (
             <Control label="Marks">
               <Seg value={mark} onChange={setMark} options={MARK_SHAPES.map((m) => ({ id: m.id, label: m.label }))} />
+              {fills && logos === "jev" && <span className="studio-hint small">the LLMs' mark; the Jev logos stay</span>}
             </Control>
           )}
           <Control label="Mark size">
             <Seg value={markSize} onChange={setMarkSize} options={[{ id: "s", label: "S", title: "0.75× the site's mark" }, { id: "m", label: "M", title: "The site's mark size" }, { id: "l", label: "L", title: "1.5×" }, { id: "xl", label: "XL", title: "2.2×, for logos inside wide interval boxes" }]} />
-            {fills && logos && <span className="studio-hint small" title="Switch Canvas → Panel to names only to choose a mark shape">logos are the marks</span>}
+            {fills && logos === "all" && <span className="studio-hint small" title="Switch Canvas → Panel to Jev logos only or names only to choose a mark shape">logos are the marks</span>}
+          </Control>
+          {/* the Jev rows' own size (JevMarkSize): their logo or mark alone, the LLMs' and Laya's untouched; `= marks` follows Mark size */}
+          <Control label="Jev mark size">
+            <Seg
+              value={jevSize} onChange={setJevSize}
+              options={[
+                { id: "same", label: "= marks", title: "The Jev rows' marks at the Mark size, like every other" },
+                { id: "s", label: "S", title: "Jev marks and logos at 0.75× the site's mark, whatever Mark size is" }, { id: "m", label: "M", title: "Jev marks at the site's size" },
+                { id: "l", label: "L", title: "1.5×" }, { id: "xl", label: "XL", title: "2.2×" }, { id: "xxl", label: "2XL", title: "3×, for a Jev logo that dominates its interval box" },
+              ]}
+            />
           </Control>
           {/* one Fill setting for the map's interval boxes and the bar charts' bars; hidden on the views with neither (ranked, dots, scatter) */}
           {showFill && (
@@ -557,7 +591,7 @@ export default function StudioPage() {
           <Control label="Panel">
             <Seg value={frame ? "card" : "plain"} onChange={(x) => setFrame(x === "card")} options={[{ id: "card", label: "framed" }, { id: "plain", label: "plain" }]} />
             <Seg value={legend ? "on" : "off"} onChange={(x) => setLegend(x === "on")} options={[{ id: "on", label: "legend" }, { id: "off", label: "no legend" }]} />
-            <Seg value={logos ? "on" : "off"} onChange={(x) => setLogos(x === "on")} options={[{ id: "on", label: "logos" }, { id: "off", label: "names only" }]} />
+            <Seg value={logos} onChange={setLogos} options={LOGOS_OPTIONS} />
           </Control>
           <Control label="Background">
             <Seg value={bg} onChange={setBg} options={BG_OPTIONS} />
@@ -680,17 +714,17 @@ export default function StudioPage() {
             className={`studio-plot${frame ? " framed" : ""}${fills ? "" : " auto"}`}
             data-style={style}
             data-contrast={contrast}
-            style={{ ...colorVars, ...sliderVars, ...bgVars, width: w, height: fills ? h : undefined, "--fs-legend": `${12 * ts}px`, "--mark-user": ms } as React.CSSProperties}
+            style={{ ...colorVars, ...sliderVars, ...bgVars, width: w, height: fills ? h : undefined, "--fs-legend": `${12 * ts}px`, "--mark-user": ms, "--mark-jev": jms } as React.CSSProperties}
           >
             {plot === "pr" && chart === "map" && (
               <div className="studio-canvas">
-                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} boxes={fillMode} bg={plotBg("dots")} />
+                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} boxes={fillMode} bg={plotBg("dots")} />
               </div>
             )}
             {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} mark={mark} bg={plotBg("dots")} />}
             {plot === "cost" && costChart === "scatter" && (
               <div className="studio-canvas">
-                <StudioScatter pts={costPts(sel, v, costUnit)} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} bg={plotBg("none")} />
+                <StudioScatter pts={costPts(sel, v, costUnit)} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} bg={plotBg("none")} />
               </div>
             )}
             {plot === "cost" && costChart !== "scatter" && (

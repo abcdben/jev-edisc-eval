@@ -1,7 +1,7 @@
 import { useId, useRef } from "react";
 import type { CI } from "../data";
 import { fmtPct, fmtRange } from "../data";
-import { Logo, LogoGlyph } from "../logos";
+import { Logo, LogoGlyph, isJev, logoShown, logosMode, type LogosMode } from "../logos";
 import type { MarkShape, PRItem } from "./PRScatter";
 import { Mark, NAME_CLS, prTip } from "./PRScatter";
 import { CLICK_HINT, DECIDER_TEXT, ROW_PULSE_MS, RowTint, TipBox, fadeStyle, selectable, usePresence, usePulseWindow, useTip, useTween, useWidth } from "./ui";
@@ -21,9 +21,12 @@ const ROW0 = 26, NUM_W0 = 54, RANGE_W0 = 52, RAIL = 3, RANK_W0 = 26, TOP0 = 20;
  */
 /** `range` (the screenshot studio) fixes both panels' axis to an explicit 0–1 range, overriding `zoom`. */
 /** `textScale` (the studio's Text control; 1 on the site) multiplies every font size and the row geometry (row height, label and value columns) with it. Whisker width and dot radius read --sw-mult / --r-add (styles.css, the studio's high-contrast block); `mark` (the studio's Marks control; `dot` on the site) is the point shape (PRScatter.tsx Mark). */
+/** `logos` (logos.tsx LogosMode, or the boolean it was; off on the site): which rows carry their vendor glyph before the name; in `jev` the name column keeps the glyph layout and only the Jev rows fill the slot. A Jev row's point marks read the studio's Jev mark size (--mark-jev). */
 /** `bg` (the studio's Background control; the site's dot matrix, `dots`) is the pattern behind each panel's rows (plotBg.tsx). */
-export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, onSelect, highlight, onHover, textScale = 1, mark = "dot", bg = "dots" }: { items: PRItem[]; zoom: boolean; range?: [number, number]; sortBy?: "recall" | "precision" | "f1"; logos?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; textScale?: number; mark?: MarkShape; bg?: PlotBg }) {
+export function PRRail({ items, zoom, range, sortBy = "recall", logos: logosIn, onSelect, highlight, onHover, textScale = 1, mark = "dot", bg = "dots" }: { items: PRItem[]; zoom: boolean; range?: [number, number]; sortBy?: "recall" | "precision" | "f1"; logos?: boolean | LogosMode; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; textScale?: number; mark?: MarkShape; bg?: PlotBg }) {
   const { tip, show, hide, hostRef } = useTip();
+  const logosOn = logosMode(logosIn, false), logos = logosOn !== "none";
+  const glyphOf = (r: PRItem) => logoShown(logosOn, r.id);
   const bgId = `bg-${useId().replace(/[^A-Za-z0-9_-]/g, "")}`;
   const pickRow = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const W = useWidth(hostRef, 760);
@@ -106,12 +109,12 @@ export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, o
             const top = lastTop.current.get(r.id) ?? TOP, y = ROW / 2, label = labelOf(r);
             return (
               <g key={r.id} className={`mv fd${highlight === r.id ? " hl" : ""}`} transform={`translate(0 ${top})`} style={fadeStyle(state)} {...hoverable(onHover, r.id)}>
-                <g onMouseMove={(e) => show(e, { kind: "row", top, height: ROW, clearX: W }, prTip(r, logos ? <Logo model={r.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
+                <g onMouseMove={(e) => show(e, { kind: "row", top, height: ROW, clearX: W }, prTip(r, glyphOf(r) ? <Logo model={r.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickRow, r, r.name)}>
                   {r.emphasis && <RowTint sig={sig} pulsing={pulsing} width={W} height={ROW} />}
                   <rect className="hit" x={0} y={0} width={W} height={ROW} fill="transparent" />
                   {logos ? (
                     <>
-                      <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={RANK_W + 12 * s} cy={y} size={13 * s} /></g>
+                      {glyphOf(r) && <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={RANK_W + 12 * s} cy={y} size={13 * s} /></g>}
                       <text x={RANK_W + 26 * s} y={y + 4 * s} fontSize={12 * s} fill="var(--ink-2)" className="nm" style={r.decider ? DECIDER_TEXT : undefined}>{label}</text>
                     </>
                   ) : (
@@ -121,7 +124,7 @@ export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, o
                     ci ? (
                       <g key={col}>
                         <line x1={g(`${r.id}:${col}:lo`)} x2={g(`${r.id}:${col}:hi`)} y1={y} y2={y} stroke={r.color} strokeWidth={1.5} style={{ strokeWidth: "calc(1.5 * var(--sw-mult, 1))" }} />
-                        <Mark shape={mark} cx={g(`${r.id}:${col}:v`)} cy={y} r={3.2} color={r.color} />
+                        <Mark shape={mark} cx={g(`${r.id}:${col}:v`)} cy={y} r={3.2} color={r.color} jev={isJev(r.id)} />
                         <text x={x0[col] + colW + NUM_W} y={y + 4 * s} textAnchor="end" fontSize={11.5 * s} fill="var(--ink)" className="mono">{fmtPct(ci[0])}</text>
                         <text x={x0[col] + colW + NUMS - 2} y={y + 4 * s} textAnchor="end" fontSize={10.5 * s} fill="var(--ink-4)" className="mono">{fmtRange(ci)}</text>
                       </g>

@@ -1,7 +1,7 @@
 import { useId, useMemo, useRef, type CSSProperties } from "react";
 import type { CI } from "../data";
-import { LogoGlyph, logoFor } from "../logos";
-import { GLYPH_SCALE, LEADER_STYLE, LEGEND_CLS, LEGEND_GAP, Legend, Mark, NAME_CLS, axisMargins, leaderFor, legendLayout, type LabelsMode, type MarkShape } from "./PRScatter";
+import { LogoGlyph, isJev, logoFor, logoShown, logosMode, type LogosMode } from "../logos";
+import { LEADER_STYLE, LEGEND_CLS, LEGEND_GAP, Legend, Mark, NAME_CLS, axisMargins, glyphScale, leaderFor, legendLayout, legendSwatch, type LabelsMode, type MarkShape } from "./PRScatter";
 import { useTextMeasure } from "./measure";
 import { DECIDER_TEXT, selectable, useSize, useWidth } from "./ui";
 import { PlotBgPattern, type PlotBg } from "./plotBg";
@@ -56,7 +56,9 @@ function logTicks(d0: number, d1: number): number[] {
  * `sort`: ascending, descending or the given order; rows without a value sink to the bottom in muted ink (or pass them filtered out).
  * The width follows the host; the height follows the rows (the studio panel's `auto` mode).
  * `textScale` (the studio's Text control) multiplies every font size and, with it, the row height, the label and value columns and the axis area.
- * `mark` (the studio's Marks control) is the dot plot's point shape (PRScatter.tsx Mark).
+ * `mark` (the studio's Marks control) is the dot plot's point shape (PRScatter.tsx Mark; a Jev row's reads the Jev mark size, --mark-jev).
+ * `logos` (logos.tsx LogosMode, or the boolean it was): which rows carry their vendor glyph before the name; in `jev` the name column keeps the glyph
+ * layout (names left-aligned after the glyph slot) and only the Jev rows fill the slot, so the LLM rows read as name-only rows in the same table.
  * `onSelect` (the dashboard's B variant, AppB.tsx; the studio passes none) makes each row a button that opens the details modal for its id: a transparent
  * full-width hit rect behind the row tints on hover (styles.css `.sel .hit`), Enter and Space work (ui.tsx selectable). Without it the rows are inert, as in the studio.
  * `bg` (the studio's Background control; none by default) is a pattern behind the bar area, under the gridlines (plotBg.tsx).
@@ -64,8 +66,10 @@ function logTicks(d0: number, d1: number): number[] {
  * row's colour at 3 × --bar-alpha (capped at 1) inside a hairline edge; the edge alone, --box-stroke-w px wide; or the hatch inside that edge. The
  * whisker gets a panel-colour halo over a hatched bar so its ink line stays legible across the hatch lines; the figures sit clear of the bar either way.
  */
-export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort = "asc", axis, fmtTick, logos = true, labelW, textScale = 1, mark = "dot", onSelect, bg = "none", bars: barMode = "filled" }: { rows: StudioRow[]; kind?: "bar" | "dot"; scale?: "linear" | "log"; domain?: [number, number]; sort?: "asc" | "desc" | "none"; axis: string; fmtTick: (v: number) => string; logos?: boolean; labelW?: number; textScale?: number; mark?: MarkShape; onSelect?: (id: string) => void; bg?: PlotBg; bars?: FillMode }) {
+export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort = "asc", axis, fmtTick, logos: logosIn, labelW, textScale = 1, mark = "dot", onSelect, bg = "none", bars: barMode = "filled" }: { rows: StudioRow[]; kind?: "bar" | "dot"; scale?: "linear" | "log"; domain?: [number, number]; sort?: "asc" | "desc" | "none"; axis: string; fmtTick: (v: number) => string; logos?: boolean | LogosMode; labelW?: number; textScale?: number; mark?: MarkShape; onSelect?: (id: string) => void; bg?: PlotBg; bars?: FillMode }) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const logosOn = logosMode(logosIn, true), logos = logosOn !== "none";
+  const glyphOf = (r: StudioRow) => logoShown(logosOn, r.id);
   const bgId = useBgId();
   const hatched = kind === "bar" && isHatched(barMode), outlined = kind === "bar" && isOutlined(barMode);
   const hatchId = useHatchIds();
@@ -133,7 +137,7 @@ export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort 
             return (
               <g key={r.id} {...sel}>
                 {hit}
-                {logos && <g color="var(--ink-4)"><LogoGlyph model={r.id} cx={12 * s} cy={cy} size={14 * s} opacity={0.6} /></g>}
+                {glyphOf(r) && <g color="var(--ink-4)"><LogoGlyph model={r.id} cx={12 * s} cy={cy} size={14 * s} opacity={0.6} /></g>}
                 <text x={nameX} y={cy + 4.5 * s} fontSize={12.5 * s} textAnchor={logos ? "start" : "end"} fill="var(--ink-4)" className="nm">{label}</text>
                 <text x={x0 + 8 * s} y={cy + 4.5 * s} fontSize={11.5 * s} fill="var(--ink-4)">{r.empty ?? "not measured"}</text>
               </g>
@@ -152,7 +156,7 @@ export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort 
           return (
             <g key={r.id} {...sel}>
               {hit}
-              {logos && <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={12 * s} cy={cy} size={14 * s} /></g>}
+              {glyphOf(r) && <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={12 * s} cy={cy} size={14 * s} /></g>}
               <text x={nameX} y={cy + 4.5 * s} fontSize={12.5 * s} textAnchor={logos ? "start" : "end"} fill="var(--ink-2)" className="nm" style={r.decider ? DECIDER_TEXT : undefined}>{label}</text>
               {kind === "bar" ? (
                 <>
@@ -178,7 +182,7 @@ export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort 
               ) : (
                 <>
                   {xhi - xlo > 0.5 && <line x1={xlo} x2={xhi} y1={cy} y2={cy} stroke={r.color} strokeWidth={1.75} style={SW(1.75)} />}
-                  <Mark shape={mark} cx={xv} cy={cy} r={4.5} color={r.color} />
+                  <Mark shape={mark} cx={xv} cy={cy} r={4.5} color={r.color} jev={isJev(r.id)} />
                 </>
               )}
               <text x={end} y={cy + 4.5 * s} fontSize={12 * s} fill="var(--ink)" className="mono">{r.label}</text>
@@ -203,9 +207,11 @@ export type StudioScatterPt = { id: string; name: string; color: string; x: numb
 
 const PR = 24, PT = 18;
 
-/** Cost (log x) against recall (y, 95% whisker). Sized to the host's box like PRScatter's `fill` mode (host must be positioned). `leaders`, `labels`, `mark` and `markSize` as on PRScatter: a hairline from a displaced label to its mark; a legend row at the top instead of point labels; the point shape and the Mark size multiplier the label placement allows for. `onSelect` (AppB.tsx) makes each mark a button opening the details modal for its id; the studio passes none. */
-export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = true, emptyText = "Select at least one model.", textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, onSelect, bg = "none" }: { pts: StudioScatterPt[]; xLabel: string; yLabel?: string; fmtX: (v: number) => string; logos?: boolean; emptyText?: string; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; onSelect?: (id: string) => void; bg?: PlotBg }) {
+/** Cost (log x) against recall (y, 95% whisker). Sized to the host's box like PRScatter's `fill` mode (host must be positioned). `logos`, `leaders`, `labels`, `mark`, `markSize` and `jevMarkSize` as on PRScatter: which items get their vendor glyph as the mark; a hairline from a displaced label to its mark; a legend row at the top instead of point labels; the point shape, and the Mark size and Jev mark size multipliers the label placement allows for. `onSelect` (AppB.tsx) makes each mark a button opening the details modal for its id; the studio passes none. */
+export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos: logosIn, emptyText = "Select at least one model.", textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, onSelect, bg = "none" }: { pts: StudioScatterPt[]; xLabel: string; yLabel?: string; fmtX: (v: number) => string; logos?: boolean | LogosMode; emptyText?: string; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; onSelect?: (id: string) => void; bg?: PlotBg }) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const logos = logosMode(logosIn, true);
+  const hasLogo = (p: StudioScatterPt) => logoShown(logos, p.id) && !!logoFor(p.id);
   const bgId = useBgId();
   const sz = useSize(hostRef, { w: 900, h: 520 });
   const W = sz.w, H = Math.max(300, sz.h);
@@ -226,16 +232,18 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
   const top = labelsMode === "legend" ? Math.max(PT, LEGEND_Y + legendH + LEGEND_GAP * s) : PT;
   const X = (v: number) => PL + ((Math.log10(v) - Math.log10(xd[0])) / (Math.log10(xd[1]) - Math.log10(xd[0]) || 1)) * (W - PL - PR);
   const Y = (v: number) => top + (1 - (v - yd[0]) / (yd[1] - yd[0] || 1)) * (H - top - PB);
-  // mark radius as drawn (glyph half-size or dot radius × the Mark size) and the beside-the-mark label offset, grown with the mark (PRScatter does the same)
-  const markR = (p: StudioScatterPt) => (logos && logoFor(p.id) ? 6.5 : 4) * markSize;
-  const grow = Math.max(0, 6.5 * markSize - 6.5), O = 11 * s + grow, avoid = 6 + grow;
+  // per item: its size factor (the Jev mark size for a Jev row, else the Mark size), the mark radius as drawn (glyph half-size or dot radius × that) and the
+  // beside-the-mark label offset, grown with the mark (PRScatter does the same); the placement keeps clear of each dot by its own grown pad
+  const sizeOf = (p: StudioScatterPt) => (isJev(p.id) ? jevMarkSize : markSize);
+  const markR = (p: StudioScatterPt) => (hasLogo(p) ? 6.5 : 4) * sizeOf(p);
+  const growOf = (p: StudioScatterPt) => Math.max(0, 6.5 * sizeOf(p) - 6.5), O = (p: StudioScatterPt) => 11 * s + growOf(p);
   // labels: right of the mark, else left, above, below; skipped when nothing fits
   const placed: { x: number; y: number; w: number; h: number }[] = [];
-  const dots = drawn.map((p) => ({ x: X(p.x), y: Y(p.y[0]) }));
-  const clash = (a: { x: number; y: number; w: number; h: number }) => placed.some((b) => a.x < b.x + b.w + 2 && a.x + a.w + 2 > b.x && a.y < b.y + b.h + 1 && a.y + a.h + 1 > b.y) || dots.some((d) => d.x > a.x - avoid && d.x < a.x + a.w + avoid && d.y > a.y - avoid && d.y < a.y + a.h + avoid);
+  const dots = drawn.map((p) => ({ x: X(p.x), y: Y(p.y[0]), avoid: 6 + growOf(p) }));
+  const clash = (a: { x: number; y: number; w: number; h: number }) => placed.some((b) => a.x < b.x + b.w + 2 && a.x + a.w + 2 > b.x && a.y < b.y + b.h + 1 && a.y + a.h + 1 > b.y) || dots.some((d) => d.x > a.x - d.avoid && d.x < a.x + a.w + d.avoid && d.y > a.y - d.avoid && d.y < a.y + a.h + d.avoid);
   const labels = drawn.map((p, i) => {
     if (labelsMode === "legend") return null;
-    const text = `${p.name}${p.subset ? " *" : ""}`, w = measure(text, 11.5 * s, NAME_CLS) + 4, h = 14 * s, o = O, { x, y } = dots[i];
+    const text = `${p.name}${p.subset ? " *" : ""}`, w = measure(text, 11.5 * s, NAME_CLS) + 4, h = 14 * s, o = O(p), { x, y } = dots[i];
     const cands = [{ x: x + o, y: y - h / 2 }, { x: x - o - w, y: y - h / 2 }, { x: x - w / 2, y: y - 14 * s - h }, { x: x - w / 2, y: y + 14 * s }];
     const c = cands.find((cc) => cc.x >= PL && cc.x + w <= W - 2 && cc.y >= 0 && !clash({ ...cc, w, h }));
     if (c) placed.push({ ...c, w, h });
@@ -264,14 +272,14 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
         </g>
         <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
         <text x={titleX} y={(top + H - PB) / 2} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(top + H - PB) / 2})`}>{yLabel}</text>
-        {labelsMode === "legend" && <Legend items={legendItems} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={logos ? "square-swatch" : mark} measure={measure} />}
+        {labelsMode === "legend" && <Legend items={legendItems} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={legendSwatch(logos, mark)} measure={measure} />}
         {probes}
         {/* leader lines: before every whisker, mark and label, so none crosses them */}
         {leaders && labelsMode === "beside" && drawn.map((p, i) => {
           const l = labels[i];
           if (!l) return null;
           const { x, y } = dots[i];
-          const ld = leaderFor({ x: l.x - x, y: l.y - y, w: l.w, h: l.h }, markR(p), O);
+          const ld = leaderFor({ x: l.x - x, y: l.y - y, w: l.w, h: l.h }, markR(p), O(p));
           return ld && <line key={`l${p.id}`} className="pr-leader" x1={x + ld.x1} y1={y + ld.y1} x2={x + ld.x2} y2={y + ld.y2} stroke={p.color} strokeOpacity={0.7} style={LEADER_STYLE} />;
         })}
         {drawn.map((p, i) => {
@@ -284,7 +292,7 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
                 <line x1={x - 4} x2={x + 4} y1={y1} y2={y1} />
                 <line x1={x - 4} x2={x + 4} y1={y2} y2={y2} />
               </g>
-              {logos && logoFor(p.id) ? <g color={p.color} style={{ transform: GLYPH_SCALE, transformOrigin: `${x}px ${y}px` }}><LogoGlyph model={p.id} cx={x} cy={y} size={13} /></g> : <Mark shape={mark} cx={x} cy={y} r={4} color={p.color} />}
+              {hasLogo(p) ? <g color={p.color} style={{ transform: glyphScale(isJev(p.id)), transformOrigin: `${x}px ${y}px` }}><LogoGlyph model={p.id} cx={x} cy={y} size={13} /></g> : <Mark shape={mark} cx={x} cy={y} r={4} color={p.color} jev={isJev(p.id)} />}
               {l && <text x={l.x} y={l.y + 10.5 * s} fontSize={11.5 * s} fill="var(--ink)" className="nm" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round" }}>{l.text}</text>}
             </g>
           );

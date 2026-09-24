@@ -1,6 +1,6 @@
 import { useId, useMemo, type ReactNode } from "react";
 import { fmtCI, type CI } from "../data";
-import { Logo, LogoGlyph, logoFor } from "../logos";
+import { Logo, LogoGlyph, isJev, logoFor, logoShown, logosMode, type LogosMode } from "../logos";
 import { CLICK_HINT, TipBox, fadeStyle, selectable, usePresence, usePulseWindow, useSize, useTip, useTween, type TipContent } from "./ui";
 import { hoverable } from "./hover";
 import { useTextMeasure, type Measure } from "./measure";
@@ -68,14 +68,18 @@ export const LEADER_STYLE = { strokeWidth: "calc(0.75 * var(--sw-mult, 1))" } as
  *   square   filled, side 1.8 r, axis-aligned; diamond is the square turned 45°.
  * Two size multipliers compose on the mark as CSS transforms: --mark-user, the studio's Mark size control (set inline on the panel; 1 on the site),
  * and --mark-scale, the high-contrast block's 1.3 (the dot takes high contrast as --r-add instead, as it always has, so it is not counted twice).
- * The vendor glyph (logos on) is scaled by the same product where it is drawn. `fixed` draws at the base size, for legend swatches.
+ * A Jev item's mark (`jev`, logos.tsx isJev) reads --mark-jev in place of --mark-user: the studio's Jev mark size control (an absolute factor, set
+ * inline on the panel; unset it falls back to --mark-user, so the site and the control's "= marks" setting draw every mark alike).
+ * The vendor glyph (logos on) is scaled by the same product where it is drawn (glyphScale). `fixed` draws at the base size, for legend swatches.
  */
 export type MarkShape = "dot" | "plus" | "x" | "ring" | "square" | "diamond";
 export const MARK_SHAPES: { id: MarkShape; label: string }[] = [{ id: "dot", label: "dot" }, { id: "plus", label: "plus" }, { id: "x", label: "×" }, { id: "ring", label: "ring" }, { id: "square", label: "square" }, { id: "diamond", label: "diamond" }];
-/** The CSS transform that sizes a vendor glyph: the studio's Mark size × the high-contrast enlargement. */
-export const GLYPH_SCALE = "scale(calc(var(--mark-scale, 1) * var(--mark-user, 1)))";
-export function Mark({ shape = "dot", cx = 0, cy = 0, r, color, fixed = false, className }: { shape?: MarkShape; cx?: number; cy?: number; r: number; color: string; fixed?: boolean; className?: string }) {
-  const scale = fixed ? undefined : shape === "dot" ? "scale(var(--mark-user, 1))" : GLYPH_SCALE;
+/** The user's size factor on a mark: the Jev mark size where the item is a Jev row and the control is set, else the Mark size. */
+const userScale = (jev: boolean) => (jev ? "var(--mark-jev, var(--mark-user, 1))" : "var(--mark-user, 1)");
+/** The CSS transform that sizes a vendor glyph: the studio's Mark size (or Jev mark size, for a Jev row) × the high-contrast enlargement. */
+export const glyphScale = (jev: boolean) => `scale(calc(var(--mark-scale, 1) * ${userScale(jev)}))`;
+export function Mark({ shape = "dot", cx = 0, cy = 0, r, color, fixed = false, jev = false, className }: { shape?: MarkShape; cx?: number; cy?: number; r: number; color: string; fixed?: boolean; jev?: boolean; className?: string }) {
+  const scale = fixed ? undefined : shape === "dot" ? `scale(${userScale(jev)})` : glyphScale(jev);
   const st = scale ? ({ transform: scale, transformOrigin: `${cx}px ${cy}px` } as React.CSSProperties) : undefined;
   if (shape === "dot") return <circle className={className} cx={cx} cy={cy} r={r} fill={color} style={{ ...st, r: fixed ? undefined : `calc(${r}px + var(--r-add, 0px))` } as React.CSSProperties} />;
   if (shape === "ring") return <circle className={className} cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth={1.5} style={{ ...st, strokeWidth: "calc(1.5 * var(--sw-mult, 1))" }} />;
@@ -122,19 +126,25 @@ export function legendLayout(names: string[], s: number, x0: number, x1: number,
 }
 /** How far below a legend's rows the plot area starts. */
 export const LEGEND_GAP = 10;
-/** The legend row(s) (LabelsMode `legend`): a swatch in the item colour and the name in --ink-2, from (x0, y) rightward, wrapping before x1. The swatch is the chart's mark shape (`mark`) at a fixed size, or a rounded square when the chart draws vendor logos (never the logo itself). */
-export function Legend({ items, s, x0, x1, y, mark, measure }: { items: { id: string; name: string; color: string }[]; s: number; x0: number; x1: number; y: number; mark?: MarkShape | "square-swatch"; measure: Measure }) {
+/** The legend row(s) (LabelsMode `legend`): a swatch in the item colour and the name in --ink-2, from (x0, y) rightward, wrapping before x1. The swatch is the chart's mark shape (`mark`) at a fixed size, or a rounded square where the chart draws the item's vendor logo (never the logo itself): `mark` is one for every item, or a function of the item id (legendSwatch, for the Jev-only logos mode). */
+export type LegendSwatch = MarkShape | "square-swatch";
+/** The legend swatch for an item under a logos mode: a square where its logo is drawn, else the chart's mark shape. */
+export const legendSwatch = (logos: LogosMode, mark: MarkShape) => (id: string): LegendSwatch => (logoShown(logos, id) ? "square-swatch" : mark);
+export function Legend({ items, s, x0, x1, y, mark, measure }: { items: { id: string; name: string; color: string }[]; s: number; x0: number; x1: number; y: number; mark?: LegendSwatch | ((id: string) => LegendSwatch); measure: Measure }) {
   const L = legendLayout(items.map((i) => i.name), s, x0, x1, measure);
   return (
     <g className="pr-legend">
-      {items.map((it, i) => (
+      {items.map((it, i) => {
+        const m = typeof mark === "function" ? mark(it.id) : mark;
+        return (
         <g key={it.id} transform={`translate(${L.pos[i].x} ${y + L.pos[i].y})`}>
-          {mark && mark !== "square-swatch"
-            ? <Mark shape={mark} cx={L.sw / 2} cy={L.row / 2} r={mark === "dot" ? 0.45 * L.sw : 0.36 * L.sw} color={it.color} fixed />
+          {m && m !== "square-swatch"
+            ? <Mark shape={m} cx={L.sw / 2} cy={L.row / 2} r={m === "dot" ? 0.45 * L.sw : 0.36 * L.sw} color={it.color} fixed />
             : <rect y={(L.row - L.sw) / 2} width={L.sw} height={L.sw} rx={1.5} fill={it.color} />}
           <text x={L.sw + L.gap} y={L.row / 2 + 4 * s} fontSize={L.fs} fill="var(--ink-2)" className={LEGEND_CLS}>{it.name}</text>
         </g>
-      ))}
+        );
+      })}
     </g>
   );
 }
@@ -170,12 +180,16 @@ const PULSE_CYCLES = 2, PULSE_CYCLE_MS = 650;
 /** `textScale` (the studio's Text control; 1 on the site) multiplies every font size, the label placement's box heights and offsets (its widths are measured, measure.tsx) and the margins that hold tick labels. Axis stroke width, dot radius and the vendor-glyph size read the --sw-mult / --r-add / --mark-scale CSS variables (styles.css, the studio's high-contrast block; unset on the site). */
 /** `leaders` (the studio's Leaders control; off on the site) draws a hairline from each displaced label back to its mark (leaderFor), under every mark and label. */
 /** `labels` (the studio's Labels control; `beside` on the site): `legend` drops the point labels (and leaders) for a legend row at the top (Legend), the plot moved down under it. */
-/** `mark` (the studio's Marks control; `dot` on the site) is the point shape when logos are off; `markSize` is the studio's Mark size multiplier (the --mark-user the panel sets), which the label placement needs as a number to keep labels and leaders clear of a larger mark. */
+/** `logos` (logos.tsx LogosMode, or the boolean it was): which items get their vendor glyph as the mark (`all`, the Jev rows alone, or none, when every item gets `mark`). */
+/** `mark` (the studio's Marks control; `dot` on the site) is the point shape where an item draws no logo; `markSize` is the studio's Mark size multiplier (the --mark-user the panel sets) and `jevMarkSize` the Jev rows' own (--mark-jev; `markSize` when unset): the label placement needs them as numbers to keep labels and leaders clear of a larger mark. */
 /** `boxes` (the studio's Fill control; `filled` on the site) is how the interval boxes are drawn (hatch.tsx FillMode). */
 /** `bg` (the studio's Background control; the site's dot matrix, `dots`) is the pattern behind the plot area (plotBg.tsx). */
 export type PRDomain = { x: [number, number]; y: [number, number] };
-export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, boxes: boxMode = "filled", bg = "dots" }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; boxes?: FillMode; bg?: PlotBg }) {
+export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos: logosIn, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, boxes: boxMode = "filled", bg = "dots" }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean | LogosMode; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; boxes?: FillMode; bg?: PlotBg }) {
   const { tip, show, hide, hostRef } = useTip();
+  const logos = logosMode(logosIn, false);
+  const hasLogo = (p: PRItem) => logoShown(logos, p.id) && !!logoFor(p.id);
+  const tipIcon = (p: PRItem) => (hasLogo(p) ? <Logo model={p.id} size={12} /> : undefined);
   // text widths as drawn (measure.tsx): the legend rows and the point labels are laid out from them
   const { measure, probes } = useTextMeasure([LEGEND_CLS, NAME_CLS]);
   const hatched = isHatched(boxMode), outlined = isOutlined(boxMode);
@@ -225,21 +239,23 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
   const X = (v: number) => PL + ((v - dom.x[0]) / (dom.x[1] - dom.x[0] || 1)) * (W - PL - PR);
   const Y = (v: number) => top + (1 - (v - dom.y[0]) / (dom.y[1] - dom.y[0] || 1)) * (H - top - PB);
 
-  // Mark radius as drawn (the glyph's half-size or the dot's radius, × the Mark size), and the beside-the-mark label offset: 9 s at size 1, grown so the gap to a larger mark stays
-  const markR = (p: PRItem) => (logos && logoFor(p.id) ? 6 : 3.2) * markSize;
-  const grow = Math.max(0, 6 * markSize - 6);
-  const O = 9 * s + grow;
+  // Per item: its size factor (the Jev mark size for a Jev row, else the Mark size), the mark radius as drawn (the glyph's half-size or the dot's radius, × that),
+  // and the beside-the-mark label offset: 9 s at size 1, grown so the gap to a larger mark stays. `grow` is what a larger mark adds; the placement pads each dot by its own.
+  const sizeOf = (p: PRItem) => (isJev(p.id) ? jevMarkSize : markSize);
+  const markR = (p: PRItem) => (hasLogo(p) ? 6 : 3.2) * sizeOf(p);
+  const growOf = (p: PRItem) => Math.max(0, 6 * sizeOf(p) - 6);
+  const O = (p: PRItem) => 9 * s + growOf(p);
   // label placement: try several offsets; avoid other dots and labels; give up (hover only) when nothing fits
   const labels = useMemo(() => {
     const placed: { x: number; y: number; w: number; h: number }[] = [];
-    const dots = pts.map((p) => ({ x: X(p.recall[0]), y: Y(p.precision[0]) }));
-    const pad = 5 + grow;
+    const dots = pts.map((p) => ({ x: X(p.recall[0]), y: Y(p.precision[0]), pad: 5 + growOf(p) }));
     const overlaps = (a: { x: number; y: number; w: number; h: number }) =>
       placed.some((b) => a.x < b.x + b.w + 2 && a.x + a.w + 2 > b.x && a.y < b.y + b.h + 1 && a.y + a.h + 1 > b.y) ||
-      dots.some((d) => d.x > a.x - pad && d.x < a.x + a.w + pad && d.y > a.y - pad && d.y < a.y + a.h + pad);
+      dots.some((d) => d.x > a.x - d.pad && d.x < a.x + a.w + d.pad && d.y > a.y - d.pad && d.y < a.y + a.h + d.pad);
     return pts.map((p, i) => {
       const text = p.name + (p.subset ? " *" : "");
-      const w = measure(text, 11 * s, NAME_CLS) + 4, h = 13 * s, o = O, d = 22 * s + grow;
+      const grow = growOf(p);
+      const w = measure(text, 11 * s, NAME_CLS) + 4, h = 13 * s, o = O(p), d = 22 * s + grow;
       const { x, y } = dots[i];
       const cands: { x: number; y: number }[] = [
         { x: x + o, y: y - h / 2 }, { x: x - o - w, y: y - h / 2 },
@@ -253,7 +269,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
       return { ...c, w, h, text };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pts, dom, W, H, s, top, O, logos, measure]);
+  }, [pts, dom, W, H, s, top, markSize, jevMarkSize, logos, measure]);
 
   // Where everything is heading, keyed by item so a move is continuous across re-sorts; `geo` is where it is drawn this frame.
   const target: Record<string, number> = {};
@@ -297,7 +313,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
         </g>
         <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={TITLE_FS * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
         <text x={titleX} y={(top + H - PB) / 2} fontSize={TITLE_FS * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(top + H - PB) / 2})`}>{yLabel}</text>
-        {labelsMode === "legend" && <Legend items={pts.map((p) => ({ id: p.id, name: p.name + (p.subset ? " *" : ""), color: p.color }))} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={logos ? "square-swatch" : mark} measure={measure} />}
+        {labelsMode === "legend" && <Legend items={pts.map((p) => ({ id: p.id, name: p.name + (p.subset ? " *" : ""), color: p.color }))} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={legendSwatch(logos, mark)} measure={measure} />}
         {probes}
 
         {/* CI boxes first so dots sit on top; every box is drawn the same way (FillMode), the highlighted one a little deeper */}
@@ -308,7 +324,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
           return (
             <g key={`b${p.id}`} className="fd" style={fadeStyle(stateOf[p.id] ?? "exit")}>{/* fade in / out (ui.tsx usePresence) */}
             <g {...hoverable(onHover, p.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
-            <g onMouseMove={(e) => show(e, mark, prTip(p, logos ? <Logo model={p.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)} tabIndex={-1}>
+            <g onMouseMove={(e) => show(e, mark, prTip(p, tipIcon(p)))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)} tabIndex={-1}>
               {/* the pulse class is dropped while this box is highlighted, so the deeper hover fill is steady and wins */}
               {/* `--box-stroke` (0 on the site) lets a studio style preset draw the box as a hairline outline in the item's colour; the outline modes draw it regardless */}
               <rect key={`${p.id}:${sig}`} className={pulsing && p.decider && hl !== p.id ? "pr-box pulse" : "pr-box"} x={g(p.id, "x0")} y={g(p.id, "y0")} width={g(p.id, "w")} height={g(p.id, "h")} fill={boxFill} stroke={p.color} strokeWidth={0.75} style={{ fillOpacity: boxFillOpacity, strokeOpacity: outlined ? 1 : "var(--box-stroke, 0)", strokeWidth: OUTLINE_W, transition: "fill-opacity 120ms" }} rx={1} />
@@ -322,7 +338,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
           const li = pts.indexOf(p), l0 = li >= 0 ? labels[li] : null;
           if (!l0) return null;
           const tx = X(p.recall[0]), ty = Y(p.precision[0]);
-          const ld = leaderFor({ x: l0.x - tx, y: l0.y - ty, w: l0.w, h: l0.h }, markR(p), O);
+          const ld = leaderFor({ x: l0.x - tx, y: l0.y - ty, w: l0.w, h: l0.h }, markR(p), O(p));
           if (!ld) return null;
           return (
             <g key={`l${p.id}`} className="fd" style={fadeStyle(stateOf[p.id] ?? "exit")} transform={`translate(${g(p.id, "x")} ${g(p.id, "y")})`}>
@@ -335,18 +351,17 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
           // a highlighted mark whose label found no room gets one anyway, at the first candidate position
           const tx = X(p.recall[0]), ty = Y(p.precision[0]), x = g(p.id, "x"), y = g(p.id, "y");
           const li = pts.indexOf(p), l0 = li >= 0 ? labels[li] : null;
-          const l = labelsMode === "legend" ? null : l0 ? { x: l0.x - tx, y: l0.y - ty, text: l0.text } : hl === p.id ? { x: O, y: -6.5 * s, text: p.name + (p.subset ? " *" : "") } : null;
-          const hasLogo = logos && logoFor(p.id);
+          const l = labelsMode === "legend" ? null : l0 ? { x: l0.x - tx, y: l0.y - ty, text: l0.text } : hl === p.id ? { x: O(p), y: -6.5 * s, text: p.name + (p.subset ? " *" : "") } : null;
           const hitR = Math.max(9, markR(p) + 3);
           return (
             <g key={`d${p.id}`} className="fd" style={fadeStyle(stateOf[p.id] ?? "exit")}>{/* fade in / out (ui.tsx usePresence) */}
             <g {...hoverable(onHover, p.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
-            <g transform={`translate(${x} ${y})`} onMouseMove={(e) => show(e, { kind: "mark", x: tx, y: ty, r: hitR }, prTip(p, logos ? <Logo model={p.id} size={12} /> : undefined))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)}>
+            <g transform={`translate(${x} ${y})`} onMouseMove={(e) => show(e, { kind: "mark", x: tx, y: ty, r: hitR }, prTip(p, tipIcon(p)))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)}>
               <circle className="hit" r={hitR} fill="transparent" />
-              {hasLogo ? (
-                <g color={p.color} style={{ transform: GLYPH_SCALE }}><LogoGlyph model={p.id} cx={0} cy={0} size={glyph(p)} /></g>
+              {hasLogo(p) ? (
+                <g color={p.color} style={{ transform: glyphScale(isJev(p.id)) }}><LogoGlyph model={p.id} cx={0} cy={0} size={glyph(p)} /></g>
               ) : (
-                <Mark shape={mark} r={3.2} color={p.color} />
+                <Mark shape={mark} r={3.2} color={p.color} jev={isJev(p.id)} />
               )}
               {l && (
                 <text x={l.x} y={l.y + 10 * s} fontSize={11 * s} fill="var(--ink)" className="nm" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round", pointerEvents: onSelect ? "auto" : "none" }}>
