@@ -4,8 +4,8 @@ import { useRef, useState } from "react";
 import { CLICK_HINT, DECIDER_TEXT, Hint, ROW_PULSE_MS, RowTint, Seg, TipBox, fadeStyle, selectable, usePresence, usePulseWindow, useTip, useTween, useWidth, type HintItem, type TipLine } from "./ui";
 import { hoverable } from "./hover";
 
-/** The Stability card's "i" popover. */
-const DET_ITEMS: HintItem[] = [
+/** The Stability card's "i" popover (also the Stability tab's on the B variant, AppB.tsx). */
+export const DET_ITEMS: HintItem[] = [
   { k: "Question", v: <mark><b>How often does the exact same input produce a different answer?</b></mark> },
   { k: "How tested", v: <><b>300 documents scored 5 times</b> with identical inputs.</> },
   { k: "t = 0", v: <><b>Temperature 0</b> reduces sampling randomness in the model.</> },

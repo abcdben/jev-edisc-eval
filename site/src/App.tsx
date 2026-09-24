@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER, rosterOf,
   corpusKey, costPerDoc, fmtCI, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, issueLabel, pick, siteCorpus, starOf, variantColor,
@@ -29,7 +29,7 @@ const KIND_SHORT: Record<Kind, string> = { system1: "Decision models", system1_f
 /** `pulse` (Compare models only: the Configurations page shows one family, so no decider to single out) lets the deciders' interval boxes breathe for a few cycles when the map loads or its points change. */
 /** `ranked` picks the ranked view's component: `rail` (PRRail, Compare models) or `heat` (PRHeat, Compare configurations, differenced against `referenceId`, the family's base configuration). Both draw their own legend line. */
 /** `sig` names what the card is showing (the corpus, and the family on Configurations): the `ranked` option's accent (ui.tsx Seg `accent`) breathes once when the card mounts and again whenever it changes, not on every model toggle. */
-function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false, ranked, referenceId, sig = "card" }: { items: PRItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean; ranked: "rail" | "heat"; referenceId?: string; sig?: string }) {
+export function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false, ranked, referenceId, sig = "card" }: { items: PRItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean; ranked: "rail" | "heat"; referenceId?: string; sig?: string }) {
   const setChart = onChart;
   const [zoom, setZoom] = useState(defaultZoom);
   const onSelect = explain && ((it: PRItem) => explain(it.id));
@@ -175,7 +175,7 @@ function useRows(v: View) {
 }
 
 /** The Speed and Cost hints: machine time and price only. */
-const LATENCY_ITEMS: HintItem[] = [
+export const LATENCY_ITEMS: HintItem[] = [
   { k: "Measures", v: <><b>Median round-trip to score one document</b>, one request at a time.</> },
   { k: "Hosted", v: <>Includes network. <b>Rate limits and parallel throughput not measured.</b></> },
   { k: "Local", v: <>Laya and Gemma on <b>one A100</b>; no network.</> },
@@ -186,7 +186,7 @@ const DOC_NOUN: Record<string, string> = { trec: "email", mnk: "email" };
  * The Cost hint for the rows the card shows: the per-100k basis, then the mean billed tokens per document across the shown LLM rows
  * (the corpus's average document length in each vendor's tokenizer), so the numbers follow the corpus and the selection.
  */
-function costItems(recs: Rec[]): HintItem[] {
+export function costItems(recs: Rec[]): HintItem[] {
   const llm = recs.filter((r) => (r.kind === "llm" || r.kind === "local_llm") && r.ops.tokens_in_per_doc != null);
   const mean = (f: (r: Rec) => number | null) => { const v = llm.map(f).filter((x): x is number => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
   const tin = mean((r) => r.ops.tokens_in_per_doc), tout = mean((r) => r.ops.tokens_out_per_doc);
@@ -275,7 +275,10 @@ export function useCompareItems(v: View, on: Set<string>): { sel: Rec[]; items: 
   }, [rows, on, v]);
 }
 
-function CompareSection({ v, on, explain }: { v: View; on: Set<string>; explain: (k: string) => void }) {
+/** What the page shell hands its Compare models section: the view, the model selection and the details-modal opener. */
+export type CompareProps = { v: View; on: Set<string>; explain: (k: string) => void };
+
+function CompareSection({ v, on, explain }: CompareProps) {
   const { sel, items } = useCompareItems(v, on);
   const [chart, setChart] = useState<Chart>("map");
 
@@ -364,7 +367,14 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
 type Page = "compare" | "configurations";
 const PAGES: { id: Page; label: string }[] = [{ id: "compare", label: "Compare models" }, { id: "configurations", label: "Compare configurations" }];
 
-export default function App() {
+/**
+ * The page: masthead, sticky control bar, the Compare models or Compare configurations section, the details and disclaimer modals and the foot.
+ * `Compare` is the Compare models section (this file's CompareSection: one recall/precision card with the Speed, Cost and Stability cards beside it);
+ * the B variant (AppB.tsx, b.html) passes its tabbed section and keeps everything else identical. `mast` goes in the masthead after the page nav
+ * (B's "view A" link), `controlsTail` at the end of the control bar on Compare models (B's tab strip), and `compareHash` is the hash the page nav writes
+ * for Compare models (B keeps the active tab in it).
+ */
+export function Shell({ Compare = CompareSection, mast, controlsTail, compareHash = "#compare" }: { Compare?: (p: CompareProps) => ReactNode; mast?: ReactNode; controlsTail?: ReactNode; compareHash?: string }) {
   // The corpus is not persisted (hash or storage); siteCorpus still guards the state so an unlisted id (e.g. "veridian") can never render.
   const [corpus, setCorpusRaw] = useState(DEFAULT_CORPUS);
   const setCorpus = (c: string) => setCorpusRaw(siteCorpus(c));
@@ -394,7 +404,7 @@ export default function App() {
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
-  const goPage = (p: Page) => { history.replaceState(null, "", p === "compare" ? "#compare" : "#configurations"); setPageId(p); window.scrollTo(0, 0); };
+  const goPage = (p: Page) => { history.replaceState(null, "", p === "compare" ? compareHash : "#configurations"); setPageId(p); window.scrollTo(0, 0); };
 
   const page = (
     <div className="page">
@@ -405,6 +415,7 @@ export default function App() {
             <button key={p.id} className={pageId === p.id ? "on" : ""} onClick={() => goPage(p.id)} aria-current={pageId === p.id ? "page" : undefined}>{p.label}</button>
           ))}
         </nav>
+        {mast}
         <span className="theme"><Seg value={theme} onChange={setTheme} options={[{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }]} /></span>
       </header>
 
@@ -426,9 +437,10 @@ export default function App() {
             </select>
           </span>
         </Control>
+        {pageId === "compare" && controlsTail}
       </div>
 
-      {pageId === "compare" ? <CompareSection v={v} on={on} explain={setExplain} /> : <AblationSection v={v} grp={grp} off={off} explain={setExplain} />}
+      {pageId === "compare" ? <Compare v={v} on={on} explain={setExplain} /> : <AblationSection v={v} grp={grp} off={off} explain={setExplain} />}
       {explain && (
         <ExplainModal
           initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)}
@@ -444,4 +456,9 @@ export default function App() {
     </div>
   );
   return <MethodContext.Provider value={openMethod}>{page}</MethodContext.Provider>;
+}
+
+/** The site (index.html): the shell with its own Compare models section. */
+export default function App() {
+  return <Shell />;
 }

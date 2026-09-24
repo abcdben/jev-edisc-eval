@@ -3,7 +3,7 @@ import type { CI } from "../data";
 import { LogoGlyph, logoFor } from "../logos";
 import { GLYPH_SCALE, LEADER_STYLE, LEGEND_CLS, LEGEND_GAP, Legend, Mark, NAME_CLS, axisMargins, leaderFor, legendLayout, type LabelsMode, type MarkShape } from "./PRScatter";
 import { useTextMeasure } from "./measure";
-import { DECIDER_TEXT, useSize, useWidth } from "./ui";
+import { DECIDER_TEXT, selectable, useSize, useWidth } from "./ui";
 
 /**
  * Screenshot-studio charts for the Cost, Speed and Stability plots (StudioPage.tsx): static SVG, no tooltips, hover or motion; every
@@ -48,8 +48,10 @@ function logTicks(d0: number, d1: number): number[] {
  * The width follows the host; the height follows the rows (the studio panel's `auto` mode).
  * `textScale` (the studio's Text control) multiplies every font size and, with it, the row height, the label and value columns and the axis area.
  * `mark` (the studio's Marks control) is the dot plot's point shape (PRScatter.tsx Mark).
+ * `onSelect` (the dashboard's B variant, AppB.tsx; the studio passes none) makes each row a button that opens the details modal for its id: a transparent
+ * full-width hit rect behind the row tints on hover (styles.css `.sel .hit`), Enter and Space work (ui.tsx selectable). Without it the rows are inert, as in the studio.
  */
-export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort = "asc", axis, fmtTick, logos = true, labelW, textScale = 1, mark = "dot" }: { rows: StudioRow[]; kind?: "bar" | "dot"; scale?: "linear" | "log"; domain?: [number, number]; sort?: "asc" | "desc" | "none"; axis: string; fmtTick: (v: number) => string; logos?: boolean; labelW?: number; textScale?: number; mark?: MarkShape }) {
+export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort = "asc", axis, fmtTick, logos = true, labelW, textScale = 1, mark = "dot", onSelect }: { rows: StudioRow[]; kind?: "bar" | "dot"; scale?: "linear" | "log"; domain?: [number, number]; sort?: "asc" | "desc" | "none"; axis: string; fmtTick: (v: number) => string; logos?: boolean; labelW?: number; textScale?: number; mark?: MarkShape; onSelect?: (id: string) => void }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const W = useWidth(hostRef, 900);
   const s = textScale, ROW = ROW0 * s, TOP = TOP0 * s;
@@ -103,9 +105,13 @@ export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort 
           const cy = TOP + i * ROW + ROW / 2;
           const nameX = logos ? 30 * s : LABEL_W - 14 * s;
           const label = labelOf(r);
+          // clickable rows (onSelect): the row group becomes a button with a full-width hit rect behind it; without onSelect nothing is added
+          const sel = onSelect ? selectable(onSelect, r.id, label) : {};
+          const hit = onSelect ? <rect className="hit" x={0} y={cy - ROW / 2} width={W} height={ROW} fill="transparent" /> : null;
           if (r.value == null) {
             return (
-              <g key={r.id}>
+              <g key={r.id} {...sel}>
+                {hit}
                 {logos && <g color="var(--ink-4)"><LogoGlyph model={r.id} cx={12 * s} cy={cy} size={14 * s} opacity={0.6} /></g>}
                 <text x={nameX} y={cy + 4.5 * s} fontSize={12.5 * s} textAnchor={logos ? "start" : "end"} fill="var(--ink-4)" className="nm">{label}</text>
                 <text x={x0 + 8 * s} y={cy + 4.5 * s} fontSize={11.5 * s} fill="var(--ink-4)">{r.empty ?? "not measured"}</text>
@@ -117,7 +123,8 @@ export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort 
           const xlo = lo == null ? xv : X(lo), xhi = hi == null ? xv : X(hi);
           const end = Math.max(xv, xhi) + 9 * s;
           return (
-            <g key={r.id}>
+            <g key={r.id} {...sel}>
+              {hit}
               {logos && <g color="var(--ink-2)"><LogoGlyph model={r.id} cx={12 * s} cy={cy} size={14 * s} /></g>}
               <text x={nameX} y={cy + 4.5 * s} fontSize={12.5 * s} textAnchor={logos ? "start" : "end"} fill="var(--ink-2)" className="nm" style={r.decider ? DECIDER_TEXT : undefined}>{label}</text>
               {kind === "bar" ? (
@@ -159,8 +166,8 @@ export type StudioScatterPt = { id: string; name: string; color: string; x: numb
 
 const PR = 24, PT = 18;
 
-/** Cost (log x) against recall (y, 95% whisker). Sized to the host's box like PRScatter's `fill` mode (host must be positioned). `leaders`, `labels`, `mark` and `markSize` as on PRScatter: a hairline from a displaced label to its mark; a legend row at the top instead of point labels; the point shape and the Mark size multiplier the label placement allows for. */
-export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = true, emptyText = "Select at least one model.", textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1 }: { pts: StudioScatterPt[]; xLabel: string; yLabel?: string; fmtX: (v: number) => string; logos?: boolean; emptyText?: string; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number }) {
+/** Cost (log x) against recall (y, 95% whisker). Sized to the host's box like PRScatter's `fill` mode (host must be positioned). `leaders`, `labels`, `mark` and `markSize` as on PRScatter: a hairline from a displaced label to its mark; a legend row at the top instead of point labels; the point shape and the Mark size multiplier the label placement allows for. `onSelect` (AppB.tsx) makes each mark a button opening the details modal for its id; the studio passes none. */
+export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = true, emptyText = "Select at least one model.", textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, onSelect }: { pts: StudioScatterPt[]; xLabel: string; yLabel?: string; fmtX: (v: number) => string; logos?: boolean; emptyText?: string; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; onSelect?: (id: string) => void }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const sz = useSize(hostRef, { w: 900, h: 520 });
   const W = sz.w, H = Math.max(300, sz.h);
@@ -231,7 +238,7 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
           const x = X(p.x), y = Y(p.y[0]), y1 = Y(p.y[2]), y2 = Y(p.y[1]);
           const l = labels[i];
           return (
-            <g key={p.id}>
+            <g key={p.id} {...(onSelect ? selectable(onSelect, p.id, `${p.name}${p.subset ? " *" : ""}`) : {})}>
               <g stroke={p.color} strokeWidth={1.5} style={{ ...SW(1.5), opacity: "var(--op-whisker, 0.75)" }}>
                 <line x1={x} x2={x} y1={y1} y2={y2} />
                 <line x1={x - 4} x2={x + 4} y1={y1} y2={y1} />

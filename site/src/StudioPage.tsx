@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { DATA, DEFAULT_CORPUS, DEFAULT_ON, PRIMARY_BY_KEY, corpusKey, costPerDoc, fmtInt, fmtPct, isDecider, issueLabel, pick, siteCorpus, starOf, CORPORA, type Rec } from "./data";
+import { DATA, DEFAULT_CORPUS, DEFAULT_ON, PRIMARY_BY_KEY, corpusKey, fmtInt, issueLabel, siteCorpus, starOf, CORPORA } from "./data";
 import { ModelPicker, useCompareItems, type Chart, type View } from "./App";
 import { BOX_MODES, MARK_SHAPES, PRScatter, isBoxMode, type BoxMode, type LabelsMode, type MarkShape, type PRDomain } from "./components/PRScatter";
 import { PRRail } from "./components/PRRail";
-import { detFor } from "./components/Consistency";
-import { StudioBars, StudioScatter, type StudioRow, type StudioScatterPt } from "./components/StudioCharts";
+import { StudioBars, StudioScatter } from "./components/StudioCharts";
+import { COST_UNIT, costAxis, costCaption, costPts, costRows, fmtMoneyTick, fmtMsTick, fmtPctTick, speedAxis, speedCaption, speedRows, stabAxis, stabCaption, stabRows, type CostChart, type CostUnit, type SpeedChart, type SpeedUnit, type StabChart } from "./opsRows";
 import { Control, Seg } from "./components/ui";
 import { copyPng, downloadBlob, renderPanelPng, slug, type ExportBackground } from "./exportPng";
 import { PALETTES, isPaletteId, toHex, toVars, varOf, type PaletteId } from "./palettes";
@@ -120,26 +120,10 @@ const readCustom = (): Record<string, string> => { try { const o = JSON.parse(lo
 type ExportScale = "1" | "2" | "3";
 const isExportScale = (s: string | null): s is ExportScale => s === "1" || s === "2" || s === "3";
 
-/** The four plots. `pr` is the site's recall/precision chart (map or ranked); the others are the studio's own bar, dot and scatter charts. */
+/** The four plots. `pr` is the site's recall/precision chart (map or ranked); the others are the studio's own bar, dot and scatter charts (rows and captions: opsRows.ts). */
 type Plot = "pr" | "cost" | "speed" | "stability";
-type CostChart = "bars" | "dots" | "scatter";
-type CostUnit = "1k" | "100k" | "decision";
-type SpeedChart = "bars" | "dots" | "throughput";
-type SpeedUnit = "ms" | "s";
-type StabChart = "bars" | "agree" | "dots";
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, Math.round(n)));
-const COST_UNIT: Record<CostUnit, { mult: (r: Rec) => number; axis: string; short: string }> = {
-  "1k": { mult: () => 1e3, axis: "US dollars per 1,000 documents", short: "per 1,000 docs" },
-  "100k": { mult: () => 1e5, axis: "US dollars per 100,000 documents", short: "per 100,000 docs" },
-  decision: { mult: (r) => (r.ops.n_decisions ? r.ops.n_docs / r.ops.n_decisions : 1), axis: "US dollars per decision (one document × one issue)", short: "per decision" },
-};
-/** Money at the precision the size calls for: "$5,000", "$12.3", "$0.14", "$0.000017". */
-const fmtMoney = (v: number): string => (v === 0 ? "$0" : v >= 100 ? `$${fmtInt(Math.round(v))}` : v >= 1 ? `$${v.toFixed(v >= 10 ? 1 : 2)}` : v >= 0.01 ? `$${v.toFixed(2)}` : `$${(+v.toPrecision(2)).toString()}`);
-const fmtMoneyTick = (v: number): string => (v >= 1 ? `$${fmtInt(Math.round(v))}` : `$${(+v.toPrecision(2)).toString()}`);
-const fmtMsTick = (v: number): string => (v === 0 ? "0" : v < 1000 ? `${Math.round(v)} ms` : `${+(v / 1000).toFixed(2)} s`);
-const fmtPctTick = (v: number): string => `${+(v * 100).toFixed(2)}%`;
-const fmtLatency = (ms: number, unit: SpeedUnit) => (unit === "s" ? `${(ms / 1000).toFixed(2)} s` : `${fmtInt(Math.round(ms))} ms`);
 
 export default function StudioPage() {
   const [corpus, setCorpusRaw] = useState(DEFAULT_CORPUS);
@@ -328,40 +312,11 @@ export default function StudioPage() {
   }, []);
   const preset = PRESETS.find((p) => p.w === w && p.h === h)?.id ?? "custom";
 
-  // ---- rows for the studio's own charts, from the selected roster records (colours and short names from the roster, so Style presets apply) ----
-  const base = (r: Rec) => ({ id: r.model, name: PRIMARY_BY_KEY[r.model].short, color: PRIMARY_BY_KEY[r.model].color, decider: isDecider(PRIMARY_BY_KEY[r.model].kind ?? r.kind), subset: starOf(r) });
+  // ---- rows for the studio's own charts, from the selected roster records (opsRows.ts: colours and short names from the roster, so Style presets apply) ----
   const cu = COST_UNIT[costUnit];
-  const costRows: StudioRow[] = sel.map((r) => {
-    const c = costPerDoc(r), val = c == null ? null : c * cu.mult(r);
-    return { ...base(r), value: val, label: val == null ? "" : fmtMoney(val) };
-  });
-  const costPts: StudioScatterPt[] = sel.map((r) => { const c = costPerDoc(r); return { ...base(r), x: c == null ? null : c * cu.mult(r), y: pick(r, v.level, v.gray, v.issue).recall }; });
-  const speedRows: StudioRow[] = sel.map((r) => {
-    const p50 = r.ops.doc_latency_p50_ms, ci = r.ops.doc_latency_p50_ci_ms ?? null;
-    if (speedChart === "throughput") { const val = p50 == null ? null : 3.6e6 / p50; return { ...base(r), value: val, label: val == null ? "" : `${fmtInt(Math.round(val))} docs/h` }; }
-    // Whisker: the 95% bootstrap interval for the median (two-sided), not the p95 tail.
-    return { ...base(r), value: p50, lo: ci?.[0] ?? null, hi: ci?.[1] ?? null, label: p50 == null ? "" : fmtLatency(p50, speedUnit) };
-  });
-  // Stability: the card's rule. At t = 0 a decider keeps its default cell (no sampling control); an LLM without a t = 0 cell rejected the parameter.
-  const isLLM = (r: Rec) => r.kind === "llm" || r.kind === "local_llm";
-  const stabLbl = (p: number) => (p === 0 ? "0" : fmtPct(p, p < 0.001 ? 2 : 1));
-  const stabCells = sel.map((r) => { const d = detFor(r, v.arm, "default"), t0 = detFor(r, v.arm, "t0"); return { r, d, c: stabSetting === "t0" ? (t0 ?? (isLLM(r) ? null : d)) : d }; });
-  // "5 runs · 2,400 decisions" goes in the legend when every measured row shares it, on each row otherwise
-  const runsOf = new Set(stabCells.filter((x) => x.c).map((x) => `${x.c!.cell.k} runs · ${fmtInt(x.c!.cell.n_decisions)} decisions`));
-  const sameRuns = runsOf.size === 1 ? [...runsOf][0] : null;
-  const stabAll: StudioRow[] = stabCells.map(({ r, d, c }) => {
-    if (!c) return { ...base(r), value: null, label: "", empty: stabSetting === "t0" && d ? "API rejects temperature" : "not measured" };
-    const [p, lo, hi] = c.pairwise, runs = `${c.cell.k} runs · ${fmtInt(c.cell.n_decisions)} decisions`;
-    if (stabChart === "agree") return { ...base(r), value: 1 - p, lo: 1 - hi, hi: 1 - lo, label: p === 0 ? "100%" : fmtPct(1 - p, p < 0.001 ? 2 : 1), sub: `disagree ${stabLbl(p)}` };
-    return { ...base(r), value: p, lo, hi, label: stabLbl(p), sub: sameRuns ? undefined : runs };
-  });
-  const stabRows = hideUnmeasured ? stabAll.filter((x) => x.value != null) : stabAll;
-  const agreeLo = Math.min(1, ...stabRows.map((x) => (x.value == null ? 1 : (x.lo ?? x.value))));
-  const agreeDomain: [number, number] = [Math.max(0, Math.floor((agreeLo - 0.003) * 200) / 200), 1];
-  const stabHasT0 = sel.some((r) => detFor(r, v.arm, "t0"));
+  const stab = stabRows(sel, v.arm, stabChart, stabSetting, hideUnmeasured);
 
   const emptyText = "Select at least one model.";
-  const measuredOn = DATA.determinism ? `${fmtInt(DATA.determinism.sample.n_docs)} Mallinckrodt emails` : "a fixed sample";
   // What the panel actually draws for the 95% interval, read off its computed variables after each style-affecting change (preset, Custom sliders,
   // Boxes mode and Contrast all folded in): the map's boxes (--box-alpha, or the outline: --box-stroke in the filled modes, --box-stroke-w in the outline
   // modes) and the whisker charts' whiskers (--op-whisker). The legend note names only what is drawn.
@@ -378,20 +333,9 @@ export default function StudioPage() {
     const what = logos || mark === "dot" ? "Dot" : mark === "x" ? "Cross" : mark[0].toUpperCase() + mark.slice(1);
     const box = boxes === "filled" ? "Shaded box" : boxes === "hatched" ? "Hatched box" : boxes === "outline" ? "Outlined box" : "Hatched, outlined box";
     if (plot === "pr") return chart === "map" ? [marks.boxes ? `${what}: point estimate. ${box}: 95% interval on recall (width) and precision (height).` : `${what}: point estimate.`] : [];
-    const whisk = (clause: string) => (marks.whiskers ? clause : "");
-    if (plot === "cost") {
-      const basis = "Cost as paid for the benchmark run (OpenAI flex pricing, Anthropic prompt caching, Google and TypeSafe at list; GPU rows as A100 rental for their median latency)";
-      if (costChart === "scatter") return [`${basis}, ${cu.short} on a log axis, against recall${whisk(" with its 95% interval (whisker)")}.`];
-      return [`${basis}, ${cu.short}${costChart === "dots" || costScale === "log" ? ", log axis" : ""}.`];
-    }
-    if (plot === "speed") {
-      if (speedChart === "throughput") return ["Sequential documents per hour: 3,600,000 ÷ median wall-clock milliseconds per document, one request at a time. Every service accepts parallel requests, so compare ratios, not absolutes."];
-      return [`${speedChart === "bars" ? "Bar" : "Dot"}: median latency per document, one request at a time${speedChart === "dots" ? ", on a log axis" : ""}${whisk("; whisker: 95% bootstrap interval for the median")}.`];
-    }
-    const t0 = stabSetting === "t0" ? " Temperature 0 where the API accepts it; deciders expose no sampling control." : "";
-    const where = `Measured on ${measuredOn}${sameRuns ? ` (${sameRuns} per model)` : " scored 5 times"}; the same cells are shown for every corpus.`;
-    if (stabChart === "agree") return [`Bar: agreement, the probability two identical runs give the same decision (1 − pairwise disagreement)${whisk("; whisker: 95% bootstrap interval")}. Axis zoomed to the measured range.${t0}`, where];
-    return [`${stabChart === "bars" ? "Bar" : "Dot"}: probability two identical runs disagree on a decision (pairwise)${whisk("; whisker: 95% bootstrap interval over decisions")}.${t0}`, where];
+    if (plot === "cost") return costCaption(costChart, costUnit, costScale, marks.whiskers);
+    if (plot === "speed") return speedCaption(speedChart, marks.whiskers);
+    return stabCaption(stabChart, stabSetting, stab.sameRuns, marks.whiskers);
   };
   const legendLines = legendText();
   const showIssue = plot === "pr" || (plot === "cost" && costChart === "scatter");
@@ -492,7 +436,7 @@ export default function StudioPage() {
               <Seg value={stabChart} onChange={setStabChart} options={[{ id: "bars", label: "disagreement bars" }, { id: "agree", label: "agreement · zoomed" }, { id: "dots", label: "dots" }]} />
             </Control>
             <Control label="Setting">
-              <Seg value={stabSetting} onChange={setStabSetting} options={[{ id: "default", label: "default", title: "Vendor default sampling" }, { id: "t0", label: "t = 0", title: stabHasT0 ? "Temperature 0 where the API accepts it" : "No t = 0 cell among the selected models" }]} />
+              <Seg value={stabSetting} onChange={setStabSetting} options={[{ id: "default", label: "default", title: "Vendor default sampling" }, { id: "t0", label: "t = 0", title: stab.hasT0 ? "Temperature 0 where the API accepts it" : "No t = 0 cell among the selected models" }]} />
               <Seg value={hideUnmeasured ? "hide" : "show"} onChange={(x) => setHideUnmeasured(x === "hide")} options={[{ id: "show", label: "list unmeasured" }, { id: "hide", label: "hide unmeasured" }]} />
             </Control>
           </>
@@ -670,23 +614,23 @@ export default function StudioPage() {
             {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} mark={mark} />}
             {plot === "cost" && costChart === "scatter" && (
               <div className="studio-canvas">
-                <StudioScatter pts={costPts} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} />
+                <StudioScatter pts={costPts(sel, v, costUnit)} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} />
               </div>
             )}
             {plot === "cost" && costChart !== "scatter" && (
-              <StudioBars rows={costRows} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={cu.axis + (costChart === "dots" || costScale === "log" ? " (log)" : "")} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} mark={mark} />
+              <StudioBars rows={costRows(sel, costUnit)} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={costAxis(costChart, costUnit, costScale)} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} mark={mark} />
             )}
             {plot === "speed" && (
               <StudioBars
-                rows={speedRows} kind={speedChart === "dots" ? "dot" : "bar"} scale={speedChart === "dots" ? "log" : "linear"} sort={speedChart === "throughput" ? "desc" : "asc"}
-                axis={speedChart === "throughput" ? "sequential documents per hour (3,600,000 ÷ median ms per document)" : `median latency per document${speedChart === "dots" ? " (log)" : ""}`}
+                rows={speedRows(sel, speedChart, speedUnit)} kind={speedChart === "dots" ? "dot" : "bar"} scale={speedChart === "dots" ? "log" : "linear"} sort={speedChart === "throughput" ? "desc" : "asc"}
+                axis={speedAxis(speedChart)}
                 fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos} textScale={ts} mark={mark}
               />
             )}
             {plot === "stability" && (
               <StudioBars
-                rows={stabRows} kind={stabChart === "dots" ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? agreeDomain : undefined}
-                axis={stabChart === "agree" ? `agreement: probability two identical runs give the same decision${stabSetting === "t0" ? " · temperature 0" : ""}` : `probability two identical runs disagree${stabSetting === "t0" ? " · temperature 0" : ""}`}
+                rows={stab.rows} kind={stabChart === "dots" ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? stab.agreeDomain : undefined}
+                axis={stabAxis(stabChart, stabSetting)}
                 fmtTick={fmtPctTick} logos={logos} textScale={ts} mark={mark}
               />
             )}
