@@ -142,6 +142,8 @@ svg text { user-select: none; font-family: var(--sans); }
 }
 .control { display: flex; align-items: center; gap: 8px; }
 .control > .lab { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 500; }
+/* the control's children sit in a .ctl wrapper (ui.tsx Control), invisible to layout here; the studio's inspector lays it out as a wrapping cell */
+.control > .ctl { display: contents; }
 .seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 6px; padding: 2px; background: var(--panel); }
 .seg button {
   border: 0; background: transparent; border-radius: 4px; padding: 4px 11px; font-size: 13px; color: var(--ink-2); cursor: pointer;
@@ -581,12 +583,42 @@ svg text { user-select: none; font-family: var(--sans); }
 .logo { border-radius: 3px; object-fit: contain; display: inline-block; }
 /* the tinted vendor mark is the colour key; a deselected row goes grey */
 
-/* Screenshot studio (studio.html, src/Studio.tsx): the recall/precision chart alone on a sized panel, every control in the bars above.
-   The panel is CSS-resizable by its corner (Studio.tsx mirrors the dragged size into the fields); the bars are not sticky here so two rows never overlap. */
+/* Screenshot studio (studio.html, src/StudioPage.tsx): one chart alone on a sized panel, every control above it. The top bar (`.studio-bar`, the
+   site's control bar, static here) holds what is plotted and the export buttons; the inspector (`.studio-ins`, components/Inspector.tsx) stacks
+   disclosure sections under it. The panel is CSS-resizable by its corner (StudioPage.tsx mirrors the dragged size into the fields). */
 .page.studio { max-width: none; }
-.studio .controls { position: static; backdrop-filter: none; }
-.studio .controls.studio-row2 { border-bottom: 1px solid var(--line); }
+.studio .controls { position: static; backdrop-filter: none; gap: 18px 22px; }
+.studio-bar-r { margin-left: auto; display: inline-flex; align-items: center; gap: 10px; }
 .studio-hint { color: var(--ink-3); font-size: 13px; }
+/* Inspector: full-bleed like the control bar; one section per row, a hairline between. The header is one button: chevron, title and, while the
+   section is closed, a muted one-line summary of its values (ellipsised when the row runs out). */
+.studio-ins { margin: 0 -32px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--panel) 40%, var(--bg)); }
+.studio-sec { border-bottom: 1px solid var(--line); padding: 0 32px; }
+.studio-sec:last-child { border-bottom: 0; }
+.studio-sec-h { margin: 0; font-size: inherit; font-weight: inherit; line-height: inherit; }
+.studio-sec-h button { display: flex; align-items: center; gap: 10px; width: 100%; min-width: 0; padding: 9px 0; border: 0; background: none; font: inherit; color: var(--ink); text-align: left; cursor: pointer; border-radius: 4px; }
+.studio-sec-h button:focus-visible { outline: 1.5px solid var(--ink-3); outline-offset: -1px; }
+.studio-sec-h .chev { flex: none; width: 6px; height: 6px; margin: 0 4px 0 3px; border-right: 1.5px solid var(--ink-3); border-bottom: 1.5px solid var(--ink-3); transform: rotate(-45deg); transition: transform 120ms var(--ease), border-color 120ms; }
+.studio-sec.open .studio-sec-h .chev { transform: translateY(-1px) rotate(45deg); }
+.studio-sec-h button:hover .chev { border-color: var(--ink); }
+.studio-sec-h .t { flex: none; font-size: 12.5px; font-weight: 500; letter-spacing: 0.01em; min-width: 58px; }
+.studio-sec-h .sum { color: var(--ink-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.studio-sec-h button:hover .sum { color: var(--ink-2); }
+/* The body: controls in a grid of equal columns as wide as the row allows (two at the site's usual width, one under ~1100px); a `.wide` control
+   (the long Style and Colors rows, the swatch grids) spans them all. Each control is a fixed label column and a wrapping cell of its parts. */
+.studio-sec-b { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 540px), 1fr)); gap: 6px 36px; padding: 2px 0 14px 23px; }
+.studio-sec-b .control { display: grid; grid-template-columns: 92px minmax(0, 1fr); column-gap: 10px; align-items: start; min-height: 30px; }
+.studio-sec-b .control > .lab { padding-top: 9px; line-height: 1.2; }
+.studio-sec-b .control > .ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-height: 30px; }
+.studio-sec-b .control.wide { grid-column: 1 / -1; }
+.studio-sec-b .studio-hint.small { line-height: 1.3; }
+.studio-sec-b .studio-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 6px 14px; width: 100%; }
+.studio-sec-b .studio-swatch { display: grid; grid-template-columns: 24px auto minmax(0, 1fr); gap: 7px; align-items: center; }
+.studio-sec-b .studio-swatch > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.studio-sec-b .studio-slider { gap: 8px; margin-right: 8px; }
+.studio-sec-b .studio-slider input[type="range"] { width: 120px; }
+.studio-sec-b .studio-slider > span:first-child { min-width: 56px; }
+@media (max-width: 720px) { .studio-sec-b .control { grid-template-columns: minmax(0, 1fr); row-gap: 2px; } .studio-sec-b .control > .lab { padding-top: 4px; } }
 .studio-size { display: inline-flex; align-items: center; gap: 6px; }
 .studio-size input { width: 76px; font: inherit; font-variant-numeric: tabular-nums; color: var(--ink); background: var(--panel); border: 1px solid var(--line-2); border-radius: 6px; padding: 4px 8px; }
 .studio-size input:disabled { color: var(--ink-4); }
@@ -606,10 +638,13 @@ svg text { user-select: none; font-family: var(--sans); }
 .studio-canvas { flex: 1; position: relative; min-height: 0; }
 .studio-foot { color: var(--ink-3); font-size: 12px; margin: 10px 0 0; font-variant-numeric: tabular-nums; }
 .studio-hint.small { font-size: 11.5px; color: var(--ink-4); }
-/* Export row: Download / Copy buttons and a brief status ("Rendering…", "Copied", or the browser's refusal) */
+/* Buttons: the top bar's Download PNG (`.primary`, filled) and Copy PNG, the scheme editor's small ones; a brief status ("Rendering…", "Copied", or the browser's refusal) beside them */
 .studio-btn { border: 1px solid var(--line-2); border-radius: 6px; background: var(--panel); color: var(--ink); font: inherit; font-size: 13px; padding: 4px 12px; cursor: pointer; white-space: nowrap; }
 .studio-btn:hover { border-color: var(--ink-3); }
 .studio-btn:disabled { color: var(--ink-4); cursor: default; border-color: var(--line-2); }
+.studio-btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.studio-btn.primary:hover { opacity: 0.88; }
+.studio-btn.primary:disabled { opacity: 0.5; color: var(--bg); }
 .studio-status { font-size: 12.5px; color: var(--ink-2); }
 .studio-status.err { color: #b3261e; }
 .studio-btn.small { font-size: 12px; padding: 2px 9px; }

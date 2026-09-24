@@ -1,9 +1,13 @@
-import { useMemo, useRef } from "react";
+import { useId, useMemo, useRef } from "react";
 import type { CI } from "../data";
 import { LogoGlyph, logoFor } from "../logos";
 import { GLYPH_SCALE, LEADER_STYLE, LEGEND_CLS, LEGEND_GAP, Legend, Mark, NAME_CLS, axisMargins, leaderFor, legendLayout, type LabelsMode, type MarkShape } from "./PRScatter";
 import { useTextMeasure } from "./measure";
 import { DECIDER_TEXT, selectable, useSize, useWidth } from "./ui";
+import { PlotBgPattern, type PlotBg } from "./plotBg";
+
+/** A url(#…)-safe id from useId, for this chart's background pattern (plotBg.tsx). */
+const useBgId = () => `bg-${useId().replace(/[^A-Za-z0-9_-]/g, "")}`;
 
 /**
  * Screenshot-studio charts for the Cost, Speed and Stability plots (StudioPage.tsx): static SVG, no tooltips, hover or motion; every
@@ -50,9 +54,11 @@ function logTicks(d0: number, d1: number): number[] {
  * `mark` (the studio's Marks control) is the dot plot's point shape (PRScatter.tsx Mark).
  * `onSelect` (the dashboard's B variant, AppB.tsx; the studio passes none) makes each row a button that opens the details modal for its id: a transparent
  * full-width hit rect behind the row tints on hover (styles.css `.sel .hit`), Enter and Space work (ui.tsx selectable). Without it the rows are inert, as in the studio.
+ * `bg` (the studio's Background control; none by default) is a pattern behind the bar area, under the gridlines (plotBg.tsx).
  */
-export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort = "asc", axis, fmtTick, logos = true, labelW, textScale = 1, mark = "dot", onSelect }: { rows: StudioRow[]; kind?: "bar" | "dot"; scale?: "linear" | "log"; domain?: [number, number]; sort?: "asc" | "desc" | "none"; axis: string; fmtTick: (v: number) => string; logos?: boolean; labelW?: number; textScale?: number; mark?: MarkShape; onSelect?: (id: string) => void }) {
+export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort = "asc", axis, fmtTick, logos = true, labelW, textScale = 1, mark = "dot", onSelect, bg = "none" }: { rows: StudioRow[]; kind?: "bar" | "dot"; scale?: "linear" | "log"; domain?: [number, number]; sort?: "asc" | "desc" | "none"; axis: string; fmtTick: (v: number) => string; logos?: boolean; labelW?: number; textScale?: number; mark?: MarkShape; onSelect?: (id: string) => void; bg?: PlotBg }) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const bgId = useBgId();
   const W = useWidth(hostRef, 900);
   const s = textScale, ROW = ROW0 * s, TOP = TOP0 * s;
   // text widths as drawn (measure.tsx): names (.nm, the decider rows heavier), figures (.mono) and the plain "not measured"
@@ -95,6 +101,8 @@ export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort 
   return (
     <div ref={hostRef} style={{ position: "relative" }}>
       <svg viewBox={`0 0 ${W} ${h}`} width={W} height={h} style={{ display: "block", overflow: "visible" }}>
+        <defs><PlotBgPattern id={bgId} kind={bg} s={s} /></defs>
+        {bg !== "none" && n > 0 && <rect x={x0} y={TOP} width={plotW} height={bottom - TOP} fill={`url(#${bgId})`} />}
         {ticks.map((t) => (
           <g key={t}>
             <line className="gl" x1={X(t)} x2={X(t)} y1={TOP} y2={bottom} stroke="var(--grid)" />
@@ -167,8 +175,9 @@ export type StudioScatterPt = { id: string; name: string; color: string; x: numb
 const PR = 24, PT = 18;
 
 /** Cost (log x) against recall (y, 95% whisker). Sized to the host's box like PRScatter's `fill` mode (host must be positioned). `leaders`, `labels`, `mark` and `markSize` as on PRScatter: a hairline from a displaced label to its mark; a legend row at the top instead of point labels; the point shape and the Mark size multiplier the label placement allows for. `onSelect` (AppB.tsx) makes each mark a button opening the details modal for its id; the studio passes none. */
-export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = true, emptyText = "Select at least one model.", textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, onSelect }: { pts: StudioScatterPt[]; xLabel: string; yLabel?: string; fmtX: (v: number) => string; logos?: boolean; emptyText?: string; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; onSelect?: (id: string) => void }) {
+export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = true, emptyText = "Select at least one model.", textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, onSelect, bg = "none" }: { pts: StudioScatterPt[]; xLabel: string; yLabel?: string; fmtX: (v: number) => string; logos?: boolean; emptyText?: string; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; onSelect?: (id: string) => void; bg?: PlotBg }) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const bgId = useBgId();
   const sz = useSize(hostRef, { w: 900, h: 520 });
   const W = sz.w, H = Math.max(300, sz.h);
   const s = textScale;
@@ -206,6 +215,8 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos = tr
   return (
     <div ref={hostRef} style={{ position: "absolute", inset: 0 }}>
       <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ display: "block", overflow: "visible" }}>
+        <defs><PlotBgPattern id={bgId} kind={bg} s={s} /></defs>
+        {bg !== "none" && <rect x={PL} y={top} width={W - PR - PL} height={H - PB - top} fill={`url(#${bgId})`} />}
         {xt.map((t) => (
           <g key={`x${t}`}>
             <line className="gl" x1={X(t)} x2={X(t)} y1={top} y2={H - PB} stroke="var(--grid-x, var(--grid))" />

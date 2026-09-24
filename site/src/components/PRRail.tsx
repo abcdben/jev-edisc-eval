@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useId, useRef } from "react";
 import type { CI } from "../data";
 import { fmtPct, fmtRange } from "../data";
 import { Logo, LogoGlyph } from "../logos";
@@ -7,6 +7,7 @@ import { Mark, NAME_CLS, prTip } from "./PRScatter";
 import { CLICK_HINT, DECIDER_TEXT, ROW_PULSE_MS, RowTint, TipBox, fadeStyle, selectable, usePresence, usePulseWindow, useTip, useTween, useWidth } from "./ui";
 import { hoverable } from "./hover";
 import { useTextMeasure } from "./measure";
+import { PlotBgPattern, type PlotBg } from "./plotBg";
 
 /** Row geometry (row height, value column) shared with PRHeat so the two ranked views keep rows in place; RAIL is the rank rail at the left edge, RANK_W the `01`–`12` numerals, RANGE_W the muted "82–91" interval column after each value. */
 const ROW0 = 26, NUM_W0 = 54, RANGE_W0 = 52, RAIL = 3, RANK_W0 = 26, TOP0 = 20;
@@ -20,8 +21,10 @@ const ROW0 = 26, NUM_W0 = 54, RANGE_W0 = 52, RAIL = 3, RANK_W0 = 26, TOP0 = 20;
  */
 /** `range` (the screenshot studio) fixes both panels' axis to an explicit 0–1 range, overriding `zoom`. */
 /** `textScale` (the studio's Text control; 1 on the site) multiplies every font size and the row geometry (row height, label and value columns) with it. Whisker width and dot radius read --sw-mult / --r-add (styles.css, the studio's high-contrast block); `mark` (the studio's Marks control; `dot` on the site) is the point shape (PRScatter.tsx Mark). */
-export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, onSelect, highlight, onHover, textScale = 1, mark = "dot" }: { items: PRItem[]; zoom: boolean; range?: [number, number]; sortBy?: "recall" | "precision" | "f1"; logos?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; textScale?: number; mark?: MarkShape }) {
+/** `bg` (the studio's Background control; the site's dot matrix, `dots`) is the pattern behind each panel's rows (plotBg.tsx). */
+export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, onSelect, highlight, onHover, textScale = 1, mark = "dot", bg = "dots" }: { items: PRItem[]; zoom: boolean; range?: [number, number]; sortBy?: "recall" | "precision" | "f1"; logos?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; textScale?: number; mark?: MarkShape; bg?: PlotBg }) {
   const { tip, show, hide, hostRef } = useTip();
+  const bgId = `bg-${useId().replace(/[^A-Za-z0-9_-]/g, "")}`;
   const pickRow = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const W = useWidth(hostRef, 760);
   const s = textScale, ROW = ROW0 * s, NUM_W = NUM_W0 * s, RANGE_W = RANGE_W0 * s, RANK_W = RANK_W0 * s, TOP = TOP0 * s;
@@ -74,9 +77,7 @@ export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, o
       <div ref={hostRef} data-tip-host style={{ position: "relative" }}>
         <svg viewBox={`0 0 ${W} ${h}`} width={W} height={h} style={{ display: "block", overflow: "visible" }}>
           <defs>
-            <pattern id="dotgrid-rail" width={10} height={10} patternUnits="userSpaceOnUse">
-              <circle cx={1} cy={1} r={0.7} fill="var(--dots)" fillOpacity={0.8} />
-            </pattern>
+            <PlotBgPattern id={bgId} kind={bg} s={s} step={10} opacity={0.8} />
           </defs>
           {/* rank-indexed furniture: banding, separators, rail and numerals stay put while the rows slide between ranks */}
           {rows.map((_, i) => (
@@ -90,7 +91,7 @@ export function PRRail({ items, zoom, range, sortBy = "recall", logos = false, o
           {n > 0 && <line x1={RAIL + 4} x2={W} y1={TOP} y2={TOP} stroke="var(--line-2)" />}
           {[0, 1].map((col) => (
             <g key={col}>
-              <rect x={x0[col]} y={TOP} width={Math.max(0, colW)} height={n * ROW} fill="url(#dotgrid-rail)" />
+              {bg !== "none" && <rect x={x0[col]} y={TOP} width={Math.max(0, colW)} height={n * ROW} fill={`url(#${bgId})`} />}
               <text x={x0[col]} y={12 * s} fontSize={12 * s} fontWeight={500} fill="var(--ink)" className="ax">{col === 0 ? "Recall" : "Precision"}</text>
               <text x={x0[col] + colW + NUMS - 2} y={12 * s} textAnchor="end" fontSize={10 * s} fontWeight={500} letterSpacing=".06em" fill="var(--ink-3)">95% CI</text>
               {ticks.map((t, i) => (

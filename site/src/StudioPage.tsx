@@ -6,14 +6,18 @@ import { PRRail } from "./components/PRRail";
 import { StudioBars, StudioScatter } from "./components/StudioCharts";
 import { COST_UNIT, costAxis, costCaption, costPts, costRows, fmtMoneyTick, fmtMsTick, fmtPctTick, speedAxis, speedCaption, speedRows, stabAxis, stabCaption, stabRows, type CostChart, type CostUnit, type SpeedChart, type SpeedUnit, type StabChart } from "./opsRows";
 import { Control, Seg } from "./components/ui";
+import { Section, summarize, useSections } from "./components/Inspector";
+import type { PlotBg } from "./components/plotBg";
 import { copyPng, downloadBlob, renderPanelPng, slug, type ExportBackground } from "./exportPng";
 import { PALETTES, isPaletteId, toHex, toVars, varOf, type PaletteId } from "./palettes";
 
 /**
  * Screenshot studio (studio.html → studio.tsx → this page; unlinked from the site): one Compare models chart alone, on a plain panel whose size
- * you set, with every control (corpus, models, issue, plot and chart type, units, axis range, size, theme, frame, legend, style and a custom colour scheme
- * you can save, load, export and import, model colours) in the bars above and none on the plot. Plots: recall/precision (the site's map and ranked views), Cost, Speed and Stability (components/StudioCharts.tsx).
- * Drag the panel's bottom-right corner or type a size; pick a preset for LinkedIn's usual aspect ratios. Nothing pulses and nothing opens on click.
+ * you set, with every control above the plot and none on it. The top bar holds what is plotted (plot, corpus, models, issue) and the PNG export;
+ * the inspector under it (components/Inspector.tsx) groups the rest into disclosure sections: Chart (the plot's own controls: view, axes, marks,
+ * boxes, labels), Canvas (size, frame, legend, logos, background pattern), Style (preset, colours, text, contrast), Scheme (the custom scheme
+ * editor, with Style → Custom) and Export (scale, backdrop). Plots: recall/precision (the site's map and ranked views), Cost, Speed and Stability
+ * (components/StudioCharts.tsx). Drag the panel's bottom-right corner or type a size; pick a preset for LinkedIn's usual aspect ratios. Nothing pulses and nothing opens on click.
  */
 
 type Preset = { id: string; label: string; w: number; h: number };
@@ -123,6 +127,24 @@ const isExportScale = (s: string | null): s is ExportScale => s === "1" || s ===
 /** The four plots. `pr` is the site's recall/precision chart (map or ranked); the others are the studio's own bar, dot and scatter charts (rows and captions: opsRows.ts). */
 type Plot = "pr" | "cost" | "speed" | "stability";
 
+/**
+ * Background (Canvas → Background): the pattern behind every plot's plot area (components/plotBg.tsx). `auto` is what each Style preset drew before
+ * the control existed: the recall/precision charts' dot matrix in the preset's --dots (transparent in Journal, Newsroom, Economist and Epoch), nothing
+ * behind the bar and scatter charts; `off` removes it everywhere; `dots` and `grid` put the pattern behind every plot, in the preset's --dots where
+ * it has one and otherwise a faint ink written to the panel as --plot-dots.
+ */
+type Bg = "auto" | "off" | "dots" | "grid";
+const BG_OPTIONS: { id: Bg; label: string; title: string }[] = [
+  { id: "auto", label: "auto", title: "The style's own: the dot matrix on the recall/precision charts where the preset has a dot colour (Site, LinkedIn, Slate), nothing behind the bar charts" },
+  { id: "off", label: "plain", title: "No pattern behind the plot area, in every plot and style" },
+  { id: "dots", label: "dot grid", title: "A dot matrix behind the plot area of every plot; the style's dot colour, or a faint ink where the style has none" },
+  { id: "grid", label: "fine grid", title: "Fine hairlines behind the plot area of every plot, in the same colour as the dot grid" },
+];
+const isBg = (s: string | null): s is Bg => BG_OPTIONS.some((o) => o.id === s);
+const BG_SUMMARY: Record<Bg, string> = { auto: "background auto", off: "plain background", dots: "dot grid", grid: "fine grid" };
+/** A computed --dots that draws nothing: unset, or transparent in either spelling. */
+const noColour = (v: string) => !v || v === "transparent" || v === "rgba(0, 0, 0, 0)";
+
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, Math.round(n)));
 
 export default function StudioPage() {
@@ -178,6 +200,12 @@ export default function StudioPage() {
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
   const [style, setStyle] = useState<PlotStyle>(() => { const s = localStorage.getItem("studio-style"); return isPlotStyle(s) ? s : "site"; });
   useEffect(() => { localStorage.setItem("studio-style", style); }, [style]);
+  // Background (Bg above): `studio-bg`; `presetDots` is whether the panel's own --dots (preset, theme or Custom scheme; not the --plot-dots override) draws anything.
+  const [bg, setBg] = useState<Bg>(() => { const s = localStorage.getItem("studio-bg"); return isBg(s) ? s : "auto"; });
+  useEffect(() => { localStorage.setItem("studio-bg", bg); }, [bg]);
+  const [presetDots, setPresetDots] = useState(true);
+  // The inspector's sections (components/Inspector.tsx): Chart and Canvas open on a first visit, Scheme whenever Style → Custom is chosen.
+  const sections = useSections({ chart: true, canvas: true, style: false, scheme: true, export: false });
 
   // Custom scheme: the variables on the panel (`studio-custom`), the schemes saved by name (`studio-schemes`) and the name in the field / the
   // saved scheme selected (`studio-scheme`, one value: the select shows it while it matches a saved name).
@@ -250,7 +278,7 @@ export default function StudioPage() {
     return out;
   };
   // Entering Custom copies the preset that was on, so the editor starts from real values; a reload into Custom with nothing stored copies Site.
-  const onStyle = (s: PlotStyle) => { if (s === "custom" && style !== "custom") setScheme(presetVars(style)); setStyle(s); };
+  const onStyle = (s: PlotStyle) => { if (s === "custom" && style !== "custom") { setScheme(presetVars(style)); sections.set("scheme", true); } setStyle(s); };
   useEffect(() => { if (style === "custom" && !Object.keys(scheme).length) setScheme(presetVars("site")); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   /** Every roster model's colour as the panel currently resolves it (the preset's, or the palette or swatch over it). */
   const currentColors = (): Record<string, string> => {
@@ -327,7 +355,13 @@ export default function StudioPage() {
     const outline = boxOutlined ? num("--box-stroke-w", 0.75) > 0 : num("--box-stroke", 0) > 0;
     const drawn = (boxes !== "outline" && num("--box-alpha", 0.14) > 0) || outline, whiskers = num("--op-whisker", 0.75) > 0;
     setMarks((p) => (p.boxes === drawn && p.whiskers === whiskers ? p : { boxes: drawn, whiskers }));
+    setPresetDots(!noColour(cs.getPropertyValue("--dots").trim()));
   }, [style, scheme, contrast, theme, boxes, boxOutlined]);
+  // The Background control on the panel: the pattern each chart draws (auto keeps each chart's own default) and, where the style has no dot colour,
+  // a faint ink for it: lighter on a dark panel, stronger in high contrast, and lighter again for the fine grid, whose lines cover more of the area than dots.
+  const plotBg = (dflt: PlotBg): PlotBg => (bg === "auto" ? dflt : bg === "off" ? "none" : bg);
+  const inkPct = (darkPanel ? 13 : contrast === "high" ? 30 : 20) * (bg === "grid" ? 0.6 : 1);
+  const bgVars: Record<string, string> = bg !== "auto" && bg !== "off" && !presetDots ? { "--plot-dots": `color-mix(in srgb, var(--ink) ${inkPct}%, transparent)` } : {};
   const legendText = (): string[] => {
     // the note names the mark drawn at the point (Marks control); with logos on it keeps the site's wording
     const what = logos || mark === "dot" ? "Dot" : mark === "x" ? "Cross" : mark[0].toUpperCase() + mark.slice(1);
@@ -345,6 +379,24 @@ export default function StudioPage() {
     const styleId = style === "custom" && schemeName.trim() ? `custom-${schemeName.trim()}` : style;
     return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, corpus, styleId, colorMode === "style" ? "" : colorMode].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
   };
+  const exportSize = `${w * Number(exScale)} × ${fills ? h * Number(exScale) : "auto"} px`;
+
+  // The sections' one-line summaries while closed (Inspector.tsx summarize): the values a closed section holds, in the order its controls come.
+  const markText = `${fills && logos ? "logos" : MARK_SHAPES.find((m) => m.id === mark)?.label} ${markSize.toUpperCase()}`;
+  const chartSummary = summarize(
+    plot === "pr" && chart, plot === "pr" && (axes === "full" ? "0–100%" : axes === "zoom" ? "fit to data" : `${ax.xlo}–${ax.xhi}%${chart === "map" ? ` × ${ax.ylo}–${ax.yhi}%` : ""}`),
+    plot === "cost" && (costChart === "scatter" ? "cost vs recall" : costChart === "dots" ? "dots · log" : `bars · ${costScale}`), plot === "cost" && COST_UNIT[costUnit].axis,
+    plot === "speed" && (speedChart === "throughput" ? "docs per hour" : `${speedChart === "dots" ? "dots · log" : "bars"} · ${speedUnit} per document`),
+    plot === "stability" && (stabChart === "agree" ? "agreement · zoomed" : stabChart === "dots" ? "dots" : "disagreement bars"), plot === "stability" && (stabSetting === "t0" ? "t = 0" : "default sampling"), plot === "stability" && hideUnmeasured && "unmeasured hidden",
+    markText, plot === "pr" && chart === "map" && `${BOX_MODES.find((m) => m.id === boxes)?.label} boxes`, fills && `labels ${labelsMode}`, fills && labelsMode === "beside" && leaders && "leaders",
+  );
+  const canvasSummary = summarize(`${w} × ${fills ? h : "auto"} px`, frame ? "framed" : "plain", legend ? "legend" : "no legend", logos ? "logos" : "names only", BG_SUMMARY[bg]);
+  const styleSummary = summarize(
+    STYLES.find((s) => s.id === style)?.label, style === "custom" && schemeName.trim(),
+    colorMode === "style" ? null : colorMode === "custom" ? "custom colours" : PALETTES.find((p) => p.id === colorMode)?.label, `Text ${text.toUpperCase()}`, `${contrast} contrast`,
+  );
+  const schemeSummary = summarize(savedName ? `${savedName} (saved)` : schemeName.trim() ? `${schemeName.trim()} (unsaved)` : "unnamed", `${Object.keys(schemes).length} saved`, (scheme["--sans"] ?? "").split(",")[0].replace(/["']/g, "").trim());
+  const exportSummary = summarize(`${exScale}×`, exportSize, exBg === "panel" ? "panel colour" : "transparent");
 
   return (
     <div className="page studio">
@@ -354,7 +406,8 @@ export default function StudioPage() {
         <span className="theme"><Seg value={theme} onChange={setTheme} options={[{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }]} /></span>
       </header>
 
-      <div className="controls">
+      {/* Top bar: what is plotted, and the PNG export at the right (the export's scale and backdrop are in the Export section below). */}
+      <div className="controls studio-bar">
         <Control label="Plot">
           <Seg value={plot} onChange={setPlot} options={[{ id: "pr", label: "Recall / precision" }, { id: "cost", label: "Cost" }, { id: "speed", label: "Speed" }, { id: "stability", label: "Stability" }]} />
         </Control>
@@ -374,224 +427,237 @@ export default function StudioPage() {
             </span>
           </Control>
         )}
+        <span className="studio-bar-r">
+          {exStatus && <span className={`studio-status${exStatus.err ? " err" : ""}`} role="status">{exStatus.msg}</span>}
+          <span className="studio-hint small" title="The PNG's pixel size: the panel × the Export scale">{exportSize}</span>
+          <button type="button" className="studio-btn primary" onClick={onDownload} disabled={exStatus?.busy} title="Save the chart area as a PNG file">Download PNG</button>
+          <button type="button" className="studio-btn" onClick={onCopy} disabled={exStatus?.busy} title="Copy the chart area as a PNG image">Copy PNG</button>
+        </span>
       </div>
 
-      <div className="controls studio-row2">
-        {plot === "pr" && (
-          <>
-            <Control label="View">
-              <Seg value={chart} onChange={setChart} options={[{ id: "map", label: "map" }, { id: "ranked", label: "ranked" }]} />
-            </Control>
-            <Control label="Axes">
-              <Seg value={axes} onChange={setAxes} options={[{ id: "full", label: "0–100%" }, { id: "zoom", label: "fit to data" }, { id: "custom", label: "custom" }]} />
-              {axes === "custom" && (
-                <span className="studio-axes">
-                  <span className="studio-size">
-                    <span className="unit">{chart === "map" ? "recall" : "both panels"}</span>
-                    <input type="number" min={0} max={100} step={5} value={ax.xlo} onChange={setBound("xlo")} aria-label="recall axis minimum, percent" />
-                    <span className="x">–</span>
-                    <input type="number" min={0} max={100} step={5} value={ax.xhi} onChange={setBound("xhi")} aria-label="recall axis maximum, percent" />
-                    <span className="unit">%</span>
-                  </span>
-                  {chart === "map" && (
+      {/* Inspector (components/Inspector.tsx): every other control, grouped in disclosure sections that summarise their values while closed. */}
+      <div className="studio-ins">
+        <Section id="chart" title="Chart" open={!!sections.open.chart} onToggle={() => sections.toggle("chart")} summary={chartSummary}>
+          {plot === "pr" && (
+            <>
+              <Control label="View">
+                <Seg value={chart} onChange={setChart} options={[{ id: "map", label: "map" }, { id: "ranked", label: "ranked" }]} />
+              </Control>
+              <Control label="Axes">
+                <Seg value={axes} onChange={setAxes} options={[{ id: "full", label: "0–100%" }, { id: "zoom", label: "fit to data" }, { id: "custom", label: "custom" }]} />
+                {axes === "custom" && (
+                  <span className="studio-axes">
                     <span className="studio-size">
-                      <span className="unit">precision</span>
-                      <input type="number" min={0} max={100} step={5} value={ax.ylo} onChange={setBound("ylo")} aria-label="precision axis minimum, percent" />
+                      <span className="unit">{chart === "map" ? "recall" : "both panels"}</span>
+                      <input type="number" min={0} max={100} step={5} value={ax.xlo} onChange={setBound("xlo")} aria-label="recall axis minimum, percent" />
                       <span className="x">–</span>
-                      <input type="number" min={0} max={100} step={5} value={ax.yhi} onChange={setBound("yhi")} aria-label="precision axis maximum, percent" />
+                      <input type="number" min={0} max={100} step={5} value={ax.xhi} onChange={setBound("xhi")} aria-label="recall axis maximum, percent" />
                       <span className="unit">%</span>
                     </span>
-                  )}
-                </span>
-              )}
-            </Control>
-          </>
-        )}
-        {plot === "cost" && (
-          <>
-            <Control label="Chart">
-              <Seg value={costChart} onChange={setCostChart} options={[{ id: "bars", label: "bars" }, { id: "dots", label: "dots · log" }, { id: "scatter", label: "cost vs recall" }]} />
-              {costChart === "bars" && <Seg value={costScale} onChange={setCostScale} options={[{ id: "linear", label: "linear" }, { id: "log", label: "log" }]} />}
-            </Control>
-            <Control label="Units">
-              <Seg value={costUnit} onChange={setCostUnit} options={[{ id: "1k", label: "$ per 1,000 docs" }, { id: "100k", label: "$ per 100,000 docs" }, { id: "decision", label: "$ per decision" }]} />
-            </Control>
-          </>
-        )}
-        {plot === "speed" && (
-          <>
-            <Control label="Chart">
-              <Seg value={speedChart} onChange={setSpeedChart} options={[{ id: "bars", label: "bars" }, { id: "dots", label: "dots · log" }, { id: "throughput", label: "docs per hour" }]} />
-            </Control>
-            {speedChart !== "throughput" && (
-              <Control label="Units">
-                <Seg value={speedUnit} onChange={setSpeedUnit} options={[{ id: "ms", label: "ms per document" }, { id: "s", label: "s per document" }]} />
+                    {chart === "map" && (
+                      <span className="studio-size">
+                        <span className="unit">precision</span>
+                        <input type="number" min={0} max={100} step={5} value={ax.ylo} onChange={setBound("ylo")} aria-label="precision axis minimum, percent" />
+                        <span className="x">–</span>
+                        <input type="number" min={0} max={100} step={5} value={ax.yhi} onChange={setBound("yhi")} aria-label="precision axis maximum, percent" />
+                        <span className="unit">%</span>
+                      </span>
+                    )}
+                  </span>
+                )}
               </Control>
-            )}
-          </>
-        )}
-        {plot === "stability" && (
-          <>
-            <Control label="Chart">
-              <Seg value={stabChart} onChange={setStabChart} options={[{ id: "bars", label: "disagreement bars" }, { id: "agree", label: "agreement · zoomed" }, { id: "dots", label: "dots" }]} />
+            </>
+          )}
+          {plot === "cost" && (
+            <>
+              <Control label="Chart">
+                <Seg value={costChart} onChange={setCostChart} options={[{ id: "bars", label: "bars" }, { id: "dots", label: "dots · log" }, { id: "scatter", label: "cost vs recall" }]} />
+                {costChart === "bars" && <Seg value={costScale} onChange={setCostScale} options={[{ id: "linear", label: "linear" }, { id: "log", label: "log" }]} />}
+              </Control>
+              <Control label="Units">
+                <Seg value={costUnit} onChange={setCostUnit} options={[{ id: "1k", label: "$ per 1,000 docs" }, { id: "100k", label: "$ per 100,000 docs" }, { id: "decision", label: "$ per decision" }]} />
+              </Control>
+            </>
+          )}
+          {plot === "speed" && (
+            <>
+              <Control label="Chart">
+                <Seg value={speedChart} onChange={setSpeedChart} options={[{ id: "bars", label: "bars" }, { id: "dots", label: "dots · log" }, { id: "throughput", label: "docs per hour" }]} />
+              </Control>
+              {speedChart !== "throughput" && (
+                <Control label="Units">
+                  <Seg value={speedUnit} onChange={setSpeedUnit} options={[{ id: "ms", label: "ms per document" }, { id: "s", label: "s per document" }]} />
+                </Control>
+              )}
+            </>
+          )}
+          {plot === "stability" && (
+            <>
+              <Control label="Chart">
+                <Seg value={stabChart} onChange={setStabChart} options={[{ id: "bars", label: "disagreement bars" }, { id: "agree", label: "agreement · zoomed" }, { id: "dots", label: "dots" }]} />
+              </Control>
+              <Control label="Setting">
+                <Seg value={stabSetting} onChange={setStabSetting} options={[{ id: "default", label: "default", title: "Vendor default sampling" }, { id: "t0", label: "t = 0", title: stab.hasT0 ? "Temperature 0 where the API accepts it" : "No t = 0 cell among the selected models" }]} />
+                <Seg value={hideUnmeasured ? "hide" : "show"} onChange={(x) => setHideUnmeasured(x === "hide")} options={[{ id: "show", label: "list unmeasured" }, { id: "hide", label: "hide unmeasured" }]} />
+              </Control>
+            </>
+          )}
+          {/* the shape control steps aside where the vendor glyph is the mark (a scatter with logos on); the size control scales either */}
+          {!(fills && logos) && (
+            <Control label="Marks">
+              <Seg value={mark} onChange={setMark} options={MARK_SHAPES.map((m) => ({ id: m.id, label: m.label }))} />
             </Control>
-            <Control label="Setting">
-              <Seg value={stabSetting} onChange={setStabSetting} options={[{ id: "default", label: "default", title: "Vendor default sampling" }, { id: "t0", label: "t = 0", title: stab.hasT0 ? "Temperature 0 where the API accepts it" : "No t = 0 cell among the selected models" }]} />
-              <Seg value={hideUnmeasured ? "hide" : "show"} onChange={(x) => setHideUnmeasured(x === "hide")} options={[{ id: "show", label: "list unmeasured" }, { id: "hide", label: "hide unmeasured" }]} />
+          )}
+          <Control label="Mark size">
+            <Seg value={markSize} onChange={setMarkSize} options={[{ id: "s", label: "S", title: "0.75× the site's mark" }, { id: "m", label: "M", title: "The site's mark size" }, { id: "l", label: "L", title: "1.5×" }, { id: "xl", label: "XL", title: "2.2×, for logos inside wide interval boxes" }]} />
+            {fills && logos && <span className="studio-hint small" title="Switch Canvas → Panel to names only to choose a mark shape">logos are the marks</span>}
+          </Control>
+          {plot === "pr" && chart === "map" && (
+            <Control label="Boxes">
+              <Seg value={boxes} onChange={setBoxes} options={BOX_MODES.map((m) => ({ id: m.id, label: m.label, title: m.title }))} />
             </Control>
-          </>
-        )}
-        <Control label="Size">
-          <span className="select">
-            <select value={preset} onChange={(e) => { const p = PRESETS.find((x) => x.id === e.target.value); if (p) { setW(p.w); setH(p.h); } }}>
-              {PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-              <option value="custom" disabled>custom</option>
-            </select>
-          </span>
-          <span className="studio-size">
-            <input type="number" min={320} max={4000} step={10} value={w} onChange={(e) => setW(clamp(Number(e.target.value) || w, 320, 4000))} aria-label="width in pixels" />
-            <span className="x">×</span>
-            <input type="number" min={240} max={4000} step={10} value={h} onChange={(e) => setH(clamp(Number(e.target.value) || h, 240, 4000))} aria-label="height in pixels" disabled={!fills} />
-            <span className="unit">px{fills ? "" : " · height follows the rows"}</span>
-          </span>
-        </Control>
-        <Control label="Panel">
-          <Seg value={frame ? "card" : "plain"} onChange={(x) => setFrame(x === "card")} options={[{ id: "card", label: "framed" }, { id: "plain", label: "plain" }]} />
-          <Seg value={legend ? "on" : "off"} onChange={(x) => setLegend(x === "on")} options={[{ id: "on", label: "legend" }, { id: "off", label: "no legend" }]} />
-          <Seg value={logos ? "on" : "off"} onChange={(x) => setLogos(x === "on")} options={[{ id: "on", label: "logos" }, { id: "off", label: "names only" }]} />
-        </Control>
-        {/* the shape control steps aside where the vendor glyph is the mark (a scatter with logos on); the size control scales either */}
-        {!(fills && logos) && (
-          <Control label="Marks">
-            <Seg value={mark} onChange={setMark} options={MARK_SHAPES.map((m) => ({ id: m.id, label: m.label }))} />
-          </Control>
-        )}
-        <Control label="Mark size">
-          <Seg value={markSize} onChange={setMarkSize} options={[{ id: "s", label: "S", title: "0.75× the site's mark" }, { id: "m", label: "M", title: "The site's mark size" }, { id: "l", label: "L", title: "1.5×" }, { id: "xl", label: "XL", title: "2.2×, for logos inside wide interval boxes" }]} />
-          {fills && logos && <span className="studio-hint small" title="Switch Panel to names only to choose a mark shape">logos are the marks</span>}
-        </Control>
-        {plot === "pr" && chart === "map" && (
-          <Control label="Boxes">
-            <Seg value={boxes} onChange={setBoxes} options={BOX_MODES.map((m) => ({ id: m.id, label: m.label, title: m.title }))} />
-          </Control>
-        )}
-        {fills && (
-          <Control label="Labels">
-            <Seg value={labelsMode} onChange={setLabelsMode} options={[{ id: "beside", label: "beside", title: "Each model's name next to its mark" }, { id: "legend", label: "legend", title: "A legend row at the top of the panel (square swatches and names); no names on the plot" }]} />
-          </Control>
-        )}
-        {fills && labelsMode === "beside" && (
-          <Control label="Leaders">
-            <Seg value={leaders ? "on" : "off"} onChange={(x) => setLeaders(x === "on")} options={[{ id: "off", label: "off" }, { id: "on", label: "on", title: "A hairline in the model's colour from a label the layout pushed away from its mark back to the mark; labels beside their mark get none" }]} />
-          </Control>
-        )}
-        <Control label="Style">
-          <Seg value={style} onChange={onStyle} options={STYLES.map((s) => ({ id: s.id, label: s.label, title: s.title }))} />
-        </Control>
-        {style === "custom" && (
-          <Control label="Saved">
+          )}
+          {fills && (
+            <Control label="Labels">
+              <Seg value={labelsMode} onChange={setLabelsMode} options={[{ id: "beside", label: "beside", title: "Each model's name next to its mark" }, { id: "legend", label: "legend", title: "A legend row at the top of the panel (square swatches and names); no names on the plot" }]} />
+            </Control>
+          )}
+          {fills && labelsMode === "beside" && (
+            <Control label="Leaders">
+              <Seg value={leaders ? "on" : "off"} onChange={(x) => setLeaders(x === "on")} options={[{ id: "off", label: "off" }, { id: "on", label: "on", title: "A hairline in the model's colour from a label the layout pushed away from its mark back to the mark; labels beside their mark get none" }]} />
+            </Control>
+          )}
+        </Section>
+
+        <Section id="canvas" title="Canvas" open={!!sections.open.canvas} onToggle={() => sections.toggle("canvas")} summary={canvasSummary}>
+          <Control label="Size">
             <span className="select">
-              <select value={savedName} onChange={(e) => loadScheme(e.target.value)} aria-label="Saved schemes">
-                <option value="">{Object.keys(schemes).length ? "—" : "none yet"}</option>
-                {Object.keys(schemes).sort().map((n) => <option key={n} value={n}>{n}</option>)}
+              <select value={preset} onChange={(e) => { const p = PRESETS.find((x) => x.id === e.target.value); if (p) { setW(p.w); setH(p.h); } }} aria-label="size preset">
+                {PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+                <option value="custom" disabled>custom</option>
               </select>
             </span>
-            <button type="button" className="studio-btn small" onClick={deleteScheme} disabled={!savedName} title="Remove the selected saved scheme from this browser">Delete</button>
-            <label className="studio-btn small" title="Load a scheme file written by Export JSON (or a bare variable map)">
-              Import JSON
-              <input type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; void importScheme(f); }} />
-            </label>
+            <span className="studio-size">
+              <input type="number" min={320} max={4000} step={10} value={w} onChange={(e) => setW(clamp(Number(e.target.value) || w, 320, 4000))} aria-label="width in pixels" />
+              <span className="x">×</span>
+              <input type="number" min={240} max={4000} step={10} value={h} onChange={(e) => setH(clamp(Number(e.target.value) || h, 240, 4000))} aria-label="height in pixels" disabled={!fills} />
+              <span className="unit">px{fills ? "" : " · height follows the rows"}</span>
+            </span>
           </Control>
-        )}
-        <Control label="Colors">
-          <Seg
-            value={colorMode} onChange={onColorMode}
-            options={[
-              { id: "style" as ColorMode, label: "style's own", title: "The model colours the Style preset defines" },
-              ...PALETTES.map((p) => ({ id: p.id as ColorMode, label: p.label, title: p.title })),
-              { id: "custom" as ColorMode, label: "custom", title: "Pick each model's colour; starts from the colours on screen" },
-            ]}
-          />
-          {colorMode === "custom" && (
-            <span className="studio-swatches">
-              {sel.map((r) => {
-                const m = PRIMARY_BY_KEY[r.model], hex = custom[r.model] ?? "#888888";
+          <Control label="Panel">
+            <Seg value={frame ? "card" : "plain"} onChange={(x) => setFrame(x === "card")} options={[{ id: "card", label: "framed" }, { id: "plain", label: "plain" }]} />
+            <Seg value={legend ? "on" : "off"} onChange={(x) => setLegend(x === "on")} options={[{ id: "on", label: "legend" }, { id: "off", label: "no legend" }]} />
+            <Seg value={logos ? "on" : "off"} onChange={(x) => setLogos(x === "on")} options={[{ id: "on", label: "logos" }, { id: "off", label: "names only" }]} />
+          </Control>
+          <Control label="Background">
+            <Seg value={bg} onChange={setBg} options={BG_OPTIONS} />
+          </Control>
+        </Section>
+
+        <Section id="style" title="Style" open={!!sections.open.style} onToggle={() => sections.toggle("style")} summary={styleSummary}>
+          <Control label="Style" className="wide">
+            <Seg value={style} onChange={onStyle} options={STYLES.map((s) => ({ id: s.id, label: s.label, title: s.title }))} />
+          </Control>
+          <Control label="Colors" className="wide">
+            <Seg
+              value={colorMode} onChange={onColorMode}
+              options={[
+                { id: "style" as ColorMode, label: "style's own", title: "The model colours the Style preset defines" },
+                ...PALETTES.map((p) => ({ id: p.id as ColorMode, label: p.label, title: p.title })),
+                { id: "custom" as ColorMode, label: "custom", title: "Pick each model's colour; starts from the colours on screen" },
+              ]}
+            />
+            {colorMode === "custom" && (
+              <>
+                <span className="studio-swatches">
+                  {sel.map((r) => {
+                    const m = PRIMARY_BY_KEY[r.model], hex = custom[r.model] ?? "#888888";
+                    return (
+                      <label key={r.model} className="studio-swatch" title={`${m.short}: ${hex}`}>
+                        <input type="color" value={hex} onChange={(e) => { const c = e.target.value; setCustom((p) => ({ ...p, [r.model]: c })); }} aria-label={`${m.short} colour`} />
+                        <span>{m.short}</span>
+                      </label>
+                    );
+                  })}
+                </span>
+                <button type="button" className="studio-btn small" onClick={resetCustom} title="Drop the swatches and go back to the style's own colours">reset</button>
+              </>
+            )}
+          </Control>
+          <Control label="Text">
+            <Seg value={text} onChange={setText} options={[{ id: "s", label: "S", title: "90% of the site's text size" }, { id: "m", label: "M", title: "The site's text size" }, { id: "l", label: "L", title: "120%" }, { id: "xl", label: "XL", title: "145%, for phone-sized viewing" }]} />
+          </Control>
+          <Control label="Contrast">
+            <Seg value={contrast} onChange={setContrast} options={[{ id: "normal", label: "normal" }, { id: "high", label: "high", title: "Full-ink labels, darker and thicker axes and whiskers, stronger fills, larger marks" }]} />
+          </Control>
+        </Section>
+
+        {style === "custom" && (
+          <Section id="scheme" title="Scheme" open={!!sections.open.scheme} onToggle={() => sections.toggle("scheme")} summary={schemeSummary}>
+            <Control label="Name">
+              <span className="studio-size">
+                <input type="text" className="name" value={schemeName} onChange={(e) => setSchemeName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") saveScheme(); }} placeholder="name" spellCheck={false} aria-label="scheme name" />
+              </span>
+              <button type="button" className="studio-btn small" onClick={saveScheme} title="Store these values under this name in this browser; an existing name is overwritten">Save</button>
+              <button type="button" className="studio-btn small" onClick={exportScheme} title="Download these values as <name>.json, for another browser">Export JSON</button>
+              {scMsg && <span className="studio-status" role="status">{scMsg}</span>}
+            </Control>
+            <Control label="Saved">
+              <span className="select">
+                <select value={savedName} onChange={(e) => loadScheme(e.target.value)} aria-label="Saved schemes">
+                  <option value="">{Object.keys(schemes).length ? "—" : "none yet"}</option>
+                  {Object.keys(schemes).sort().map((n) => <option key={n} value={n}>{n}</option>)}
+                </select>
+              </span>
+              <button type="button" className="studio-btn small" onClick={deleteScheme} disabled={!savedName} title="Remove the selected saved scheme from this browser">Delete</button>
+              <label className="studio-btn small" title="Load a scheme file written by Export JSON (or a bare variable map)">
+                Import JSON
+                <input type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; void importScheme(f); }} />
+              </label>
+            </Control>
+            <Control label="Surface" className="wide">
+              <span className="studio-swatches">
+                {SCHEME_SURFACE.map((x) => <SchemeColor key={x.v} v={x.v} label={x.label} value={scheme[x.v] ?? ""} onChange={(val) => setVar(x.v, val)} />)}
+              </span>
+            </Control>
+            <Control label="Alpha" className="wide">
+              {SCHEME_SLIDERS.map((x) => {
+                const n = parseFloat(scheme[x.v] ?? ""); const val = Number.isFinite(n) ? n : x.dflt;
                 return (
-                  <label key={r.model} className="studio-swatch" title={`${m.short}: ${hex}`}>
-                    <input type="color" value={hex} onChange={(e) => { const c = e.target.value; setCustom((p) => ({ ...p, [r.model]: c })); }} aria-label={`${m.short} colour`} />
-                    <span>{m.short}</span>
+                  <label key={x.v} className="studio-slider" title={x.title}>
+                    <span>{x.label}</span>
+                    <input type="range" min={x.min} max={x.max} step={x.step} value={val} onChange={(e) => setVar(x.v, e.target.value)} aria-label={x.label} />
+                    <span className="val">{val.toFixed(2)}</span>
                   </label>
                 );
               })}
-              <button type="button" className="studio-btn small" onClick={resetCustom} title="Drop the swatches and go back to the style's own colours">reset</button>
-            </span>
-          )}
-        </Control>
-        <Control label="Text">
-          <Seg value={text} onChange={setText} options={[{ id: "s", label: "S", title: "90% of the site's text size" }, { id: "m", label: "M", title: "The site's text size" }, { id: "l", label: "L", title: "120%" }, { id: "xl", label: "XL", title: "145%, for phone-sized viewing" }]} />
-        </Control>
-        <Control label="Contrast">
-          <Seg value={contrast} onChange={setContrast} options={[{ id: "normal", label: "normal" }, { id: "high", label: "high", title: "Full-ink labels, darker and thicker axes and whiskers, stronger fills, larger marks" }]} />
-        </Control>
-      </div>
-
-      {style === "custom" && (
-        <div className="controls studio-row2 studio-scheme-row">
-          <Control label="Scheme">
-            <span className="studio-size">
-              <input type="text" className="name" value={schemeName} onChange={(e) => setSchemeName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") saveScheme(); }} placeholder="name" spellCheck={false} aria-label="scheme name" />
-            </span>
-            <button type="button" className="studio-btn small" onClick={saveScheme} title="Store these values under this name in this browser; an existing name is overwritten">Save</button>
-            <button type="button" className="studio-btn small" onClick={exportScheme} title="Download these values as <name>.json, for another browser">Export JSON</button>
-            {scMsg && <span className="studio-status" role="status">{scMsg}</span>}
-          </Control>
-          <Control label="Surface">
-            <span className="studio-swatches">
-              {SCHEME_SURFACE.map((x) => <SchemeColor key={x.v} v={x.v} label={x.label} value={scheme[x.v] ?? ""} onChange={(val) => setVar(x.v, val)} />)}
-            </span>
-          </Control>
-          <Control label="Boxes & bars">
-            {SCHEME_SLIDERS.map((x) => {
-              const n = parseFloat(scheme[x.v] ?? ""); const val = Number.isFinite(n) ? n : x.dflt;
-              return (
-                <label key={x.v} className="studio-slider" title={x.title}>
-                  <span>{x.label}</span>
-                  <input type="range" min={x.min} max={x.max} step={x.step} value={val} onChange={(e) => setVar(x.v, e.target.value)} aria-label={x.label} />
-                  <span className="val">{val.toFixed(2)}</span>
-                </label>
-              );
-            })}
-          </Control>
-          <Control label="Font">
-            <span className="studio-size">
-              <input type="text" className="font" value={scheme["--sans"] ?? ""} onChange={(e) => setVar("--sans", e.target.value)} spellCheck={false} aria-label="panel font family, CSS" title="The panel's font-family list, as CSS" />
-            </span>
-          </Control>
-          <Control label="Models">
-            <button type="button" className="studio-btn small" onClick={() => setShowModels((s) => !s)} aria-expanded={showModels}>{showModels ? "hide" : "show"} {SCHEME_MODELS.length} colours</button>
-            {showModels && (
-              <span className="studio-swatches">
-                {SCHEME_MODELS.map((x) => <SchemeColor key={x.v} v={x.v} label={x.label} value={scheme[x.v] ?? ""} onChange={(val) => setVar(x.v, val)} />)}
+            </Control>
+            <Control label="Font" className="wide">
+              <span className="studio-size">
+                <input type="text" className="font" value={scheme["--sans"] ?? ""} onChange={(e) => setVar("--sans", e.target.value)} spellCheck={false} aria-label="panel font family, CSS" title="The panel's font-family list, as CSS" />
               </span>
-            )}
-            {showModels && colorMode !== "style" && <span className="studio-hint small">Colors is on “{colorMode === "custom" ? "custom" : PALETTES.find((p) => p.id === colorMode)?.label}”, which paints over these; set it to style's own to see them.</span>}
-          </Control>
-        </div>
-      )}
+            </Control>
+            <Control label="Models" className="wide">
+              <button type="button" className="studio-btn small" onClick={() => setShowModels((s) => !s)} aria-expanded={showModels}>{showModels ? "hide" : "show"} {SCHEME_MODELS.length} colours</button>
+              {showModels && colorMode !== "style" && <span className="studio-hint small">Colors is on “{colorMode === "custom" ? "custom" : PALETTES.find((p) => p.id === colorMode)?.label}”, which paints over these; set it to style's own to see them.</span>}
+              {showModels && (
+                <span className="studio-swatches">
+                  {SCHEME_MODELS.map((x) => <SchemeColor key={x.v} v={x.v} label={x.label} value={scheme[x.v] ?? ""} onChange={(val) => setVar(x.v, val)} />)}
+                </span>
+              )}
+            </Control>
+          </Section>
+        )}
 
-      <div className="controls studio-row2 studio-export">
-        <Control label="Export">
-          <button type="button" className="studio-btn" onClick={onDownload} disabled={exStatus?.busy} title="Save the chart area as a PNG file">Download PNG</button>
-          <button type="button" className="studio-btn" onClick={onCopy} disabled={exStatus?.busy} title="Copy the chart area as a PNG image">Copy PNG</button>
-          {exStatus && <span className={`studio-status${exStatus.err ? " err" : ""}`} role="status">{exStatus.msg}</span>}
-        </Control>
-        <Control label="Scale">
-          <Seg value={exScale} onChange={setExScale} options={[{ id: "1", label: "1×", title: "PNG at the panel's size" }, { id: "2", label: "2×", title: "Twice the panel's size (retina)" }, { id: "3", label: "3×", title: "Three times the panel's size" }]} />
-          <span className="studio-hint small">{w * Number(exScale)} × {fills ? h * Number(exScale) : "auto"} px, no frame</span>
-        </Control>
-        <Control label="Background">
-          <Seg value={exBg} onChange={setExBg} options={[{ id: "panel", label: "panel", title: "Filled with the style's panel colour" }, { id: "transparent", label: "transparent", title: "Alpha where the panel would be" }]} />
-        </Control>
+        <Section id="export" title="Export" open={!!sections.open.export} onToggle={() => sections.toggle("export")} summary={exportSummary}>
+          <Control label="Scale">
+            <Seg value={exScale} onChange={setExScale} options={[{ id: "1", label: "1×", title: "PNG at the panel's size" }, { id: "2", label: "2×", title: "Twice the panel's size (retina)" }, { id: "3", label: "3×", title: "Three times the panel's size" }]} />
+            <span className="studio-hint small">{exportSize}, no frame</span>
+          </Control>
+          <Control label="Backdrop">
+            <Seg value={exBg} onChange={setExBg} options={[{ id: "panel", label: "panel", title: "Filled with the style's panel colour" }, { id: "transparent", label: "transparent", title: "Alpha where the panel would be" }]} />
+          </Control>
+        </Section>
       </div>
 
       {/* With Custom on, the stage paints the scheme's --bg behind the panel (styles.css .studio-stage.custom); body keeps the theme's. */}
@@ -604,34 +670,34 @@ export default function StudioPage() {
             className={`studio-plot${frame ? " framed" : ""}${fills ? "" : " auto"}`}
             data-style={style}
             data-contrast={contrast}
-            style={{ ...colorVars, ...sliderVars, width: w, height: fills ? h : undefined, "--fs-legend": `${12 * ts}px`, "--mark-user": ms } as React.CSSProperties}
+            style={{ ...colorVars, ...sliderVars, ...bgVars, width: w, height: fills ? h : undefined, "--fs-legend": `${12 * ts}px`, "--mark-user": ms } as React.CSSProperties}
           >
             {plot === "pr" && chart === "map" && (
               <div className="studio-canvas">
-                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} boxes={boxes} />
+                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} boxes={boxes} bg={plotBg("dots")} />
               </div>
             )}
-            {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} mark={mark} />}
+            {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} mark={mark} bg={plotBg("dots")} />}
             {plot === "cost" && costChart === "scatter" && (
               <div className="studio-canvas">
-                <StudioScatter pts={costPts(sel, v, costUnit)} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} />
+                <StudioScatter pts={costPts(sel, v, costUnit)} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} bg={plotBg("none")} />
               </div>
             )}
             {plot === "cost" && costChart !== "scatter" && (
-              <StudioBars rows={costRows(sel, costUnit)} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={costAxis(costChart, costUnit, costScale)} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} mark={mark} />
+              <StudioBars rows={costRows(sel, costUnit)} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={costAxis(costChart, costUnit, costScale)} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} />
             )}
             {plot === "speed" && (
               <StudioBars
                 rows={speedRows(sel, speedChart, speedUnit)} kind={speedChart === "dots" ? "dot" : "bar"} scale={speedChart === "dots" ? "log" : "linear"} sort={speedChart === "throughput" ? "desc" : "asc"}
                 axis={speedAxis(speedChart)}
-                fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos} textScale={ts} mark={mark}
+                fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")}
               />
             )}
             {plot === "stability" && (
               <StudioBars
                 rows={stab.rows} kind={stabChart === "dots" ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? stab.agreeDomain : undefined}
                 axis={stabAxis(stabChart, stabSetting)}
-                fmtTick={fmtPctTick} logos={logos} textScale={ts} mark={mark}
+                fmtTick={fmtPctTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")}
               />
             )}
             {legend && legendLines.length > 0 && (
@@ -645,7 +711,7 @@ export default function StudioPage() {
         </div>
       </section>
       {/* outside the stage, so it reads the theme's ink rather than sitting on a Custom scheme's page colour */}
-      <p className="studio-foot">Drag the panel's bottom-right corner to resize, or type a size above. {w} × {fills ? h : "auto"} px.</p>
+      <p className="studio-foot">Drag the panel's bottom-right corner to resize, or type a size under Canvas. {w} × {fills ? h : "auto"} px.</p>
     </div>
   );
 }

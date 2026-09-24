@@ -519,11 +519,12 @@ export function Seg<T extends string>({ value, onChange, options, pulse = false 
   );
 }
 
-export function Control({ label, children }: { label: string; children: ReactNode }) {
+/** A labelled control: the small uppercase label, then its children in a `.ctl` wrapper (`display: contents` on the site's bars; the studio's inspector lays it out as a wrapping cell). `className` is added to the control (the inspector's `wide` spans its grid). */
+export function Control({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
   return (
-    <span className="control">
+    <span className={`control${className ? ` ${className}` : ""}`}>
       <span className="lab">{label}</span>
-      {children}
+      <span className="ctl">{children}</span>
     </span>
   );
 }

@@ -4,6 +4,7 @@ import { Logo, LogoGlyph, logoFor } from "../logos";
 import { CLICK_HINT, TipBox, fadeStyle, selectable, usePresence, usePulseWindow, useSize, useTip, useTween, type TipContent } from "./ui";
 import { hoverable } from "./hover";
 import { useTextMeasure, type Measure } from "./measure";
+import { PlotBgPattern, type PlotBg } from "./plotBg";
 
 /** `sub` is the one secondary line of the hover tooltip (what the point was scored on); the full figures live in the details modal. `decider` sets the row's name heavier in the tables; on the map it only selects which interval boxes breathe when `pulse` is on (the mark and label are drawn like every other). `emphasis` (Compare models: the decision-model rows, Jev and Laya) tints the row in the ranked table (ui.tsx RowTint); the map ignores it. */
 export type PRItem = { id: string; name: string; color: string; recall: CI; precision: CI; dashed?: boolean; subset?: string | null; sub?: string; decider?: boolean; emphasis?: boolean };
@@ -184,8 +185,9 @@ const PULSE_CYCLES = 2, PULSE_CYCLE_MS = 650;
 /** `labels` (the studio's Labels control; `beside` on the site): `legend` drops the point labels (and leaders) for a legend row at the top (Legend), the plot moved down under it. */
 /** `mark` (the studio's Marks control; `dot` on the site) is the point shape when logos are off; `markSize` is the studio's Mark size multiplier (the --mark-user the panel sets), which the label placement needs as a number to keep labels and leaders clear of a larger mark. */
 /** `boxes` (the studio's Boxes control; `filled` on the site) is how the interval boxes are drawn (BoxMode). */
+/** `bg` (the studio's Background control; the site's dot matrix, `dots`) is the pattern behind the plot area (plotBg.tsx). */
 export type PRDomain = { x: [number, number]; y: [number, number] };
-export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, boxes: boxMode = "filled" }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; boxes?: BoxMode }) {
+export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos = false, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, boxes: boxMode = "filled", bg = "dots" }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; boxes?: BoxMode; bg?: PlotBg }) {
   const { tip, show, hide, hostRef } = useTip();
   // text widths as drawn (measure.tsx): the legend rows and the point labels are laid out from them
   const { measure, probes } = useTextMeasure([LEGEND_CLS, NAME_CLS]);
@@ -193,6 +195,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
   // pattern ids: this instance's useId (colons and the like stripped) and the item id reduced to url(#…)-safe characters
   const uid = useId().replace(/[^A-Za-z0-9_-]/g, "");
   const hatchId = (id: string) => `hatch-${uid}-${id.replace(/[^A-Za-z0-9_-]/g, "-")}`;
+  const bgId = `bg-${uid}`;
   const pickMark = onSelect && ((it: PRItem) => { hide(); onSelect(it); });
   const sz = useSize(hostRef, { w: 760, h: height });
   const W = sz.w, H = fill ? Math.max(300, sz.h) : height;
@@ -282,11 +285,9 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
   return (
     <div ref={hostRef} data-tip-host style={fill ? { position: "absolute", inset: 0 } : { position: "relative" }}>
       <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ display: "block", overflow: "visible" }}>
-        {/* dot-matrix plot background, then the tick grid on top */}
+        {/* plot-area background (plotBg.tsx: the dot matrix, or the studio's choice), then the tick grid on top */}
         <defs>
-          <pattern id="dotgrid" width={8} height={8} patternUnits="userSpaceOnUse">
-            <circle cx={1} cy={1} r={0.7} fill="var(--dots)" />
-          </pattern>
+          <PlotBgPattern id={bgId} kind={bg} s={s} />
           {/* hatch (BoxMode): one tile per item, a line down the tile's middle (at its edge it would be half clipped), the tile turned 45° */}
           {hatched && drawn.map((p) => {
             const gap = HATCH_GAP * s;
@@ -297,7 +298,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
             );
           })}
         </defs>
-        <rect x={PL} y={top} width={W - PR - PL} height={H - PB - top} fill="url(#dotgrid)" />
+        {bg !== "none" && <rect x={PL} y={top} width={W - PR - PL} height={H - PB - top} fill={`url(#${bgId})`} />}
         {/* vertical gridlines read --grid-x (falls back to --grid), so a preset can keep horizontal rules only (Epoch); the y-axis line likewise --axis-y */}
         {xt.map((t) => (
           <g key={`x${t}`}>
