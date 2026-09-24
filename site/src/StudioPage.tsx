@@ -340,21 +340,31 @@ export default function StudioPage() {
 
   const emptyText = "Select at least one model.";
   const measuredOn = DATA.determinism ? `${fmtInt(DATA.determinism.sample.n_docs)} Mallinckrodt emails` : "a fixed sample";
+  // What the panel actually draws for the 95% interval, read off its computed variables after each style-affecting change (preset, Custom sliders and
+  // Contrast all folded in): the map's shaded boxes (--box-alpha / --box-stroke) and the whisker charts' whiskers (--op-whisker). The legend note names only what is drawn.
+  const [marks, setMarks] = useState({ boxes: true, whiskers: true });
+  useEffect(() => {
+    const el = plotRef.current; if (!el) return;
+    const cs = getComputedStyle(el), num = (v: string, dflt: number) => { const n = parseFloat(cs.getPropertyValue(v)); return Number.isFinite(n) ? n : dflt; };
+    const boxes = num("--box-alpha", 0.14) > 0 || num("--box-stroke", 0) > 0, whiskers = num("--op-whisker", 0.75) > 0;
+    setMarks((p) => (p.boxes === boxes && p.whiskers === whiskers ? p : { boxes, whiskers }));
+  }, [style, scheme, contrast, theme]);
   const legendText = (): string[] => {
-    if (plot === "pr") return chart === "map" ? ["Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height)."] : [];
+    if (plot === "pr") return chart === "map" ? [marks.boxes ? "Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height)." : "Dot: point estimate."] : [];
+    const whisk = (clause: string) => (marks.whiskers ? clause : "");
     if (plot === "cost") {
       const basis = "Cost as paid for the benchmark run (OpenAI flex pricing, Anthropic prompt caching, Google and TypeSafe at list; GPU rows as A100 rental for their median latency)";
-      if (costChart === "scatter") return [`${basis}, ${cu.short} on a log axis, against recall with its 95% interval (whisker).`];
+      if (costChart === "scatter") return [`${basis}, ${cu.short} on a log axis, against recall${whisk(" with its 95% interval (whisker)")}.`];
       return [`${basis}, ${cu.short}${costChart === "dots" || costScale === "log" ? ", log axis" : ""}.`];
     }
     if (plot === "speed") {
       if (speedChart === "throughput") return ["Sequential documents per hour: 3,600,000 ÷ median wall-clock milliseconds per document, one request at a time. Every service accepts parallel requests, so compare ratios, not absolutes."];
-      return [`${speedChart === "bars" ? "Bar" : "Dot"}: median latency per document, one request at a time${speedChart === "dots" ? ", on a log axis" : ""}; whisker: 95% bootstrap interval for the median.`];
+      return [`${speedChart === "bars" ? "Bar" : "Dot"}: median latency per document, one request at a time${speedChart === "dots" ? ", on a log axis" : ""}${whisk("; whisker: 95% bootstrap interval for the median")}.`];
     }
     const t0 = stabSetting === "t0" ? " Temperature 0 where the API accepts it; deciders expose no sampling control." : "";
     const where = `Measured on ${measuredOn}${sameRuns ? ` (${sameRuns} per model)` : " scored 5 times"}; the same cells are shown for every corpus.`;
-    if (stabChart === "agree") return [`Bar: agreement, the probability two identical runs give the same decision (1 − pairwise disagreement); whisker: 95% bootstrap interval. Axis zoomed to the measured range.${t0}`, where];
-    return [`${stabChart === "bars" ? "Bar" : "Dot"}: probability two identical runs disagree on a decision (pairwise); whisker: 95% bootstrap interval over decisions.${t0}`, where];
+    if (stabChart === "agree") return [`Bar: agreement, the probability two identical runs give the same decision (1 − pairwise disagreement)${whisk("; whisker: 95% bootstrap interval")}. Axis zoomed to the measured range.${t0}`, where];
+    return [`${stabChart === "bars" ? "Bar" : "Dot"}: probability two identical runs disagree on a decision (pairwise)${whisk("; whisker: 95% bootstrap interval over decisions")}.${t0}`, where];
   };
   const legendLines = legendText();
   const showIssue = plot === "pr" || (plot === "cost" && costChart === "scatter");
