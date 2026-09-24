@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { DATA, DEFAULT_CORPUS, DEFAULT_ON, PRIMARY_BY_KEY, corpusKey, fmtInt, issueLabel, siteCorpus, starOf, CORPORA } from "./data";
 import { ModelPicker, useCompareItems, type Chart, type View } from "./App";
-import { BOX_MODES, MARK_SHAPES, PRScatter, isBoxMode, type BoxMode, type LabelsMode, type MarkShape, type PRDomain } from "./components/PRScatter";
+import { MARK_SHAPES, PRScatter, type LabelsMode, type MarkShape, type PRDomain } from "./components/PRScatter";
+import { FILL_MODES, isFillMode, isOutlined, type FillMode } from "./components/hatch";
 import { PRRail } from "./components/PRRail";
 import { StudioBars, StudioScatter } from "./components/StudioCharts";
 import { COST_UNIT, costAxis, costCaption, costPts, costRows, fmtMoneyTick, fmtMsTick, fmtPctTick, speedAxis, speedCaption, speedRows, stabAxis, stabCaption, stabRows, type CostChart, type CostUnit, type SpeedChart, type SpeedUnit, type StabChart } from "./opsRows";
@@ -15,7 +16,7 @@ import { PALETTES, isPaletteId, toHex, toVars, varOf, type PaletteId } from "./p
  * Screenshot studio (studio.html → studio.tsx → this page; unlinked from the site): one Compare models chart alone, on a plain panel whose size
  * you set, with every control above the plot and none on it. The top bar holds what is plotted (plot, corpus, models, issue) and the PNG export;
  * the inspector under it (components/Inspector.tsx) groups the rest into disclosure sections: Chart (the plot's own controls: view, axes, marks,
- * boxes, labels), Canvas (size, frame, legend, logos, background pattern), Style (preset, colours, text, contrast), Scheme (the custom scheme
+ * fill of the boxes and bars, labels), Canvas (size, frame, legend, logos, background pattern), Style (preset, colours, text, contrast), Scheme (the custom scheme
  * editor, with Style → Custom) and Export (scale, backdrop). Plots: recall/precision (the site's map and ranked views), Cost, Speed and Stability
  * (components/StudioCharts.tsx). Drag the panel's bottom-right corner or type a size; pick a preset for LinkedIn's usual aspect ratios. Nothing pulses and nothing opens on click.
  */
@@ -52,7 +53,7 @@ const isPlotStyle = (s: string | null): s is PlotStyle => STYLES.some((x) => x.i
  * Custom scheme (Style → Custom): the panel variables every preset block defines, exposed in the editor row, plus `--bg`, the page behind the panel
  * (painted by the stage while Custom is on; the PNG export is the panel alone and never shows it). Colours: the surface and ink set, then one
  * per roster model through the custom property its colour is (data.ts ALL_PRIMARY `var(--…)`, palettes.ts varOf). Sliders: the interval-box fill
- * opacity (which also sets the hatch lines' in the hatched Boxes modes, PRScatter.tsx BoxMode), the box outline width in px and the bar fill opacity.
+ * opacity and the bar fill opacity (each also sets its hatch lines' opacity in the hatched Fill modes, components/hatch.tsx FillMode) and the outline width in px.
  * `--sans` is the panel face. A colour's text field takes any CSS colour (`transparent` for no grid included); the native picker beside it shows the nearest hex.
  */
 type SchemeVar = { v: string; label: string };
@@ -63,12 +64,12 @@ const SCHEME_SURFACE: SchemeVar[] = [
 const SCHEME_MODELS: SchemeVar[] = Object.entries(PRIMARY_BY_KEY).flatMap(([k, m]) => { const v = varOf(k); return v ? [{ v, label: m.short }] : []; });
 /** `dflt` is shown, and drawn, while the scheme has no value for the variable (the charts' own fallback). */
 const SCHEME_SLIDERS: (SchemeVar & { min: number; max: number; step: number; dflt: number; title: string })[] = [
-  { v: "--box-alpha", label: "box fill", min: 0, max: 0.6, step: 0.01, dflt: 0.14, title: "Opacity of the 95% interval boxes on the recall/precision map: the shade of a filled box, or the lines of a hatched one (Boxes control)" },
-  { v: "--box-stroke-w", label: "outline px", min: 0, max: 3, step: 0.25, dflt: 0.75, title: "Width of the interval boxes' outline, in px (Boxes → outline or hatched + outline; also a preset's own hairline, as Journal's)" },
-  { v: "--bar-alpha", label: "bar fill", min: 0.1, max: 1, step: 0.01, dflt: 0.55, title: "Fill opacity of the bars (Cost, Speed and Stability bar charts)" },
+  { v: "--box-alpha", label: "box fill", min: 0, max: 0.6, step: 0.01, dflt: 0.14, title: "Opacity of the 95% interval boxes on the recall/precision map: the shade of a filled box, or the lines of a hatched one (Fill control)" },
+  { v: "--box-stroke-w", label: "outline px", min: 0, max: 3, step: 0.25, dflt: 0.75, title: "Width of the interval boxes' and bars' outline, in px (Fill → outline or hatched + outline; also a preset's own box hairline, as Journal's)" },
+  { v: "--bar-alpha", label: "bar fill", min: 0.1, max: 1, step: 0.01, dflt: 0.55, title: "Opacity of the bars (Cost, Speed and Stability bar charts): the shade of a filled bar, or the lines of a hatched one (Fill control)" },
 ];
-// --grid-x and --axis-y (vertical gridlines, y-axis line; unset they follow --grid / --axis) and --box-stroke (a preset's outline opacity in the filled and hatched
-// Boxes modes; Journal's hairline) have no control but are copied, saved and imported, so a Custom made from Epoch keeps its horizontal-only grid
+// --grid-x and --axis-y (vertical gridlines, y-axis line; unset they follow --grid / --axis) and --box-stroke (a preset's box outline opacity in the filled and hatched
+// Fill modes; Journal's hairline) have no control but are copied, saved and imported, so a Custom made from Epoch keeps its horizontal-only grid
 const SCHEME_VARS = new Set([...SCHEME_SURFACE, ...SCHEME_MODELS, ...SCHEME_SLIDERS].map((x) => x.v).concat("--sans", "--grid-x", "--axis-y", "--box-stroke"));
 type Vars = Record<string, string>;
 const isVars = (o: unknown): o is Vars => !!o && typeof o === "object" && !Array.isArray(o) && Object.values(o).every((x) => typeof x === "string");
@@ -192,10 +193,11 @@ export default function StudioPage() {
   const [markSize, setMarkSize] = useState<MarkSize>(() => { const s = localStorage.getItem("studio-mark-scale"); return isMarkSize(s) ? s : "m"; });
   useEffect(() => { localStorage.setItem("studio-mark-scale", markSize); }, [markSize]);
   const ms = MARK_SCALE[markSize];
-  // Boxes (PRScatter.tsx BoxMode): how the map draws the 95% interval boxes: filled, hatched, outline only, or hatched inside an outline.
-  const [boxes, setBoxes] = useState<BoxMode>(() => { const s = localStorage.getItem("studio-boxes"); return isBoxMode(s) ? s : "filled"; });
-  useEffect(() => { localStorage.setItem("studio-boxes", boxes); }, [boxes]);
-  const boxOutlined = boxes === "outline" || boxes === "hatched-outline";
+  // Fill (components/hatch.tsx FillMode): how the map's 95% interval boxes and the Cost, Speed and Stability bars are drawn: filled, hatched, outline
+  // only, or hatched inside an outline. One setting for whichever plot is shown; stored under the key the earlier Boxes control used.
+  const [fillMode, setFillMode] = useState<FillMode>(() => { const s = localStorage.getItem("studio-boxes"); return isFillMode(s) ? s : "filled"; });
+  useEffect(() => { localStorage.setItem("studio-boxes", fillMode); }, [fillMode]);
+  const boxOutlined = isOutlined(fillMode);
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "light");
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
   const [style, setStyle] = useState<PlotStyle>(() => { const s = localStorage.getItem("studio-style"); return isPlotStyle(s) ? s : "site"; });
@@ -319,6 +321,9 @@ export default function StudioPage() {
 
   // Which charts fill the panel's height (the map-like ones); the row-based ones take their height from the rows (the panel's `auto` mode).
   const fills = (plot === "pr" && chart === "map") || (plot === "cost" && costChart === "scatter");
+  // Which plots draw bars (StudioBars kind "bar"), and so take the Fill control with the map; the dot and scatter views have no area to fill.
+  const hasBars = (plot === "cost" && costChart === "bars") || (plot === "speed" && speedChart !== "dots") || (plot === "stability" && stabChart !== "dots");
+  const showFill = (plot === "pr" && chart === "map") || hasBars;
 
   // Panel size in CSS pixels. The panel is also CSS-resizable by its corner; a ResizeObserver writes the dragged size back into the fields.
   // In the row-based charts the height follows the rows, so only the width is synced and the chosen height is kept for when a filling chart returns.
@@ -346,17 +351,17 @@ export default function StudioPage() {
 
   const emptyText = "Select at least one model.";
   // What the panel actually draws for the 95% interval, read off its computed variables after each style-affecting change (preset, Custom sliders,
-  // Boxes mode and Contrast all folded in): the map's boxes (--box-alpha, or the outline: --box-stroke in the filled modes, --box-stroke-w in the outline
+  // Fill mode and Contrast all folded in): the map's boxes (--box-alpha, or the outline: --box-stroke in the filled modes, --box-stroke-w in the outline
   // modes) and the whisker charts' whiskers (--op-whisker). The legend note names only what is drawn.
   const [marks, setMarks] = useState({ boxes: true, whiskers: true });
   useEffect(() => {
     const el = plotRef.current; if (!el) return;
     const cs = getComputedStyle(el), num = (v: string, dflt: number) => { const n = parseFloat(cs.getPropertyValue(v)); return Number.isFinite(n) ? n : dflt; };
     const outline = boxOutlined ? num("--box-stroke-w", 0.75) > 0 : num("--box-stroke", 0) > 0;
-    const drawn = (boxes !== "outline" && num("--box-alpha", 0.14) > 0) || outline, whiskers = num("--op-whisker", 0.75) > 0;
+    const drawn = (fillMode !== "outline" && num("--box-alpha", 0.14) > 0) || outline, whiskers = num("--op-whisker", 0.75) > 0;
     setMarks((p) => (p.boxes === drawn && p.whiskers === whiskers ? p : { boxes: drawn, whiskers }));
     setPresetDots(!noColour(cs.getPropertyValue("--dots").trim()));
-  }, [style, scheme, contrast, theme, boxes, boxOutlined]);
+  }, [style, scheme, contrast, theme, fillMode, boxOutlined]);
   // The Background control on the panel: the pattern each chart draws (auto keeps each chart's own default) and, where the style has no dot colour,
   // a faint ink for it: lighter on a dark panel, stronger in high contrast, and lighter again for the fine grid, whose lines cover more of the area than dots.
   const plotBg = (dflt: PlotBg): PlotBg => (bg === "auto" ? dflt : bg === "off" ? "none" : bg);
@@ -365,12 +370,16 @@ export default function StudioPage() {
   const legendText = (): string[] => {
     // the note names the mark drawn at the point (Marks control); with logos on it keeps the site's wording
     const what = logos || mark === "dot" ? "Dot" : mark === "x" ? "Cross" : mark[0].toUpperCase() + mark.slice(1);
-    const box = boxes === "filled" ? "Shaded box" : boxes === "hatched" ? "Hatched box" : boxes === "outline" ? "Outlined box" : "Hatched, outlined box";
+    const box = fillMode === "filled" ? "Shaded box" : fillMode === "hatched" ? "Hatched box" : fillMode === "outline" ? "Outlined box" : "Hatched, outlined box";
     if (plot === "pr") return chart === "map" ? [marks.boxes ? `${what}: point estimate. ${box}: 95% interval on recall (width) and precision (height).` : `${what}: point estimate.`] : [];
-    if (plot === "cost") return costCaption(costChart, costUnit, costScale, marks.whiskers);
-    if (plot === "speed") return speedCaption(speedChart, marks.whiskers);
-    return stabCaption(stabChart, stabSetting, stab.sameRuns, marks.whiskers);
+    if (plot === "cost") return barNote(costCaption(costChart, costUnit, costScale, marks.whiskers));
+    if (plot === "speed") return barNote(speedCaption(speedChart, marks.whiskers));
+    return barNote(stabCaption(stabChart, stabSetting, stab.sameRuns, marks.whiskers));
   };
+  // A bar chart's caption (opsRows.ts, written for a filled bar) names the Fill mode: its leading "Bar:" becomes "Hatched bar:" and the like; a caption
+  // that does not open on the bar (Cost, throughput) is prefixed with it instead. Filled bars, and the dot and scatter views, keep the caption as written.
+  const barWord = fillMode === "hatched" ? "Hatched bar" : fillMode === "outline" ? "Outlined bar" : "Hatched, outlined bar";
+  const barNote = (lines: string[]): string[] => (!hasBars || fillMode === "filled" || !lines.length ? lines : [lines[0].startsWith("Bar:") ? barWord + lines[0].slice(3) : `${barWord}: ${lines[0][0].toLowerCase()}${lines[0].slice(1)}`, ...lines.slice(1)]);
   const legendLines = legendText();
   const showIssue = plot === "pr" || (plot === "cost" && costChart === "scatter");
   /** e.g. jev-recall-precision-map-trec-linkedin-1200x675@2x.png; the size is the panel's rendered CSS size (the PNG is that × scale). */
@@ -388,7 +397,7 @@ export default function StudioPage() {
     plot === "cost" && (costChart === "scatter" ? "cost vs recall" : costChart === "dots" ? "dots · log" : `bars · ${costScale}`), plot === "cost" && COST_UNIT[costUnit].axis,
     plot === "speed" && (speedChart === "throughput" ? "docs per hour" : `${speedChart === "dots" ? "dots · log" : "bars"} · ${speedUnit} per document`),
     plot === "stability" && (stabChart === "agree" ? "agreement · zoomed" : stabChart === "dots" ? "dots" : "disagreement bars"), plot === "stability" && (stabSetting === "t0" ? "t = 0" : "default sampling"), plot === "stability" && hideUnmeasured && "unmeasured hidden",
-    markText, plot === "pr" && chart === "map" && `${BOX_MODES.find((m) => m.id === boxes)?.label} boxes`, fills && `labels ${labelsMode}`, fills && labelsMode === "beside" && leaders && "leaders",
+    markText, showFill && `${FILL_MODES.find((m) => m.id === fillMode)?.label} ${hasBars ? "bars" : "boxes"}`, fills && `labels ${labelsMode}`, fills && labelsMode === "beside" && leaders && "leaders",
   );
   const canvasSummary = summarize(`${w} × ${fills ? h : "auto"} px`, frame ? "framed" : "plain", legend ? "legend" : "no legend", logos ? "logos" : "names only", BG_SUMMARY[bg]);
   const styleSummary = summarize(
@@ -512,9 +521,10 @@ export default function StudioPage() {
             <Seg value={markSize} onChange={setMarkSize} options={[{ id: "s", label: "S", title: "0.75× the site's mark" }, { id: "m", label: "M", title: "The site's mark size" }, { id: "l", label: "L", title: "1.5×" }, { id: "xl", label: "XL", title: "2.2×, for logos inside wide interval boxes" }]} />
             {fills && logos && <span className="studio-hint small" title="Switch Canvas → Panel to names only to choose a mark shape">logos are the marks</span>}
           </Control>
-          {plot === "pr" && chart === "map" && (
-            <Control label="Boxes">
-              <Seg value={boxes} onChange={setBoxes} options={BOX_MODES.map((m) => ({ id: m.id, label: m.label, title: m.title }))} />
+          {/* one Fill setting for the map's interval boxes and the bar charts' bars; hidden on the views with neither (ranked, dots, scatter) */}
+          {showFill && (
+            <Control label="Fill">
+              <Seg value={fillMode} onChange={setFillMode} options={FILL_MODES.map((m) => ({ id: m.id, label: m.label, title: m.title }))} />
             </Control>
           )}
           {fills && (
@@ -674,7 +684,7 @@ export default function StudioPage() {
           >
             {plot === "pr" && chart === "map" && (
               <div className="studio-canvas">
-                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} boxes={boxes} bg={plotBg("dots")} />
+                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} boxes={fillMode} bg={plotBg("dots")} />
               </div>
             )}
             {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} mark={mark} bg={plotBg("dots")} />}
@@ -684,20 +694,20 @@ export default function StudioPage() {
               </div>
             )}
             {plot === "cost" && costChart !== "scatter" && (
-              <StudioBars rows={costRows(sel, costUnit)} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={costAxis(costChart, costUnit, costScale)} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} />
+              <StudioBars rows={costRows(sel, costUnit)} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={costAxis(costChart, costUnit, costScale)} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} />
             )}
             {plot === "speed" && (
               <StudioBars
                 rows={speedRows(sel, speedChart, speedUnit)} kind={speedChart === "dots" ? "dot" : "bar"} scale={speedChart === "dots" ? "log" : "linear"} sort={speedChart === "throughput" ? "desc" : "asc"}
                 axis={speedAxis(speedChart)}
-                fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")}
+                fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode}
               />
             )}
             {plot === "stability" && (
               <StudioBars
                 rows={stab.rows} kind={stabChart === "dots" ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? stab.agreeDomain : undefined}
                 axis={stabAxis(stabChart, stabSetting)}
-                fmtTick={fmtPctTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")}
+                fmtTick={fmtPctTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode}
               />
             )}
             {legend && legendLines.length > 0 && (

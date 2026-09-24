@@ -1,10 +1,11 @@
-import { useId, useMemo, useRef } from "react";
+import { useId, useMemo, useRef, type CSSProperties } from "react";
 import type { CI } from "../data";
 import { LogoGlyph, logoFor } from "../logos";
 import { GLYPH_SCALE, LEADER_STYLE, LEGEND_CLS, LEGEND_GAP, Legend, Mark, NAME_CLS, axisMargins, leaderFor, legendLayout, type LabelsMode, type MarkShape } from "./PRScatter";
 import { useTextMeasure } from "./measure";
 import { DECIDER_TEXT, selectable, useSize, useWidth } from "./ui";
 import { PlotBgPattern, type PlotBg } from "./plotBg";
+import { HatchDefs, OUTLINE_W, hatchAlpha, isHatched, isOutlined, useHatchIds, type FillMode } from "./hatch";
 
 /** A url(#…)-safe id from useId, for this chart's background pattern (plotBg.tsx). */
 const useBgId = () => `bg-${useId().replace(/[^A-Za-z0-9_-]/g, "")}`;
@@ -22,6 +23,10 @@ export type StudioRow = { id: string; name: string; color: string; value: number
 const ROW0 = 30, TOP0 = 8;
 /** Stroke widths and mark radii read the studio's high-contrast variables (styles.css .studio-plot[data-contrast="high"]); unset, they are the defaults given here. */
 const SW = (base: number) => ({ strokeWidth: `calc(${base} * var(--sw-mult, 1))` });
+/** Hatch-line opacity for a bar whose filled opacity is --bar-alpha (hatch.tsx). */
+const BAR_HATCH_ALPHA = hatchAlpha("--bar-alpha", 0.55);
+/** The hairline edge a hatched bar gets (no outline mode on), so its extent reads where the lines thin out: 0.5 px × --sw-mult. */
+const HATCHED_EDGE_W = "calc(0.5px * var(--sw-mult, 1))";
 /** `nice` step for a linear axis with about five ticks. */
 function linTicks(d0: number, d1: number): number[] {
   const span = d1 - d0;
@@ -55,10 +60,15 @@ function logTicks(d0: number, d1: number): number[] {
  * `onSelect` (the dashboard's B variant, AppB.tsx; the studio passes none) makes each row a button that opens the details modal for its id: a transparent
  * full-width hit rect behind the row tints on hover (styles.css `.sel .hit`), Enter and Space work (ui.tsx selectable). Without it the rows are inert, as in the studio.
  * `bg` (the studio's Background control; none by default) is a pattern behind the bar area, under the gridlines (plotBg.tsx).
+ * `bars` (the studio's Fill control; `filled` by default) is how a bar is drawn (hatch.tsx FillMode): a shade at --bar-alpha; 45° hatch lines in the
+ * row's colour at 3 × --bar-alpha (capped at 1) inside a hairline edge; the edge alone, --box-stroke-w px wide; or the hatch inside that edge. The
+ * whisker gets a panel-colour halo over a hatched bar so its ink line stays legible across the hatch lines; the figures sit clear of the bar either way.
  */
-export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort = "asc", axis, fmtTick, logos = true, labelW, textScale = 1, mark = "dot", onSelect, bg = "none" }: { rows: StudioRow[]; kind?: "bar" | "dot"; scale?: "linear" | "log"; domain?: [number, number]; sort?: "asc" | "desc" | "none"; axis: string; fmtTick: (v: number) => string; logos?: boolean; labelW?: number; textScale?: number; mark?: MarkShape; onSelect?: (id: string) => void; bg?: PlotBg }) {
+export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort = "asc", axis, fmtTick, logos = true, labelW, textScale = 1, mark = "dot", onSelect, bg = "none", bars: barMode = "filled" }: { rows: StudioRow[]; kind?: "bar" | "dot"; scale?: "linear" | "log"; domain?: [number, number]; sort?: "asc" | "desc" | "none"; axis: string; fmtTick: (v: number) => string; logos?: boolean; labelW?: number; textScale?: number; mark?: MarkShape; onSelect?: (id: string) => void; bg?: PlotBg; bars?: FillMode }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const bgId = useBgId();
+  const hatched = kind === "bar" && isHatched(barMode), outlined = kind === "bar" && isOutlined(barMode);
+  const hatchId = useHatchIds();
   const W = useWidth(hostRef, 900);
   const s = textScale, ROW = ROW0 * s, TOP = TOP0 * s;
   // text widths as drawn (measure.tsx): names (.nm, the decider rows heavier), figures (.mono) and the plain "not measured"
@@ -101,7 +111,10 @@ export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort 
   return (
     <div ref={hostRef} style={{ position: "relative" }}>
       <svg viewBox={`0 0 ${W} ${h}`} width={W} height={h} style={{ display: "block", overflow: "visible" }}>
-        <defs><PlotBgPattern id={bgId} kind={bg} s={s} /></defs>
+        <defs>
+          <PlotBgPattern id={bgId} kind={bg} s={s} />
+          <HatchDefs items={measured} s={s} hatchId={hatchId} on={hatched} />
+        </defs>
         {bg !== "none" && n > 0 && <rect x={x0} y={TOP} width={plotW} height={bottom - TOP} fill={`url(#${bgId})`} />}
         {ticks.map((t) => (
           <g key={t}>
@@ -130,6 +143,12 @@ export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort 
           const lo = r.lo ?? null, hi = r.hi ?? null;
           const xlo = lo == null ? xv : X(lo), xhi = hi == null ? xv : X(hi);
           const end = Math.max(xv, xhi) + 9 * s;
+          // the bar's paint (FillMode): a zero-value bar is a 1.5 px stub at half the opacity; the edge is the outline modes' --box-stroke-w, or a hatched bar's hairline at the hatch opacity
+          const alpha = hatched ? BAR_HATCH_ALPHA : "var(--bar-alpha)";
+          const barFill = barMode === "outline" ? "none" : hatched ? `url(#${hatchId(r.id)})` : r.color;
+          const barStyle: CSSProperties = { fillOpacity: barMode === "outline" ? undefined : v === 0 ? `calc(${alpha} * 0.5)` : alpha };
+          if (outlined) barStyle.strokeWidth = OUTLINE_W;
+          else if (hatched) { barStyle.strokeWidth = HATCHED_EDGE_W; barStyle.strokeOpacity = alpha; }
           return (
             <g key={r.id} {...sel}>
               {hit}
@@ -137,13 +156,23 @@ export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort 
               <text x={nameX} y={cy + 4.5 * s} fontSize={12.5 * s} textAnchor={logos ? "start" : "end"} fill="var(--ink-2)" className="nm" style={r.decider ? DECIDER_TEXT : undefined}>{label}</text>
               {kind === "bar" ? (
                 <>
-                  <rect x={x0} y={cy - 6 * s} width={Math.max(1.5, xv - x0)} height={12 * s} fill={r.color} rx={1.5} style={{ fillOpacity: v === 0 ? "calc(var(--bar-alpha) * 0.5)" : "var(--bar-alpha)" }} />
+                  <rect x={x0} y={cy - 6 * s} width={Math.max(1.5, xv - x0)} height={12 * s} fill={barFill} rx={1.5} stroke={outlined || hatched ? r.color : undefined} style={barStyle} />
                   {(lo != null || hi != null) && xhi - xlo > 0.5 && (
-                    <g stroke="var(--ink)" strokeWidth={1} style={{ ...SW(1), opacity: "var(--op-whisker, 0.65)" }}>
-                      <line x1={xlo} x2={xhi} y1={cy} y2={cy} />
-                      <line x1={xlo} x2={xlo} y1={cy - 4 * s} y2={cy + 4 * s} />
-                      <line x1={xhi} x2={xhi} y1={cy - 4 * s} y2={cy + 4 * s} />
-                    </g>
+                    <>
+                      {/* over a hatched bar the whisker sits on a panel-colour halo, so its ink line is not lost among the hatch lines */}
+                      {hatched && (
+                        <g stroke="var(--panel)" strokeWidth={3} strokeLinecap="round" style={SW(3)}>
+                          <line x1={xlo} x2={xhi} y1={cy} y2={cy} />
+                          <line x1={xlo} x2={xlo} y1={cy - 4 * s} y2={cy + 4 * s} />
+                          <line x1={xhi} x2={xhi} y1={cy - 4 * s} y2={cy + 4 * s} />
+                        </g>
+                      )}
+                      <g stroke="var(--ink)" strokeWidth={1} style={{ ...SW(1), opacity: "var(--op-whisker, 0.65)" }}>
+                        <line x1={xlo} x2={xhi} y1={cy} y2={cy} />
+                        <line x1={xlo} x2={xlo} y1={cy - 4 * s} y2={cy + 4 * s} />
+                        <line x1={xhi} x2={xhi} y1={cy - 4 * s} y2={cy + 4 * s} />
+                      </g>
+                    </>
                   )}
                 </>
               ) : (

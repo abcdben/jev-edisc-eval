@@ -18,7 +18,7 @@
   --dots: #c6c7bf;
   --axis: #c9cac2;
   --box-alpha: 0.14;
-  /* the interval boxes' outline width, px (PRScatter.tsx BoxMode; the studio's scheme editor has a slider for it); its opacity, --box-stroke, is 0 on the site */
+  /* the interval boxes' (and the studio's outlined bars') outline width, px (components/hatch.tsx FillMode; the studio's scheme editor has a slider for it); the boxes' outline opacity, --box-stroke, is 0 on the site */
   --box-stroke-w: 0.75;
   --bar-alpha: 0.55;
   /* key-section highlight: a very light chartreuse behind the details modal's definition, lever callout and headline figures */
