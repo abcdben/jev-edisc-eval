@@ -331,7 +331,6 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
             </g>
           );
         })}
-        {labelsMode === "beside" && labels.some((l) => !l) && <text x={W - PR} y={PT - 6} fontSize={10.5 * s} textAnchor="end" fill="var(--ink-4)">some labels hidden where marks overlap; hover to identify</text>}
         {pts.length === 0 && <text x={W / 2} y={H / 2} textAnchor="middle" fontSize={13 * s} fill="var(--ink-4)">{emptyText ?? "Select at least one model."}</text>}
       </svg>
       {undefinedOnes.length > 0 && (
