@@ -92,3 +92,13 @@ export function forDark(hex: string): string {
   if (l >= 0.58) return h;
   return hslToHex(hue, s, Math.max(0.58, Math.min(l + 0.12, 0.7)));
 }
+/**
+ * A sibling hue: the colour turned `deg` degrees round the hue circle, saturation and lightness kept (the studio's Key → by family, StudioPage.tsx:
+ * the composed family's default beside a palette or custom Jev colour, −60° putting a violet beside a magenta, a blue beside a plum, a
+ * yellow-green beside an emerald; every palette's Jev rows share one hue family, so following any of them would put the two families too close).
+ */
+export function siblingHue(hex: string, deg = -60): string {
+  const h = toHex(hex); if (!h) return hex;
+  const [hue, s, l] = hexToHsl(h);
+  return hslToHex((((hue + deg / 360) % 1) + 1) % 1, s, l);
+}

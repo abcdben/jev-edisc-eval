@@ -11,7 +11,7 @@ import { Section, sectionsApi, summarize } from "./components/Inspector";
 import type { PlotBg } from "./components/plotBg";
 import { TICK_DENSITIES } from "./components/ticks";
 import { copyPng, downloadBlob, renderPanelPng, slug } from "./exportPng";
-import { PALETTES, toHex, toVars, varOf } from "./palettes";
+import { PALETTES, siblingHue, toHex, toVars, varOf } from "./palettes";
 import type { LogosMode } from "./logos";
 import { FAMILIES, FAMILY_BASIC_VAR, FAMILY_COMPOSED_VAR, FAMILY_MEMBERS, MAKERS, familyColor, familyOf, makerColor, makerName, makerOf } from "./makers";
 import {
@@ -121,8 +121,8 @@ function SchemeColor({ v, label, value, onChange }: { v: string; label: string; 
 // Key (KeyMode; makers.ts): `maker` colours every item by who makes it through that maker's model colour property, so the Style preset, palette or custom swatch
 // still decides the hue; the legend then lists the makers and the points keep their name labels (shortened where the roster gives a `shortInMaker`).
 // `family` splits the Jev rows into the basic question forms (Noul, Choice, Score) and the composed variants (Facets, Ensemble, Gate), one colour each through
-// --fam-basic / --fam-composed (styles.css defaults off the style's Jev colours; the Basic and Composed swatches, `famBasic` / `famComposed`, override inline),
-// and colours every other model as by maker.
+// --fam-basic / --fam-composed (styles.css defaults off the style's Jev colours, a palette's composed default a sibling hue of its Jev · Noul; the Basic and
+// Composed swatches, `famBasic` / `famComposed`, override inline), and colours every other model as by maker.
 /** Logos (Canvas → Panel): every item's vendor mark, the Jev rows' alone, or none (logos.tsx LogosMode). */
 const LOGOS_OPTIONS: { id: LogosMode; label: string; title: string }[] = [
   { id: "all", label: "logos", title: "Every model's vendor mark: as the point mark on the map and cost scatter, before the name in the ranked and bar charts" },
@@ -215,21 +215,6 @@ export default function StudioPage() {
   // the legend groups (PRScatter.tsx LegendGroup) the scatters list in the grouped modes with Labels → legend; the point labels stay on
   const groups = groupOf ? (id: string) => { const g = groupOf(id); return { id: g.id, name: g.label, title: g.title, color: groupColor(id, PRIMARY_BY_KEY[id]?.color ?? "var(--ink-3)") }; } : undefined;
   const pointLabels = labelsMode === "beside" || !!groupOf;
-  // The family swatches (famBasic / famComposed): a hex goes inline on the panel over the style's default; "" leaves the default, except that with a Colors
-  // palette or custom swatches on, the composed family follows the recoloured Score row (--v5) rather than a preset's own fixed hue (TypeSafe's violet).
-  const famVars: Record<string, string> = {
-    ...(famBasic ? { [FAMILY_BASIC_VAR]: famBasic } : {}),
-    ...(famComposed ? { [FAMILY_COMPOSED_VAR]: famComposed } : colorMode !== "style" ? { [FAMILY_COMPOSED_VAR]: "var(--v5)" } : {}),
-  };
-  // what the two families draw in right now, read off the panel for the swatches' pickers (the default is a var() chain the picker cannot show)
-  const [famShown, setFamShown] = useState({ basic: "#888888", composed: "#888888" });
-  useEffect(() => {
-    const el = plotRef.current; if (!el || !byFamily) return;
-    const cs = getComputedStyle(el), read = (v: string, dflt: string) => toHex(cs.getPropertyValue(v)) ?? dflt;
-    const basic = read(FAMILY_BASIC_VAR, famBasic || "#888888"), composed = read(FAMILY_COMPOSED_VAR, famComposed || "#888888");
-    setFamShown((p) => (p.basic === basic && p.composed === composed ? p : { basic, composed }));
-  }, [byFamily, style, scheme, colorMode, custom, theme, famBasic, famComposed]);
-  const resetFamily = () => patch({ famBasic: "", famComposed: "" });
   // Marks: the point shape when logos are off (the glyph stands in for it otherwise), and the size of whichever is drawn; the Jev rows' own size (`same` follows Mark size)
   const ms = MARK_SCALE[markSize];
   const jms = jevSize === "same" ? ms : JEV_SCALE[jevSize];
@@ -292,6 +277,24 @@ export default function StudioPage() {
   const customPanelHex = style === "custom" ? toHex(scheme["--panel"] ?? "") : null;
   const darkPanel = customPanelHex ? luminance(customPanelHex) < 0.4 : DARK_STYLES.includes(style) || (style === "site" && theme === "dark");
   const colorVars: Record<string, string> = colorMode === "style" ? {} : colorMode === "custom" ? toVars(custom, false) : toVars(PALETTES.find((p) => p.id === colorMode)!.colors, darkPanel);
+  // The family swatches (famBasic / famComposed): a hex goes inline on the panel over the style's default (styles.css --fam-basic / --fam-composed);
+  // "" leaves the default, except that with a Colors palette or custom swatches on, the composed family's default is a sibling hue of the recoloured
+  // Jev · Noul (palettes.ts siblingHue) rather than a preset's fixed hue or its Score row: every palette keeps the Jev rows in one hue family, so
+  // following any of them would draw the two families alike. Without a Noul swatch to turn (custom mode, none set), it follows the Score row.
+  const paletteBasic = colorMode !== "style" ? colorVars[varOf("jev@base")!] : undefined;
+  const famVars: Record<string, string> = {
+    ...(famBasic ? { [FAMILY_BASIC_VAR]: famBasic } : {}),
+    ...(famComposed ? { [FAMILY_COMPOSED_VAR]: famComposed } : colorMode !== "style" ? { [FAMILY_COMPOSED_VAR]: paletteBasic ? siblingHue(paletteBasic) : "var(--v5)" } : {}),
+  };
+  // what the two families draw in right now, read off the panel for the swatches' pickers (the default is a var() chain the picker cannot show)
+  const [famShown, setFamShown] = useState({ basic: "#888888", composed: "#888888" });
+  useEffect(() => {
+    const el = plotRef.current; if (!el || !byFamily) return;
+    const cs = getComputedStyle(el), read = (v: string, dflt: string) => toHex(cs.getPropertyValue(v)) ?? dflt;
+    const basic = read(FAMILY_BASIC_VAR, famBasic || "#888888"), composed = read(FAMILY_COMPOSED_VAR, famComposed || "#888888");
+    setFamShown((p) => (p.basic === basic && p.composed === composed ? p : { basic, composed }));
+  }, [byFamily, style, scheme, colorMode, custom, theme, famBasic, famComposed]);
+  const resetFamily = () => patch({ famBasic: "", famComposed: "" });
   // The scheme's slider values, written inline on the panel itself (the rest of the scheme sits on the wrapper): the panel's own [data-contrast="high"]
   // block sets --box-alpha and --bar-alpha, and would otherwise silence the sliders whenever Contrast is high.
   const sliderVars: Record<string, string> = style === "custom" ? Object.fromEntries(SCHEME_SLIDERS.flatMap((x) => (scheme[x.v] ? [[x.v, scheme[x.v]]] : []))) : {};
@@ -743,7 +746,7 @@ export default function StudioPage() {
                     <input type="color" value={famShown.basic} onChange={(e) => set("famBasic", e.target.value)} aria-label="Jev basic forms colour" />
                     <span>Basic</span>
                   </label>
-                  <label className="studio-swatch" title={`${FAMILIES.composed.title}. ${famComposed ? `Set to ${famComposed}` : "The style's own (its Jev · Score colour, or a companion hue)"}; the picker overrides it`}>
+                  <label className="studio-swatch" title={`${FAMILIES.composed.title}. ${famComposed ? `Set to ${famComposed}` : colorMode === "style" ? "The style's own (its Jev · Score colour, or a companion hue)" : "A sibling hue of the Jev · Noul colour"}; the picker overrides it`}>
                     <input type="color" value={famShown.composed} onChange={(e) => set("famComposed", e.target.value)} aria-label="Jev composed variants colour" />
                     <span>Composed</span>
                   </label>
@@ -813,7 +816,7 @@ export default function StudioPage() {
                 </span>
                 <button type="button" className="studio-btn small" onClick={resetCustom} title="Drop the swatches and go back to the style's own colours">reset</button>
                 {byMaker && <span className="studio-hint small">Key is by maker: each maker takes one model's swatch (TypeSafe → Jev · Noul, ConvAI → Laya, Anthropic → Sonnet 5, OpenAI → GPT-5.6 Terra, Google → Gemini 3.8 Flash)</span>}
-                {byFamily && <span className="studio-hint small">Key is by family: the Jev families take the Jev · Noul and Jev · Score swatches unless the Basic and Composed swatches under Chart → Key are set; each maker takes one model's swatch (ConvAI → Laya, Anthropic → Sonnet 5, OpenAI → GPT-5.6 Terra, Google → Gemini 3.8 Flash)</span>}
+                {byFamily && <span className="studio-hint small">Key is by family: the basic forms take the Jev · Noul swatch and the composed variants a sibling hue of it, unless the Basic and Composed swatches under Chart → Key are set; each maker takes one model's swatch (ConvAI → Laya, Anthropic → Sonnet 5, OpenAI → GPT-5.6 Terra, Google → Gemini 3.8 Flash)</span>}
               </>
             )}
           </Control>

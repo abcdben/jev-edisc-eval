@@ -39,8 +39,9 @@ export const makerName = (key: string, own: string): string => PRIMARY_BY_KEY[ke
  * Question-form families (the Key control's `by family`): the Jev rows split into the three basic question forms (Noul, Choice, Score: JEV_BASIC) and
  * the composed variants (Facets, Three-Phrasing Ensemble, Relevance Gate, and any other `jev@…` row the roster gains), each family drawn in one colour
  * through its own custom property. styles.css gives the two properties defaults off the style's own Jev colours (--fam-basic follows Noul's --c-jev,
- * --fam-composed Score's --v5, TypeSafe a cooler magenta-violet), so a palette or custom swatch that recolours those moves the families too; the
- * studio's Basic and Composed swatches write overrides inline on the panel. Every other model is grouped and coloured as in by-maker mode (makerOf).
+ * --fam-composed Score's --v5, TypeSafe a cooler magenta-violet); with a Colors palette or custom swatches on, StudioPage.tsx gives the composed
+ * family a sibling hue of the recoloured Noul instead (palettes.ts siblingHue), and the studio's Basic and Composed swatches write overrides
+ * inline on the panel. Every other model is grouped and coloured as in by-maker mode (makerOf).
  */
 export const JEV_BASIC = ["jev@base", "jev@choice", "jev@score"];
 export const FAMILY_BASIC_VAR = "--fam-basic", FAMILY_COMPOSED_VAR = "--fam-composed";

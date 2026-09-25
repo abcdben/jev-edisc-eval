@@ -688,8 +688,9 @@ label.studio-btn { display: inline-block; }
    Every preset but `site` sets all of them, so the page's Dark/Light theme never leaks into the panel. */
 .studio-plot { font-family: var(--sans); color: var(--ink); }
 /* Key → by family (StudioPage.tsx, makers.ts familyOf): the Jev basic forms draw in --fam-basic, the composed variants in --fam-composed. Their defaults
-   follow the style's own Jev colours (Noul's --c-jev, Score's --v5), so a Colors palette or custom swatch that recolours those moves the families too;
-   TypeSafe below gives the composed family a cooler magenta-violet beside its magenta. The studio's Basic / Composed swatches write overrides inline on the panel. */
+   follow the style's own Jev colours (Noul's --c-jev, Score's --v5); TypeSafe below gives the composed family a cooler magenta-violet beside its magenta.
+   With a Colors palette or custom swatches on, StudioPage.tsx writes the composed family's default inline (a sibling hue of the recoloured Noul), and the
+   studio's Basic / Composed swatches write overrides inline on the panel. */
 .studio-plot { --fam-basic: var(--c-jev); --fam-composed: var(--v5); }
 
 /* Journal: an academic figure. White, black hairline axes, serif labels, no grid, boxes as thin outlines. Okabe–Ito colorblind-safe palette (yellow darkened for white paper). */
