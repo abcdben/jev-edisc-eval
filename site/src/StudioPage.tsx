@@ -1,31 +1,41 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DATA, DEFAULT_CORPUS, DEFAULT_ON, PRIMARY_BY_KEY, corpusKey, fmtInt, issueLabel, siteCorpus, starOf, CORPORA } from "./data";
-import { ModelPicker, useCompareItems, type Chart, type View } from "./App";
-import { INTERVAL_MODES, MARK_SHAPES, PRScatter, intervalHasArea, isIntervalMode, type IntervalMode, type LabelsMode, type MarkShape, type PRDomain } from "./components/PRScatter";
-import { FILL_MODES, isFillMode, isOutlined, type FillMode } from "./components/hatch";
+import { DATA, PRIMARY_BY_KEY, corpusKey, fmtInt, issueLabel, siteCorpus, starOf, CORPORA } from "./data";
+import { ModelPicker, useCompareItems, type View } from "./App";
+import { INTERVAL_MODES, MARK_SHAPES, PRScatter, intervalHasArea, type PRDomain } from "./components/PRScatter";
+import { FILL_MODES, isOutlined } from "./components/hatch";
 import { PRRail } from "./components/PRRail";
 import { StudioBars, StudioScatter } from "./components/StudioCharts";
-import { COST_UNIT, costAxis, costCaption, costPts, costRows, fmtMoneyTick, fmtMsTick, fmtPctTick, speedAxis, speedCaption, speedRows, stabAxis, stabCaption, stabRows, type CostChart, type CostUnit, type SpeedChart, type SpeedUnit, type StabChart } from "./opsRows";
+import { COST_UNIT, costAxis, costCaption, costPts, costRows, fmtMoneyTick, fmtMsTick, fmtPctTick, speedAxis, speedCaption, speedRows, stabAxis, stabCaption, stabRows } from "./opsRows";
 import { Control, Seg } from "./components/ui";
-import { Section, summarize, useSections } from "./components/Inspector";
+import { Section, sectionsApi, summarize } from "./components/Inspector";
 import type { PlotBg } from "./components/plotBg";
-import { TICK_DENSITIES, isTickDensity, type TickDensity } from "./components/ticks";
-import { copyPng, downloadBlob, renderPanelPng, slug, type ExportBackground } from "./exportPng";
-import { PALETTES, isPaletteId, toHex, toVars, varOf, type PaletteId } from "./palettes";
+import { TICK_DENSITIES } from "./components/ticks";
+import { copyPng, downloadBlob, renderPanelPng, slug } from "./exportPng";
+import { PALETTES, toHex, toVars, varOf } from "./palettes";
 import type { LogosMode } from "./logos";
 import { MAKERS, makerColor, makerName, makerOf } from "./makers";
+import {
+  BUILTIN_PRESETS, BUILTIN_PREFIX, JEV_SCALE, MARK_SCALE, SCHEME_MODELS, SCHEME_SLIDERS, SCHEME_SURFACE, SCHEME_VARS, TEXT_SCALE, builtinState, cleanVars, decodeHash, defaults, encodeHash,
+  fromPreset, isVars, makePreset, parsePresetFile, readPresets, readStored, sameState, writeChanged,
+  type Bg, type ColorMode, type PlotStyle, type StudioPreset, type StudioState, type Vars,
+} from "./studioState";
 
 /**
  * Screenshot studio (studio.html → studio.tsx → this page; unlinked from the site): one Compare models chart alone, on a plain panel whose size
  * you set, with every control above the plot and none on it. The top bar holds what is plotted (plot, corpus, models, issue) and the PNG export;
- * the inspector under it (components/Inspector.tsx) groups the rest into disclosure sections: Chart (the plot's own controls: view, axes, gridline
+ * the Presets row under it saves, loads, imports, exports and shares the whole panel of settings (studioState.ts); the inspector under that
+ * (components/Inspector.tsx) groups the rest into disclosure sections: Chart (the plot's own controls: view, axes, gridline
  * density, marks, the interval mark's shape, fill of the boxes and bars, labels, the key: by model or by maker), Canvas (size, title, frame, legend, logos, background pattern), Style (preset, colours, text, contrast), Scheme (the custom scheme
  * editor, with Style → Custom) and Export (scale, backdrop). Plots: recall/precision (the site's map and ranked views), Cost, Speed and Stability
- * (components/StudioCharts.tsx). Drag the panel's bottom-right corner or type a size; pick a preset for LinkedIn's usual aspect ratios. Nothing pulses and nothing opens on click.
+ * (components/StudioCharts.tsx). Drag the panel's bottom-right corner or type a size; pick a size preset for LinkedIn's usual aspect ratios. Nothing pulses and nothing opens on click.
+ *
+ * State: every setting is one field of a single `StudioState` (studioState.ts FIELDS: defaults, validation, and the localStorage key each remembered
+ * field has always had), held in one useState here; `set` / `patch` change fields, an effect writes the changed remembered fields back to their own keys,
+ * so a visitor who never touches presets sees no difference. A preset is `snapshot(state)`; loading one replaces the whole state (`fromPreset`).
  */
 
-type Preset = { id: string; label: string; w: number; h: number };
-const PRESETS: Preset[] = [
+type SizePreset = { id: string; label: string; w: number; h: number };
+const PRESETS: SizePreset[] = [
   { id: "wide", label: "1200 × 675 (16:9)", w: 1200, h: 675 },
   { id: "link", label: "1200 × 627 (link card)", w: 1200, h: 627 },
   { id: "square", label: "1080 × 1080 (1:1)", w: 1080, h: 1080 },
@@ -41,8 +51,7 @@ const PRESETS: Preset[] = [
  * A preset may carry a `profile`: the companion settings (labels, marks, background, panel frame, logos, colours, text, contrast) that reproduce its reference
  * look, applied once, when the preset is chosen (onStyle), never on reload or while it stays on, so every control still moves freely afterwards.
  */
-type PlotStyle = "site" | "journal" | "newsroom" | "linkedin" | "slate" | "economist" | "epoch" | "typesafe" | "custom";
-type Profile = { labels?: LabelsMode; leaders?: boolean; mark?: MarkShape; markSize?: MarkSize; bg?: Bg; frame?: boolean; logos?: LogosMode; text?: TextSize; contrast?: Contrast; colors?: ColorMode };
+type Profile = Partial<Pick<StudioState, "labels" | "leaders" | "mark" | "markSize" | "bg" | "frame" | "logos" | "text" | "contrast" | "colors">>;
 const STYLES: { id: PlotStyle; label: string; title: string; profile?: Profile }[] = [
   { id: "site", label: "Site", title: "The site's own look; follows the Dark/Light theme" },
   { id: "journal", label: "Journal", title: "Academic figure: white, black hairline axes, serif labels, Okabe–Ito colorblind-safe palette" },
@@ -58,7 +67,6 @@ const STYLES: { id: PlotStyle; label: string; title: string; profile?: Profile }
   },
   { id: "custom", label: "Custom", title: "Your own scheme: starts as a copy of the preset that was on, editable below, saved by name" },
 ];
-const isPlotStyle = (s: string | null): s is PlotStyle => STYLES.some((x) => x.id === s);
 /** Presets with a dark panel (the Colors palettes are lifted on them, palettes.ts forDark; Site follows the theme, Custom its own --panel). */
 const DARK_STYLES: PlotStyle[] = ["slate", "typesafe"];
 /**
@@ -66,36 +74,17 @@ const DARK_STYLES: PlotStyle[] = ["slate", "typesafe"];
  * off the preset's CSS when chosen (presetVars), so the two never drift apart. Saving keeps a copy under the user's schemes; the built-in stays.
  */
 const BUILTIN_SCHEMES: { name: string; style: PlotStyle }[] = [{ name: "TypeSafe", style: "typesafe" }];
-const BUILTIN_PREFIX = "builtin:";
 
 /**
- * Custom scheme (Style → Custom): the panel variables every preset block defines, exposed in the editor row, plus `--bg`, the page behind the panel
- * (painted by the stage while Custom is on; the PNG export is the panel alone and never shows it). Colours: the surface and ink set, then one
- * per roster model through the custom property its colour is (data.ts ALL_PRIMARY `var(--…)`, palettes.ts varOf). Sliders: the interval-box fill
- * opacity and the bar fill opacity (each also sets its hatch lines' opacity in the hatched Fill modes, components/hatch.tsx FillMode) and the outline width in px.
- * `--sans` is the panel face. A colour's text field takes any CSS colour (`transparent` for no grid included); the native picker beside it shows the nearest hex.
+ * Custom scheme (Style → Custom): the panel variables every preset block defines (studioState.ts SCHEME_SURFACE, SCHEME_MODELS, SCHEME_SLIDERS), exposed
+ * in the editor row, plus `--bg`, the page behind the panel (painted by the stage while Custom is on; the PNG export is the panel alone and never shows it).
+ * Colours: the surface and ink set, then one per roster model through the custom property its colour is (data.ts ALL_PRIMARY `var(--…)`, palettes.ts varOf).
+ * Sliders: the interval-box fill opacity and the bar fill opacity (each also sets its hatch lines' opacity in the hatched Fill modes, components/hatch.tsx FillMode)
+ * and the outline width in px. `--sans` is the panel face. A colour's text field takes any CSS colour (`transparent` for no grid included); the native picker beside it shows the nearest hex.
+ * The saved schemes (`studio-schemes`, a name → vars map) are a colour library apart from the state: a preset carries its scheme's vars inline instead.
  */
-type SchemeVar = { v: string; label: string };
-const SCHEME_SURFACE: SchemeVar[] = [
-  { v: "--bg", label: "page" }, { v: "--panel", label: "panel" }, { v: "--ink", label: "ink" }, { v: "--ink-2", label: "ink 2" }, { v: "--ink-3", label: "ink 3" }, { v: "--ink-4", label: "ink 4" },
-  { v: "--line", label: "line" }, { v: "--line-2", label: "line 2" }, { v: "--grid", label: "grid" }, { v: "--dots", label: "dots" }, { v: "--axis", label: "axis" }, { v: "--hl", label: "highlight" },
-];
-const SCHEME_MODELS: SchemeVar[] = Object.entries(PRIMARY_BY_KEY).flatMap(([k, m]) => { const v = varOf(k); return v ? [{ v, label: m.short }] : []; });
-/** `dflt` is shown, and drawn, while the scheme has no value for the variable (the charts' own fallback). */
-const SCHEME_SLIDERS: (SchemeVar & { min: number; max: number; step: number; dflt: number; title: string })[] = [
-  { v: "--box-alpha", label: "box fill", min: 0, max: 0.6, step: 0.01, dflt: 0.14, title: "Opacity of the 95% interval boxes on the recall/precision map: the shade of a filled box, or the lines of a hatched one (Fill control)" },
-  { v: "--box-stroke-w", label: "outline px", min: 0, max: 3, step: 0.25, dflt: 0.75, title: "Width of the interval boxes' and bars' outline, in px (Fill → outline or hatched + outline; also a preset's own box hairline, as Journal's)" },
-  { v: "--bar-alpha", label: "bar fill", min: 0.1, max: 1, step: 0.01, dflt: 0.55, title: "Opacity of the bars (Cost, Speed and Stability bar charts): the shade of a filled bar, or the lines of a hatched one (Fill control)" },
-];
-// --grid-x and --axis-y (vertical gridlines, y-axis line; unset they follow --grid / --axis) and --box-stroke (a preset's box outline opacity in the filled and hatched
-// Fill modes; Journal's hairline) have no control but are copied, saved and imported, so a Custom made from Epoch keeps its horizontal-only grid
-const SCHEME_VARS = new Set([...SCHEME_SURFACE, ...SCHEME_MODELS, ...SCHEME_SLIDERS].map((x) => x.v).concat("--sans", "--grid-x", "--axis-y", "--box-stroke"));
-type Vars = Record<string, string>;
-const isVars = (o: unknown): o is Vars => !!o && typeof o === "object" && !Array.isArray(o) && Object.values(o).every((x) => typeof x === "string");
 const isSchemes = (o: unknown): o is Record<string, Vars> => !!o && typeof o === "object" && !Array.isArray(o) && Object.values(o).every(isVars);
 const readJson = <T,>(key: string, ok: (o: unknown) => o is T, dflt: T): T => { try { const o: unknown = JSON.parse(localStorage.getItem(key) || "null"); return ok(o) ? o : dflt; } catch { return dflt; } };
-/** Only the editor's variables, as short strings: what a saved or imported scheme may set on the panel. */
-const cleanVars = (o: Vars): Vars => Object.fromEntries(Object.entries(o).filter(([k, v]) => SCHEME_VARS.has(k) && v.length <= 200));
 /** A scheme file as Export JSON writes it (`{ name, vars }`), a bare variable map, or a `{ [name]: vars }` map (the localStorage form); null if none of those. */
 const parseSchemeFile = (text: string): Record<string, Vars> | null => {
   let o: unknown; try { o = JSON.parse(text); } catch { return null; }
@@ -123,53 +112,20 @@ function SchemeColor({ v, label, value, onChange }: { v: string; label: string; 
   );
 }
 
-/** Mark sizes (Mark size control): the multiplier on every point mark and vendor glyph, written to the panel as --mark-user (PRScatter.tsx Mark, glyphScale) and passed to the scatters so their label placement keeps clear of the larger mark. High contrast's own 1.3 (--mark-scale / --r-add) multiplies on top. */
-type MarkSize = "s" | "m" | "l" | "xl";
-const MARK_SCALE: Record<MarkSize, number> = { s: 0.75, m: 1, l: 1.5, xl: 2.2 };
-const isMarkSize = (s: string | null): s is MarkSize => s != null && s in MARK_SCALE;
-const isMarkShape = (s: string | null): s is MarkShape => MARK_SHAPES.some((m) => m.id === s);
-/**
- * Jev mark size (Jev mark size control): the Jev rows' own size (logos.tsx isJev; Laya and the LLMs keep the Mark size), the same steps plus 2XL, or
- * `same`, the Mark size (the default, so nothing changes until it is set). Written to the panel as --mark-jev, an absolute factor the Jev marks and
- * glyphs read in place of --mark-user (PRScatter.tsx Mark), and passed to the scatters as `jevMarkSize` for their label placement.
- */
-type JevMarkSize = "same" | MarkSize | "xxl";
-const JEV_SCALE: Record<Exclude<JevMarkSize, "same">, number> = { ...MARK_SCALE, xxl: 3 };
-const isJevMarkSize = (s: string | null): s is JevMarkSize => s === "same" || (s != null && s in JEV_SCALE);
+// Mark size (studioState.ts MarkSize, MARK_SCALE): the multiplier on every point mark and vendor glyph, written to the panel as --mark-user (PRScatter.tsx Mark,
+// glyphScale) and passed to the scatters so their label placement keeps clear of the larger mark. High contrast's own 1.3 (--mark-scale / --r-add) multiplies on top.
+// Jev mark size (JevMarkSize, JEV_SCALE): the Jev rows' own size (logos.tsx isJev; Laya and the LLMs keep the Mark size), the same steps plus 2XL, or `same`, the
+// Mark size. Written to the panel as --mark-jev, an absolute factor the Jev marks and glyphs read in place of --mark-user, and passed to the scatters as `jevMarkSize`.
+// Text size (TextSize, TEXT_SCALE): one factor on every font size in the panel, passed to the charts as `textScale`, which also scales their label-width estimates and margins.
+// Contrast `high` (styles.css .studio-plot[data-contrast="high"]) puts every label in full ink, thickens axes and whiskers, raises the bar and box alphas and enlarges the marks.
+// Key (KeyMode; makers.ts): `maker` colours every item by who makes it through that maker's model colour property, so the Style preset, palette or custom swatch
+// still decides the hue; the legend then lists the makers and the points keep their name labels (shortened where the roster gives a `shortInMaker`).
 /** Logos (Canvas → Panel): every item's vendor mark, the Jev rows' alone, or none (logos.tsx LogosMode). */
 const LOGOS_OPTIONS: { id: LogosMode; label: string; title: string }[] = [
   { id: "all", label: "logos", title: "Every model's vendor mark: as the point mark on the map and cost scatter, before the name in the ranked and bar charts" },
   { id: "jev", label: "Jev logos only", title: "The Jev rows keep their mark; the LLMs (and Laya) draw the plain mark shape and their name alone" },
   { id: "none", label: "names only", title: "No vendor marks; every point is the Marks shape" },
 ];
-const isLogosMode = (s: string | null): s is LogosMode => LOGOS_OPTIONS.some((o) => o.id === s);
-
-/** Text sizes: one factor on every font size in the panel (axis titles, ticks, names, values, point labels, legend note), passed to the charts as `textScale`, which also scales their label-width estimates and margins. M is the site's own size. */
-type TextSize = "s" | "m" | "l" | "xl";
-const TEXT_SCALE: Record<TextSize, number> = { s: 0.9, m: 1, l: 1.2, xl: 1.45 };
-const isTextSize = (s: string | null): s is TextSize => s != null && s in TEXT_SCALE;
-/** Contrast: `high` (styles.css .studio-plot[data-contrast="high"]) puts every label in full ink, thickens axes and whiskers, raises the bar and box alphas and enlarges the marks, on top of whichever Style preset is on. */
-type Contrast = "normal" | "high";
-/** Colors (palettes.ts): `style` leaves the Style preset's own model colours; a palette id writes that palette over them; `custom` writes the user's swatches, seeded from whatever was showing when they switched. */
-type ColorMode = "style" | PaletteId | "custom";
-const isColorMode = (s: string | null): s is ColorMode => s === "style" || s === "custom" || isPaletteId(s);
-const readCustom = (): Record<string, string> => { try { const o = JSON.parse(localStorage.getItem("studio-colors-custom") || "{}"); return o && typeof o === "object" ? o : {}; } catch { return {}; } };
-
-/**
- * Key (Chart → Key; makers.ts): `model` is the site's own, every roster model in its own colour and, with Labels → legend, one legend entry per
- * model; `maker` colours every item by who makes it (TypeSafe, ConvAI, Anthropic, OpenAI, Google), through that maker's model colour property, so
- * the Style preset, palette or custom swatch still decides the hue; the legend then lists the makers and the points keep their name labels
- * (shortened where the roster gives a `shortInMaker`). Applied once, to the items and rows the page hands its charts (keyed), so every plot follows.
- */
-type KeyMode = "model" | "maker";
-const isKeyMode = (s: string | null): s is KeyMode => s === "model" || s === "maker";
-
-/** PNG export scale: device pixels per CSS pixel of the panel (a 1200 × 675 panel at 2× is a 2400 × 1350 PNG). */
-type ExportScale = "1" | "2" | "3";
-const isExportScale = (s: string | null): s is ExportScale => s === "1" || s === "2" || s === "3";
-
-/** The four plots. `pr` is the site's recall/precision chart (map or ranked); the others are the studio's own bar, dot and scatter charts (rows and captions: opsRows.ts). */
-type Plot = "pr" | "cost" | "speed" | "stability";
 
 /**
  * Background (Canvas → Background): the pattern behind every plot's plot area (components/plotBg.tsx). `auto` is what each Style preset drew before
@@ -177,14 +133,12 @@ type Plot = "pr" | "cost" | "speed" | "stability";
  * behind the bar and scatter charts; `off` removes it everywhere; `dots` and `grid` put the pattern behind every plot, in the preset's --dots where
  * it has one and otherwise a faint ink written to the panel as --plot-dots.
  */
-type Bg = "auto" | "off" | "dots" | "grid";
 const BG_OPTIONS: { id: Bg; label: string; title: string }[] = [
   { id: "auto", label: "auto", title: "The style's own: the dot matrix on the recall/precision charts where the preset has a dot colour (Site, LinkedIn, Slate), nothing behind the bar charts" },
   { id: "off", label: "plain", title: "No pattern behind the plot area, in every plot and style" },
   { id: "dots", label: "dot grid", title: "A dot matrix behind the plot area of every plot; the style's dot colour, or a faint ink where the style has none" },
   { id: "grid", label: "fine grid", title: "Fine hairlines behind the plot area of every plot, in the same colour as the dot grid" },
 ];
-const isBg = (s: string | null): s is Bg => BG_OPTIONS.some((o) => o.id === s);
 const BG_SUMMARY: Record<Bg, string> = { auto: "background auto", off: "plain background", dots: "dot grid", grid: "fine grid" };
 /** A computed --dots that draws nothing: unset, or transparent in either spelling. */
 const noColour = (v: string) => !v || v === "transparent" || v === "rgba(0, 0, 0, 0)";
@@ -192,106 +146,90 @@ const noColour = (v: string) => !v || v === "transparent" || v === "rgba(0, 0, 0
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, Math.round(n)));
 
 export default function StudioPage() {
-  const [corpus, setCorpusRaw] = useState(DEFAULT_CORPUS);
-  const setCorpus = (c: string) => { setCorpusRaw(siteCorpus(c)); setIssue(null); };
-  const [issue, setIssue] = useState<string | null>(null);
+  // ---- The one state object (studioState.ts): the remembered fields from their own localStorage keys, or the whole state from a share link's #p= hash ----
+  const [fromLink] = useState(() => decodeHash(location.hash));
+  const [state, setState] = useState<StudioState>(() => (fromLink ? fromPreset(fromLink.state) : readStored()));
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  // Persistence gate: a state that arrived by link is not written to localStorage until the user changes something or saves it; the first change also
+  // drops the hash from the URL, since it no longer describes the page. `lastWritten` is what was last written back, null before the first write.
+  const persistRef = useRef(!fromLink);
+  const lastWritten = useRef<StudioState | null>(null);
+  const touch = () => {
+    if (persistRef.current) return;
+    persistRef.current = true;
+    if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+    writeChanged(null, stateRef.current);
+    lastWritten.current = stateRef.current;
+  };
+  /** Set one field (a value or an updater), as a user change. */
+  const set = <K extends keyof StudioState>(k: K, v: StudioState[K] | ((p: StudioState[K]) => StudioState[K])) => {
+    touch();
+    setState((p) => { const nv = typeof v === "function" ? (v as (p: StudioState[K]) => StudioState[K])(p[k]) : v; return Object.is(nv, p[k]) ? p : { ...p, [k]: nv }; });
+  };
+  const setter = <K extends keyof StudioState>(k: K) => (v: StudioState[K]) => set(k, v);
+  /** Set several fields at once, as a user change. */
+  const patch = (p: Partial<StudioState>) => { touch(); setState((s) => ({ ...s, ...p })); };
+  // every remembered field whose stored form changed goes back to its own key, as the page always wrote it (studioState.ts FIELDS)
+  useEffect(() => { if (!persistRef.current) return; writeChanged(lastWritten.current, state); lastWritten.current = state; }, [state]);
+  const {
+    plot, corpus, issue, on, chart, costChart, costUnit, costScale, speedChart, speedUnit, stabChart, stabSetting, hideUnmeasured, axes, ax, swap, ticks,
+    mark, markSize, jevSize, fill: fillMode, interval, labels: labelsMode, leaders, key, w, h, title, frame, legend, logos, bg, style, colors: colorMode, custom, text, contrast,
+    scheme, schemeName, exScale, exBg, theme,
+  } = state;
+
+  // the controls' setters, one per field (the JSX below reads as it did when each was its own useState)
+  const setPlot = setter("plot"), setCorpus = (c: string) => patch({ corpus: siteCorpus(c), issue: null }), setIssue = setter("issue"), setOn = setter("on");
+  const setChart = setter("chart"), setCostChart = setter("costChart"), setCostUnit = setter("costUnit"), setCostScale = setter("costScale"), setSpeedChart = setter("speedChart"), setSpeedUnit = setter("speedUnit");
+  const setStabChart = setter("stabChart"), setStabSetting = setter("stabSetting"), setHideUnmeasured = setter("hideUnmeasured"), setAxes = setter("axes"), setSwap = setter("swap"), setTicks = setter("ticks");
+  const setMark = setter("mark"), setMarkSize = setter("markSize"), setJevSize = setter("jevSize"), setFillMode = setter("fill"), setIntervalMode = setter("interval"), setLabelsMode = setter("labels"), setLeaders = setter("leaders"), setKey = setter("key");
+  const setW = setter("w"), setH = setter("h"), setTitle = setter("title"), setFrame = setter("frame"), setLegend = setter("legend"), setLogos = setter("logos"), setBg = setter("bg");
+  const setText = setter("text"), setContrast = setter("contrast"), setExScale = setter("exScale"), setExBg = setter("exBg"), setTheme = setter("theme");
   const v: View = { corpus, tag: "", arm: "multi", gray: "all", level: "doc", issue };
   const meta = DATA.corpora[corpusKey(v.corpus, v.tag)];
-  const [on, setOn] = useState<Set<string>>(new Set(DEFAULT_ON));
   const { sel, items } = useCompareItems(v, on);
 
-  const [plot, setPlot] = useState<Plot>("pr");
-  const [chart, setChart] = useState<Chart>("map");
-  const [costChart, setCostChart] = useState<CostChart>("bars");
-  const [costUnit, setCostUnit] = useState<CostUnit>("1k");
-  const [costScale, setCostScale] = useState<"linear" | "log">("linear");
-  const [speedChart, setSpeedChart] = useState<SpeedChart>("bars");
-  const [speedUnit, setSpeedUnit] = useState<SpeedUnit>("ms");
-  const [stabChart, setStabChart] = useState<StabChart>("bars");
-  const [stabSetting, setStabSetting] = useState<"default" | "t0">("default");
-  const [hideUnmeasured, setHideUnmeasured] = useState(false);
   // Axes: the site's two modes, plus `custom`, explicit percent bounds per axis (the ranked view shares one range across both panels).
-  const [axes, setAxes] = useState<"full" | "zoom" | "custom">("zoom");
-  const [ax, setAx] = useState({ xlo: 50, xhi: 100, ylo: 50, yhi: 100 });
-  const setBound = (k: keyof typeof ax) => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const setBound = (k: keyof StudioState["ax"]) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const n = Number(e.target.value);
-    if (Number.isFinite(n)) setAx((p) => ({ ...p, [k]: clamp(n, 0, 100) }));
+    if (Number.isFinite(n)) set("ax", (p) => ({ ...p, [k]: clamp(n, 0, 100) }));
   };
   const span = (lo: number, hi: number): [number, number] => (hi > lo ? [lo / 100, hi / 100] : [Math.min(lo, hi) / 100, Math.min(lo, hi) / 100 + 0.01]);
-  // Axes orientation (PRScatter.tsx `swap`): recall on x (the site's map) or precision on x with recall up the side; `studio-swap`. The custom bounds
+  // Axes orientation (PRScatter.tsx `swap`): recall on x (the site's map) or precision on x with recall up the side. The custom bounds
   // above stay per metric (xlo/xhi are recall, ylo/yhi precision) and are mapped to the plot's axes here.
-  const [swap, setSwap] = useState(() => localStorage.getItem("studio-swap") === "on");
-  useEffect(() => { localStorage.setItem("studio-swap", swap ? "on" : "off"); }, [swap]);
   const recallSpan = span(ax.xlo, ax.xhi), precisionSpan = span(ax.ylo, ax.yhi);
   const domain: PRDomain | undefined = axes === "custom" ? (swap ? { x: precisionSpan, y: recallSpan } : { x: recallSpan, y: precisionSpan }) : undefined;
   const range: [number, number] | undefined = axes === "custom" ? span(ax.xlo, ax.xhi) : undefined;
   const zoom = axes === "zoom";
-  // Gridlines (components/ticks.ts TickDensity): the tick and gridline density of every plot's axes; `normal` is what each chart always drew.
-  const [ticks, setTicks] = useState<TickDensity>(() => { const s = localStorage.getItem("studio-ticks"); return isTickDensity(s) ? s : "normal"; });
-  useEffect(() => { localStorage.setItem("studio-ticks", ticks); }, [ticks]);
-  // Logos (LOGOS_OPTIONS): `studio-logos`; `all` is what the studio always drew.
-  const [logos, setLogos] = useState<LogosMode>(() => { const s = localStorage.getItem("studio-logos"); return isLogosMode(s) ? s : "all"; });
-  useEffect(() => { localStorage.setItem("studio-logos", logos); }, [logos]);
-  const [legend, setLegend] = useState(true);
-  const [frame, setFrame] = useState(true);
-  // Leader lines (PRScatter.tsx / StudioCharts.tsx `leaders`): a hairline from a label the placement pushed away from its mark back to the mark.
-  const [leaders, setLeaders] = useState(() => localStorage.getItem("studio-leaders") === "on");
-  useEffect(() => { localStorage.setItem("studio-leaders", leaders ? "on" : "off"); }, [leaders]);
-  // Labels (PRScatter.tsx LabelsMode): names beside the marks, or a legend row at the top of the panel and no point labels.
-  const [labelsMode, setLabelsMode] = useState<LabelsMode>(() => (localStorage.getItem("studio-labels") === "legend" ? "legend" : "beside"));
-  useEffect(() => { localStorage.setItem("studio-labels", labelsMode); }, [labelsMode]);
-  // Key (KeyMode): `studio-key`; `model` is what the studio always drew
-  const [key, setKey] = useState<KeyMode>(() => { const s = localStorage.getItem("studio-key"); return isKeyMode(s) ? s : "model"; });
-  useEffect(() => { localStorage.setItem("studio-key", key); }, [key]);
   const byMaker = key === "maker";
-  // in by-maker mode every item or row the charts get takes its maker's colour and its in-maker name; in by-model mode it is returned as it came
+  // Key (KeyMode): in by-maker mode every item or row the charts get takes its maker's colour and its in-maker name; in by-model mode it is returned as it came
   const keyed = <T extends { id: string; name: string; color: string }>(x: T): T => (byMaker ? { ...x, color: makerColor(x.id, x.color), name: makerName(x.id, x.name) } : x);
   const keyedItems = useMemo(() => items.map(keyed), [items, byMaker]); // eslint-disable-line react-hooks/exhaustive-deps
   // the legend groups (PRScatter.tsx LegendGroup) the scatters list in by-maker mode with Labels → legend; the point labels stay on
   const groups = byMaker ? (id: string) => { const m = makerOf(id); return { id: m.id, name: m.label, color: makerColor(id, PRIMARY_BY_KEY[id]?.color ?? "var(--ink-3)") }; } : undefined;
   const pointLabels = labelsMode === "beside" || byMaker;
-  // Marks: the point shape when logos are off (the glyph stands in for it otherwise), and the size of whichever is drawn.
-  const [mark, setMark] = useState<MarkShape>(() => { const s = localStorage.getItem("studio-mark"); return isMarkShape(s) ? s : "dot"; });
-  useEffect(() => { localStorage.setItem("studio-mark", mark); }, [mark]);
-  const [markSize, setMarkSize] = useState<MarkSize>(() => { const s = localStorage.getItem("studio-mark-scale"); return isMarkSize(s) ? s : "m"; });
-  useEffect(() => { localStorage.setItem("studio-mark-scale", markSize); }, [markSize]);
+  // Marks: the point shape when logos are off (the glyph stands in for it otherwise), and the size of whichever is drawn; the Jev rows' own size (`same` follows Mark size)
   const ms = MARK_SCALE[markSize];
-  // Jev mark size (JevMarkSize): the Jev rows' factor; `same` follows the Mark size
-  const [jevSize, setJevSize] = useState<JevMarkSize>(() => { const s = localStorage.getItem("studio-jev-mark"); return isJevMarkSize(s) ? s : "same"; });
-  useEffect(() => { localStorage.setItem("studio-jev-mark", jevSize); }, [jevSize]);
   const jms = jevSize === "same" ? ms : JEV_SCALE[jevSize];
   // Fill (components/hatch.tsx FillMode): how the map's 95% interval boxes and the Cost, Speed and Stability bars are drawn: filled, hatched, outline
-  // only, or hatched inside an outline. One setting for whichever plot is shown; stored under the key the earlier Boxes control used.
-  const [fillMode, setFillMode] = useState<FillMode>(() => { const s = localStorage.getItem("studio-boxes"); return isFillMode(s) ? s : "filled"; });
-  useEffect(() => { localStorage.setItem("studio-boxes", fillMode); }, [fillMode]);
+  // only, or hatched inside an outline. One setting for whichever plot is shown; stored under the key the earlier Boxes control used (`studio-boxes`).
   const boxOutlined = isOutlined(fillMode);
   // Interval (PRScatter.tsx IntervalMode): the shape of the map's 95% interval marks (box, whiskers, recall whisker, ellipse, brackets, none); the
   // ranked view maps it onto its row whiskers (PRRail.tsx). `box` is what the site and the studio always drew.
-  const [interval, setIntervalMode] = useState<IntervalMode>(() => { const s = localStorage.getItem("studio-ci"); return isIntervalMode(s) ? s : "box"; });
-  useEffect(() => { localStorage.setItem("studio-ci", interval); }, [interval]);
   const intervalArea = intervalHasArea(interval);
-  const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "light");
-  useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
-  const [style, setStyle] = useState<PlotStyle>(() => { const s = localStorage.getItem("studio-style"); return isPlotStyle(s) ? s : "site"; });
-  useEffect(() => { localStorage.setItem("studio-style", style); }, [style]);
-  // Background (Bg above): `studio-bg`; `presetDots` is whether the panel's own --dots (preset, theme or Custom scheme; not the --plot-dots override) draws anything.
-  const [bg, setBg] = useState<Bg>(() => { const s = localStorage.getItem("studio-bg"); return isBg(s) ? s : "auto"; });
-  useEffect(() => { localStorage.setItem("studio-bg", bg); }, [bg]);
+  useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
+  // Background (Bg): `presetDots` is whether the panel's own --dots (preset, theme or Custom scheme; not the --plot-dots override) draws anything.
   const [presetDots, setPresetDots] = useState(true);
-  // Title (Canvas → Title): an optional bold line at the panel's top-left, above the chart (styles.css .studio-title); empty draws nothing.
-  const [title, setTitle] = useState(() => localStorage.getItem("studio-title") ?? "");
-  useEffect(() => { localStorage.setItem("studio-title", title); }, [title]);
-  // The inspector's sections (components/Inspector.tsx): Chart and Canvas open on a first visit, Scheme whenever Style → Custom is chosen.
-  const sections = useSections({ chart: true, canvas: true, style: false, scheme: true, export: false });
+  // The inspector's sections (components/Inspector.tsx; the `sections` field): Chart and Canvas open on a first visit, Scheme whenever Style → Custom is chosen.
+  // Opening or closing one is not a change to the chart: it neither starts persisting a linked state nor marks a loaded preset modified.
+  const sections = sectionsApi(state.sections, (f) => setState((p) => ({ ...p, sections: f(p.sections) })));
 
-  // Custom scheme: the variables on the panel (`studio-custom`), the schemes saved by name (`studio-schemes`) and the name in the field / the
-  // saved scheme selected (`studio-scheme`, one value: the select shows it while it matches a saved name).
-  const [scheme, setScheme] = useState<Vars>(() => readJson("studio-custom", isVars, {}));
-  useEffect(() => { localStorage.setItem("studio-custom", JSON.stringify(scheme)); }, [scheme]);
+  // Custom scheme: the variables on the panel (the `scheme` field, `studio-custom`), the schemes saved by name (`studio-schemes`, a colour library
+  // outside the state) and the name in the field / the saved scheme selected (`schemeName`, one value: the select shows it while it matches a saved name).
+  const setScheme = (v: Vars | ((p: Vars) => Vars)) => set("scheme", v);
+  const setSchemeName = setter("schemeName");
   const [schemes, setSchemes] = useState<Record<string, Vars>>(() => readJson("studio-schemes", isSchemes, {}));
   useEffect(() => { localStorage.setItem("studio-schemes", JSON.stringify(schemes)); }, [schemes]);
-  const [schemeName, setSchemeName] = useState(() => localStorage.getItem("studio-scheme") ?? "");
-  useEffect(() => { localStorage.setItem("studio-scheme", schemeName); }, [schemeName]);
   const [showModels, setShowModels] = useState(false);
   const [scMsg, setScMsg] = useState<string | null>(null);
   const scTimer = useRef(0);
@@ -325,17 +263,10 @@ export default function StudioPage() {
     setSchemeName(names[0]);
     say(names.length === 1 ? `Imported “${names[0]}”` : `Imported ${names.length} schemes`);
   };
-  const [text, setText] = useState<TextSize>(() => { const s = localStorage.getItem("studio-text"); return isTextSize(s) ? s : "m"; });
-  useEffect(() => { localStorage.setItem("studio-text", text); }, [text]);
   const ts = TEXT_SCALE[text];
-  const [contrast, setContrast] = useState<Contrast>(() => (localStorage.getItem("studio-contrast") === "high" ? "high" : "normal"));
-  useEffect(() => { localStorage.setItem("studio-contrast", contrast); }, [contrast]);
 
   // Model colours: a palette over the Style preset, or per-model swatches. Dark panels (Slate, or Site in Dark) get the palette lifted (palettes.ts forDark).
-  const [colorMode, setColorMode] = useState<ColorMode>(() => { const s = localStorage.getItem("studio-colors"); return isColorMode(s) ? s : "style"; });
-  useEffect(() => { localStorage.setItem("studio-colors", colorMode); }, [colorMode]);
-  const [custom, setCustom] = useState<Record<string, string>>(readCustom);
-  useEffect(() => { localStorage.setItem("studio-colors-custom", JSON.stringify(custom)); }, [custom]);
+  const setCustom = (v: Record<string, string> | ((p: Record<string, string>) => Record<string, string>)) => set("custom", v);
   const customPanelHex = style === "custom" ? toHex(scheme["--panel"] ?? "") : null;
   const darkPanel = customPanelHex ? luminance(customPanelHex) < 0.4 : DARK_STYLES.includes(style) || (style === "site" && theme === "dark");
   const colorVars: Record<string, string> = colorMode === "style" ? {} : colorMode === "custom" ? toVars(custom, false) : toVars(PALETTES.find((p) => p.id === colorMode)!.colors, darkPanel);
@@ -358,25 +289,13 @@ export default function StudioPage() {
     probe.remove();
     return out;
   };
-  // A preset's profile (STYLES): the companion settings it declares, set once as it is chosen; the controls are the user's again from then on.
-  const applyProfile = (p: Profile) => {
-    if (p.labels) setLabelsMode(p.labels);
-    if (p.leaders !== undefined) setLeaders(p.leaders);
-    if (p.mark) setMark(p.mark);
-    if (p.markSize) setMarkSize(p.markSize);
-    if (p.bg) setBg(p.bg);
-    if (p.frame !== undefined) setFrame(p.frame);
-    if (p.logos) setLogos(p.logos);
-    if (p.text) setText(p.text);
-    if (p.contrast) setContrast(p.contrast);
-    if (p.colors) setColorMode(p.colors);
-  };
+  // A style's profile (STYLES): the companion settings it declares, set once as it is chosen; the controls are the user's again from then on.
   // Entering Custom copies the preset that was on, so the editor starts from real values; a reload into Custom with nothing stored copies Site.
   const onStyle = (s: PlotStyle) => {
-    if (s === "custom" && style !== "custom") { setScheme(presetVars(style)); sections.set("scheme", true); }
-    const profile = STYLES.find((x) => x.id === s)?.profile;
-    if (profile && s !== style) applyProfile(profile);
-    setStyle(s);
+    const entering = s === "custom" && style !== "custom";
+    if (entering) sections.set("scheme", true);
+    const profile = s !== style ? STYLES.find((x) => x.id === s)?.profile : undefined;
+    patch({ ...profile, style: s, ...(entering ? { scheme: presetVars(style) } : {}) });
   };
   useEffect(() => { if (style === "custom" && !Object.keys(scheme).length) setScheme(presetVars("site")); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   /** Every roster model's colour as the panel currently resolves it (the preset's, or the palette or swatch over it). */
@@ -389,16 +308,78 @@ export default function StudioPage() {
   };
   const onColorMode = (m: ColorMode) => {
     // Entering custom starts from the colours on screen, so "pick a palette, then tweak" works.
-    if (m === "custom" && colorMode !== "custom") setCustom(currentColors());
-    setColorMode(m);
+    patch(m === "custom" && colorMode !== "custom" ? { colors: m, custom: currentColors() } : { colors: m });
   };
-  const resetCustom = () => { setCustom({}); setColorMode("style"); };
+  const resetCustom = () => patch({ custom: {}, colors: "style" });
+
+  // ---- Presets (studioState.ts): the whole state saved by name (`studio-presets`), the one loaded (`studio-preset-current`; shown in the select, with a
+  // • once the settings differ from it), the built-ins (BUILTIN_PRESETS, copy-on-save), a JSON file in or out, a share link carrying the state in its hash. ----
+  const [presets, setPresets] = useState<Record<string, StudioPreset>>(readPresets);
+  useEffect(() => { localStorage.setItem("studio-presets", JSON.stringify(presets)); }, [presets]);
+  const [current, setCurrentRaw] = useState(() => (fromLink ? "" : localStorage.getItem("studio-preset-current") ?? ""));
+  const setCurrent = (n: string) => { setCurrentRaw(n); localStorage.setItem("studio-preset-current", n); };
+  const [presetName, setPresetName] = useState(() => fromLink?.name ?? current.replace(BUILTIN_PREFIX, ""));
+  const builtinOf = (n: string) => BUILTIN_PRESETS.find((b) => BUILTIN_PREFIX + b.name === n);
+  const cur = current in presets || builtinOf(current) ? current : "";
+  const curLabel = cur.replace(BUILTIN_PREFIX, "");
+  const curBuiltin = builtinOf(cur);
+  const curState = cur ? (curBuiltin ? builtinState(curBuiltin) : fromPreset(presets[cur].state)) : null;
+  const modified = !!curState && !sameState(curState, state);
+  const [psMsg, setPsMsg] = useState<string | null>(null);
+  const psTimer = useRef(0);
+  const note = (msg: string) => { setPsMsg(msg); window.clearTimeout(psTimer.current); psTimer.current = window.setTimeout(() => setPsMsg(null), 2200); };
+  const savePreset = (name: string) => {
+    const n = name.trim().slice(0, 80);
+    if (!n) { note("Name the preset first."); return; }
+    if (n in presets && n !== cur && !confirm(`Overwrite the saved preset “${n}”?`)) return;
+    touch();
+    setPresets((p) => ({ ...p, [n]: makePreset(n, state) }));
+    setCurrent(n); setPresetName(n);
+    note(n in presets ? `Updated “${n}”` : `Saved “${n}”`);
+  };
+  // the loaded (saved, not built-in) preset takes the name in the field; shown while the field holds a different, non-empty name
+  const renameName = cur && !curBuiltin ? presetName.trim().slice(0, 80) : "";
+  const canRename = !!renameName && renameName !== cur;
+  const renamePreset = () => {
+    if (!canRename) return;
+    if (renameName in presets && !confirm(`Overwrite the saved preset “${renameName}”?`)) return;
+    setPresets((p) => { const q = { ...p }; q[renameName] = { ...q[cur], name: renameName }; delete q[cur]; return q; });
+    setCurrent(renameName); setPresetName(renameName); note(`Renamed to “${renameName}”`);
+  };
+  const onSaveAs = () => { const n = prompt("Save the current settings as", presetName.trim() || "My preset"); if (n != null) savePreset(n); };
+  const applyPreset = (st: StudioState, name: string, field: string) => { touch(); setState(st); setCurrent(name); setPresetName(field); };
+  const loadPreset = (n: string) => {
+    if (!n) return;
+    const b = builtinOf(n);
+    if (b) applyPreset(builtinState(b), n, b.name);
+    else if (presets[n]) applyPreset(fromPreset(presets[n].state), n, n);
+  };
+  const deletePreset = () => {
+    if (!cur || curBuiltin || !confirm(`Delete the saved preset “${cur}”?`)) return;
+    setPresets((p) => { const q = { ...p }; delete q[cur]; return q; });
+    setCurrent(""); note(`Deleted “${cur}”`);
+  };
+  const exportPreset = () => {
+    const n = presetName.trim() || curLabel || "preset";
+    downloadBlob(new Blob([JSON.stringify(makePreset(n, state), null, 2)], { type: "application/json" }), `${slug(n) || "preset"}.studio.json`);
+  };
+  const importPresets = async (file: File | undefined) => {
+    if (!file) return;
+    const got = parsePresetFile(await file.text());
+    const names = got ? Object.keys(got) : [];
+    if (!got || !names.length) { note("Not a preset file."); return; }
+    setPresets((p) => ({ ...p, ...got }));
+    applyPreset(fromPreset(got[names[0]].state), names[0], names[0]);
+    note(names.length === 1 ? `Imported “${names[0]}”` : `Imported ${names.length} presets`);
+  };
+  const resetAll = () => { if (!confirm("Reset every setting to its default?")) return; applyPreset(defaults(), "", ""); note("Reset to defaults"); };
+  // the share link: this page's URL with the whole state, as a preset, base64url-encoded in the hash (studioState.ts encodeHash); read back on load (fromLink)
+  const copyLink = async () => {
+    const url = `${location.origin}${location.pathname}#${encodeHash(makePreset(presetName.trim() || curLabel || "shared", state))}`;
+    try { await navigator.clipboard.writeText(url); note(`Link copied (${(url.length / 1024).toFixed(1)} KB)`); } catch { prompt("Copy this link", url); }
+  };
 
   // PNG export (exportPng.ts): the panel as shown, minus frame, corner radius and resize grip, at 1–3× on the panel colour or transparent.
-  const [exScale, setExScale] = useState<ExportScale>(() => { const s = localStorage.getItem("studio-export-scale"); return isExportScale(s) ? s : "2"; });
-  useEffect(() => { localStorage.setItem("studio-export-scale", exScale); }, [exScale]);
-  const [exBg, setExBg] = useState<ExportBackground>(() => (localStorage.getItem("studio-export-bg") === "transparent" ? "transparent" : "panel"));
-  useEffect(() => { localStorage.setItem("studio-export-bg", exBg); }, [exBg]);
   const [exStatus, setExStatus] = useState<{ msg: string; busy?: boolean; err?: boolean } | null>(null);
   const exTimer = useRef(0);
   const flash = (msg: string, err = false) => { setExStatus({ msg, err }); window.clearTimeout(exTimer.current); exTimer.current = window.setTimeout(() => setExStatus(null), err ? 6000 : 1500); };
@@ -425,8 +406,7 @@ export default function StudioPage() {
 
   // Panel size in CSS pixels. The panel is also CSS-resizable by its corner; a ResizeObserver writes the dragged size back into the fields.
   // In the row-based charts the height follows the rows, so only the width is synced and the chosen height is kept for when a filling chart returns.
-  const [w, setW] = useState(PRESETS[0].w);
-  const [h, setH] = useState(PRESETS[0].h);
+  // The observer's write-back is quiet (setState, not `set`): it fires on mount and after a preset loads, which are not the user's changes.
   const plotRef = useRef<HTMLDivElement>(null);
   const fillsRef = useRef(fills);
   fillsRef.current = fills;
@@ -435,8 +415,7 @@ export default function StudioPage() {
     if (!el) return;
     const ro = new ResizeObserver(() => {
       const bw = el.offsetWidth, bh = el.offsetHeight;
-      if (bw) setW((p) => (p === bw ? p : bw));
-      if (bh && fillsRef.current) setH((p) => (p === bh ? p : bh));
+      setState((p) => { const nw = bw || p.w, nh = bh && fillsRef.current ? bh : p.h; return nw === p.w && nh === p.h ? p : { ...p, w: nw, h: nh }; });
     });
     ro.observe(el);
     return () => ro.disconnect();
@@ -556,6 +535,48 @@ export default function StudioPage() {
           <span className="studio-hint small" title="The PNG's pixel size: the panel × the Export scale">{exportSize}</span>
           <button type="button" className="studio-btn primary" onClick={onDownload} disabled={exStatus?.busy} title="Save the chart area as a PNG file">Download PNG</button>
           <button type="button" className="studio-btn" onClick={onCopy} disabled={exStatus?.busy} title="Copy the chart area as a PNG image">Copy PNG</button>
+        </span>
+      </div>
+
+      {/* Presets row: the whole panel of settings (every control on this page, studioState.ts) saved by name in this browser, as a JSON file, or as a link. */}
+      <div className="controls studio-bar studio-presets">
+        <Control label="Preset">
+          <span className="select">
+            <select value={cur} onChange={(e) => loadPreset(e.target.value)} aria-label="Saved presets" title="Load a saved preset: every setting on this page, the models and size included">
+              <option value="">{Object.keys(presets).length ? "—" : "none saved yet"}</option>
+              {Object.keys(presets).sort().map((n) => <option key={n} value={n}>{n}</option>)}
+              <optgroup label="Built-in">
+                {BUILTIN_PRESETS.map((b) => <option key={b.name} value={BUILTIN_PREFIX + b.name} title={b.title}>{b.name}</option>)}
+              </optgroup>
+            </select>
+          </span>
+          {cur && (
+            <span className={`studio-preset-cur${modified ? " mod" : ""}`} title={modified ? `The settings differ from “${curLabel}” as ${curBuiltin ? "built in" : "saved"}${curBuiltin ? "; Save keeps your copy" : "; Update saves them over it"}` : `“${curLabel}” as ${curBuiltin ? "built in" : "saved"}`}>
+              {curLabel}{modified && <span className="dot"> •</span>}
+            </span>
+          )}
+          {cur && modified && !curBuiltin && <button type="button" className="studio-btn small" onClick={() => savePreset(cur)} title={`Save the current settings over “${curLabel}”`}>Update</button>}
+          <button type="button" className="studio-btn small" onClick={deletePreset} disabled={!cur || !!curBuiltin} title={curBuiltin ? "Built-in presets stay" : "Remove the selected preset from this browser"}>Delete</button>
+        </Control>
+        <Control label="Save">
+          <span className="studio-size">
+            <input type="text" className="name" value={presetName} onChange={(e) => setPresetName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") savePreset(presetName); }} placeholder="name" spellCheck={false} aria-label="preset name" />
+          </span>
+          <button type="button" className="studio-btn small" onClick={() => savePreset(presetName)} title="Store every current setting under this name in this browser (asks before overwriting another preset)">Save</button>
+          <button type="button" className="studio-btn small" onClick={onSaveAs} title="Store every current setting under a new name">Save as…</button>
+          {canRename && <button type="button" className="studio-btn small" onClick={renamePreset} title={`Rename “${curLabel}” to “${renameName}” (its settings stay as saved)`}>Rename</button>}
+        </Control>
+        <Control label="File">
+          <button type="button" className="studio-btn small" onClick={exportPreset} title="Download every current setting as <name>.studio.json, for another browser">Export JSON</button>
+          <label className="studio-btn small" title="Load a preset file written by Export JSON (one preset, or an array or map of them); the first is applied, all are saved">
+            Import JSON
+            <input type="file" accept=".json,application/json" hidden onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; void importPresets(f); }} />
+          </label>
+        </Control>
+        <span className="studio-bar-r">
+          {psMsg && <span className="studio-status" role="status">{psMsg}</span>}
+          <button type="button" className="studio-btn small" onClick={copyLink} title="Copy this page's address with every setting in it (#p=…), to open elsewhere or send">Copy link</button>
+          <button type="button" className="studio-btn small" onClick={resetAll} title="Every setting back to its default, the models and size included">Reset to defaults</button>
         </span>
       </div>
 

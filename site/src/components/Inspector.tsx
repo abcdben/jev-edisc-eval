@@ -1,22 +1,17 @@
-import { useEffect, useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 /**
  * The screenshot studio's settings inspector (StudioPage.tsx): one disclosure section per group of controls, stacked under the top bar.
  * A closed section shows a one-line summary of its current values in its header; open, it lays its controls out in a grid
- * (styles.css `.studio-sec-b`). Which sections are open is remembered in localStorage (`studio-sections`).
+ * (styles.css `.studio-sec-b`). Which sections are open is one field of the studio's state (studioState.ts `sections`, remembered under
+ * `studio-sections` and carried by presets); the page hands it here with its updater.
  */
 
-const KEY = "studio-sections";
-const isOpenMap = (o: unknown): o is Record<string, boolean> => !!o && typeof o === "object" && !Array.isArray(o) && Object.values(o).every((v) => typeof v === "boolean");
-
-/** Open/closed state of the sections, `defaults` for a first visit; `set` opens or closes one without a click (Style → Custom opens Scheme). */
-export function useSections(defaults: Record<string, boolean>) {
-  const [open, setOpen] = useState<Record<string, boolean>>(() => {
-    try { const o: unknown = JSON.parse(localStorage.getItem(KEY) || "null"); return isOpenMap(o) ? { ...defaults, ...o } : defaults; } catch { return defaults; }
-  });
-  useEffect(() => { localStorage.setItem(KEY, JSON.stringify(open)); }, [open]);
-  const toggle = (id: string) => setOpen((p) => ({ ...p, [id]: !p[id] }));
-  const set = (id: string, v: boolean) => setOpen((p) => (p[id] === v ? p : { ...p, [id]: v }));
+type OpenMap = Record<string, boolean>;
+/** Toggle and set over the page's open-sections field; `set` opens or closes one without a click (Style → Custom opens Scheme). */
+export function sectionsApi(open: OpenMap, update: (f: (p: OpenMap) => OpenMap) => void) {
+  const toggle = (id: string) => update((p) => ({ ...p, [id]: !p[id] }));
+  const set = (id: string, v: boolean) => update((p) => (p[id] === v ? p : { ...p, [id]: v }));
   return { open, toggle, set };
 }
 

@@ -589,6 +589,13 @@ svg text { user-select: none; font-family: var(--sans); }
 .page.studio { max-width: none; }
 .studio .controls { position: static; backdrop-filter: none; gap: 18px 22px; }
 .studio-bar-r { margin-left: auto; display: inline-flex; align-items: center; gap: 10px; }
+/* Presets row (StudioPage.tsx, under the top bar): the saved-presets select with the loaded name beside it (a • once the settings differ from it), the
+   name field and Save buttons, the file buttons, and Copy link / Reset at the right. Slimmer than the bar above; the same select, field and small-button idioms. */
+.studio .controls.studio-presets { padding-top: 7px; padding-bottom: 7px; gap: 12px 26px; background: color-mix(in srgb, var(--panel) 40%, var(--bg)); }
+.studio-presets .studio-btn.small { padding: 3px 9px; }
+.studio-presets .studio-size input.name { width: 170px; padding: 4px 8px; }
+.studio-preset-cur { font-size: 12.5px; color: var(--ink-2); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.studio-preset-cur .dot { color: var(--ink); font-weight: 600; }
 .studio-hint { color: var(--ink-3); font-size: 13px; }
 /* Inspector: full-bleed like the control bar; one section per row, a hairline between. The header is one button: chevron, title and, while the
    section is closed, a muted one-line summary of its values (ellipsised when the row runs out). */
