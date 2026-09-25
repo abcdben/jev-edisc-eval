@@ -38,7 +38,8 @@ export const TEXT_SCALE: Record<TextSize, number> = { s: 0.9, m: 1, l: 1.2, xl: 
 export type Contrast = "normal" | "high";
 /** Colors (palettes.ts): `style` leaves the Style preset's own model colours; a palette id writes that palette over them; `custom` the user's swatches. */
 export type ColorMode = "style" | PaletteId | "custom";
-export type KeyMode = "model" | "maker";
+/** Key (makers.ts): every model its own colour; one colour per maker; or one per question-form family (Jev basic forms, Jev composed variants) with the rest by maker. */
+export type KeyMode = "model" | "maker" | "family";
 export type ExportScale = "1" | "2" | "3";
 export type Bg = "auto" | "off" | "dots" | "grid";
 export type Axes = "full" | "zoom" | "custom";
@@ -72,6 +73,8 @@ export type StudioState = {
   chart: Chart; costChart: CostChart; costUnit: CostUnit; costScale: CostScale; speedChart: SpeedChart; speedUnit: SpeedUnit; stabChart: StabChart; stabSetting: StabSetting; hideUnmeasured: boolean;
   axes: Axes; ax: AxBounds; swap: boolean; ticks: TickDensity;
   mark: MarkShape; markSize: MarkSize; jevSize: JevMarkSize; fill: FillMode; interval: IntervalMode; labels: LabelsMode; leaders: boolean; key: KeyMode;
+  /** Key → by family swatches: a hex over the style's own colour for the Jev basic forms / composed variants, or "" for the style's (makers.ts FAMILY_*_VAR). */
+  famBasic: string; famComposed: string;
   w: number; h: number; title: string; frame: boolean; legend: boolean; logos: LogosMode; bg: Bg;
   style: PlotStyle; colors: ColorMode; custom: Record<string, string>; text: TextSize; contrast: Contrast;
   scheme: Vars; schemeName: string;
@@ -96,6 +99,8 @@ type Fields = { [K in keyof StudioState]: Field<StudioState[K]> };
 const oneOf = <T extends string>(ids: readonly T[]) => (raw: unknown): T | undefined => (typeof raw === "string" && (ids as readonly string[]).includes(raw) ? (raw as T) : undefined);
 const bool = (raw: unknown): boolean | undefined => (typeof raw === "boolean" ? raw : raw === "on" ? true : raw === "off" ? false : undefined);
 const str = (max: number) => (raw: unknown): string | undefined => (typeof raw === "string" && raw.length <= max ? raw : undefined);
+/** A "#rrggbb" colour (as the native picker writes), or "" for none. */
+const hexOrNone = (raw: unknown): string | undefined => (raw === "" ? "" : typeof raw === "string" && /^#[0-9a-f]{6}$/i.test(raw) ? raw.toLowerCase() : undefined);
 const clampInt = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, Math.round(n)));
 const int = (lo: number, hi: number) => (raw: unknown): number | undefined => (typeof raw === "number" && Number.isFinite(raw) ? clampInt(raw, lo, hi) : undefined);
 const isRecord = (o: unknown): o is Record<string, unknown> => !!o && typeof o === "object" && !Array.isArray(o);
@@ -141,7 +146,9 @@ export const FIELDS: Fields = {
   interval: { dflt: "box", key: "studio-ci", store: "string", coerce: oneOf(ids(INTERVAL_MODES)) },
   labels: { dflt: "beside", key: "studio-labels", store: "string", coerce: oneOf(["beside", "legend"] as const) },
   leaders: { dflt: false, key: "studio-leaders", store: "onoff", coerce: bool },
-  key: { dflt: "model", key: "studio-key", store: "string", coerce: oneOf(["model", "maker"] as const) },
+  key: { dflt: "model", key: "studio-key", store: "string", coerce: oneOf(["model", "maker", "family"] as const) },
+  famBasic: { dflt: "", key: "studio-family-basic", store: "string", coerce: hexOrNone },
+  famComposed: { dflt: "", key: "studio-family-composed", store: "string", coerce: hexOrNone },
   w: { dflt: DEFAULT_SIZE.w, coerce: int(320, 4000) },
   h: { dflt: DEFAULT_SIZE.h, coerce: int(240, 4000) },
   title: { dflt: "", key: "studio-title", store: "string", coerce: str(300) },

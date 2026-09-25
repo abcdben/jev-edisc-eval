@@ -622,6 +622,9 @@ svg text { user-select: none; font-family: var(--sans); }
 .studio-sec-b .studio-swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 6px 14px; width: 100%; }
 .studio-sec-b .studio-swatch { display: grid; grid-template-columns: 24px auto minmax(0, 1fr); gap: 7px; align-items: center; }
 .studio-sec-b .studio-swatch > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* the Key control's Basic / Composed family swatches: two inline, beside the segmented control (the Colors grid above would take the whole row) */
+.studio-sec-b .studio-fam { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.studio-sec-b .studio-fam .studio-swatch { display: inline-flex; }
 .studio-sec-b .studio-slider { gap: 8px; margin-right: 8px; }
 .studio-sec-b .studio-slider input[type="range"] { width: 120px; }
 .studio-sec-b .studio-slider > span:first-child { min-width: 56px; }
@@ -684,6 +687,10 @@ label.studio-btn { display: inline-block; }
    (data.ts ALL_PRIMARY colours: --c-jev, --v3, --v5 the three default Jev rows; --v1/--v9/--v14 the other Jev rows; --c-laya-ft; the LLM --c-*).
    Every preset but `site` sets all of them, so the page's Dark/Light theme never leaks into the panel. */
 .studio-plot { font-family: var(--sans); color: var(--ink); }
+/* Key → by family (StudioPage.tsx, makers.ts familyOf): the Jev basic forms draw in --fam-basic, the composed variants in --fam-composed. Their defaults
+   follow the style's own Jev colours (Noul's --c-jev, Score's --v5), so a Colors palette or custom swatch that recolours those moves the families too;
+   TypeSafe below gives the composed family a cooler magenta-violet beside its magenta. The studio's Basic / Composed swatches write overrides inline on the panel. */
+.studio-plot { --fam-basic: var(--c-jev); --fam-composed: var(--v5); }
 
 /* Journal: an academic figure. White, black hairline axes, serif labels, no grid, boxes as thin outlines. Okabe–Ito colorblind-safe palette (yellow darkened for white paper). */
 .studio-plot[data-style="journal"] {
@@ -777,6 +784,7 @@ label.studio-btn { display: inline-block; }
   --box-alpha: 0.08; --box-stroke: 0; --bar-alpha: 0.7; --op-whisker: 0.45; --hl: rgba(230, 80, 185, 0.14);
   --c-jev: #e84fb9; --v3: #f48ad4; --v5: #b93b93; --v1: #ffb3e3; --v9: #a33383; --v14: #ee6fc6; --c-laya-ft: #a897dd;
   --c-haiku: #f5b25a; --c-sonnet: #ec9330; --c-luna: #5fd1c5; --c-terra: #0aad9f; --c-flashlite: #8ab6ff; --c-flash: #4c8dff; --c-gemma: #abbab9;
+  --fam-composed: #b48cf2; /* Key → by family: the composed Jev variants a lighter, cooler magenta-violet beside the basic forms' magenta */
   border-radius: 8px;
 }
 .studio-plot[data-style="typesafe"].framed { border-color: #3a3a3a; }

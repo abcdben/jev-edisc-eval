@@ -13,7 +13,7 @@ import { TICK_DENSITIES } from "./components/ticks";
 import { copyPng, downloadBlob, renderPanelPng, slug } from "./exportPng";
 import { PALETTES, toHex, toVars, varOf } from "./palettes";
 import type { LogosMode } from "./logos";
-import { MAKERS, makerColor, makerName, makerOf } from "./makers";
+import { FAMILIES, FAMILY_BASIC_VAR, FAMILY_COMPOSED_VAR, FAMILY_MEMBERS, MAKERS, familyColor, familyOf, makerColor, makerName, makerOf } from "./makers";
 import {
   BUILTIN_PRESETS, BUILTIN_PREFIX, JEV_SCALE, MARK_SCALE, SCHEME_MODELS, SCHEME_SLIDERS, SCHEME_SURFACE, SCHEME_VARS, TEXT_SCALE, builtinState, cleanVars, decodeHash, defaults, encodeHash,
   fromPreset, isVars, makePreset, parsePresetFile, readPresets, readStored, sameState, writeChanged,
@@ -25,7 +25,7 @@ import {
  * you set, with every control above the plot and none on it. The top bar holds what is plotted (plot, corpus, models, issue) and the PNG export;
  * the Presets row under it saves, loads, imports, exports and shares the whole panel of settings (studioState.ts); the inspector under that
  * (components/Inspector.tsx) groups the rest into disclosure sections: Chart (the plot's own controls: view, axes, gridline
- * density, marks, the interval mark's shape, fill of the boxes and bars, labels, the key: by model or by maker), Canvas (size, title, frame, legend, logos, background pattern), Style (preset, colours, text, contrast), Scheme (the custom scheme
+ * density, marks, the interval mark's shape, fill of the boxes and bars, labels, the key: by model, maker or question-form family), Canvas (size, title, frame, legend, logos, background pattern), Style (preset, colours, text, contrast), Scheme (the custom scheme
  * editor, with Style → Custom) and Export (scale, backdrop). Plots: recall/precision (the site's map and ranked views), Cost, Speed and Stability
  * (components/StudioCharts.tsx). Drag the panel's bottom-right corner or type a size; pick a size preset for LinkedIn's usual aspect ratios. Nothing pulses and nothing opens on click.
  *
@@ -120,6 +120,9 @@ function SchemeColor({ v, label, value, onChange }: { v: string; label: string; 
 // Contrast `high` (styles.css .studio-plot[data-contrast="high"]) puts every label in full ink, thickens axes and whiskers, raises the bar and box alphas and enlarges the marks.
 // Key (KeyMode; makers.ts): `maker` colours every item by who makes it through that maker's model colour property, so the Style preset, palette or custom swatch
 // still decides the hue; the legend then lists the makers and the points keep their name labels (shortened where the roster gives a `shortInMaker`).
+// `family` splits the Jev rows into the basic question forms (Noul, Choice, Score) and the composed variants (Facets, Ensemble, Gate), one colour each through
+// --fam-basic / --fam-composed (styles.css defaults off the style's Jev colours; the Basic and Composed swatches, `famBasic` / `famComposed`, override inline),
+// and colours every other model as by maker.
 /** Logos (Canvas → Panel): every item's vendor mark, the Jev rows' alone, or none (logos.tsx LogosMode). */
 const LOGOS_OPTIONS: { id: LogosMode; label: string; title: string }[] = [
   { id: "all", label: "logos", title: "Every model's vendor mark: as the point mark on the map and cost scatter, before the name in the ranked and bar charts" },
@@ -174,7 +177,7 @@ export default function StudioPage() {
   useEffect(() => { if (!persistRef.current) return; writeChanged(lastWritten.current, state); lastWritten.current = state; }, [state]);
   const {
     plot, corpus, issue, on, chart, costChart, costUnit, costScale, speedChart, speedUnit, stabChart, stabSetting, hideUnmeasured, axes, ax, swap, ticks,
-    mark, markSize, jevSize, fill: fillMode, interval, labels: labelsMode, leaders, key, w, h, title, frame, legend, logos, bg, style, colors: colorMode, custom, text, contrast,
+    mark, markSize, jevSize, fill: fillMode, interval, labels: labelsMode, leaders, key, famBasic, famComposed, w, h, title, frame, legend, logos, bg, style, colors: colorMode, custom, text, contrast,
     scheme, schemeName, exScale, exBg, theme,
   } = state;
 
@@ -201,13 +204,32 @@ export default function StudioPage() {
   const domain: PRDomain | undefined = axes === "custom" ? (swap ? { x: precisionSpan, y: recallSpan } : { x: recallSpan, y: precisionSpan }) : undefined;
   const range: [number, number] | undefined = axes === "custom" ? span(ax.xlo, ax.xhi) : undefined;
   const zoom = axes === "zoom";
-  const byMaker = key === "maker";
-  // Key (KeyMode): in by-maker mode every item or row the charts get takes its maker's colour and its in-maker name; in by-model mode it is returned as it came
-  const keyed = <T extends { id: string; name: string; color: string }>(x: T): T => (byMaker ? { ...x, color: makerColor(x.id, x.color), name: makerName(x.id, x.name) } : x);
-  const keyedItems = useMemo(() => items.map(keyed), [items, byMaker]); // eslint-disable-line react-hooks/exhaustive-deps
-  // the legend groups (PRScatter.tsx LegendGroup) the scatters list in by-maker mode with Labels → legend; the point labels stay on
-  const groups = byMaker ? (id: string) => { const m = makerOf(id); return { id: m.id, name: m.label, color: makerColor(id, PRIMARY_BY_KEY[id]?.color ?? "var(--ink-3)") }; } : undefined;
-  const pointLabels = labelsMode === "beside" || byMaker;
+  const byMaker = key === "maker", byFamily = key === "family";
+  // Key (KeyMode): the group an item falls into and the colour it draws in (makers.ts): its maker in by-maker mode, its question-form family (or maker) in
+  // by-family mode; none in by-model mode. `keyed` is the one place the items and rows the charts get are recoloured and renamed (the in-maker name in both
+  // grouped modes); in by-model mode it returns them as they came.
+  const groupOf = byFamily ? familyOf : byMaker ? makerOf : null;
+  const groupColor = byFamily ? familyColor : makerColor;
+  const keyed = <T extends { id: string; name: string; color: string }>(x: T): T => (groupOf ? { ...x, color: groupColor(x.id, x.color), name: makerName(x.id, x.name) } : x);
+  const keyedItems = useMemo(() => items.map(keyed), [items, key]); // eslint-disable-line react-hooks/exhaustive-deps
+  // the legend groups (PRScatter.tsx LegendGroup) the scatters list in the grouped modes with Labels → legend; the point labels stay on
+  const groups = groupOf ? (id: string) => { const g = groupOf(id); return { id: g.id, name: g.label, title: g.title, color: groupColor(id, PRIMARY_BY_KEY[id]?.color ?? "var(--ink-3)") }; } : undefined;
+  const pointLabels = labelsMode === "beside" || !!groupOf;
+  // The family swatches (famBasic / famComposed): a hex goes inline on the panel over the style's default; "" leaves the default, except that with a Colors
+  // palette or custom swatches on, the composed family follows the recoloured Score row (--v5) rather than a preset's own fixed hue (TypeSafe's violet).
+  const famVars: Record<string, string> = {
+    ...(famBasic ? { [FAMILY_BASIC_VAR]: famBasic } : {}),
+    ...(famComposed ? { [FAMILY_COMPOSED_VAR]: famComposed } : colorMode !== "style" ? { [FAMILY_COMPOSED_VAR]: "var(--v5)" } : {}),
+  };
+  // what the two families draw in right now, read off the panel for the swatches' pickers (the default is a var() chain the picker cannot show)
+  const [famShown, setFamShown] = useState({ basic: "#888888", composed: "#888888" });
+  useEffect(() => {
+    const el = plotRef.current; if (!el || !byFamily) return;
+    const cs = getComputedStyle(el), read = (v: string, dflt: string) => toHex(cs.getPropertyValue(v)) ?? dflt;
+    const basic = read(FAMILY_BASIC_VAR, famBasic || "#888888"), composed = read(FAMILY_COMPOSED_VAR, famComposed || "#888888");
+    setFamShown((p) => (p.basic === basic && p.composed === composed ? p : { basic, composed }));
+  }, [byFamily, style, scheme, colorMode, custom, theme, famBasic, famComposed]);
+  const resetFamily = () => patch({ famBasic: "", famComposed: "" });
   // Marks: the point shape when logos are off (the glyph stands in for it otherwise), and the size of whichever is drawn; the Jev rows' own size (`same` follows Mark size)
   const ms = MARK_SCALE[markSize];
   const jms = jevSize === "same" ? ms : JEV_SCALE[jevSize];
@@ -477,7 +499,7 @@ export default function StudioPage() {
   const exportName = (el: HTMLElement) => {
     const chartId = plot === "pr" ? chart : plot === "cost" ? costChart : plot === "speed" ? speedChart : stabChart;
     const styleId = style === "custom" && schemeName.trim() ? `custom-${schemeName.trim()}` : style;
-    return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, plot === "pr" && chart === "map" && swap ? "precision-x" : "", corpus, styleId, colorMode === "style" ? "" : colorMode, byMaker ? "by-maker" : ""].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
+    return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, plot === "pr" && chart === "map" && swap ? "precision-x" : "", corpus, styleId, colorMode === "style" ? "" : colorMode, byMaker ? "by-maker" : byFamily ? "by-family" : ""].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
   };
   const exportSize = `${w * Number(exScale)} × ${fills ? h * Number(exScale) : "auto"} px`;
 
@@ -491,7 +513,7 @@ export default function StudioPage() {
     ticks !== "normal" && (ticks === "none" ? "no gridlines" : `${ticks} gridlines`), markText,
     // the interval mark: "filled boxes" / "hatched ellipses" in the area modes (the Fill folded in), the mode's own name otherwise; the bar charts name their Fill alone
     plot === "pr" && (showFill ? `${FILL_MODES.find((m) => m.id === fillMode)?.label} ${interval === "ellipse" ? "ellipses" : "boxes"}` : INTERVAL_MODES.find((m) => m.id === interval)?.label),
-    hasBars && `${FILL_MODES.find((m) => m.id === fillMode)?.label} bars`, fills && `labels ${labelsMode}`, fills && pointLabels && leaders && "leaders", byMaker && "key by maker",
+    hasBars && `${FILL_MODES.find((m) => m.id === fillMode)?.label} bars`, fills && `labels ${labelsMode}`, fills && pointLabels && leaders && "leaders", byMaker ? "key by maker" : byFamily && "key by family",
   );
   const canvasSummary = summarize(`${w} × ${fills ? h : "auto"} px`, title.trim() && `“${title.trim()}”`, frame ? "framed" : "plain", legend ? "legend" : "no legend", LOGOS_OPTIONS.find((o) => o.id === logos)?.label, BG_SUMMARY[bg]);
   const styleSummary = summarize(
@@ -703,16 +725,33 @@ export default function StudioPage() {
               <Seg value={leaders ? "on" : "off"} onChange={(x) => setLeaders(x === "on")} options={[{ id: "off", label: "off" }, { id: "on", label: "on", title: "A hairline in the model's colour from a label the layout pushed away from its mark back to the mark; labels beside their mark get none" }]} />
             </Control>
           )}
-          {/* the key (KeyMode): every plot recolours by maker; the scatters' legend (Labels → legend) lists the makers and keeps the point names */}
+          {/* the key (KeyMode): every plot recolours by maker or by question-form family; the scatters' legend (Labels → legend) lists the groups and keeps the point names */}
           <Control label="Key">
             <Seg
               value={key} onChange={setKey}
               options={[
                 { id: "model", label: "by model", title: "Every model in its own colour; a legend (Labels → legend) lists the models" },
                 { id: "maker", label: "by maker", title: `One colour per maker (${MAKERS.filter((m) => m.colorVar).map((m) => m.label).join(", ")}), taken from the style's colour for that maker's model (Jev, Laya, Sonnet, Terra, Flash); a legend lists the makers and every point keeps its own name label` },
+                { id: "family", label: "by family", title: `Jev's three basic question forms (${FAMILY_MEMBERS.basic}) in one colour and its composed variants (${FAMILY_MEMBERS.composed}) in a second, set by the Basic and Composed swatches (the style's own Jev colours until changed); every other model by maker; a legend lists the families and makers and every point keeps its own name label` },
               ]}
             />
-            {byMaker && fills && labelsMode === "legend" && <span className="studio-hint small">makers in the legend, model names on the points</span>}
+            {/* the two family swatches (famBasic / famComposed): the picker shows what the family draws in now (famShown); a pick writes it over the style's colour */}
+            {byFamily && (
+              <>
+                <span className="studio-fam">
+                  <label className="studio-swatch" title={`${FAMILIES.basic.title}. ${famBasic ? `Set to ${famBasic}` : "The style's Jev · Noul colour"}; the picker overrides it`}>
+                    <input type="color" value={famShown.basic} onChange={(e) => set("famBasic", e.target.value)} aria-label="Jev basic forms colour" />
+                    <span>Basic</span>
+                  </label>
+                  <label className="studio-swatch" title={`${FAMILIES.composed.title}. ${famComposed ? `Set to ${famComposed}` : "The style's own (its Jev · Score colour, or a companion hue)"}; the picker overrides it`}>
+                    <input type="color" value={famShown.composed} onChange={(e) => set("famComposed", e.target.value)} aria-label="Jev composed variants colour" />
+                    <span>Composed</span>
+                  </label>
+                </span>
+                {(famBasic || famComposed) && <button type="button" className="studio-btn small" onClick={resetFamily} title="Drop both family swatches and go back to the style's own colours">reset</button>}
+              </>
+            )}
+            {groupOf && fills && labelsMode === "legend" && <span className="studio-hint small">{byFamily ? "families and makers" : "makers"} in the legend, model names on the points</span>}
           </Control>
         </Section>
 
@@ -774,6 +813,7 @@ export default function StudioPage() {
                 </span>
                 <button type="button" className="studio-btn small" onClick={resetCustom} title="Drop the swatches and go back to the style's own colours">reset</button>
                 {byMaker && <span className="studio-hint small">Key is by maker: each maker takes one model's swatch (TypeSafe → Jev · Noul, ConvAI → Laya, Anthropic → Sonnet 5, OpenAI → GPT-5.6 Terra, Google → Gemini 3.8 Flash)</span>}
+                {byFamily && <span className="studio-hint small">Key is by family: the Jev families take the Jev · Noul and Jev · Score swatches unless the Basic and Composed swatches under Chart → Key are set; each maker takes one model's swatch (ConvAI → Laya, Anthropic → Sonnet 5, OpenAI → GPT-5.6 Terra, Google → Gemini 3.8 Flash)</span>}
               </>
             )}
           </Control>
@@ -866,7 +906,7 @@ export default function StudioPage() {
             className={`studio-plot${frame ? " framed" : ""}${fills ? "" : " auto"}`}
             data-style={style}
             data-contrast={contrast}
-            style={{ ...colorVars, ...sliderVars, ...bgVars, width: w, height: fills ? h : undefined, "--fs-legend": `${12 * ts}px`, "--mark-user": ms, "--mark-jev": jms } as React.CSSProperties}
+            style={{ ...colorVars, ...sliderVars, ...bgVars, ...famVars, width: w, height: fills ? h : undefined, "--fs-legend": `${12 * ts}px`, "--mark-user": ms, "--mark-jev": jms } as React.CSSProperties}
           >
             {title.trim() ? <div className="studio-title">{title.trim()}</div> : null}
             {plot === "pr" && chart === "map" && (

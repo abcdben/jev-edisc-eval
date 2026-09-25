@@ -118,8 +118,9 @@ export type LabelsMode = "beside" | "legend";
  * A legend group (the studio's Key → by maker mode, `groups` on PRScatter and StudioScatter): the legend lists one swatch and name per group the
  * drawn items fall into (in order of first appearance; makers.ts), instead of one per item, and the items keep their beside labels, so the
  * names read on the plot and the key reads at the top. Without `groups`, Labels → legend lists the items and draws no point labels.
+ * `title`, where given, is the legend entry's hover tooltip (an SVG <title>; the by-family groups list their members in it).
  */
-export type LegendGroup = { id: string; name: string; color: string };
+export type LegendGroup = { id: string; name: string; color: string; title?: string };
 /** The groups among `ids`, each with the first item that fell into it (`sample`, for the swatch: its logo where drawn, else the mark). */
 export function legendGroups(ids: string[], groupOf: (id: string) => LegendGroup): (LegendGroup & { sample: string })[] {
   const out: (LegendGroup & { sample: string })[] = [];
@@ -147,7 +148,7 @@ export const LEGEND_GAP = 10;
 export type LegendSwatch = MarkShape | "square-swatch";
 /** The legend swatch for an item under a logos mode: a square where its logo is drawn, else the chart's mark shape. */
 export const legendSwatch = (logos: LogosMode, mark: MarkShape) => (id: string): LegendSwatch => (logoShown(logos, id) ? "square-swatch" : mark);
-export function Legend({ items, s, x0, x1, y, mark, measure }: { items: { id: string; name: string; color: string }[]; s: number; x0: number; x1: number; y: number; mark?: LegendSwatch | ((id: string) => LegendSwatch); measure: Measure }) {
+export function Legend({ items, s, x0, x1, y, mark, measure }: { items: { id: string; name: string; color: string; title?: string }[]; s: number; x0: number; x1: number; y: number; mark?: LegendSwatch | ((id: string) => LegendSwatch); measure: Measure }) {
   const L = legendLayout(items.map((i) => i.name), s, x0, x1, measure);
   return (
     <g className="pr-legend">
@@ -155,6 +156,7 @@ export function Legend({ items, s, x0, x1, y, mark, measure }: { items: { id: st
         const m = typeof mark === "function" ? mark(it.id) : mark;
         return (
         <g key={it.id} transform={`translate(${L.pos[i].x} ${y + L.pos[i].y})`}>
+          {it.title && <title>{it.title}</title>}
           {m && m !== "square-swatch"
             ? <Mark shape={m} cx={L.sw / 2} cy={L.row / 2} r={m === "dot" ? 0.45 * L.sw : 0.36 * L.sw} color={it.color} fixed />
             : <rect y={(L.row - L.sw) / 2} width={L.sw} height={L.sw} rx={1.5} fill={it.color} />}
