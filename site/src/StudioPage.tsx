@@ -9,6 +9,7 @@ import { COST_UNIT, costAxis, costCaption, costPts, costRows, fmtMoneyTick, fmtM
 import { Control, Seg } from "./components/ui";
 import { Section, summarize, useSections } from "./components/Inspector";
 import type { PlotBg } from "./components/plotBg";
+import { TICK_DENSITIES, isTickDensity, type TickDensity } from "./components/ticks";
 import { copyPng, downloadBlob, renderPanelPng, slug, type ExportBackground } from "./exportPng";
 import { PALETTES, isPaletteId, toHex, toVars, varOf, type PaletteId } from "./palettes";
 import type { LogosMode } from "./logos";
@@ -17,8 +18,8 @@ import { MAKERS, makerColor, makerName, makerOf } from "./makers";
 /**
  * Screenshot studio (studio.html → studio.tsx → this page; unlinked from the site): one Compare models chart alone, on a plain panel whose size
  * you set, with every control above the plot and none on it. The top bar holds what is plotted (plot, corpus, models, issue) and the PNG export;
- * the inspector under it (components/Inspector.tsx) groups the rest into disclosure sections: Chart (the plot's own controls: view, axes, marks,
- * the interval mark's shape, fill of the boxes and bars, labels, the key: by model or by maker), Canvas (size, title, frame, legend, logos, background pattern), Style (preset, colours, text, contrast), Scheme (the custom scheme
+ * the inspector under it (components/Inspector.tsx) groups the rest into disclosure sections: Chart (the plot's own controls: view, axes, gridline
+ * density, marks, the interval mark's shape, fill of the boxes and bars, labels, the key: by model or by maker), Canvas (size, title, frame, legend, logos, background pattern), Style (preset, colours, text, contrast), Scheme (the custom scheme
  * editor, with Style → Custom) and Export (scale, backdrop). Plots: recall/precision (the site's map and ranked views), Cost, Speed and Stability
  * (components/StudioCharts.tsx). Drag the panel's bottom-right corner or type a size; pick a preset for LinkedIn's usual aspect ratios. Nothing pulses and nothing opens on click.
  */
@@ -225,6 +226,9 @@ export default function StudioPage() {
   const domain: PRDomain | undefined = axes === "custom" ? (swap ? { x: precisionSpan, y: recallSpan } : { x: recallSpan, y: precisionSpan }) : undefined;
   const range: [number, number] | undefined = axes === "custom" ? span(ax.xlo, ax.xhi) : undefined;
   const zoom = axes === "zoom";
+  // Gridlines (components/ticks.ts TickDensity): the tick and gridline density of every plot's axes; `normal` is what each chart always drew.
+  const [ticks, setTicks] = useState<TickDensity>(() => { const s = localStorage.getItem("studio-ticks"); return isTickDensity(s) ? s : "normal"; });
+  useEffect(() => { localStorage.setItem("studio-ticks", ticks); }, [ticks]);
   // Logos (LOGOS_OPTIONS): `studio-logos`; `all` is what the studio always drew.
   const [logos, setLogos] = useState<LogosMode>(() => { const s = localStorage.getItem("studio-logos"); return isLogosMode(s) ? s : "all"; });
   useEffect(() => { localStorage.setItem("studio-logos", logos); }, [logos]);
@@ -505,7 +509,7 @@ export default function StudioPage() {
     plot === "cost" && (costChart === "scatter" ? "cost vs recall" : costChart === "dots" ? "dots · log" : `bars · ${costScale}`), plot === "cost" && COST_UNIT[costUnit].axis,
     plot === "speed" && (speedChart === "throughput" ? "docs per hour" : `${speedChart === "dots" ? "dots · log" : "bars"} · ${speedUnit} per document`),
     plot === "stability" && (stabChart === "agree" ? "agreement · zoomed" : stabChart === "dots" ? "dots" : "disagreement bars"), plot === "stability" && (stabSetting === "t0" ? "t = 0" : "default sampling"), plot === "stability" && hideUnmeasured && "unmeasured hidden",
-    markText,
+    ticks !== "normal" && (ticks === "none" ? "no gridlines" : `${ticks} gridlines`), markText,
     // the interval mark: "filled boxes" / "hatched ellipses" in the area modes (the Fill folded in), the mode's own name otherwise; the bar charts name their Fill alone
     plot === "pr" && (showFill ? `${FILL_MODES.find((m) => m.id === fillMode)?.label} ${interval === "ellipse" ? "ellipses" : "boxes"}` : INTERVAL_MODES.find((m) => m.id === interval)?.label),
     hasBars && `${FILL_MODES.find((m) => m.id === fillMode)?.label} bars`, fills && `labels ${labelsMode}`, fills && pointLabels && leaders && "leaders", byMaker && "key by maker",
@@ -629,6 +633,10 @@ export default function StudioPage() {
               </Control>
             </>
           )}
+          {/* one Gridlines setting for every plot's axes (ticks.ts): after Axes on the recall/precision plot, after the chart's own controls on the others */}
+          <Control label="Gridlines">
+            <Seg value={ticks} onChange={setTicks} options={TICK_DENSITIES} />
+          </Control>
           {/* the shape control steps aside where every point's mark is its vendor glyph (a scatter with all logos on); the size controls scale either */}
           {!(fills && logos === "all") && (
             <Control label="Marks">
@@ -842,30 +850,30 @@ export default function StudioPage() {
             {title.trim() ? <div className="studio-title">{title.trim()}</div> : null}
             {plot === "pr" && chart === "map" && (
               <div className="studio-canvas">
-                <PRScatter items={keyedItems} zoom={zoom} domain={domain} swap={swap} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} boxes={fillMode} interval={interval} bg={plotBg("dots")} groups={groups} />
+                <PRScatter items={keyedItems} zoom={zoom} domain={domain} swap={swap} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} boxes={fillMode} interval={interval} bg={plotBg("dots")} groups={groups} ticks={ticks} />
               </div>
             )}
-            {plot === "pr" && chart === "ranked" && <PRRail items={keyedItems} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} mark={mark} bg={plotBg("dots")} interval={interval} />}
+            {plot === "pr" && chart === "ranked" && <PRRail items={keyedItems} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} mark={mark} bg={plotBg("dots")} interval={interval} ticks={ticks} />}
             {plot === "cost" && costChart === "scatter" && (
               <div className="studio-canvas">
-                <StudioScatter pts={costPts(sel, v, costUnit).map(keyed)} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} bg={plotBg("none")} groups={groups} />
+                <StudioScatter pts={costPts(sel, v, costUnit).map(keyed)} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} bg={plotBg("none")} groups={groups} ticks={ticks} />
               </div>
             )}
             {plot === "cost" && costChart !== "scatter" && (
-              <StudioBars rows={costRows(sel, costUnit).map(keyed)} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={costAxis(costChart, costUnit, costScale)} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} />
+              <StudioBars rows={costRows(sel, costUnit).map(keyed)} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={costAxis(costChart, costUnit, costScale)} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} ticks={ticks} />
             )}
             {plot === "speed" && (
               <StudioBars
                 rows={speedRows(sel, speedChart, speedUnit).map(keyed)} kind={speedChart === "dots" ? "dot" : "bar"} scale={speedChart === "dots" ? "log" : "linear"} sort={speedChart === "throughput" ? "desc" : "asc"}
                 axis={speedAxis(speedChart)}
-                fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode}
+                fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} ticks={ticks}
               />
             )}
             {plot === "stability" && (
               <StudioBars
                 rows={stabRowsKeyed} kind={stabChart === "dots" ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? stab.agreeDomain : undefined}
                 axis={stabAxis(stabChart, stabSetting)}
-                fmtTick={fmtPctTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode}
+                fmtTick={fmtPctTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} ticks={ticks}
               />
             )}
             {legend && legendLines.length > 0 && (

@@ -6,6 +6,7 @@ import { hoverable } from "./hover";
 import { useTextMeasure, type Measure } from "./measure";
 import { PlotBgPattern, type PlotBg } from "./plotBg";
 import { HatchDefs, OUTLINE_W, hatchAlpha, isHatched, isOutlined, useHatchIds, type FillMode } from "./hatch";
+import { gridOn, labelEvery, labelledAt, pctStep, pctTicks, type TickDensity } from "./ticks";
 
 /** `sub` is the one secondary line of the hover tooltip (what the point was scored on); the full figures live in the details modal. `decider` sets the row's name heavier in the tables; on the map it only selects which interval boxes breathe when `pulse` is on (the mark and label are drawn like every other). `emphasis` (Compare models: the decision-model rows, Jev and Laya) tints the row in the ranked table (ui.tsx RowTint); the map ignores it. */
 export type PRItem = { id: string; name: string; color: string; recall: CI; precision: CI; dashed?: boolean; subset?: string | null; sub?: string; decider?: boolean; emphasis?: boolean };
@@ -205,13 +206,8 @@ const WHISKER_CAP = 4, BRACKET_FRAC = 0.1, BRACKET_MIN = 4;
 /** The whisker and bracket stroke: the item's colour, 1 px × --sw-mult, at --op-whisker (styles.css; the high-contrast block raises both). */
 const WHISKER_STYLE = { strokeWidth: "calc(1px * var(--sw-mult, 1))", opacity: "var(--op-whisker, 0.75)" } as const;
 
-function niceTicks(lo: number, hi: number): number[] {
-  const span = hi - lo;
-  const step = span > 0.6 ? 0.2 : span > 0.3 ? 0.1 : span > 0.12 ? 0.05 : span > 0.06 ? 0.02 : 0.01;
-  const out: number[] = [];
-  for (let t = Math.ceil(lo / step) * step; t <= hi + 1e-9; t += step) out.push(Math.round(t * 1000) / 1000);
-  return out;
-}
+/** The map's own tick step, in percent, for an axis `span` (0–1) wide: 20% across the full range, 5% on a fitted one (the `normal` density; ticks.ts pctStep picks the others around it). */
+const mapStep = (span: number) => (span > 0.6 ? 20 : span > 0.3 ? 10 : span > 0.12 ? 5 : span > 0.06 ? 2 : 1);
 
 /** Recall (x) against precision (y), or precision against recall under `swap`. Each item is a dot at the point estimate inside a box spanning both 95% intervals. */
 /** `fill`: size to the host's box (host must be positioned, e.g. an absolutely-filled flex child) instead of a fixed height. */
@@ -233,14 +229,15 @@ const PULSE_CYCLES = 2, PULSE_CYCLE_MS = 650;
 /** `interval` (the studio's Interval control; `box` on the site) is the shape of the interval mark (IntervalMode above). */
 /** `bg` (the studio's Background control; the site's dot matrix, `dots`) is the pattern behind the plot area (plotBg.tsx). */
 /** `swap` (the studio's Axes orientation control; off on the site) puts precision on x and recall on y. Every item's (recall, precision) is read through `xCI` / `yCI` once, so the marks, intervals (the box's width becomes the precision interval, the recall whisker vertical), fit-to-data domain, ticks, titles, labels and leaders all follow. `domain` is always in plot x/y (the caller maps its metric bounds). */
+/** `ticks` (the studio's Gridlines control; `normal` on the site) is the tick and gridline density on both axes (ticks.ts TickDensity): gridlines and tick labels share the step; labels thin to every n-th tick where they would touch. */
 export type PRDomain = { x: [number, number]; y: [number, number] };
-export function PRScatter({ items, zoom, domain, swap = false, xLabel = swap ? "Precision" : "Recall", yLabel = swap ? "Recall" : "Precision", emptyText, logos: logosIn, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, boxes: boxMode = "filled", interval = "box", bg = "dots", groups }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; swap?: boolean; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean | LogosMode; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; boxes?: FillMode; interval?: IntervalMode; bg?: PlotBg; groups?: (id: string) => LegendGroup }) {
+export function PRScatter({ items, zoom, domain, swap = false, xLabel = swap ? "Precision" : "Recall", yLabel = swap ? "Recall" : "Precision", emptyText, logos: logosIn, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, boxes: boxMode = "filled", interval = "box", bg = "dots", groups, ticks = "normal" }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; swap?: boolean; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean | LogosMode; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; boxes?: FillMode; interval?: IntervalMode; bg?: PlotBg; groups?: (id: string) => LegendGroup; ticks?: TickDensity }) {
   const { tip, show, hide, hostRef } = useTip();
   const logos = logosMode(logosIn, false);
   const hasLogo = (p: PRItem) => logoShown(logos, p.id) && !!logoFor(p.id);
   const tipIcon = (p: PRItem) => (hasLogo(p) ? <Logo model={p.id} size={12} /> : undefined);
-  // text widths as drawn (measure.tsx): the legend rows and the point labels are laid out from them
-  const { measure, probes } = useTextMeasure([LEGEND_CLS, NAME_CLS]);
+  // text widths as drawn (measure.tsx): the legend rows and the point labels are laid out from them; the tick labels (.mono) for the thinning
+  const { measure, probes } = useTextMeasure([LEGEND_CLS, NAME_CLS, "mono"]);
   const area = intervalHasArea(interval);
   const hatched = area && isHatched(boxMode), outlined = isOutlined(boxMode);
   // pattern ids (url(#…)-safe, unique to this instance): the hatch tiles (hatch.tsx) and the background
@@ -282,7 +279,11 @@ export function PRScatter({ items, zoom, domain, swap = false, xLabel = swap ? "
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pts, zoom, domain, swap]);
 
-  const xt = niceTicks(dom.x[0], dom.x[1]), yt = niceTicks(dom.y[0], dom.y[1]);
+  // tick step per axis (percent; ticks.ts): the map's own at `normal`, the density's around it; every tick draws a gridline (unless `none`)
+  const xSpan = dom.x[1] - dom.x[0], ySpan = dom.y[1] - dom.y[0];
+  const xStep = pctStep(ticks, xSpan, mapStep(xSpan)), yStep = pctStep(ticks, ySpan, mapStep(ySpan));
+  const xt = pctTicks(dom.x[0], dom.x[1], xStep), yt = pctTicks(dom.y[0], dom.y[1], yStep);
+  const grid = gridOn(ticks);
   const tickLabel = (t: number) => `${Math.round(t * 100)}%`;
   const { PL, PB, titleX } = axisMargins(yt.map(tickLabel), s);
   // legend mode: the legend rows sit at the top (from LEGEND_Y), and the plot area starts LEGEND_GAP below them instead of at PT; the rows list the
@@ -295,6 +296,9 @@ export function PRScatter({ items, zoom, domain, swap = false, xLabel = swap ? "
   const top = labelsMode === "legend" ? Math.max(PT, LEGEND_Y + legendH + LEGEND_GAP * s) : PT;
   const X = (v: number) => PL + ((v - dom.x[0]) / (dom.x[1] - dom.x[0] || 1)) * (W - PL - PR);
   const Y = (v: number) => top + (1 - (v - dom.y[0]) / (dom.y[1] - dom.y[0] || 1)) * (H - top - PB);
+  // labels on every n-th tick where adjacent ones would touch ("100%" at its measured width plus 8 s along x; a line's height along y); every tick keeps its gridline
+  const xEvery = labelEvery(measure("100%", TICK_FS * s, "mono") + 8 * s, ((W - PL - PR) * xStep) / 100 / (xSpan || 1));
+  const yEvery = labelEvery(TICK_FS * s * 1.4, ((H - top - PB) * yStep) / 100 / (ySpan || 1));
 
   // Per item: its size factor (the Jev mark size for a Jev row, else the Mark size), the mark radius as drawn (the glyph's half-size or the dot's radius, × that),
   // and the beside-the-mark label offset: 9 s at size 1, grown so the gap to a larger mark stays. `grow` is what a larger mark adds; the placement pads each dot by its own.
@@ -355,14 +359,14 @@ export function PRScatter({ items, zoom, domain, swap = false, xLabel = swap ? "
         {/* vertical gridlines read --grid-x (falls back to --grid), so a preset can keep horizontal rules only (Epoch); the y-axis line likewise --axis-y */}
         {xt.map((t) => (
           <g key={`x${t}`}>
-            <line className="gl" x1={X(t)} x2={X(t)} y1={top} y2={H - PB} stroke="var(--grid-x, var(--grid))" />
-            <text x={X(t)} y={H - PB + 16 * s} fontSize={TICK_FS * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{tickLabel(t)}</text>
+            {grid && <line className="gl" x1={X(t)} x2={X(t)} y1={top} y2={H - PB} stroke="var(--grid-x, var(--grid))" />}
+            {labelledAt(t * 100, xStep, xEvery) && <text x={X(t)} y={H - PB + 16 * s} fontSize={TICK_FS * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{tickLabel(t)}</text>}
           </g>
         ))}
         {yt.map((t) => (
           <g key={`y${t}`}>
-            <line className="gl" x1={PL} x2={W - PR} y1={Y(t)} y2={Y(t)} stroke="var(--grid)" />
-            <text x={PL - 8} y={Y(t) + 3.5 * s} fontSize={TICK_FS * s} textAnchor="end" fill="var(--ink-3)" className="mono">{tickLabel(t)}</text>
+            {grid && <line className="gl" x1={PL} x2={W - PR} y1={Y(t)} y2={Y(t)} stroke="var(--grid)" />}
+            {labelledAt(t * 100, yStep, yEvery) && <text x={PL - 8} y={Y(t) + 3.5 * s} fontSize={TICK_FS * s} textAnchor="end" fill="var(--ink-3)" className="mono">{tickLabel(t)}</text>}
           </g>
         ))}
         <g stroke="var(--axis)" style={{ strokeWidth: "var(--sw-mult, 1)" }}>

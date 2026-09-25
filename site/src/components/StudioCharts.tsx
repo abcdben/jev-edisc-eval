@@ -6,6 +6,7 @@ import { useTextMeasure } from "./measure";
 import { DECIDER_TEXT, selectable, useSize, useWidth } from "./ui";
 import { PlotBgPattern, type PlotBg } from "./plotBg";
 import { HatchDefs, OUTLINE_W, hatchAlpha, isHatched, isOutlined, useHatchIds, type FillMode } from "./hatch";
+import { gridOn, labelEvery, labelledAt, linTarget, linTicks, logTicks, thinLogLabels, type TickDensity } from "./ticks";
 
 /** A url(#…)-safe id from useId, for this chart's background pattern (plotBg.tsx). */
 const useBgId = () => `bg-${useId().replace(/[^A-Za-z0-9_-]/g, "")}`;
@@ -27,26 +28,21 @@ const SW = (base: number) => ({ strokeWidth: `calc(${base} * var(--sw-mult, 1))`
 const BAR_HATCH_ALPHA = hatchAlpha("--bar-alpha", 0.55);
 /** The hairline edge a hatched bar gets (no outline mode on), so its extent reads where the lines thin out: 0.5 px × --sw-mult. */
 const HATCHED_EDGE_W = "calc(0.5px * var(--sw-mult, 1))";
-/** `nice` step for a linear axis with about five ticks. */
-function linTicks(d0: number, d1: number): number[] {
-  const span = d1 - d0;
-  if (!(span > 0)) return [d0];
-  const raw = span / 5, mag = 10 ** Math.floor(Math.log10(raw)), r = raw / mag;
-  const step = (r >= 5 ? 5 : r >= 2.5 ? 2.5 : r >= 2 ? 2 : 1) * mag;
-  const out: number[] = [];
-  for (let t = Math.ceil(d0 / step - 1e-9) * step; t <= d1 + 1e-9; t += step) out.push(+t.toPrecision(12));
-  return out;
-}
-/** Powers of ten across the domain; 2× and 5× as well when there are fewer than three decades. */
-function logTicks(d0: number, d1: number): number[] {
-  const a = Math.floor(Math.log10(d0)), b = Math.ceil(Math.log10(d1));
-  const out: number[] = [];
-  for (let e = a; e <= b; e++) {
-    const p = 10 ** e;
-    out.push(p);
-    if (b - a < 3) { if (2 * p < d1) out.push(2 * p); if (5 * p < d1) out.push(5 * p); }
+/**
+ * The ticks of a value axis `plotPx` long at a density (ticks.ts; the tick routines themselves live there): linear, nice numbers at the density's target
+ * count; log, decades and what the density adds inside them. Each carries whether it is labelled: labels thin to every n-th tick where the widest one
+ * (`labelPx`, measured) would touch its neighbour; every tick keeps its gridline.
+ */
+function axisTicks(scale: "linear" | "log", dom: [number, number], density: TickDensity, plotPx: number, labelPx: (t: number) => number): { t: number; label: boolean }[] {
+  if (scale === "log") {
+    const raw = logTicks(dom[0], dom[1], density);
+    const widest = Math.max(0, ...raw.filter((x) => x.label).map((x) => labelPx(x.t)));
+    return thinLogLabels(raw, widest, plotPx / (Math.log10(dom[1]) - Math.log10(dom[0]) || 1));
   }
-  return out.filter((t) => t >= d0 - 1e-12 && t <= d1 + 1e-12).sort((x, y) => x - y);
+  const ts = linTicks(dom[0], dom[1], linTarget(density));
+  const step = ts.length > 1 ? ts[1] - ts[0] : dom[1] - dom[0] || 1;
+  const every = labelEvery(Math.max(0, ...ts.map(labelPx)), (plotPx * step) / (dom[1] - dom[0] || 1));
+  return ts.map((t) => ({ t, label: labelledAt(t, step, every) }));
 }
 
 /**
@@ -65,8 +61,9 @@ function logTicks(d0: number, d1: number): number[] {
  * `bars` (the studio's Fill control; `filled` by default) is how a bar is drawn (hatch.tsx FillMode): a shade at --bar-alpha; 45° hatch lines in the
  * row's colour at 3 × --bar-alpha (capped at 1) inside a hairline edge; the edge alone, --box-stroke-w px wide; or the hatch inside that edge. The
  * whisker gets a panel-colour halo over a hatched bar so its ink line stays legible across the hatch lines; the figures sit clear of the bar either way.
+ * `ticks` (the studio's Gridlines control; `normal` by default) is the axis's tick and gridline density (ticks.ts TickDensity, axisTicks above).
  */
-export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort = "asc", axis, fmtTick, logos: logosIn, labelW, textScale = 1, mark = "dot", onSelect, bg = "none", bars: barMode = "filled" }: { rows: StudioRow[]; kind?: "bar" | "dot"; scale?: "linear" | "log"; domain?: [number, number]; sort?: "asc" | "desc" | "none"; axis: string; fmtTick: (v: number) => string; logos?: boolean | LogosMode; labelW?: number; textScale?: number; mark?: MarkShape; onSelect?: (id: string) => void; bg?: PlotBg; bars?: FillMode }) {
+export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort = "asc", axis, fmtTick, logos: logosIn, labelW, textScale = 1, mark = "dot", onSelect, bg = "none", bars: barMode = "filled", ticks: density = "normal" }: { rows: StudioRow[]; kind?: "bar" | "dot"; scale?: "linear" | "log"; domain?: [number, number]; sort?: "asc" | "desc" | "none"; axis: string; fmtTick: (v: number) => string; logos?: boolean | LogosMode; labelW?: number; textScale?: number; mark?: MarkShape; onSelect?: (id: string) => void; bg?: PlotBg; bars?: FillMode; ticks?: TickDensity }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const logosOn = logosMode(logosIn, true), logos = logosOn !== "none";
   const glyphOf = (r: StudioRow) => logoShown(logosOn, r.id);
@@ -110,7 +107,7 @@ export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort 
     }
     return x0 + Math.min(1, Math.max(0, (v - dom[0]) / (dom[1] - dom[0] || 1))) * plotW;
   };
-  const ticks = scale === "log" ? logTicks(dom[0], dom[1]) : linTicks(dom[0], dom[1]);
+  const ticks = axisTicks(scale, dom, density, plotW, (t) => measure(fmtTick(t), 11 * s, "mono") + 8 * s), grid = gridOn(density);
   const n = sorted.length, bottom = TOP + n * ROW, h = bottom + 46 * s;
   return (
     <div ref={hostRef} style={{ position: "relative" }}>
@@ -120,10 +117,10 @@ export function StudioBars({ rows, kind = "bar", scale = "linear", domain, sort 
           <HatchDefs items={measured} s={s} hatchId={hatchId} on={hatched} />
         </defs>
         {bg !== "none" && n > 0 && <rect x={x0} y={TOP} width={plotW} height={bottom - TOP} fill={`url(#${bgId})`} />}
-        {ticks.map((t) => (
+        {ticks.map(({ t, label }) => (
           <g key={t}>
-            <line className="gl" x1={X(t)} x2={X(t)} y1={TOP} y2={bottom} stroke="var(--grid)" />
-            <text x={X(t)} y={bottom + 16 * s} fontSize={11 * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{fmtTick(t)}</text>
+            {grid && <line className="gl" x1={X(t)} x2={X(t)} y1={TOP} y2={bottom} stroke="var(--grid)" />}
+            {label && <text x={X(t)} y={bottom + 16 * s} fontSize={11 * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{fmtTick(t)}</text>}
           </g>
         ))}
         {sorted.map((r, i) => {
@@ -207,8 +204,8 @@ export type StudioScatterPt = { id: string; name: string; color: string; x: numb
 
 const PR = 24, PT = 18;
 
-/** Cost (log x) against recall (y, 95% whisker). Sized to the host's box like PRScatter's `fill` mode (host must be positioned). `logos`, `leaders`, `labels`, `mark`, `markSize`, `jevMarkSize` and `groups` as on PRScatter: which items get their vendor glyph as the mark; a hairline from a displaced label to its mark; a legend row at the top instead of point labels; the point shape, and the Mark size and Jev mark size multipliers the label placement allows for; the groups the legend lists (the points then keep their labels). `onSelect` (AppB.tsx) makes each mark a button opening the details modal for its id; the studio passes none. */
-export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos: logosIn, emptyText = "Select at least one model.", textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, onSelect, bg = "none", groups }: { pts: StudioScatterPt[]; xLabel: string; yLabel?: string; fmtX: (v: number) => string; logos?: boolean | LogosMode; emptyText?: string; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; onSelect?: (id: string) => void; bg?: PlotBg; groups?: (id: string) => LegendGroup }) {
+/** Cost (log x) against recall (y, 95% whisker). Sized to the host's box like PRScatter's `fill` mode (host must be positioned). `logos`, `leaders`, `labels`, `mark`, `markSize`, `jevMarkSize` and `groups` as on PRScatter: which items get their vendor glyph as the mark; a hairline from a displaced label to its mark; a legend row at the top instead of point labels; the point shape, and the Mark size and Jev mark size multipliers the label placement allows for; the groups the legend lists (the points then keep their labels). `onSelect` (AppB.tsx) makes each mark a button opening the details modal for its id; the studio passes none. `ticks` (the studio's Gridlines control) is the tick density of both axes (axisTicks: x log, y linear). */
+export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos: logosIn, emptyText = "Select at least one model.", textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, onSelect, bg = "none", groups, ticks: density = "normal" }: { pts: StudioScatterPt[]; xLabel: string; yLabel?: string; fmtX: (v: number) => string; logos?: boolean | LogosMode; emptyText?: string; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; onSelect?: (id: string) => void; bg?: PlotBg; groups?: (id: string) => LegendGroup; ticks?: TickDensity }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const logos = logosMode(logosIn, true);
   const hasLogo = (p: StudioScatterPt) => logoShown(logos, p.id) && !!logoFor(p.id);
@@ -216,23 +213,25 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos: log
   const sz = useSize(hostRef, { w: 900, h: 520 });
   const W = sz.w, H = Math.max(300, sz.h);
   const s = textScale;
-  const { measure, probes } = useTextMeasure([LEGEND_CLS, NAME_CLS]);
+  const { measure, probes } = useTextMeasure([LEGEND_CLS, NAME_CLS, "mono"]);
   const drawn = pts.filter((p): p is StudioScatterPt & { x: number; y: NonNullable<CI> } => p.x != null && p.x > 0 && !!p.y);
   const xs = drawn.map((p) => p.x);
   const xd: [number, number] = xs.length ? [10 ** Math.floor(Math.log10(Math.min(...xs))), 10 ** Math.ceil(Math.log10(Math.max(...xs)) - 1e-9)] : [0.01, 100];
   const ylo = Math.min(1, ...drawn.map((p) => p.y[1])), yhi = Math.max(0, ...drawn.map((p) => p.y[2]));
   const pad = Math.max(0.02, (yhi - ylo) * 0.12);
   const yd: [number, number] = drawn.length ? [Math.max(0, ylo - pad), Math.min(1, yhi + pad)] : [0, 1];
-  const xt = logTicks(xd[0], xd[1]), yt = linTicks(yd[0], yd[1]);
   const yTickLabel = (t: number) => `${+(t * 100).toFixed(1)}%`;
   // the left and bottom margins hold the y tick labels and the axis titles, sized from them and the text scale (PRScatter.tsx axisMargins)
-  const { PL, PB, titleX } = axisMargins(yt.map(yTickLabel), s);
+  const { PL, PB, titleX } = axisMargins(linTicks(yd[0], yd[1], linTarget(density)).map(yTickLabel), s);
   // the legend lists the items, or the groups they fall into (`groups`; PRScatter.tsx LegendGroup), in which case the points keep their labels
   const grouped = labelsMode === "legend" && groups ? legendGroups(drawn.map((p) => p.id), groups) : null;
   const legendItems = grouped ?? drawn.map((p) => ({ id: p.id, name: `${p.name}${p.subset ? " *" : ""}`, color: p.color, sample: p.id }));
   const pointLabels = labelsMode === "beside" || !!grouped;
   const LEGEND_Y = 4, legendH = labelsMode === "legend" ? legendLayout(legendItems.map((i) => i.name), s, PL, W - PR, measure).height : 0;
   const top = labelsMode === "legend" ? Math.max(PT, LEGEND_Y + legendH + LEGEND_GAP * s) : PT;
+  // ticks at the density (axisTicks): x log across the plot width, y linear down its height (a label there is a line high)
+  const xt = axisTicks("log", xd, density, W - PL - PR, (t) => measure(fmtX(t), 10.5 * s, "mono") + 8 * s), yt = axisTicks("linear", yd, density, H - top - PB, () => 10.5 * s * 1.4);
+  const grid = gridOn(density);
   const X = (v: number) => PL + ((Math.log10(v) - Math.log10(xd[0])) / (Math.log10(xd[1]) - Math.log10(xd[0]) || 1)) * (W - PL - PR);
   const Y = (v: number) => top + (1 - (v - yd[0]) / (yd[1] - yd[0] || 1)) * (H - top - PB);
   // per item: its size factor (the Jev mark size for a Jev row, else the Mark size), the mark radius as drawn (glyph half-size or dot radius × that) and the
@@ -257,16 +256,16 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos: log
       <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ display: "block", overflow: "visible" }}>
         <defs><PlotBgPattern id={bgId} kind={bg} s={s} /></defs>
         {bg !== "none" && <rect x={PL} y={top} width={W - PR - PL} height={H - PB - top} fill={`url(#${bgId})`} />}
-        {xt.map((t) => (
+        {xt.map(({ t, label }) => (
           <g key={`x${t}`}>
-            <line className="gl" x1={X(t)} x2={X(t)} y1={top} y2={H - PB} stroke="var(--grid-x, var(--grid))" />
-            <text x={X(t)} y={H - PB + 16 * s} fontSize={10.5 * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{fmtX(t)}</text>
+            {grid && <line className="gl" x1={X(t)} x2={X(t)} y1={top} y2={H - PB} stroke="var(--grid-x, var(--grid))" />}
+            {label && <text x={X(t)} y={H - PB + 16 * s} fontSize={10.5 * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{fmtX(t)}</text>}
           </g>
         ))}
-        {yt.map((t) => (
+        {yt.map(({ t, label }) => (
           <g key={`y${t}`}>
-            <line className="gl" x1={PL} x2={W - PR} y1={Y(t)} y2={Y(t)} stroke="var(--grid)" />
-            <text x={PL - 8} y={Y(t) + 3.5 * s} fontSize={10.5 * s} textAnchor="end" fill="var(--ink-3)" className="mono">{yTickLabel(t)}</text>
+            {grid && <line className="gl" x1={PL} x2={W - PR} y1={Y(t)} y2={Y(t)} stroke="var(--grid)" />}
+            {label && <text x={PL - 8} y={Y(t) + 3.5 * s} fontSize={10.5 * s} textAnchor="end" fill="var(--ink-3)" className="mono">{yTickLabel(t)}</text>}
           </g>
         ))}
         <g stroke="var(--axis)" style={SW(1)}>
@@ -295,7 +294,8 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos: log
                 <line x1={x - 4} x2={x + 4} y1={y1} y2={y1} />
                 <line x1={x - 4} x2={x + 4} y1={y2} y2={y2} />
               </g>
-              {hasLogo(p) ? <g color={p.color} style={{ transform: glyphScale(isJev(p.id)), transformOrigin: `${x}px ${y}px` }}><LogoGlyph model={p.id} cx={x} cy={y} size={13} /></g> : <Mark shape={mark} cx={x} cy={y} r={4} color={p.color} jev={isJev(p.id)} />}
+              {/* the glyph is drawn at the origin of a group translated to the point and scaled about 0 0 (PRScatter.tsx Mark): a `transform-origin: x y` in px drifts on a zoomed WebKit page */}
+              {hasLogo(p) ? <g transform={`translate(${x} ${y})`}><g color={p.color} style={{ transform: glyphScale(isJev(p.id)) }}><LogoGlyph model={p.id} cx={0} cy={0} size={13} /></g></g> : <Mark shape={mark} cx={x} cy={y} r={4} color={p.color} jev={isJev(p.id)} />}
               {l && <text x={l.x} y={l.y + 10.5 * s} fontSize={11.5 * s} fill="var(--ink)" className="nm" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round" }}>{l.text}</text>}
             </g>
           );

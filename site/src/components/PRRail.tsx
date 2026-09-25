@@ -8,6 +8,7 @@ import { CLICK_HINT, DECIDER_TEXT, ROW_PULSE_MS, RowTint, TipBox, fadeStyle, sel
 import { hoverable } from "./hover";
 import { useTextMeasure } from "./measure";
 import { PlotBgPattern, type PlotBg } from "./plotBg";
+import { gridOn, labelEvery, labelledAt, pctStep, pctTicks, type TickDensity } from "./ticks";
 
 /** Row geometry (row height, value column) shared with PRHeat so the two ranked views keep rows in place; RAIL is the rank rail at the left edge, RANK_W the `01`–`12` numerals, RANGE_W the muted "82–91" interval column after each value. */
 const ROW0 = 26, NUM_W0 = 54, RANGE_W0 = 52, RAIL = 3, RANK_W0 = 26, TOP0 = 20;
@@ -24,7 +25,8 @@ const ROW0 = 26, NUM_W0 = 54, RANGE_W0 = 52, RAIL = 3, RANK_W0 = 26, TOP0 = 20;
 /** `logos` (logos.tsx LogosMode, or the boolean it was; off on the site): which rows carry their vendor glyph before the name; in `jev` the name column keeps the glyph layout and only the Jev rows fill the slot. A Jev row's point marks read the studio's Jev mark size (--mark-jev). */
 /** `bg` (the studio's Background control; the site's dot matrix, `dots`) is the pattern behind each panel's rows (plotBg.tsx). */
 /** `interval` (the studio's Interval control, PRScatter.tsx IntervalMode; `box` on the site) maps onto the row's one horizontal interval mark: `box` and `ellipse` keep the plain line the site draws; `whiskers`, `band` and `bracket` add end caps to it; `none` drops it (the point and the printed range stay). */
-export function PRRail({ items, zoom, range, sortBy = "recall", logos: logosIn, onSelect, highlight, onHover, textScale = 1, mark = "dot", bg = "dots", interval = "box" }: { items: PRItem[]; zoom: boolean; range?: [number, number]; sortBy?: "recall" | "precision" | "f1"; logos?: boolean | LogosMode; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; textScale?: number; mark?: MarkShape; bg?: PlotBg; interval?: IntervalMode }) {
+/** `ticks` (the studio's Gridlines control; `normal` on the site) is the tick and gridline density of the shared percent range (ticks.ts TickDensity). */
+export function PRRail({ items, zoom, range, sortBy = "recall", logos: logosIn, onSelect, highlight, onHover, textScale = 1, mark = "dot", bg = "dots", interval = "box", ticks: density = "normal" }: { items: PRItem[]; zoom: boolean; range?: [number, number]; sortBy?: "recall" | "precision" | "f1"; logos?: boolean | LogosMode; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; textScale?: number; mark?: MarkShape; bg?: PlotBg; interval?: IntervalMode; ticks?: TickDensity }) {
   const { tip, show, hide, hostRef } = useTip();
   const whisker = interval !== "none", caps = interval === "whiskers" || interval === "band" || interval === "bracket";
   const logosOn = logosMode(logosIn, false), logos = logosOn !== "none";
@@ -58,12 +60,18 @@ export function PRRail({ items, zoom, range, sortBy = "recall", logos: logosIn, 
   }
   const sx = (col: number, v: number) => x0[col] + ((v - lo) / (hi - lo || 1)) * colW;
   const span = hi - lo;
-  const step = span > 0.6 ? 0.25 : span > 0.3 ? 0.1 : span > 0.12 ? 0.05 : 0.02;
-  const ticks: number[] = [];
-  for (let t = Math.ceil(lo / step) * step; t <= hi + 1e-9; t += step) ticks.push(Math.round(t * 1000) / 1000);
-  // every tick keeps its gridline; labels ("100%" at its measured width, 8 s apart) go on every n-th tick when adjacent ones would touch (large text in a narrow panel)
-  const tickW = measure("100%", 10 * s, "mono") + 8 * s;
-  const labelEvery = Math.max(1, Math.ceil(tickW / ((colW * step) / (span || 1))));
+  // the tick step in percent (ticks.ts): the rail's own at `normal` (25% across the full range, 5% on a fitted one), the density's around it
+  const step = pctStep(density, span, span > 0.6 ? 25 : span > 0.3 ? 10 : span > 0.12 ? 5 : 2);
+  const ticks = pctTicks(lo, hi, step), grid = gridOn(density);
+  // a tick label's centre, kept so its box (measured) stays inside the column: the edge labels ("100%" at the right, "0%" at the left) would
+  // otherwise straddle the column's edge, the right one reaching under the value column's figures; `shift` is how far that moves a label
+  const halfW = (t: number) => measure(`${Math.round(t * 100)}%`, 10 * s, "mono") / 2;
+  const tickLabelX = (col: number, t: number) => Math.min(Math.max(sx(col, t), x0[col] + halfW(t)), x0[col] + colW - halfW(t));
+  const shift = ticks.length ? Math.max(0, ...[ticks[0], ticks[ticks.length - 1]].map((t) => Math.abs(tickLabelX(0, t) - sx(0, t)))) : 0;
+  // every tick keeps its gridline; labels ("100%" at its measured width, 8 s apart, plus what the edge clamp moves one by) go on every n-th tick when
+  // adjacent ones would touch (large text in a narrow panel, or a fine density)
+  const tickW = measure("100%", 10 * s, "mono") + 8 * s + shift;
+  const every = labelEvery(tickW, (colW * step) / 100 / (span || 1));
   const h = n * ROW + 44 * s;
   // rows drawn in first-appearance order and placed by rank with a transform (ui.tsx usePresence), so a re-sort slides them
   const presence = usePresence(items, (it) => it.id);
@@ -99,10 +107,10 @@ export function PRRail({ items, zoom, range, sortBy = "recall", logos: logosIn, 
               {bg !== "none" && <rect x={x0[col]} y={TOP} width={Math.max(0, colW)} height={n * ROW} fill={`url(#${bgId})`} />}
               <text x={x0[col]} y={12 * s} fontSize={12 * s} fontWeight={500} fill="var(--ink)" className="ax">{col === 0 ? "Recall" : "Precision"}</text>
               <text x={x0[col] + colW + NUMS - 2} y={12 * s} textAnchor="end" fontSize={10 * s} fontWeight={500} letterSpacing=".06em" fill="var(--ink-3)">95% CI</text>
-              {ticks.map((t, i) => (
+              {ticks.map((t) => (
                 <g key={t}>
-                  <line className="gl" x1={sx(col, t)} x2={sx(col, t)} y1={TOP} y2={TOP + n * ROW} stroke="var(--line)" />
-                  {i % labelEvery === 0 && <text x={sx(col, t)} y={TOP + n * ROW + 14 * s} fontSize={10 * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>}
+                  {grid && <line className="gl" x1={sx(col, t)} x2={sx(col, t)} y1={TOP} y2={TOP + n * ROW} stroke="var(--line)" />}
+                  {labelledAt(t * 100, step, every) && <text x={tickLabelX(col, t)} y={TOP + n * ROW + 14 * s} fontSize={10 * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{Math.round(t * 100)}%</text>}
                 </g>
               ))}
             </g>
