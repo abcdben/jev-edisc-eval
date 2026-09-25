@@ -57,7 +57,7 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         <ul>
           <li><b>Recall and precision</b>, with 95% confidence intervals.</li>
           <li><b>Speed</b>: median latency to score one document, one request at a time.</li>
-          <li><b>Cost</b> per 100,000 documents, as paid, at each corpus's average document length.</li>
+          <li><b>Cost</b> per 100,000 documents at each corpus's average document length: standard list price for every API model (no flex, batch or caching discounts); GPU rows as A100 rental for the measured time.</li>
           <li><b>Stability</b>: how often a model changes its answer on the same document across repeated identical runs (lower is more stable).</li>
         </ul>
         <p>

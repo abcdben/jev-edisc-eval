@@ -6,7 +6,10 @@ export type IssueScore = { recall: CI; precision: CI; n_pos: number; n: number }
 export type Score = { decision: PRF; doc: PRF; per_issue?: Record<string, IssueScore> };
 export type Ops = {
   n_docs: number; n_decisions: number; errors: number;
-  cost_per_doc: number | null; list_cost_per_doc: number | null;
+  /** `cost_per_doc` is at standard list price (== `list_cost_per_doc`): no flex, batch or prompt-caching discount. `paid_cost_per_doc` is what the run was billed, discounts applied (export.py _ops). */
+  cost_basis?: "list" | "human review" | string;
+  cost_per_doc: number | null; list_cost_per_doc: number | null; paid_cost_per_doc?: number | null;
+  cost_usd_total?: number | null; cost_usd_paid_total?: number | null;
   tokens_in_per_doc: number | null; tokens_out_per_doc: number | null;
   doc_latency_p50_ms: number | null; doc_latency_p95_ms: number | null; doc_latency_p50_ci_ms?: [number, number] | null; hours_per_100k_docs: number | null; // hours_per_100k_docs is p50 × 100k, in the export only; the site reads the latencies
   latency_source: string; pricing_modes: string[]; model_resolved: string[];
@@ -95,9 +98,9 @@ const ALL_PRIMARY: { key: string; color: string; short: string; shortInMaker?: s
   { key: "jev@gate", color: "var(--v14)", short: "Jev · Relevance Gate", note: "TypeSafe Jev 1.13, Relevance Gate: an extra Noul first asks whether the document has anything to do with the matter; each issue probability is multiplied by that gate. Trades recall for precision." },
   { key: "laya-ft", color: "var(--c-laya-ft)", short: "Laya", kind: "system1", note: "ConvAI Laya, fine-tuned: the one supervised row in this zero-shot comparison. Fine-tuned (RLCD) on a 30% document-level dev split of the same corpus and scored on the held-out 70%; every other row is zero-shot. The labeled data it needed is not counted in the time and cost panels. Zero-shot Laya configurations are on the Configurations page." },
   { key: "claude-haiku-4.5", color: "var(--c-haiku)", short: "Haiku 4.5", note: "Anthropic Claude Haiku 4.5, structured JSON output, default effort." },
-  { key: "claude-sonnet-5", color: "var(--c-sonnet)", short: "Sonnet 5", note: "Anthropic Claude Sonnet 5, structured JSON output, default effort, prompt caching on the all-issues arm." },
-  { key: "gpt-5.6-luna", color: "var(--c-luna)", short: "GPT-5.6 Luna", shortInMaker: "Luna", note: "OpenAI GPT-5.6 Luna, structured output, minimal reasoning, flex pricing (50% off list)." },
-  { key: "gpt-5.6-terra", color: "var(--c-terra)", short: "GPT-5.6 Terra", shortInMaker: "Terra", note: "OpenAI GPT-5.6 Terra, structured output, minimal reasoning, flex pricing (50% off list)." },
+  { key: "claude-sonnet-5", color: "var(--c-sonnet)", short: "Sonnet 5", note: "Anthropic Claude Sonnet 5, structured JSON output, default effort. The run used prompt caching on the all-issues arm; cost is reported at standard list price." },
+  { key: "gpt-5.6-luna", color: "var(--c-luna)", short: "GPT-5.6 Luna", shortInMaker: "Luna", note: "OpenAI GPT-5.6 Luna, structured output, minimal reasoning. The run used the flex tier; cost is reported at standard list price." },
+  { key: "gpt-5.6-terra", color: "var(--c-terra)", short: "GPT-5.6 Terra", shortInMaker: "Terra", note: "OpenAI GPT-5.6 Terra, structured output, minimal reasoning. The run used the flex tier; cost is reported at standard list price." },
   { key: "gemini-3.5-flash-lite", color: "var(--c-flashlite)", short: "Gemini 3.5 Flash-Lite", shortInMaker: "3.5 Flash-Lite", note: "Google Gemini 3.5 Flash-Lite, structured output." },
   { key: "gemini-3.8-flash", color: "var(--c-flash)", short: "Gemini 3.8 Flash", shortInMaker: "3.8 Flash", note: "Google Gemini 3.8 Flash, structured output." },
   { key: "gemma3-12b", color: "var(--c-gemma)", short: "Gemma 3 12B", kind: "llm", note: "Local, open-weight. Google Gemma 3 12B run via Ollama on a rented A100. Scored on a 400-600 document stratified subsample; latency measured with 4 concurrent requests." },
@@ -119,10 +122,17 @@ export const GPU_USD_PER_HOUR_H100 = 3.29;
 export const GPU_NAME = "Lambda Cloud 1× A100";
 /** Rows whose cost is GPU rental rather than an API bill. */
 export const isGpuRow = (r: Rec) => r.kind === "local_llm" || r.family === "Laya";
-/** Cost per document under the site's accounting: API rows as paid, GPU rows as rental for their median latency. */
+/** Cost per document under the site's accounting: API rows at standard list price (no flex, batch or caching discounts; the export's `cost_per_doc`), GPU rows as A100 rental for their median latency. */
 export const costPerDoc = (r: Rec): number | null => {
   if (isGpuRow(r)) return r.ops.doc_latency_p50_ms == null ? null : (r.ops.doc_latency_p50_ms / 3.6e6) * GPU_USD_PER_HOUR;
   return r.ops.cost_per_doc;
+};
+/** What the benchmark run was actually billed per document for an API row (flex / prompt-cache discounts applied), with the pricing tier, when it differs from list by more than 0.5%; null for GPU rows or when paid == list. */
+export const paidPerDoc = (r: Rec): { usd: number; mode: string } | null => {
+  const paid = r.ops.paid_cost_per_doc, list = r.ops.cost_per_doc;
+  if (isGpuRow(r) || paid == null || list == null || list === 0 || Math.abs(paid - list) / list <= 0.005) return null;
+  const modes = r.ops.pricing_modes.filter((m) => m !== "standard");
+  return { usd: paid, mode: modes.length ? modes.join("/") : "prompt caching" };
 };
 
 /** Ablation families: a base model whose variants change one lever at a time. */

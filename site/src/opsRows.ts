@@ -88,7 +88,7 @@ export const MEASURED_ON = DATA.determinism ? `${fmtInt(DATA.determinism.sample.
 
 export function costCaption(chart: CostChart, unit: CostUnit, scale: CostScale, whiskers = true): string[] {
   const cu = COST_UNIT[unit];
-  const basis = "Cost as paid for the benchmark run (OpenAI flex pricing, Anthropic prompt caching, Google and TypeSafe at list; GPU rows as A100 rental for their median latency)";
+  const basis = "Cost at standard list price for every API model (no flex, batch or caching discounts); GPU rows as A100 rental for the measured time";
   if (chart === "scatter") return [`${basis}, ${cu.short} on a log axis, against recall${whiskers ? " with its 95% interval (whisker)" : ""}.`];
   return [`${basis}, ${cu.short}${chart === "dots" || scale === "log" ? ", log axis" : ""}.`];
 }

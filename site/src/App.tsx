@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER, rosterOf,
-  corpusKey, costPerDoc, fmtCI, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, issueLabel, pick, siteCorpus, starOf, variantColor,
+  corpusKey, costPerDoc, fmtCI, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, issueLabel, paidPerDoc, pick, siteCorpus, starOf, variantColor,
   type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
 import { Control, Hint, MethodContext, ROW_PULSE_MS, Seg, usePulseWindow, type HintItem, type TipLine } from "./components/ui";
@@ -102,10 +102,12 @@ function latencySource(s: string): string | null {
   return null;
 }
 
-/** The one secondary line of an Inference latency or Cost hover: the p95 and how the latency was measured, or where the money went. */
+/** The one secondary line of an Inference latency or Cost hover: the p95 and how the latency was measured, or the cost basis (list price; what the run paid when a discount applied). */
 function opsSub(r: Rec, kind: "latency" | "cost"): string {
   if (kind === "latency") return [`p95 ${fmtMs(r.ops.doc_latency_p95_ms)}`, latencySource(r.ops.latency_source)].filter(Boolean).join(" · ");
-  return `as paid · ${isGpuRow(r) ? "GPU rental" : "API"}`;
+  if (isGpuRow(r)) return "A100 rental for the measured time";
+  const paid = paidPerDoc(r);
+  return paid ? `standard list price · as paid ${fmtUSD(paid.usd * 1e5)} (${paid.mode})` : "standard list price · API";
 }
 
 function opsLines(r: Rec): { lines: TipLine[]; notes: string[] } {
@@ -119,9 +121,12 @@ function opsLines(r: Rec): { lines: TipLine[]; notes: string[] } {
     ["Input tokens per document", o.tokens_in_per_doc == null ? "—" : fmtInt(Math.round(o.tokens_in_per_doc))],
     ["Output tokens per document", o.tokens_out_per_doc == null ? "—" : fmtInt(Math.round(o.tokens_out_per_doc))],
   ];
+  const paid = paidPerDoc(r);
+  if (paid) lines.push(["As paid per 100k docs", `${fmtUSD(paid.usd * 1e5)} (${paid.mode})`]);
   const notes: string[] = [];
   const src = latencySource(o.latency_source);
   if (src) notes.push(`Latency: ${src}.`);
+  if (!isGpuRow(r) && c != null) notes.push(`Cost is the standard list price of the tokens used, no flex, batch or caching discount${paid ? `; the run itself paid ${fmtUSD(paid.usd * 1e5)} per 100k docs on ${paid.mode}` : ""}.`);
   if (isGpuRow(r) && c != null) notes.push(`Cost is rented GPU time: ${GPU_NAME} at $${GPU_USD_PER_HOUR.toFixed(2)}/h for the median latency, one request at a time; serving documents concurrently would lower it.`);
   if (r.model === "laya-ft") notes.push("The labeled training data this checkpoint needed is not counted here.");
   return { lines, notes };
@@ -193,10 +198,10 @@ export function costItems(recs: Rec[]): HintItem[] {
   const noun = DOC_NOUN[recs[0]?.corpus ?? ""] ?? "document";
   const tokens = tin == null ? null : `${fmtInt(Math.round(tin / 100) * 100)} in / ${fmtInt(Math.max(10, Math.round((tout ?? 0) / 10) * 10))} out`;
   return [
-    { k: "Measures", v: <><b>API price as paid</b> × 100,000 documents.</> },
+    { k: "Measures", v: <><b>Standard list price</b> of the tokens used × 100,000 documents.</> },
     { k: "Basis", v: <>This corpus's average billed tokens per {noun}{tokens ? <>: <b>≈{tokens}</b> for the LLMs</> : null}.</> },
-    { k: "Pricing", v: <>OpenAI <b>flex (half of list)</b>; Anthropic prompt caching.</> },
-    { k: "Local", v: <mark>Laya and Gemma: A100 rental at ${GPU_USD_PER_HOUR.toFixed(2)}/h × latency, <b>an upper bound</b>.</mark> },
+    { k: "Pricing", v: <>Every API model at list: <b>no flex, batch or caching discounts</b>. Hover a bar for what the run paid.</> },
+    { k: "Local", v: <mark>Laya and Gemma: A100 rental at ${GPU_USD_PER_HOUR.toFixed(2)}/h × measured time, <b>an upper bound</b>.</mark> },
   ];
 }
 

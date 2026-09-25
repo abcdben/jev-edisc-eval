@@ -22,7 +22,7 @@ import {
 export type Tab = "pr" | "cost" | "speed" | "stability";
 const TABS: { id: Tab; label: string; title: string }[] = [
   { id: "pr", label: "Recall / precision", title: "Recall against precision, as a map or ranked rows" },
-  { id: "cost", label: "Cost", title: "Dollars as paid, per 1,000 or 100,000 documents or per decision" },
+  { id: "cost", label: "Cost", title: "Dollars at standard list price, per 1,000 or 100,000 documents or per decision" },
   { id: "speed", label: "Speed", title: "Median latency per document, or documents per hour" },
   { id: "stability", label: "Stability", title: "How often identical runs disagree" },
 ];

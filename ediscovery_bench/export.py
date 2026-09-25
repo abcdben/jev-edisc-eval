@@ -13,7 +13,10 @@ Definitions
   speed         median per-document wall time of the model's own calls, single stream: one call per
                 document in the multi arm, the sum of the per-issue calls in the single arm. Laya's
                 figure comes from the dedicated concurrency-1 latency runs where they exist.
-  cost          sum of the model's per-decision cost over the documents, divided by documents.
+  cost          sum of the model's per-decision cost over the documents, divided by documents, at each
+                vendor's STANDARD LIST PRICE for the tokens (`list_cost_usd`): no flex, batch or prompt-
+                caching discount, so every API model is priced the same way. What the run actually paid
+                (`cost_usd`, discounts applied) is kept alongside as `paid_cost_per_doc` / `cost_usd_paid_total`.
   scope         only questions in the task file are scored and only documents scope.in_scope keeps
                 (TREC: topic 404 `eminent_domain` dropped 2026-09-23, with its 100-email `pos:eminent_domain`
                 stratum; 11 topics, 3,016 emails). Predictions and corpora are left as saved.
@@ -191,14 +194,18 @@ def _ops(preds, arm: str, latency_preds=None, latency_note: str | None = None, l
     tokens and latency are measured per document from the calls that actually happened. In the multi
     arm one call covered every question in the run (TREC: 12, of which 11 are now scored), and its
     cost was split evenly over the rows, so summing all rows recovers the call; nothing is scaled by
-    11/12. `n_decisions` counts scored decisions only."""
+    11/12. `n_decisions` counts scored decisions only.
+
+    Cost basis: `cost_per_doc` (and `list_cost_per_doc`, the same number) is the standard list price of
+    the tokens the model consumed (`list_cost_usd`), so OpenAI's flex tier, Anthropic's prompt-cache reads
+    and any batch tier are NOT discounted; `paid_cost_per_doc` is what the run was actually billed."""
     ok = [p for p in preds if p.error is None]
     calls = [p for p in call_preds if p.error is None] if call_preds is not None else ok
     by_doc: dict[str, list] = defaultdict(list)
     for p in calls:
         by_doc[p.doc_id].append(p)
     n_docs = len(by_doc)
-    cost = sum(p.cost_usd for p in calls); lcost = sum(p.list_cost_usd for p in calls)
+    paid = sum(p.cost_usd for p in calls); lcost = sum(p.list_cost_usd for p in calls)
     tin = sum(p.input_tokens for p in calls); tout = sum(p.output_tokens for p in calls)
     src = latency_preds if latency_preds else calls
     lb: dict[str, list] = defaultdict(list)
@@ -218,7 +225,10 @@ def _ops(preds, arm: str, latency_preds=None, latency_note: str | None = None, l
         p50_ci = [round(float(np.percentile(meds, 2.5)), 2), round(float(np.percentile(meds, 97.5)), 2)]
     return {
         "n_docs": n_docs, "n_decisions": len(ok), "errors": sum(1 for p in preds if p.error),
-        "cost_per_doc": cost / n_docs if n_docs else None, "list_cost_per_doc": lcost / n_docs if n_docs else None,
+        "cost_basis": "list",
+        "cost_per_doc": lcost / n_docs if n_docs else None, "list_cost_per_doc": lcost / n_docs if n_docs else None,
+        "paid_cost_per_doc": paid / n_docs if n_docs else None,
+        "cost_usd_total": lcost, "cost_usd_paid_total": paid,
         "tokens_in_per_doc": tin / n_docs if n_docs else None, "tokens_out_per_doc": tout / n_docs if n_docs else None,
         "doc_latency_p50_ms": p50, "doc_latency_p95_ms": p95, "doc_latency_p50_ci_ms": p50_ci,
         "hours_per_100k_docs": (p50 * 100_000 / 3.6e6) if p50 else None,
@@ -263,7 +273,9 @@ def _tar_ops(t: dict) -> dict:
     THIS corpus, amortised over the corpus the workflow ran on (the 286k collection for TREC)."""
     n = t["n_corpus"]
     return {
-        "cost_per_doc": t["cost_usd"] / n, "list_cost_per_doc": t["cost_usd"] / n,
+        "cost_basis": "human review",
+        "cost_per_doc": t["cost_usd"] / n, "list_cost_per_doc": t["cost_usd"] / n, "paid_cost_per_doc": t["cost_usd"] / n,
+        "cost_usd_total": t["cost_usd"], "cost_usd_paid_total": t["cost_usd"],
         "tokens_in_per_doc": None, "tokens_out_per_doc": None,
         "doc_latency_p50_ms": t["hours"] * 3.6e6 / n, "doc_latency_p95_ms": None, "doc_latency_p50_ci_ms": None,
         "hours_per_100k_docs": t["hours"] * 1e5 / n,
@@ -391,7 +403,8 @@ def export(out: Path = Path("results"), dest: Path = Path("results/findings.json
                     rec["tar"] = _tar_block(sj)
                     rec["ops"].update(_tar_ops(rec["tar"]))
                 rec["nogray"].pop("per_issue", None)  # keep the payload small; per-issue drill-down uses all gold
-                for k in ("cost_per_doc", "list_cost_per_doc", "tokens_in_per_doc", "tokens_out_per_doc", "doc_latency_p50_ms", "doc_latency_p95_ms", "hours_per_100k_docs"):
+                for k in ("cost_per_doc", "list_cost_per_doc", "paid_cost_per_doc", "cost_usd_total", "cost_usd_paid_total",
+                          "tokens_in_per_doc", "tokens_out_per_doc", "doc_latency_p50_ms", "doc_latency_p95_ms", "hours_per_100k_docs"):
                     if rec["ops"][k] is not None:
                         rec["ops"][k] = round(rec["ops"][k], 6 if "cost" in k else 2)
                 records.append(rec)
