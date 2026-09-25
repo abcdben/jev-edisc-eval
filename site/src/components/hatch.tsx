@@ -6,7 +6,7 @@ import { useId } from "react";
  * (--box-alpha for a box, --bar-alpha for a bar):
  *   filled            a shade at that opacity;
  *   hatched           45° lines in the item's colour at 3 × that opacity, capped at 1, so the one slider carries both looks (a 1 px line every
- *                     6 px covers about a sixth of the area, so the tripled alpha keeps its weight about the same); a bar adds a hairline edge;
+ *                     3.5 px covers under a third of the area, so the tripled alpha keeps its weight close); a bar adds a hairline edge;
  *   outline           the edge alone, in the item's colour, --box-stroke-w px wide (0.75 unset) × --sw-mult;
  *   hatched-outline   the hatch inside that edge.
  * The hatch is one SVG <pattern> per item in the chart's <defs> (HatchDefs): pattern contents take their styles from the pattern's own ancestors,
@@ -26,7 +26,7 @@ export const isFillMode = (s: string | null): s is FillMode => FILL_MODES.some((
 export const isHatched = (m: FillMode) => m === "hatched" || m === "hatched-outline";
 export const isOutlined = (m: FillMode) => m === "outline" || m === "hatched-outline";
 
-export const HATCH_GAP = 6;
+export const HATCH_GAP = 3.5;
 /** Hatch-line opacity for an area whose filled opacity is the variable `alphaVar` (`dflt` where the styles set none). */
 export const hatchAlpha = (alphaVar: string, dflt: number) => `min(1, calc(var(${alphaVar}, ${dflt}) * 3))`;
 // × 1px: a unitless calc() that comes to 0 is computed as `0%` by Chrome and dropped (the width attribute would show through); a length is honoured
