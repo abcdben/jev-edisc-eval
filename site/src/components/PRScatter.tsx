@@ -159,6 +159,36 @@ export function Legend({ items, s, x0, x1, y, mark, measure }: { items: { id: st
 /** Hatch-line opacity for a box whose fill opacity is --box-alpha. */
 const HATCH_ALPHA = hatchAlpha("--box-alpha", 0.14);
 
+/**
+ * How the map draws each item's 95% intervals (the studio's Interval control, `interval` on PRScatter; `box` on the site). Every mode covers the
+ * same footprint, the rectangle spanning the recall interval (width) and the precision interval (height), so the label placement is unchanged:
+ *   box       the rectangle, drawn per the Fill control (FillMode above);
+ *   whiskers  crosshair error bars through the point: a horizontal line across the recall interval and a vertical one across the precision
+ *             interval, each with WHISKER_CAP × textScale end caps; the item's colour at --op-whisker (0.75 unset), 1 px × --sw-mult;
+ *   band      the recall whisker alone (recall is the review figure);
+ *   ellipse   the ellipse inscribed in the rectangle (semi-axes the intervals' half-widths), drawn per the Fill control like the box. It spans
+ *             the two intervals; it is not a confidence ellipse (there is no covariance behind it) and the legend says so;
+ *   bracket   the rectangle's four corners as L-shaped ticks, arms BRACKET_FRAC of each side (at least BRACKET_MIN px), no fill; whisker stroke;
+ *   none      no interval mark, the point alone.
+ * Whiskers, bands and brackets are drawn under the marks and labels, where the boxes go.
+ */
+export type IntervalMode = "box" | "whiskers" | "band" | "ellipse" | "bracket" | "none";
+export const INTERVAL_MODES: { id: IntervalMode; label: string; title: string }[] = [
+  { id: "box", label: "box", title: "A box spanning the 95% interval on recall (width) and precision (height); the Fill control draws it" },
+  { id: "whiskers", label: "whiskers", title: "Error bars through the point: horizontal across the recall interval, vertical across the precision interval, with end caps" },
+  { id: "band", label: "recall whisker", title: "The recall whisker alone (horizontal); the precision interval is not drawn" },
+  { id: "ellipse", label: "ellipse", title: "An ellipse spanning the two intervals (inscribed in the box); the Fill control draws it. Not a confidence ellipse" },
+  { id: "bracket", label: "brackets", title: "The box's four corners as short L-shaped ticks; no fill" },
+  { id: "none", label: "none", title: "The point alone; no interval mark" },
+];
+export const isIntervalMode = (s: string | null): s is IntervalMode => INTERVAL_MODES.some((m) => m.id === s);
+/** Whether the mode draws an area the Fill control applies to. */
+export const intervalHasArea = (m: IntervalMode) => m === "box" || m === "ellipse";
+/** Whisker end cap half-length at text scale 1, px; bracket arms as a fraction of the side, and their minimum, px. */
+const WHISKER_CAP = 4, BRACKET_FRAC = 0.1, BRACKET_MIN = 4;
+/** The whisker and bracket stroke: the item's colour, 1 px × --sw-mult, at --op-whisker (styles.css; the high-contrast block raises both). */
+const WHISKER_STYLE = { strokeWidth: "calc(1px * var(--sw-mult, 1))", opacity: "var(--op-whisker, 0.75)" } as const;
+
 function niceTicks(lo: number, hi: number): number[] {
   const span = hi - lo;
   const step = span > 0.6 ? 0.2 : span > 0.3 ? 0.1 : span > 0.12 ? 0.05 : span > 0.06 ? 0.02 : 0.01;
@@ -182,17 +212,19 @@ const PULSE_CYCLES = 2, PULSE_CYCLE_MS = 650;
 /** `labels` (the studio's Labels control; `beside` on the site): `legend` drops the point labels (and leaders) for a legend row at the top (Legend), the plot moved down under it. */
 /** `logos` (logos.tsx LogosMode, or the boolean it was): which items get their vendor glyph as the mark (`all`, the Jev rows alone, or none, when every item gets `mark`). */
 /** `mark` (the studio's Marks control; `dot` on the site) is the point shape where an item draws no logo; `markSize` is the studio's Mark size multiplier (the --mark-user the panel sets) and `jevMarkSize` the Jev rows' own (--mark-jev; `markSize` when unset): the label placement needs them as numbers to keep labels and leaders clear of a larger mark. */
-/** `boxes` (the studio's Fill control; `filled` on the site) is how the interval boxes are drawn (hatch.tsx FillMode). */
+/** `boxes` (the studio's Fill control; `filled` on the site) is how the interval boxes (or ellipses) are drawn (hatch.tsx FillMode). */
+/** `interval` (the studio's Interval control; `box` on the site) is the shape of the interval mark (IntervalMode above). */
 /** `bg` (the studio's Background control; the site's dot matrix, `dots`) is the pattern behind the plot area (plotBg.tsx). */
 export type PRDomain = { x: [number, number]; y: [number, number] };
-export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos: logosIn, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, boxes: boxMode = "filled", bg = "dots" }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean | LogosMode; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; boxes?: FillMode; bg?: PlotBg }) {
+export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos: logosIn, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, boxes: boxMode = "filled", interval = "box", bg = "dots" }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean | LogosMode; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; boxes?: FillMode; interval?: IntervalMode; bg?: PlotBg }) {
   const { tip, show, hide, hostRef } = useTip();
   const logos = logosMode(logosIn, false);
   const hasLogo = (p: PRItem) => logoShown(logos, p.id) && !!logoFor(p.id);
   const tipIcon = (p: PRItem) => (hasLogo(p) ? <Logo model={p.id} size={12} /> : undefined);
   // text widths as drawn (measure.tsx): the legend rows and the point labels are laid out from them
   const { measure, probes } = useTextMeasure([LEGEND_CLS, NAME_CLS]);
-  const hatched = isHatched(boxMode), outlined = isOutlined(boxMode);
+  const area = intervalHasArea(interval);
+  const hatched = area && isHatched(boxMode), outlined = isOutlined(boxMode);
   // pattern ids (url(#…)-safe, unique to this instance): the hatch tiles (hatch.tsx) and the background
   const hatchId = useHatchIds();
   const bgId = `bg-${useId().replace(/[^A-Za-z0-9_-]/g, "")}`;
@@ -316,18 +348,44 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
         {labelsMode === "legend" && <Legend items={pts.map((p) => ({ id: p.id, name: p.name + (p.subset ? " *" : ""), color: p.color }))} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={legendSwatch(logos, mark)} measure={measure} />}
         {probes}
 
-        {/* CI boxes first so dots sit on top; every box is drawn the same way (FillMode), the highlighted one a little deeper */}
-        {drawn.map((p) => {
+        {/* CI marks (IntervalMode) first so dots sit on top; every box or ellipse is drawn the same way (FillMode), the highlighted one a little deeper */}
+        {interval !== "none" && drawn.map((p) => {
           const mark = { kind: "mark" as const, x: X(p.recall[0]), y: Y(p.precision[0]), r: 9 };
           const boxFill = boxMode === "outline" ? "none" : hatched ? `url(#${hatchId(p.id)})` : p.color;
           const boxFillOpacity = boxMode === "outline" ? undefined : hl === p.id ? (hatched ? 1 : 0.35) : hatched ? HATCH_ALPHA : "var(--box-alpha)";
+          // the footprint this frame: the box, and the point through which the whiskers run
+          const x0 = g(p.id, "x0"), y0 = g(p.id, "y0"), w = g(p.id, "w"), h = g(p.id, "h"), x1 = x0 + w, y1 = y0 + h, cx = g(p.id, "x"), cy = g(p.id, "y");
+          const areaStyle = { fillOpacity: boxFillOpacity, strokeOpacity: outlined ? 1 : "var(--box-stroke, 0)", strokeWidth: OUTLINE_W, transition: "fill-opacity 120ms" } as const;
+          // the pulse class is dropped while this box is highlighted, so the deeper hover fill is steady and wins
+          const areaCls = pulsing && p.decider && hl !== p.id ? "pr-box pulse" : "pr-box";
+          const cap = WHISKER_CAP * s, ax = Math.max(BRACKET_MIN, BRACKET_FRAC * w), ay = Math.max(BRACKET_MIN, BRACKET_FRAC * h);
           return (
             <g key={`b${p.id}`} className="fd" style={fadeStyle(stateOf[p.id] ?? "exit")}>{/* fade in / out (ui.tsx usePresence) */}
             <g {...hoverable(onHover, p.id)}>{/* cross-chart hover (hover.tsx) wraps the tooltip group */}
             <g onMouseMove={(e) => show(e, mark, prTip(p, tipIcon(p)))} onMouseLeave={hide} {...selectable(pickMark, p, p.name)} tabIndex={-1}>
-              {/* the pulse class is dropped while this box is highlighted, so the deeper hover fill is steady and wins */}
               {/* `--box-stroke` (0 on the site) lets a studio style preset draw the box as a hairline outline in the item's colour; the outline modes draw it regardless */}
-              <rect key={`${p.id}:${sig}`} className={pulsing && p.decider && hl !== p.id ? "pr-box pulse" : "pr-box"} x={g(p.id, "x0")} y={g(p.id, "y0")} width={g(p.id, "w")} height={g(p.id, "h")} fill={boxFill} stroke={p.color} strokeWidth={0.75} style={{ fillOpacity: boxFillOpacity, strokeOpacity: outlined ? 1 : "var(--box-stroke, 0)", strokeWidth: OUTLINE_W, transition: "fill-opacity 120ms" }} rx={1} />
+              {interval === "box" && <rect key={`${p.id}:${sig}`} className={areaCls} x={x0} y={y0} width={w} height={h} fill={boxFill} stroke={p.color} strokeWidth={0.75} style={areaStyle} rx={1} />}
+              {interval === "ellipse" && <ellipse key={`${p.id}:${sig}`} className={areaCls} cx={x0 + w / 2} cy={y0 + h / 2} rx={w / 2} ry={h / 2} fill={boxFill} stroke={p.color} strokeWidth={0.75} style={areaStyle} />}
+              {(interval === "whiskers" || interval === "band") && (
+                <g className="pr-whisker" stroke={p.color} strokeWidth={1} fill="none" style={WHISKER_STYLE}>
+                  <line x1={x0} x2={x1} y1={cy} y2={cy} />
+                  <line x1={x0} x2={x0} y1={cy - cap} y2={cy + cap} />
+                  <line x1={x1} x2={x1} y1={cy - cap} y2={cy + cap} />
+                  {interval === "whiskers" && (
+                    <>
+                      <line x1={cx} x2={cx} y1={y0} y2={y1} />
+                      <line x1={cx - cap} x2={cx + cap} y1={y0} y2={y0} />
+                      <line x1={cx - cap} x2={cx + cap} y1={y1} y2={y1} />
+                    </>
+                  )}
+                </g>
+              )}
+              {interval === "bracket" && (
+                <path
+                  className="pr-whisker" stroke={p.color} strokeWidth={1} fill="none" style={WHISKER_STYLE}
+                  d={`M${x0} ${y0 + ay}V${y0}H${x0 + ax} M${x1 - ax} ${y0}H${x1}V${y0 + ay} M${x1} ${y1 - ay}V${y1}H${x1 - ax} M${x0 + ax} ${y1}H${x0}V${y1 - ay}`}
+                />
+              )}
             </g>
             </g>
             </g>

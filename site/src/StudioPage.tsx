@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { DATA, DEFAULT_CORPUS, DEFAULT_ON, PRIMARY_BY_KEY, corpusKey, fmtInt, issueLabel, siteCorpus, starOf, CORPORA } from "./data";
 import { ModelPicker, useCompareItems, type Chart, type View } from "./App";
-import { MARK_SHAPES, PRScatter, type LabelsMode, type MarkShape, type PRDomain } from "./components/PRScatter";
+import { INTERVAL_MODES, MARK_SHAPES, PRScatter, intervalHasArea, isIntervalMode, type IntervalMode, type LabelsMode, type MarkShape, type PRDomain } from "./components/PRScatter";
 import { FILL_MODES, isFillMode, isOutlined, type FillMode } from "./components/hatch";
 import { PRRail } from "./components/PRRail";
 import { StudioBars, StudioScatter } from "./components/StudioCharts";
@@ -17,7 +17,7 @@ import type { LogosMode } from "./logos";
  * Screenshot studio (studio.html → studio.tsx → this page; unlinked from the site): one Compare models chart alone, on a plain panel whose size
  * you set, with every control above the plot and none on it. The top bar holds what is plotted (plot, corpus, models, issue) and the PNG export;
  * the inspector under it (components/Inspector.tsx) groups the rest into disclosure sections: Chart (the plot's own controls: view, axes, marks,
- * fill of the boxes and bars, labels), Canvas (size, title, frame, legend, logos, background pattern), Style (preset, colours, text, contrast), Scheme (the custom scheme
+ * the interval mark's shape, fill of the boxes and bars, labels), Canvas (size, title, frame, legend, logos, background pattern), Style (preset, colours, text, contrast), Scheme (the custom scheme
  * editor, with Style → Custom) and Export (scale, backdrop). Plots: recall/precision (the site's map and ranked views), Cost, Speed and Stability
  * (components/StudioCharts.tsx). Drag the panel's bottom-right corner or type a size; pick a preset for LinkedIn's usual aspect ratios. Nothing pulses and nothing opens on click.
  */
@@ -236,6 +236,11 @@ export default function StudioPage() {
   const [fillMode, setFillMode] = useState<FillMode>(() => { const s = localStorage.getItem("studio-boxes"); return isFillMode(s) ? s : "filled"; });
   useEffect(() => { localStorage.setItem("studio-boxes", fillMode); }, [fillMode]);
   const boxOutlined = isOutlined(fillMode);
+  // Interval (PRScatter.tsx IntervalMode): the shape of the map's 95% interval marks (box, whiskers, recall whisker, ellipse, brackets, none); the
+  // ranked view maps it onto its row whiskers (PRRail.tsx). `box` is what the site and the studio always drew.
+  const [interval, setIntervalMode] = useState<IntervalMode>(() => { const s = localStorage.getItem("studio-ci"); return isIntervalMode(s) ? s : "box"; });
+  useEffect(() => { localStorage.setItem("studio-ci", interval); }, [interval]);
+  const intervalArea = intervalHasArea(interval);
   const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "light");
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
   const [style, setStyle] = useState<PlotStyle>(() => { const s = localStorage.getItem("studio-style"); return isPlotStyle(s) ? s : "site"; });
@@ -386,7 +391,8 @@ export default function StudioPage() {
   const fills = (plot === "pr" && chart === "map") || (plot === "cost" && costChart === "scatter");
   // Which plots draw bars (StudioBars kind "bar"), and so take the Fill control with the map; the dot and scatter views have no area to fill.
   const hasBars = (plot === "cost" && costChart === "bars") || (plot === "speed" && speedChart !== "dots") || (plot === "stability" && stabChart !== "dots");
-  const showFill = (plot === "pr" && chart === "map") || hasBars;
+  // the map's Fill applies to the Interval modes with an area (box, ellipse); whiskers, brackets and none have nothing to fill
+  const showFill = (plot === "pr" && chart === "map" && intervalArea) || hasBars;
 
   // Panel size in CSS pixels. The panel is also CSS-resizable by its corner; a ResizeObserver writes the dragged size back into the fields.
   // In the row-based charts the height follows the rows, so only the width is synced and the chosen height is kept for when a filling chart returns.
@@ -433,8 +439,19 @@ export default function StudioPage() {
   const legendText = (): string[] => {
     // the note names the mark drawn at the point (Marks control); with every logo on it keeps the site's wording
     const what = logos === "all" || mark === "dot" ? "Dot" : mark === "x" ? "Cross" : mark[0].toUpperCase() + mark.slice(1);
-    const box = fillMode === "filled" ? "Shaded box" : fillMode === "hatched" ? "Hatched box" : fillMode === "outline" ? "Outlined box" : "Hatched, outlined box";
-    if (plot === "pr") return chart === "map" ? [marks.boxes ? `${what}: point estimate. ${box}: 95% interval on recall (width) and precision (height).` : `${what}: point estimate.`] : [];
+    if (plot === "pr") {
+      if (chart !== "map") return [];
+      // the interval mark (Interval control), named only where the panel draws it: an area mode when its fill or outline is visible (marks.boxes), a line mode when --op-whisker is
+      const fillWord = fillMode === "filled" ? "Shaded" : fillMode === "hatched" ? "Hatched" : fillMode === "outline" ? "Outlined" : "Hatched, outlined";
+      const ci =
+        interval === "box" && marks.boxes ? `${fillWord} box: 95% interval on recall (width) and precision (height).`
+        : interval === "ellipse" && marks.boxes ? `${fillWord} ellipse: spans the 95% intervals on recall (width) and precision (height).`
+        : interval === "whiskers" && marks.whiskers ? "Whiskers: 95% interval on recall (horizontal) and precision (vertical)."
+        : interval === "band" && marks.whiskers ? "Whisker: 95% interval on recall."
+        : interval === "bracket" && marks.whiskers ? "Brackets: corners of the 95% interval on recall (width) and precision (height)."
+        : null;
+      return [ci ? `${what}: point estimate. ${ci}` : `${what}: point estimate.`];
+    }
     if (plot === "cost") return barNote(costCaption(costChart, costUnit, costScale, marks.whiskers));
     if (plot === "speed") return barNote(speedCaption(speedChart, marks.whiskers));
     return barNote(stabCaption(stabChart, stabSetting, stab.sameRuns, marks.whiskers));
@@ -460,7 +477,10 @@ export default function StudioPage() {
     plot === "cost" && (costChart === "scatter" ? "cost vs recall" : costChart === "dots" ? "dots · log" : `bars · ${costScale}`), plot === "cost" && COST_UNIT[costUnit].axis,
     plot === "speed" && (speedChart === "throughput" ? "docs per hour" : `${speedChart === "dots" ? "dots · log" : "bars"} · ${speedUnit} per document`),
     plot === "stability" && (stabChart === "agree" ? "agreement · zoomed" : stabChart === "dots" ? "dots" : "disagreement bars"), plot === "stability" && (stabSetting === "t0" ? "t = 0" : "default sampling"), plot === "stability" && hideUnmeasured && "unmeasured hidden",
-    markText, showFill && `${FILL_MODES.find((m) => m.id === fillMode)?.label} ${hasBars ? "bars" : "boxes"}`, fills && `labels ${labelsMode}`, fills && labelsMode === "beside" && leaders && "leaders",
+    markText,
+    // the interval mark: "filled boxes" / "hatched ellipses" in the area modes (the Fill folded in), the mode's own name otherwise; the bar charts name their Fill alone
+    plot === "pr" && (showFill ? `${FILL_MODES.find((m) => m.id === fillMode)?.label} ${interval === "ellipse" ? "ellipses" : "boxes"}` : INTERVAL_MODES.find((m) => m.id === interval)?.label),
+    hasBars && `${FILL_MODES.find((m) => m.id === fillMode)?.label} bars`, fills && `labels ${labelsMode}`, fills && labelsMode === "beside" && leaders && "leaders",
   );
   const canvasSummary = summarize(`${w} × ${fills ? h : "auto"} px`, title.trim() && `“${title.trim()}”`, frame ? "framed" : "plain", legend ? "legend" : "no legend", LOGOS_OPTIONS.find((o) => o.id === logos)?.label, BG_SUMMARY[bg]);
   const styleSummary = summarize(
@@ -596,7 +616,14 @@ export default function StudioPage() {
               ]}
             />
           </Control>
-          {/* one Fill setting for the map's interval boxes and the bar charts' bars; hidden on the views with neither (ranked, dots, scatter) */}
+          {/* the interval mark's shape (PRScatter.tsx IntervalMode) on the map; the ranked view takes what applies to its row whiskers (PRRail.tsx) */}
+          {plot === "pr" && (
+            <Control label="Interval">
+              <Seg value={interval} onChange={setIntervalMode} options={INTERVAL_MODES.map((m) => ({ id: m.id, label: m.label, title: m.title }))} />
+              {chart === "ranked" && <span className="studio-hint small">{interval === "none" ? "row whiskers off" : intervalArea ? "plain row whiskers" : "row whiskers with end caps"}</span>}
+            </Control>
+          )}
+          {/* one Fill setting for the map's interval boxes or ellipses and the bar charts' bars; hidden on the views with neither (whiskers, brackets, ranked, dots, scatter) */}
           {showFill && (
             <Control label="Fill">
               <Seg value={fillMode} onChange={setFillMode} options={FILL_MODES.map((m) => ({ id: m.id, label: m.label, title: m.title }))} />
@@ -768,10 +795,10 @@ export default function StudioPage() {
             {title.trim() ? <div className="studio-title">{title.trim()}</div> : null}
             {plot === "pr" && chart === "map" && (
               <div className="studio-canvas">
-                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} boxes={fillMode} bg={plotBg("dots")} />
+                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} boxes={fillMode} interval={interval} bg={plotBg("dots")} />
               </div>
             )}
-            {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} mark={mark} bg={plotBg("dots")} />}
+            {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} mark={mark} bg={plotBg("dots")} interval={interval} />}
             {plot === "cost" && costChart === "scatter" && (
               <div className="studio-canvas">
                 <StudioScatter pts={costPts(sel, v, costUnit)} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} bg={plotBg("none")} />
