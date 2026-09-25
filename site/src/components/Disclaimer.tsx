@@ -56,7 +56,7 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         </p>
         <ul>
           <li><b>Recall and precision</b>, with 95% confidence intervals.</li>
-          <li><b>Speed</b>: median latency to score one document, one request at a time.</li>
+          <li><b>Speed</b>: median wall-clock per request to score one document. On TREC (all issues per call) the Jev, Claude and GPT figures come from a dedicated single-request sample of 200 emails; every other figure is the per-request timing recorded during the benchmark run, with 8–12 requests in flight. GPT-5.6 Luna is timed on OpenAI's standard tier, 2.2× faster than the flex tier the run used; cost is at list price either way.</li>
           <li><b>Cost</b> per 100,000 documents at each corpus's average document length: standard list price for every API model (no flex, batch or caching discounts); GPU rows as A100 rental for the measured time.</li>
           <li><b>Stability</b>: how often a model changes its answer on the same document across repeated identical runs (lower is more stable).</li>
         </ul>

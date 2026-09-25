@@ -96,9 +96,14 @@ function opsValues(r: Rec): { ms: number | null; usd: number | null } {
 
 /** The export's `latency_source` as a short phrase for the hover; null for a source the site does not describe. */
 function latencySource(s: string): string | null {
-  if (s === "per-call latency from the main run") return "per-call, main run";
+  if (s === "per-call latency from the main run") return "per-request timing from the benchmark run, 8–12 requests in flight";
   if (/same forward pass/.test(s)) return "same forward pass as the zero-shot Laya recipe";
-  if (/concurrency-1/.test(s)) return "dedicated single-request run";
+  const m = /^dedicated concurrency-1 sample of (\d+) documents(.*)$/.exec(s);
+  if (m) {
+    const tier = /on the standard tier/.test(m[2]) ? " · OpenAI standard tier (the run used flex, which was slower)" : /on the flex tier/.test(m[2]) ? " · OpenAI flex tier, as run (standard was no faster)" : "";
+    return `dedicated single-request sample of ${fmtInt(Number(m[1]))} documents${tier}`;
+  }
+  if (/concurrency-1/.test(s)) return "dedicated single-request sample";
   return null;
 }
 
@@ -181,8 +186,9 @@ function useRows(v: View) {
 
 /** The Speed and Cost hints: machine time and price only. */
 export const LATENCY_ITEMS: HintItem[] = [
-  { k: "Measures", v: <><b>Median round-trip to score one document</b>, one request at a time.</> },
-  { k: "Hosted", v: <>Includes network. <b>Rate limits and parallel throughput not measured.</b></> },
+  { k: "Measures", v: <><b>Median wall-clock per request to score one document</b>: one call in the all-issues arm, the sum over issues in the one-issue arm.</> },
+  { k: "Source", v: <><b>TREC, all issues per call, Jev / Claude / GPT rows</b>: a dedicated single-request sample of 200 emails. Every other cell: per-request timings recorded during the benchmark run, <b>8–12 requests in flight</b>. Each row's details say which.</> },
+  { k: "Hosted", v: <>Includes network. <b>Rate limits and parallel throughput not measured.</b> GPT-5.6 Luna is timed on OpenAI's standard tier (2.2× faster than the flex tier the run used, same sample); Terra on flex (standard was no faster). Cost is at list either way.</> },
   { k: "Local", v: <>Laya and Gemma on <b>one A100</b>; no network.</> },
 ];
 /** What a document is on each corpus, for the Cost hint's basis line. */

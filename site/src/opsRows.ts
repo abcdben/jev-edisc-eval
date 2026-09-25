@@ -93,9 +93,12 @@ export function costCaption(chart: CostChart, unit: CostUnit, scale: CostScale, 
   return [`${basis}, ${cu.short}${chart === "dots" || scale === "log" ? ", log axis" : ""}.`];
 }
 
+/** Where the Speed figures come from, for the caption's second line. */
+export const SPEED_SOURCE = "TREC all-issues Jev, Claude and GPT rows: a dedicated single-request sample of 200 emails (GPT-5.6 Luna on OpenAI's standard tier, Terra on flex); every other cell: per-request timings recorded during the benchmark run, 8–12 requests in flight.";
+
 export function speedCaption(chart: SpeedChart, whiskers = true): string[] {
-  if (chart === "throughput") return ["Sequential documents per hour: 3,600,000 ÷ median wall-clock milliseconds per document, one request at a time. Every service accepts parallel requests, so compare ratios, not absolutes."];
-  return [`${chart === "bars" ? "Bar" : "Dot"}: median latency per document, one request at a time${chart === "dots" ? ", on a log axis" : ""}${whiskers ? "; whisker: 95% bootstrap interval for the median" : ""}.`];
+  if (chart === "throughput") return ["Sequential documents per hour: 3,600,000 ÷ median wall-clock milliseconds per request to score one document. Every service accepts parallel requests, so compare ratios, not absolutes.", SPEED_SOURCE];
+  return [`${chart === "bars" ? "Bar" : "Dot"}: median wall-clock per request to score one document${chart === "dots" ? ", on a log axis" : ""}${whiskers ? "; whisker: 95% bootstrap interval for the median" : ""}.`, SPEED_SOURCE];
 }
 
 export function stabCaption(chart: StabChart, setting: StabSetting, sameRuns: string | null, whiskers = true): string[] {

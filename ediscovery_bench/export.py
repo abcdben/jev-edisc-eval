@@ -10,9 +10,14 @@ Definitions
   CIs           95% Wilson score intervals. Every document in each test set carries a gold label, so
                 recall's interval is over the gold-positive set and precision's over the model's
                 predicted-positive set (no sampling step).
-  speed         median per-document wall time of the model's own calls, single stream: one call per
-                document in the multi arm, the sum of the per-issue calls in the single arm. Laya's
-                figure comes from the dedicated concurrency-1 latency runs where they exist.
+  speed         median per-document wall time of the model's own calls: one call per document in the
+                multi arm, the sum of the per-issue calls in the single arm. Where a dedicated
+                concurrency-1 sample exists (`<model>__latency.jsonl`: TREC multi arm for Jev and the
+                Anthropic and OpenAI LLMs, the same 200 emails, results/trec_lat/sample_ids.json; Laya on
+                three corpora) it is the source; otherwise the
+                per-call timings recorded during the benchmark run, which had 8 (LLMs) or 12 (Jev)
+                requests in flight. OpenAI ran on the flex tier; a standard-tier sample replaces it
+                for Speed when materially faster (_pick_latency_sample). `latency_source` says which.
   cost          sum of the model's per-decision cost over the documents, divided by documents, at each
                 vendor's STANDARD LIST PRICE for the tokens (`list_cost_usd`): no flex, batch or prompt-
                 caching discount, so every API model is priced the same way. What the run actually paid
@@ -207,22 +212,12 @@ def _ops(preds, arm: str, latency_preds=None, latency_note: str | None = None, l
     n_docs = len(by_doc)
     paid = sum(p.cost_usd for p in calls); lcost = sum(p.list_cost_usd for p in calls)
     tin = sum(p.input_tokens for p in calls); tout = sum(p.output_tokens for p in calls)
-    src = latency_preds if latency_preds else calls
-    lb: dict[str, list] = defaultdict(list)
-    for p in src:
-        if p.error is None and p.latency_ms is not None:
-            lb[p.doc_id].append(p.latency_ms)
-    per_doc = [max(v) if arm == "multi" else sum(v) for v in lb.values()]
+    per_doc = _doc_latencies(latency_preds if latency_preds else calls, arm)
     if latency_scale is None:
         per_doc = []  # no trustworthy per-call latency for this cell
-    p50 = float(np.percentile(per_doc, 50)) * (latency_scale or 1) if per_doc else None
-    p95 = float(np.percentile(per_doc, 95)) * (latency_scale or 1) if per_doc else None
-    # 95% bootstrap interval for the median (documents resampled, 1000 draws, fixed seed): uncertainty in the typical latency, not its spread.
-    p50_ci = None
-    if len(per_doc) >= 2:
-        arr = np.asarray(per_doc); rng = np.random.default_rng(7)
-        meds = np.median(arr[rng.integers(0, len(arr), (1000, len(arr)))], axis=1) * (latency_scale or 1)
-        p50_ci = [round(float(np.percentile(meds, 2.5)), 2), round(float(np.percentile(meds, 97.5)), 2)]
+    p50, p95, p50_ci = _latency_summary(per_doc, latency_scale or 1)
+    if latency_note is None:
+        latency_note = f"dedicated concurrency-1 sample of {len(per_doc)} documents" if latency_preds else "per-call latency from the main run"
     return {
         "n_docs": n_docs, "n_decisions": len(ok), "errors": sum(1 for p in preds if p.error),
         "cost_basis": "list",
@@ -232,10 +227,58 @@ def _ops(preds, arm: str, latency_preds=None, latency_note: str | None = None, l
         "tokens_in_per_doc": tin / n_docs if n_docs else None, "tokens_out_per_doc": tout / n_docs if n_docs else None,
         "doc_latency_p50_ms": p50, "doc_latency_p95_ms": p95, "doc_latency_p50_ci_ms": p50_ci,
         "hours_per_100k_docs": (p50 * 100_000 / 3.6e6) if p50 else None,
-        "latency_source": latency_note or ("dedicated concurrency-1 run" if latency_preds else "per-call latency from the main run"),
+        "latency_source": latency_note,
         "pricing_modes": sorted({p.pricing_mode for p in ok if p.pricing_mode}),
         "model_resolved": sorted({p.model_resolved for p in ok if p.model_resolved}),
     }
+
+
+def _doc_latencies(preds, arm: str) -> list[float]:
+    """Per-document wall time from per-call latencies: the one call in the multi arm (max over its rows,
+    which all carry the same figure), the sum of the per-issue calls in the single arm."""
+    lb: dict[str, list] = defaultdict(list)
+    for p in preds:
+        if p.error is None and p.latency_ms is not None:
+            lb[p.doc_id].append(p.latency_ms)
+    return [max(v) if arm == "multi" else sum(v) for v in lb.values()]
+
+
+def _latency_summary(per_doc: list[float], scale: float = 1.0) -> tuple[float | None, float | None, list[float] | None]:
+    """(p50, p95, 95% bootstrap interval for the median). The interval resamples documents (1000 draws,
+    fixed seed): uncertainty in the typical latency, not its spread."""
+    if not per_doc:
+        return None, None, None
+    p50 = float(np.percentile(per_doc, 50)) * scale
+    p95 = float(np.percentile(per_doc, 95)) * scale
+    ci = None
+    if len(per_doc) >= 2:
+        arr = np.asarray(per_doc); rng = np.random.default_rng(7)
+        meds = np.median(arr[rng.integers(0, len(arr), (1000, len(arr)))], axis=1) * scale
+        ci = [round(float(np.percentile(meds, 2.5)), 2), round(float(np.percentile(meds, 97.5)), 2)]
+    return p50, p95, ci
+
+
+# OpenAI's benchmark runs used the flex tier (cheaper; OpenAI says possibly slower). Where a standard-tier
+# concurrency-1 sample exists next to the flex one (`<model>__latency_std.jsonl`), Speed is taken from the
+# standard tier when it is materially faster: its median more than this fraction below the flex median, or
+# below the flex median's bootstrap interval. Cost is at list price either way.
+STD_TIER_MATERIAL = 0.10
+
+
+def _pick_latency_sample(flex_preds, std_preds, arm: str) -> tuple[list, str]:
+    """(latency rows to use, latency_source note) for a model with both a flex-tier and a standard-tier
+    concurrency-1 sample on the same documents."""
+    flex_doc = _doc_latencies(flex_preds, arm); std_doc = _doc_latencies(std_preds, arm)
+    f50, _, fci = _latency_summary(flex_doc); s50, _, _ = _latency_summary(std_doc)
+    if f50 is None or s50 is None:
+        return (std_preds if s50 is not None else flex_preds), f"dedicated concurrency-1 sample of {len(std_doc) if s50 is not None else len(flex_doc)} documents"
+    faster = s50 < (1 - STD_TIER_MATERIAL) * f50 or (fci is not None and s50 < fci[0])
+    if faster:
+        return std_preds, (f"dedicated concurrency-1 sample of {len(std_doc)} documents on the standard tier "
+                           f"(the benchmark run used the flex tier: p50 {f50:,.0f} ms on the same sample)")
+    how = "not materially faster" if s50 < f50 else "no faster"
+    return flex_preds, (f"dedicated concurrency-1 sample of {len(flex_doc)} documents on the flex tier the benchmark run used "
+                        f"(standard tier: p50 {s50:,.0f} ms on the same sample, {how})")
 
 
 def _tar_block(side: dict) -> dict:
@@ -350,10 +393,18 @@ def export(out: Path = Path("results"), dest: Path = Path("results/findings.json
                     calls = preds
                 if not primary and not mk.startswith("tar@") and len({p.doc_id for p in preds}) < 0.98 * len(docs):
                     continue  # stalled single-arm cells: partial files are not comparable (TAR/CAL pools are subsets by design)
+                # Dedicated concurrency-1 latency sample for this cell: `<model>__latency.jsonl` in the same
+                # directory (TREC multi arm: Jev and the Anthropic/OpenAI LLMs on a fixed 200-email sample,
+                # results/trec_lat/sample_ids.json, run with `bench run ... -c 1 --tag latency`; Laya on three
+                # corpora). `<model>__latency_std.jsonl` is the same sample on OpenAI's standard tier
+                # (`--no-flex --tag latency_std`), see _pick_latency_sample.
                 lat = files.get((mk, "latency"))
                 lat_preds = _rebind(load_predictions(lat), docs_by_id, ts) if lat else None
                 lat_note = None
                 lat_scale: float | None = 1.0
+                std = files.get((mk, "latency_std"))
+                if lat_preds and std:
+                    lat_preds, lat_note = _pick_latency_sample(lat_preds, _rebind(load_predictions(std), docs_by_id, ts), arm)
                 if lat_preds is None and mk.startswith("laya"):
                     # Not every Laya cell has a dedicated concurrency-1 sample (TREC has none; the
                     # fine-tuned checkpoints and most ablation variants have none). Borrow the closest
