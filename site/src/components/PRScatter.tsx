@@ -109,6 +109,18 @@ export function Mark({ shape = "dot", cx = 0, cy = 0, r, color, fixed = false, j
  * display order, wrapped when the panel is too narrow, with the plot area moved down under it (legendLayout, Legend).
  */
 export type LabelsMode = "beside" | "legend";
+/**
+ * A legend group (the studio's Key → by maker mode, `groups` on PRScatter and StudioScatter): the legend lists one swatch and name per group the
+ * drawn items fall into (in order of first appearance; makers.ts), instead of one per item, and the items keep their beside labels, so the
+ * names read on the plot and the key reads at the top. Without `groups`, Labels → legend lists the items and draws no point labels.
+ */
+export type LegendGroup = { id: string; name: string; color: string };
+/** The groups among `ids`, each with the first item that fell into it (`sample`, for the swatch: its logo where drawn, else the mark). */
+export function legendGroups(ids: string[], groupOf: (id: string) => LegendGroup): (LegendGroup & { sample: string })[] {
+  const out: (LegendGroup & { sample: string })[] = [];
+  for (const id of ids) { const g = groupOf(id); if (!out.some((o) => o.id === g.id)) out.push({ ...g, sample: id }); }
+  return out;
+}
 /** The legend text's class (styles.css has no rule for it; the presets' and high contrast's `svg text` rules reach it) and the point labels' (`.nm`), which the measurer's probes carry too. */
 export const LEGEND_CLS = "lg", NAME_CLS = "nm";
 /** Legend metrics at text scale `s`: a 10 px swatch, 6 px to the name, 18 px between items, 16 px rows; names at their measured width (measure.tsx) in the legend's 11 px × s face. */
@@ -210,13 +222,14 @@ const PULSE_CYCLES = 2, PULSE_CYCLE_MS = 650;
 /** `textScale` (the studio's Text control; 1 on the site) multiplies every font size, the label placement's box heights and offsets (its widths are measured, measure.tsx) and the margins that hold tick labels. Axis stroke width, dot radius and the vendor-glyph size read the --sw-mult / --r-add / --mark-scale CSS variables (styles.css, the studio's high-contrast block; unset on the site). */
 /** `leaders` (the studio's Leaders control; off on the site) draws a hairline from each displaced label back to its mark (leaderFor), under every mark and label. */
 /** `labels` (the studio's Labels control; `beside` on the site): `legend` drops the point labels (and leaders) for a legend row at the top (Legend), the plot moved down under it. */
+/** `groups` (the studio's Key → by maker; none on the site): the legend lists the groups the items fall into (LegendGroup) and the point labels stay, whichever Labels mode is on. */
 /** `logos` (logos.tsx LogosMode, or the boolean it was): which items get their vendor glyph as the mark (`all`, the Jev rows alone, or none, when every item gets `mark`). */
 /** `mark` (the studio's Marks control; `dot` on the site) is the point shape where an item draws no logo; `markSize` is the studio's Mark size multiplier (the --mark-user the panel sets) and `jevMarkSize` the Jev rows' own (--mark-jev; `markSize` when unset): the label placement needs them as numbers to keep labels and leaders clear of a larger mark. */
 /** `boxes` (the studio's Fill control; `filled` on the site) is how the interval boxes (or ellipses) are drawn (hatch.tsx FillMode). */
 /** `interval` (the studio's Interval control; `box` on the site) is the shape of the interval mark (IntervalMode above). */
 /** `bg` (the studio's Background control; the site's dot matrix, `dots`) is the pattern behind the plot area (plotBg.tsx). */
 export type PRDomain = { x: [number, number]; y: [number, number] };
-export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos: logosIn, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, boxes: boxMode = "filled", interval = "box", bg = "dots" }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean | LogosMode; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; boxes?: FillMode; interval?: IntervalMode; bg?: PlotBg }) {
+export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos: logosIn, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, boxes: boxMode = "filled", interval = "box", bg = "dots", groups }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean | LogosMode; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; boxes?: FillMode; interval?: IntervalMode; bg?: PlotBg; groups?: (id: string) => LegendGroup }) {
   const { tip, show, hide, hostRef } = useTip();
   const logos = logosMode(logosIn, false);
   const hasLogo = (p: PRItem) => logoShown(logos, p.id) && !!logoFor(p.id);
@@ -264,9 +277,13 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
   const xt = niceTicks(dom.x[0], dom.x[1]), yt = niceTicks(dom.y[0], dom.y[1]);
   const tickLabel = (t: number) => `${Math.round(t * 100)}%`;
   const { PL, PB, titleX } = axisMargins(yt.map(tickLabel), s);
-  // legend mode: the legend rows sit at the top (from LEGEND_Y), and the plot area starts LEGEND_GAP below them instead of at PT
+  // legend mode: the legend rows sit at the top (from LEGEND_Y), and the plot area starts LEGEND_GAP below them instead of at PT; the rows list the
+  // items, or the groups they fall into (`groups`), in which case the points keep their labels (pointLabels) as in beside mode
   const LEGEND_Y = 4;
-  const legendH = labelsMode === "legend" ? legendLayout(pts.map((p) => p.name + (p.subset ? " *" : "")), s, PL, W - PR, measure).height : 0;
+  const grouped = labelsMode === "legend" && groups ? legendGroups(pts.map((p) => p.id), groups) : null;
+  const legendItems = grouped ?? pts.map((p) => ({ id: p.id, name: p.name + (p.subset ? " *" : ""), color: p.color, sample: p.id }));
+  const pointLabels = labelsMode === "beside" || !!grouped;
+  const legendH = labelsMode === "legend" ? legendLayout(legendItems.map((i) => i.name), s, PL, W - PR, measure).height : 0;
   const top = labelsMode === "legend" ? Math.max(PT, LEGEND_Y + legendH + LEGEND_GAP * s) : PT;
   const X = (v: number) => PL + ((v - dom.x[0]) / (dom.x[1] - dom.x[0] || 1)) * (W - PL - PR);
   const Y = (v: number) => top + (1 - (v - dom.y[0]) / (dom.y[1] - dom.y[0] || 1)) * (H - top - PB);
@@ -345,7 +362,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
         </g>
         <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={TITLE_FS * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
         <text x={titleX} y={(top + H - PB) / 2} fontSize={TITLE_FS * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(top + H - PB) / 2})`}>{yLabel}</text>
-        {labelsMode === "legend" && <Legend items={pts.map((p) => ({ id: p.id, name: p.name + (p.subset ? " *" : ""), color: p.color }))} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={legendSwatch(logos, mark)} measure={measure} />}
+        {labelsMode === "legend" && <Legend items={legendItems} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={(id) => legendSwatch(logos, mark)(legendItems.find((i) => i.id === id)?.sample ?? id)} measure={measure} />}
         {probes}
 
         {/* CI marks (IntervalMode) first so dots sit on top; every box or ellipse is drawn the same way (FillMode), the highlighted one a little deeper */}
@@ -392,7 +409,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
           );
         })}
         {/* leader lines (studio): drawn after every box and before every mark and label, so none crosses a mark or a label */}
-        {leaders && labelsMode === "beside" && drawn.map((p) => {
+        {leaders && pointLabels && drawn.map((p) => {
           const li = pts.indexOf(p), l0 = li >= 0 ? labels[li] : null;
           if (!l0) return null;
           const tx = X(p.recall[0]), ty = Y(p.precision[0]);
@@ -409,7 +426,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
           // a highlighted mark whose label found no room gets one anyway, at the first candidate position
           const tx = X(p.recall[0]), ty = Y(p.precision[0]), x = g(p.id, "x"), y = g(p.id, "y");
           const li = pts.indexOf(p), l0 = li >= 0 ? labels[li] : null;
-          const l = labelsMode === "legend" ? null : l0 ? { x: l0.x - tx, y: l0.y - ty, text: l0.text } : hl === p.id ? { x: O(p), y: -6.5 * s, text: p.name + (p.subset ? " *" : "") } : null;
+          const l = !pointLabels ? null : l0 ? { x: l0.x - tx, y: l0.y - ty, text: l0.text } : hl === p.id ? { x: O(p), y: -6.5 * s, text: p.name + (p.subset ? " *" : "") } : null;
           const hitR = Math.max(9, markR(p) + 3);
           return (
             <g key={`d${p.id}`} className="fd" style={fadeStyle(stateOf[p.id] ?? "exit")}>{/* fade in / out (ui.tsx usePresence) */}

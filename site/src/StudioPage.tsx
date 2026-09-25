@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DATA, DEFAULT_CORPUS, DEFAULT_ON, PRIMARY_BY_KEY, corpusKey, fmtInt, issueLabel, siteCorpus, starOf, CORPORA } from "./data";
 import { ModelPicker, useCompareItems, type Chart, type View } from "./App";
 import { INTERVAL_MODES, MARK_SHAPES, PRScatter, intervalHasArea, isIntervalMode, type IntervalMode, type LabelsMode, type MarkShape, type PRDomain } from "./components/PRScatter";
@@ -12,12 +12,13 @@ import type { PlotBg } from "./components/plotBg";
 import { copyPng, downloadBlob, renderPanelPng, slug, type ExportBackground } from "./exportPng";
 import { PALETTES, isPaletteId, toHex, toVars, varOf, type PaletteId } from "./palettes";
 import type { LogosMode } from "./logos";
+import { MAKERS, makerColor, makerName, makerOf } from "./makers";
 
 /**
  * Screenshot studio (studio.html → studio.tsx → this page; unlinked from the site): one Compare models chart alone, on a plain panel whose size
  * you set, with every control above the plot and none on it. The top bar holds what is plotted (plot, corpus, models, issue) and the PNG export;
  * the inspector under it (components/Inspector.tsx) groups the rest into disclosure sections: Chart (the plot's own controls: view, axes, marks,
- * the interval mark's shape, fill of the boxes and bars, labels), Canvas (size, title, frame, legend, logos, background pattern), Style (preset, colours, text, contrast), Scheme (the custom scheme
+ * the interval mark's shape, fill of the boxes and bars, labels, the key: by model or by maker), Canvas (size, title, frame, legend, logos, background pattern), Style (preset, colours, text, contrast), Scheme (the custom scheme
  * editor, with Style → Custom) and Export (scale, backdrop). Plots: recall/precision (the site's map and ranked views), Cost, Speed and Stability
  * (components/StudioCharts.tsx). Drag the panel's bottom-right corner or type a size; pick a preset for LinkedIn's usual aspect ratios. Nothing pulses and nothing opens on click.
  */
@@ -153,6 +154,15 @@ type ColorMode = "style" | PaletteId | "custom";
 const isColorMode = (s: string | null): s is ColorMode => s === "style" || s === "custom" || isPaletteId(s);
 const readCustom = (): Record<string, string> => { try { const o = JSON.parse(localStorage.getItem("studio-colors-custom") || "{}"); return o && typeof o === "object" ? o : {}; } catch { return {}; } };
 
+/**
+ * Key (Chart → Key; makers.ts): `model` is the site's own, every roster model in its own colour and, with Labels → legend, one legend entry per
+ * model; `maker` colours every item by who makes it (TypeSafe, ConvAI, Anthropic, OpenAI, Google), through that maker's model colour property, so
+ * the Style preset, palette or custom swatch still decides the hue; the legend then lists the makers and the points keep their name labels
+ * (shortened where the roster gives a `shortInMaker`). Applied once, to the items and rows the page hands its charts (keyed), so every plot follows.
+ */
+type KeyMode = "model" | "maker";
+const isKeyMode = (s: string | null): s is KeyMode => s === "model" || s === "maker";
+
 /** PNG export scale: device pixels per CSS pixel of the panel (a 1200 × 675 panel at 2× is a 2400 × 1350 PNG). */
 type ExportScale = "1" | "2" | "3";
 const isExportScale = (s: string | null): s is ExportScale => s === "1" || s === "2" || s === "3";
@@ -221,6 +231,16 @@ export default function StudioPage() {
   // Labels (PRScatter.tsx LabelsMode): names beside the marks, or a legend row at the top of the panel and no point labels.
   const [labelsMode, setLabelsMode] = useState<LabelsMode>(() => (localStorage.getItem("studio-labels") === "legend" ? "legend" : "beside"));
   useEffect(() => { localStorage.setItem("studio-labels", labelsMode); }, [labelsMode]);
+  // Key (KeyMode): `studio-key`; `model` is what the studio always drew
+  const [key, setKey] = useState<KeyMode>(() => { const s = localStorage.getItem("studio-key"); return isKeyMode(s) ? s : "model"; });
+  useEffect(() => { localStorage.setItem("studio-key", key); }, [key]);
+  const byMaker = key === "maker";
+  // in by-maker mode every item or row the charts get takes its maker's colour and its in-maker name; in by-model mode it is returned as it came
+  const keyed = <T extends { id: string; name: string; color: string }>(x: T): T => (byMaker ? { ...x, color: makerColor(x.id, x.color), name: makerName(x.id, x.name) } : x);
+  const keyedItems = useMemo(() => items.map(keyed), [items, byMaker]); // eslint-disable-line react-hooks/exhaustive-deps
+  // the legend groups (PRScatter.tsx LegendGroup) the scatters list in by-maker mode with Labels → legend; the point labels stay on
+  const groups = byMaker ? (id: string) => { const m = makerOf(id); return { id: m.id, name: m.label, color: makerColor(id, PRIMARY_BY_KEY[id]?.color ?? "var(--ink-3)") }; } : undefined;
+  const pointLabels = labelsMode === "beside" || byMaker;
   // Marks: the point shape when logos are off (the glyph stands in for it otherwise), and the size of whichever is drawn.
   const [mark, setMark] = useState<MarkShape>(() => { const s = localStorage.getItem("studio-mark"); return isMarkShape(s) ? s : "dot"; });
   useEffect(() => { localStorage.setItem("studio-mark", mark); }, [mark]);
@@ -417,6 +437,7 @@ export default function StudioPage() {
   // ---- rows for the studio's own charts, from the selected roster records (opsRows.ts: colours and short names from the roster, so Style presets apply) ----
   const cu = COST_UNIT[costUnit];
   const stab = stabRows(sel, v.arm, stabChart, stabSetting, hideUnmeasured);
+  const stabRowsKeyed = stab.rows.map(keyed);
 
   const emptyText = "Select at least one model.";
   // What the panel actually draws for the 95% interval, read off its computed variables after each style-affecting change (preset, Custom sliders,
@@ -466,7 +487,7 @@ export default function StudioPage() {
   const exportName = (el: HTMLElement) => {
     const chartId = plot === "pr" ? chart : plot === "cost" ? costChart : plot === "speed" ? speedChart : stabChart;
     const styleId = style === "custom" && schemeName.trim() ? `custom-${schemeName.trim()}` : style;
-    return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, corpus, styleId, colorMode === "style" ? "" : colorMode].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
+    return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, corpus, styleId, colorMode === "style" ? "" : colorMode, byMaker ? "by-maker" : ""].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
   };
   const exportSize = `${w * Number(exScale)} × ${fills ? h * Number(exScale) : "auto"} px`;
 
@@ -480,7 +501,7 @@ export default function StudioPage() {
     markText,
     // the interval mark: "filled boxes" / "hatched ellipses" in the area modes (the Fill folded in), the mode's own name otherwise; the bar charts name their Fill alone
     plot === "pr" && (showFill ? `${FILL_MODES.find((m) => m.id === fillMode)?.label} ${interval === "ellipse" ? "ellipses" : "boxes"}` : INTERVAL_MODES.find((m) => m.id === interval)?.label),
-    hasBars && `${FILL_MODES.find((m) => m.id === fillMode)?.label} bars`, fills && `labels ${labelsMode}`, fills && labelsMode === "beside" && leaders && "leaders",
+    hasBars && `${FILL_MODES.find((m) => m.id === fillMode)?.label} bars`, fills && `labels ${labelsMode}`, fills && pointLabels && leaders && "leaders", byMaker && "key by maker",
   );
   const canvasSummary = summarize(`${w} × ${fills ? h : "auto"} px`, title.trim() && `“${title.trim()}”`, frame ? "framed" : "plain", legend ? "legend" : "no legend", LOGOS_OPTIONS.find((o) => o.id === logos)?.label, BG_SUMMARY[bg]);
   const styleSummary = summarize(
@@ -634,11 +655,22 @@ export default function StudioPage() {
               <Seg value={labelsMode} onChange={setLabelsMode} options={[{ id: "beside", label: "beside", title: "Each model's name next to its mark" }, { id: "legend", label: "legend", title: "A legend row at the top of the panel (square swatches and names); no names on the plot" }]} />
             </Control>
           )}
-          {fills && labelsMode === "beside" && (
+          {fills && pointLabels && (
             <Control label="Leaders">
               <Seg value={leaders ? "on" : "off"} onChange={(x) => setLeaders(x === "on")} options={[{ id: "off", label: "off" }, { id: "on", label: "on", title: "A hairline in the model's colour from a label the layout pushed away from its mark back to the mark; labels beside their mark get none" }]} />
             </Control>
           )}
+          {/* the key (KeyMode): every plot recolours by maker; the scatters' legend (Labels → legend) lists the makers and keeps the point names */}
+          <Control label="Key">
+            <Seg
+              value={key} onChange={setKey}
+              options={[
+                { id: "model", label: "by model", title: "Every model in its own colour; a legend (Labels → legend) lists the models" },
+                { id: "maker", label: "by maker", title: `One colour per maker (${MAKERS.filter((m) => m.colorVar).map((m) => m.label).join(", ")}), taken from the style's colour for that maker's model (Jev, Laya, Sonnet, Terra, Flash); a legend lists the makers and every point keeps its own name label` },
+              ]}
+            />
+            {byMaker && fills && labelsMode === "legend" && <span className="studio-hint small">makers in the legend, model names on the points</span>}
+          </Control>
         </Section>
 
         <Section id="canvas" title="Canvas" open={!!sections.open.canvas} onToggle={() => sections.toggle("canvas")} summary={canvasSummary}>
@@ -698,6 +730,7 @@ export default function StudioPage() {
                   })}
                 </span>
                 <button type="button" className="studio-btn small" onClick={resetCustom} title="Drop the swatches and go back to the style's own colours">reset</button>
+                {byMaker && <span className="studio-hint small">Key is by maker: each maker takes one model's swatch (TypeSafe → Jev · Noul, ConvAI → Laya, Anthropic → Sonnet 5, OpenAI → GPT-5.6 Terra, Google → Gemini 3.8 Flash)</span>}
               </>
             )}
           </Control>
@@ -795,28 +828,28 @@ export default function StudioPage() {
             {title.trim() ? <div className="studio-title">{title.trim()}</div> : null}
             {plot === "pr" && chart === "map" && (
               <div className="studio-canvas">
-                <PRScatter items={items} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} boxes={fillMode} interval={interval} bg={plotBg("dots")} />
+                <PRScatter items={keyedItems} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} boxes={fillMode} interval={interval} bg={plotBg("dots")} groups={groups} />
               </div>
             )}
-            {plot === "pr" && chart === "ranked" && <PRRail items={items} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} mark={mark} bg={plotBg("dots")} interval={interval} />}
+            {plot === "pr" && chart === "ranked" && <PRRail items={keyedItems} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} mark={mark} bg={plotBg("dots")} interval={interval} />}
             {plot === "cost" && costChart === "scatter" && (
               <div className="studio-canvas">
-                <StudioScatter pts={costPts(sel, v, costUnit)} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} bg={plotBg("none")} />
+                <StudioScatter pts={costPts(sel, v, costUnit).map(keyed)} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} bg={plotBg("none")} groups={groups} />
               </div>
             )}
             {plot === "cost" && costChart !== "scatter" && (
-              <StudioBars rows={costRows(sel, costUnit)} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={costAxis(costChart, costUnit, costScale)} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} />
+              <StudioBars rows={costRows(sel, costUnit).map(keyed)} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={costAxis(costChart, costUnit, costScale)} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} />
             )}
             {plot === "speed" && (
               <StudioBars
-                rows={speedRows(sel, speedChart, speedUnit)} kind={speedChart === "dots" ? "dot" : "bar"} scale={speedChart === "dots" ? "log" : "linear"} sort={speedChart === "throughput" ? "desc" : "asc"}
+                rows={speedRows(sel, speedChart, speedUnit).map(keyed)} kind={speedChart === "dots" ? "dot" : "bar"} scale={speedChart === "dots" ? "log" : "linear"} sort={speedChart === "throughput" ? "desc" : "asc"}
                 axis={speedAxis(speedChart)}
                 fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode}
               />
             )}
             {plot === "stability" && (
               <StudioBars
-                rows={stab.rows} kind={stabChart === "dots" ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? stab.agreeDomain : undefined}
+                rows={stabRowsKeyed} kind={stabChart === "dots" ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? stab.agreeDomain : undefined}
                 axis={stabAxis(stabChart, stabSetting)}
                 fmtTick={fmtPctTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode}
               />

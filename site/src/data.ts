@@ -84,8 +84,9 @@ export const isHidden = (key: string): boolean => HIDDEN_MODELS.includes(key) ||
 export const modelKind = (key: string): string | undefined => DATA.models[key]?.kind ?? DATA.records.find((r) => r.model === key)?.kind;
 
 /** Headline roster, in display order, with a stable colour each. `kind` overrides the record's kind for grouping on the Compare page. HIDDEN_MODELS are filtered out below.
- * Compare models lists a curated set of Jev configurations. The three question forms (Noul, Choice, Score) start checked; the others are off. Flat-Text State and No Criteria stay on the Configurations page. */
-const ALL_PRIMARY: { key: string; color: string; short: string; note: string; kind?: Kind }[] = [
+ * Compare models lists a curated set of Jev configurations. The three question forms (Noul, Choice, Score) start checked; the others are off. Flat-Text State and No Criteria stay on the Configurations page.
+ * `shortInMaker` (the studio's Key → by maker mode, makers.ts; the site never reads it) is the name with the vendor prefix dropped, where `short` carries one that a maker legend makes redundant. */
+const ALL_PRIMARY: { key: string; color: string; short: string; shortInMaker?: string; note: string; kind?: Kind }[] = [
   { key: "jev@base", color: "var(--c-jev)", short: "Jev · Noul", note: "TypeSafe Jev 1.13, Noul: one yes/no Noul per issue, prose criteria, RFP phrasing, matter context as a structured object. On by default." },
   { key: "jev@choice", color: "var(--v3)", short: "Jev · Choice", note: "TypeSafe Jev 1.13, Choice: the same instruction and criteria, asked as a Choice between the two labels rather than a yes/no Noul. On by default." },
   { key: "jev@score", color: "var(--v5)", short: "Jev · Score", note: "TypeSafe Jev 1.13, Score: the issue is asked as a five-point Score from 'clearly not responsive' to 'clearly responsive'; the scored probability is the level divided by four. On by default." },
@@ -95,10 +96,10 @@ const ALL_PRIMARY: { key: string; color: string; short: string; note: string; ki
   { key: "laya-ft", color: "var(--c-laya-ft)", short: "Laya", kind: "system1", note: "ConvAI Laya, fine-tuned: the one supervised row in this zero-shot comparison. Fine-tuned (RLCD) on a 30% document-level dev split of the same corpus and scored on the held-out 70%; every other row is zero-shot. The labeled data it needed is not counted in the time and cost panels. Zero-shot Laya configurations are on the Configurations page." },
   { key: "claude-haiku-4.5", color: "var(--c-haiku)", short: "Haiku 4.5", note: "Anthropic Claude Haiku 4.5, structured JSON output, default effort." },
   { key: "claude-sonnet-5", color: "var(--c-sonnet)", short: "Sonnet 5", note: "Anthropic Claude Sonnet 5, structured JSON output, default effort, prompt caching on the all-issues arm." },
-  { key: "gpt-5.6-luna", color: "var(--c-luna)", short: "GPT-5.6 Luna", note: "OpenAI GPT-5.6 Luna, structured output, minimal reasoning, flex pricing (50% off list)." },
-  { key: "gpt-5.6-terra", color: "var(--c-terra)", short: "GPT-5.6 Terra", note: "OpenAI GPT-5.6 Terra, structured output, minimal reasoning, flex pricing (50% off list)." },
-  { key: "gemini-3.5-flash-lite", color: "var(--c-flashlite)", short: "Gemini 3.5 Flash-Lite", note: "Google Gemini 3.5 Flash-Lite, structured output." },
-  { key: "gemini-3.8-flash", color: "var(--c-flash)", short: "Gemini 3.8 Flash", note: "Google Gemini 3.8 Flash, structured output." },
+  { key: "gpt-5.6-luna", color: "var(--c-luna)", short: "GPT-5.6 Luna", shortInMaker: "Luna", note: "OpenAI GPT-5.6 Luna, structured output, minimal reasoning, flex pricing (50% off list)." },
+  { key: "gpt-5.6-terra", color: "var(--c-terra)", short: "GPT-5.6 Terra", shortInMaker: "Terra", note: "OpenAI GPT-5.6 Terra, structured output, minimal reasoning, flex pricing (50% off list)." },
+  { key: "gemini-3.5-flash-lite", color: "var(--c-flashlite)", short: "Gemini 3.5 Flash-Lite", shortInMaker: "3.5 Flash-Lite", note: "Google Gemini 3.5 Flash-Lite, structured output." },
+  { key: "gemini-3.8-flash", color: "var(--c-flash)", short: "Gemini 3.8 Flash", shortInMaker: "3.8 Flash", note: "Google Gemini 3.8 Flash, structured output." },
   { key: "gemma3-12b", color: "var(--c-gemma)", short: "Gemma 3 12B", kind: "llm", note: "Local, open-weight. Google Gemma 3 12B run via Ollama on a rented A100. Scored on a 400-600 document stratified subsample; latency measured with 4 concurrent requests." },
 ];
 export const PRIMARY = ALL_PRIMARY.filter((p) => !isHidden(p.key));

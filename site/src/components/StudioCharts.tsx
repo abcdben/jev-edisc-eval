@@ -1,7 +1,7 @@
 import { useId, useMemo, useRef, type CSSProperties } from "react";
 import type { CI } from "../data";
 import { LogoGlyph, isJev, logoFor, logoShown, logosMode, type LogosMode } from "../logos";
-import { LEADER_STYLE, LEGEND_CLS, LEGEND_GAP, Legend, Mark, NAME_CLS, axisMargins, glyphScale, leaderFor, legendLayout, legendSwatch, type LabelsMode, type MarkShape } from "./PRScatter";
+import { LEADER_STYLE, LEGEND_CLS, LEGEND_GAP, Legend, Mark, NAME_CLS, axisMargins, glyphScale, leaderFor, legendGroups, legendLayout, legendSwatch, type LabelsMode, type LegendGroup, type MarkShape } from "./PRScatter";
 import { useTextMeasure } from "./measure";
 import { DECIDER_TEXT, selectable, useSize, useWidth } from "./ui";
 import { PlotBgPattern, type PlotBg } from "./plotBg";
@@ -207,8 +207,8 @@ export type StudioScatterPt = { id: string; name: string; color: string; x: numb
 
 const PR = 24, PT = 18;
 
-/** Cost (log x) against recall (y, 95% whisker). Sized to the host's box like PRScatter's `fill` mode (host must be positioned). `logos`, `leaders`, `labels`, `mark`, `markSize` and `jevMarkSize` as on PRScatter: which items get their vendor glyph as the mark; a hairline from a displaced label to its mark; a legend row at the top instead of point labels; the point shape, and the Mark size and Jev mark size multipliers the label placement allows for. `onSelect` (AppB.tsx) makes each mark a button opening the details modal for its id; the studio passes none. */
-export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos: logosIn, emptyText = "Select at least one model.", textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, onSelect, bg = "none" }: { pts: StudioScatterPt[]; xLabel: string; yLabel?: string; fmtX: (v: number) => string; logos?: boolean | LogosMode; emptyText?: string; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; onSelect?: (id: string) => void; bg?: PlotBg }) {
+/** Cost (log x) against recall (y, 95% whisker). Sized to the host's box like PRScatter's `fill` mode (host must be positioned). `logos`, `leaders`, `labels`, `mark`, `markSize`, `jevMarkSize` and `groups` as on PRScatter: which items get their vendor glyph as the mark; a hairline from a displaced label to its mark; a legend row at the top instead of point labels; the point shape, and the Mark size and Jev mark size multipliers the label placement allows for; the groups the legend lists (the points then keep their labels). `onSelect` (AppB.tsx) makes each mark a button opening the details modal for its id; the studio passes none. */
+export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos: logosIn, emptyText = "Select at least one model.", textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, onSelect, bg = "none", groups }: { pts: StudioScatterPt[]; xLabel: string; yLabel?: string; fmtX: (v: number) => string; logos?: boolean | LogosMode; emptyText?: string; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; onSelect?: (id: string) => void; bg?: PlotBg; groups?: (id: string) => LegendGroup }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const logos = logosMode(logosIn, true);
   const hasLogo = (p: StudioScatterPt) => logoShown(logos, p.id) && !!logoFor(p.id);
@@ -227,7 +227,10 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos: log
   const yTickLabel = (t: number) => `${+(t * 100).toFixed(1)}%`;
   // the left and bottom margins hold the y tick labels and the axis titles, sized from them and the text scale (PRScatter.tsx axisMargins)
   const { PL, PB, titleX } = axisMargins(yt.map(yTickLabel), s);
-  const legendItems = drawn.map((p) => ({ id: p.id, name: `${p.name}${p.subset ? " *" : ""}`, color: p.color }));
+  // the legend lists the items, or the groups they fall into (`groups`; PRScatter.tsx LegendGroup), in which case the points keep their labels
+  const grouped = labelsMode === "legend" && groups ? legendGroups(drawn.map((p) => p.id), groups) : null;
+  const legendItems = grouped ?? drawn.map((p) => ({ id: p.id, name: `${p.name}${p.subset ? " *" : ""}`, color: p.color, sample: p.id }));
+  const pointLabels = labelsMode === "beside" || !!grouped;
   const LEGEND_Y = 4, legendH = labelsMode === "legend" ? legendLayout(legendItems.map((i) => i.name), s, PL, W - PR, measure).height : 0;
   const top = labelsMode === "legend" ? Math.max(PT, LEGEND_Y + legendH + LEGEND_GAP * s) : PT;
   const X = (v: number) => PL + ((Math.log10(v) - Math.log10(xd[0])) / (Math.log10(xd[1]) - Math.log10(xd[0]) || 1)) * (W - PL - PR);
@@ -242,7 +245,7 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos: log
   const dots = drawn.map((p) => ({ x: X(p.x), y: Y(p.y[0]), avoid: 6 + growOf(p) }));
   const clash = (a: { x: number; y: number; w: number; h: number }) => placed.some((b) => a.x < b.x + b.w + 2 && a.x + a.w + 2 > b.x && a.y < b.y + b.h + 1 && a.y + a.h + 1 > b.y) || dots.some((d) => d.x > a.x - d.avoid && d.x < a.x + a.w + d.avoid && d.y > a.y - d.avoid && d.y < a.y + a.h + d.avoid);
   const labels = drawn.map((p, i) => {
-    if (labelsMode === "legend") return null;
+    if (!pointLabels) return null;
     const text = `${p.name}${p.subset ? " *" : ""}`, w = measure(text, 11.5 * s, NAME_CLS) + 4, h = 14 * s, o = O(p), { x, y } = dots[i];
     const cands = [{ x: x + o, y: y - h / 2 }, { x: x - o - w, y: y - h / 2 }, { x: x - w / 2, y: y - 14 * s - h }, { x: x - w / 2, y: y + 14 * s }];
     const c = cands.find((cc) => cc.x >= PL && cc.x + w <= W - 2 && cc.y >= 0 && !clash({ ...cc, w, h }));
@@ -272,10 +275,10 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos: log
         </g>
         <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
         <text x={titleX} y={(top + H - PB) / 2} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(top + H - PB) / 2})`}>{yLabel}</text>
-        {labelsMode === "legend" && <Legend items={legendItems} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={legendSwatch(logos, mark)} measure={measure} />}
+        {labelsMode === "legend" && <Legend items={legendItems} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={(id) => legendSwatch(logos, mark)(legendItems.find((i) => i.id === id)?.sample ?? id)} measure={measure} />}
         {probes}
         {/* leader lines: before every whisker, mark and label, so none crosses them */}
-        {leaders && labelsMode === "beside" && drawn.map((p, i) => {
+        {leaders && pointLabels && drawn.map((p, i) => {
           const l = labels[i];
           if (!l) return null;
           const { x, y } = dots[i];
