@@ -217,7 +217,12 @@ export default function StudioPage() {
     if (Number.isFinite(n)) setAx((p) => ({ ...p, [k]: clamp(n, 0, 100) }));
   };
   const span = (lo: number, hi: number): [number, number] => (hi > lo ? [lo / 100, hi / 100] : [Math.min(lo, hi) / 100, Math.min(lo, hi) / 100 + 0.01]);
-  const domain: PRDomain | undefined = axes === "custom" ? { x: span(ax.xlo, ax.xhi), y: span(ax.ylo, ax.yhi) } : undefined;
+  // Axes orientation (PRScatter.tsx `swap`): recall on x (the site's map) or precision on x with recall up the side; `studio-swap`. The custom bounds
+  // above stay per metric (xlo/xhi are recall, ylo/yhi precision) and are mapped to the plot's axes here.
+  const [swap, setSwap] = useState(() => localStorage.getItem("studio-swap") === "on");
+  useEffect(() => { localStorage.setItem("studio-swap", swap ? "on" : "off"); }, [swap]);
+  const recallSpan = span(ax.xlo, ax.xhi), precisionSpan = span(ax.ylo, ax.yhi);
+  const domain: PRDomain | undefined = axes === "custom" ? (swap ? { x: precisionSpan, y: recallSpan } : { x: recallSpan, y: precisionSpan }) : undefined;
   const range: [number, number] | undefined = axes === "custom" ? span(ax.xlo, ax.xhi) : undefined;
   const zoom = axes === "zoom";
   // Logos (LOGOS_OPTIONS): `studio-logos`; `all` is what the studio always drew.
@@ -464,12 +469,14 @@ export default function StudioPage() {
       if (chart !== "map") return [];
       // the interval mark (Interval control), named only where the panel draws it: an area mode when its fill or outline is visible (marks.boxes), a line mode when --op-whisker is
       const fillWord = fillMode === "filled" ? "Shaded" : fillMode === "hatched" ? "Hatched" : fillMode === "outline" ? "Outlined" : "Hatched, outlined";
+      // the directions follow the Axes orientation: recall is the width / horizontal on the site's map, the height / vertical when swapped
+      const [rDim, pDim] = swap ? ["height", "width"] : ["width", "height"], [rDir, pDir] = swap ? ["vertical", "horizontal"] : ["horizontal", "vertical"];
       const ci =
-        interval === "box" && marks.boxes ? `${fillWord} box: 95% interval on recall (width) and precision (height).`
-        : interval === "ellipse" && marks.boxes ? `${fillWord} ellipse: spans the 95% intervals on recall (width) and precision (height).`
-        : interval === "whiskers" && marks.whiskers ? "Whiskers: 95% interval on recall (horizontal) and precision (vertical)."
+        interval === "box" && marks.boxes ? `${fillWord} box: 95% interval on recall (${rDim}) and precision (${pDim}).`
+        : interval === "ellipse" && marks.boxes ? `${fillWord} ellipse: spans the 95% intervals on recall (${rDim}) and precision (${pDim}).`
+        : interval === "whiskers" && marks.whiskers ? `Whiskers: 95% interval on recall (${rDir}) and precision (${pDir}).`
         : interval === "band" && marks.whiskers ? "Whisker: 95% interval on recall."
-        : interval === "bracket" && marks.whiskers ? "Brackets: corners of the 95% interval on recall (width) and precision (height)."
+        : interval === "bracket" && marks.whiskers ? `Brackets: corners of the 95% interval on recall (${rDim}) and precision (${pDim}).`
         : null;
       return [ci ? `${what}: point estimate. ${ci}` : `${what}: point estimate.`];
     }
@@ -487,14 +494,14 @@ export default function StudioPage() {
   const exportName = (el: HTMLElement) => {
     const chartId = plot === "pr" ? chart : plot === "cost" ? costChart : plot === "speed" ? speedChart : stabChart;
     const styleId = style === "custom" && schemeName.trim() ? `custom-${schemeName.trim()}` : style;
-    return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, corpus, styleId, colorMode === "style" ? "" : colorMode, byMaker ? "by-maker" : ""].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
+    return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, plot === "pr" && chart === "map" && swap ? "precision-x" : "", corpus, styleId, colorMode === "style" ? "" : colorMode, byMaker ? "by-maker" : ""].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
   };
   const exportSize = `${w * Number(exScale)} × ${fills ? h * Number(exScale) : "auto"} px`;
 
   // The sections' one-line summaries while closed (Inspector.tsx summarize): the values a closed section holds, in the order its controls come.
   const markText = `${fills && logos === "all" ? "logos" : MARK_SHAPES.find((m) => m.id === mark)?.label} ${markSize.toUpperCase()}${jevSize === "same" ? "" : ` · Jev ${jevSize === "xxl" ? "2XL" : jevSize.toUpperCase()}`}`;
   const chartSummary = summarize(
-    plot === "pr" && chart, plot === "pr" && (axes === "full" ? "0–100%" : axes === "zoom" ? "fit to data" : `${ax.xlo}–${ax.xhi}%${chart === "map" ? ` × ${ax.ylo}–${ax.yhi}%` : ""}`),
+    plot === "pr" && chart, plot === "pr" && (axes === "full" ? "0–100%" : axes === "zoom" ? "fit to data" : `${ax.xlo}–${ax.xhi}%${chart === "map" ? ` × ${ax.ylo}–${ax.yhi}%` : ""}`), plot === "pr" && chart === "map" && swap && "precision on x",
     plot === "cost" && (costChart === "scatter" ? "cost vs recall" : costChart === "dots" ? "dots · log" : `bars · ${costScale}`), plot === "cost" && COST_UNIT[costUnit].axis,
     plot === "speed" && (speedChart === "throughput" ? "docs per hour" : `${speedChart === "dots" ? "dots · log" : "bars"} · ${speedUnit} per document`),
     plot === "stability" && (stabChart === "agree" ? "agreement · zoomed" : stabChart === "dots" ? "dots" : "disagreement bars"), plot === "stability" && (stabSetting === "t0" ? "t = 0" : "default sampling"), plot === "stability" && hideUnmeasured && "unmeasured hidden",
@@ -560,8 +567,9 @@ export default function StudioPage() {
                 <Seg value={axes} onChange={setAxes} options={[{ id: "full", label: "0–100%" }, { id: "zoom", label: "fit to data" }, { id: "custom", label: "custom" }]} />
                 {axes === "custom" && (
                   <span className="studio-axes">
+                    {/* the bounds are per metric; the bracketed axis letter follows the Axes orientation control */}
                     <span className="studio-size">
-                      <span className="unit">{chart === "map" ? "recall" : "both panels"}</span>
+                      <span className="unit">{chart === "map" ? `recall (${swap ? "y" : "x"})` : "both panels"}</span>
                       <input type="number" min={0} max={100} step={5} value={ax.xlo} onChange={setBound("xlo")} aria-label="recall axis minimum, percent" />
                       <span className="x">–</span>
                       <input type="number" min={0} max={100} step={5} value={ax.xhi} onChange={setBound("xhi")} aria-label="recall axis maximum, percent" />
@@ -569,7 +577,7 @@ export default function StudioPage() {
                     </span>
                     {chart === "map" && (
                       <span className="studio-size">
-                        <span className="unit">precision</span>
+                        <span className="unit">precision ({swap ? "x" : "y"})</span>
                         <input type="number" min={0} max={100} step={5} value={ax.ylo} onChange={setBound("ylo")} aria-label="precision axis minimum, percent" />
                         <span className="x">–</span>
                         <input type="number" min={0} max={100} step={5} value={ax.yhi} onChange={setBound("yhi")} aria-label="precision axis maximum, percent" />
@@ -579,6 +587,12 @@ export default function StudioPage() {
                   </span>
                 )}
               </Control>
+              {/* Axes orientation (PRScatter.tsx `swap`): which metric runs along the bottom; the ranked view is not an x/y plot */}
+              {chart === "map" && (
+                <Control label="Orientation">
+                  <Seg value={swap ? "precision" : "recall"} onChange={(x) => setSwap(x === "precision")} options={[{ id: "recall", label: "recall → x", title: "Recall along the bottom, precision up the side (the site's map)" }, { id: "precision", label: "precision → x", title: "Precision along the bottom, recall up the side" }]} />
+                </Control>
+              )}
             </>
           )}
           {plot === "cost" && (
@@ -828,7 +842,7 @@ export default function StudioPage() {
             {title.trim() ? <div className="studio-title">{title.trim()}</div> : null}
             {plot === "pr" && chart === "map" && (
               <div className="studio-canvas">
-                <PRScatter items={keyedItems} zoom={zoom} domain={domain} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} boxes={fillMode} interval={interval} bg={plotBg("dots")} groups={groups} />
+                <PRScatter items={keyedItems} zoom={zoom} domain={domain} swap={swap} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} boxes={fillMode} interval={interval} bg={plotBg("dots")} groups={groups} />
               </div>
             )}
             {plot === "pr" && chart === "ranked" && <PRRail items={keyedItems} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} mark={mark} bg={plotBg("dots")} interval={interval} />}

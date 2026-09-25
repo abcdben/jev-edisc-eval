@@ -209,7 +209,7 @@ function niceTicks(lo: number, hi: number): number[] {
   return out;
 }
 
-/** Recall (x) against precision (y). Each item is a dot at the point estimate inside a box spanning both 95% intervals. */
+/** Recall (x) against precision (y), or precision against recall under `swap`. Each item is a dot at the point estimate inside a box spanning both 95% intervals. */
 /** `fill`: size to the host's box (host must be positioned, e.g. an absolutely-filled flex child) instead of a fixed height. */
 /** `onSelect` makes each mark (dot, label and interval box) a button: click, Enter or Space. */
 /** `highlight` (cross-chart hover, see hover.tsx) gives that item a subtle emphasis: a deeper box fill, its label forced visible and the item drawn on top; the mark itself is unchanged. `onHover` reports the mark or box under the pointer or keyboard focus. */
@@ -228,8 +228,9 @@ const PULSE_CYCLES = 2, PULSE_CYCLE_MS = 650;
 /** `boxes` (the studio's Fill control; `filled` on the site) is how the interval boxes (or ellipses) are drawn (hatch.tsx FillMode). */
 /** `interval` (the studio's Interval control; `box` on the site) is the shape of the interval mark (IntervalMode above). */
 /** `bg` (the studio's Background control; the site's dot matrix, `dots`) is the pattern behind the plot area (plotBg.tsx). */
+/** `swap` (the studio's Axes orientation control; off on the site) puts precision on x and recall on y. Every item's (recall, precision) is read through `xCI` / `yCI` once, so the marks, intervals (the box's width becomes the precision interval, the recall whisker vertical), fit-to-data domain, ticks, titles, labels and leaders all follow. `domain` is always in plot x/y (the caller maps its metric bounds). */
 export type PRDomain = { x: [number, number]; y: [number, number] };
-export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Precision", emptyText, logos: logosIn, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, boxes: boxMode = "filled", interval = "box", bg = "dots", groups }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean | LogosMode; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; boxes?: FillMode; interval?: IntervalMode; bg?: PlotBg; groups?: (id: string) => LegendGroup }) {
+export function PRScatter({ items, zoom, domain, swap = false, xLabel = swap ? "Precision" : "Recall", yLabel = swap ? "Recall" : "Precision", emptyText, logos: logosIn, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, boxes: boxMode = "filled", interval = "box", bg = "dots", groups }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; swap?: boolean; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean | LogosMode; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; boxes?: FillMode; interval?: IntervalMode; bg?: PlotBg; groups?: (id: string) => LegendGroup }) {
   const { tip, show, hide, hostRef } = useTip();
   const logos = logosMode(logosIn, false);
   const hasLogo = (p: PRItem) => logoShown(logos, p.id) && !!logoFor(p.id);
@@ -248,6 +249,8 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
   type Pt = PRItem & { recall: NonNullable<CI>; precision: NonNullable<CI> };
   const hasPt = (it: PRItem): it is Pt => !!it.recall && !!it.precision;
   const pts = items.filter(hasPt);
+  // the one place an item's metrics become plot axes: recall on x and precision on y, or the other way round under `swap`
+  const xCI = (p: Pt): NonNullable<CI> => (swap ? p.precision : p.recall), yCI = (p: Pt): NonNullable<CI> => (swap ? p.recall : p.precision);
   const undefinedOnes = items.filter((it) => !it.recall || !it.precision);
   // Items that just left stay for their fade-out; the axes, label placement and highlight consider only the present ones.
   const presence = usePresence(items, (it) => it.id);
@@ -269,10 +272,11 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
       return [Math.max(0, lo - p), Math.min(1, hi + p)];
     };
     return {
-      x: pad(Math.min(...pts.map((p) => p.recall[1])), Math.max(...pts.map((p) => p.recall[2]))),
-      y: pad(Math.min(...pts.map((p) => p.precision[1])), Math.max(...pts.map((p) => p.precision[2]))),
+      x: pad(Math.min(...pts.map((p) => xCI(p)[1])), Math.max(...pts.map((p) => xCI(p)[2]))),
+      y: pad(Math.min(...pts.map((p) => yCI(p)[1])), Math.max(...pts.map((p) => yCI(p)[2]))),
     };
-  }, [pts, zoom, domain]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pts, zoom, domain, swap]);
 
   const xt = niceTicks(dom.x[0], dom.x[1]), yt = niceTicks(dom.y[0], dom.y[1]);
   const tickLabel = (t: number) => `${Math.round(t * 100)}%`;
@@ -297,7 +301,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
   // label placement: try several offsets; avoid other dots and labels; give up (hover only) when nothing fits
   const labels = useMemo(() => {
     const placed: { x: number; y: number; w: number; h: number }[] = [];
-    const dots = pts.map((p) => ({ x: X(p.recall[0]), y: Y(p.precision[0]), pad: 5 + growOf(p) }));
+    const dots = pts.map((p) => ({ x: X(xCI(p)[0]), y: Y(yCI(p)[0]), pad: 5 + growOf(p) }));
     const overlaps = (a: { x: number; y: number; w: number; h: number }) =>
       placed.some((b) => a.x < b.x + b.w + 2 && a.x + a.w + 2 > b.x && a.y < b.y + b.h + 1 && a.y + a.h + 1 > b.y) ||
       dots.some((d) => d.x > a.x - d.pad && d.x < a.x + a.w + d.pad && d.y > a.y - d.pad && d.y < a.y + a.h + d.pad);
@@ -318,13 +322,14 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
       return { ...c, w, h, text };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pts, dom, W, H, s, top, markSize, jevMarkSize, logos, measure]);
+  }, [pts, dom, W, H, s, top, markSize, jevMarkSize, logos, measure, swap]);
 
   // Where everything is heading, keyed by item so a move is continuous across re-sorts; `geo` is where it is drawn this frame.
   const target: Record<string, number> = {};
   for (const p of drawn) {
-    const x0 = X(p.recall[1]), x1 = X(p.recall[2]), y0 = Y(p.precision[2]), y1 = Y(p.precision[1]);
-    target[`${p.id}:x`] = X(p.recall[0]); target[`${p.id}:y`] = Y(p.precision[0]);
+    const xc = xCI(p), yc = yCI(p);
+    const x0 = X(xc[1]), x1 = X(xc[2]), y0 = Y(yc[2]), y1 = Y(yc[1]);
+    target[`${p.id}:x`] = X(xc[0]); target[`${p.id}:y`] = Y(yc[0]);
     target[`${p.id}:x0`] = x0; target[`${p.id}:y0`] = y0; target[`${p.id}:w`] = Math.max(1, x1 - x0); target[`${p.id}:h`] = Math.max(1, y1 - y0);
   }
   const geo = useTween(target, undefined, undefined, `${W}x${H}`);
@@ -367,7 +372,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
 
         {/* CI marks (IntervalMode) first so dots sit on top; every box or ellipse is drawn the same way (FillMode), the highlighted one a little deeper */}
         {interval !== "none" && drawn.map((p) => {
-          const mark = { kind: "mark" as const, x: X(p.recall[0]), y: Y(p.precision[0]), r: 9 };
+          const mark = { kind: "mark" as const, x: X(xCI(p)[0]), y: Y(yCI(p)[0]), r: 9 };
           const boxFill = boxMode === "outline" ? "none" : hatched ? `url(#${hatchId(p.id)})` : p.color;
           const boxFillOpacity = boxMode === "outline" ? undefined : hl === p.id ? (hatched ? 1 : 0.35) : hatched ? HATCH_ALPHA : "var(--box-alpha)";
           // the footprint this frame: the box, and the point through which the whiskers run
@@ -385,10 +390,15 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
               {interval === "ellipse" && <ellipse key={`${p.id}:${sig}`} className={areaCls} cx={x0 + w / 2} cy={y0 + h / 2} rx={w / 2} ry={h / 2} fill={boxFill} stroke={p.color} strokeWidth={0.75} style={areaStyle} />}
               {(interval === "whiskers" || interval === "band") && (
                 <g className="pr-whisker" stroke={p.color} strokeWidth={1} fill="none" style={WHISKER_STYLE}>
-                  <line x1={x0} x2={x1} y1={cy} y2={cy} />
-                  <line x1={x0} x2={x0} y1={cy - cap} y2={cy + cap} />
-                  <line x1={x1} x2={x1} y1={cy - cap} y2={cy + cap} />
-                  {interval === "whiskers" && (
+                  {/* the horizontal whisker is the recall interval, or the precision one under `swap`; `band` keeps the recall whisker alone, whichever way it runs */}
+                  {(interval === "whiskers" || !swap) && (
+                    <>
+                      <line x1={x0} x2={x1} y1={cy} y2={cy} />
+                      <line x1={x0} x2={x0} y1={cy - cap} y2={cy + cap} />
+                      <line x1={x1} x2={x1} y1={cy - cap} y2={cy + cap} />
+                    </>
+                  )}
+                  {(interval === "whiskers" || swap) && (
                     <>
                       <line x1={cx} x2={cx} y1={y0} y2={y1} />
                       <line x1={cx - cap} x2={cx + cap} y1={y0} y2={y0} />
@@ -412,7 +422,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
         {leaders && pointLabels && drawn.map((p) => {
           const li = pts.indexOf(p), l0 = li >= 0 ? labels[li] : null;
           if (!l0) return null;
-          const tx = X(p.recall[0]), ty = Y(p.precision[0]);
+          const tx = X(xCI(p)[0]), ty = Y(yCI(p)[0]);
           const ld = leaderFor({ x: l0.x - tx, y: l0.y - ty, w: l0.w, h: l0.h }, markR(p), O(p));
           if (!ld) return null;
           return (
@@ -424,7 +434,7 @@ export function PRScatter({ items, zoom, domain, xLabel = "Recall", yLabel = "Pr
         {/* the mark and its label share one group so both hover, click and focus as a unit; labels have a panel-coloured halo so they read over the boxes */}
         {drawn.map((p) => {
           // a highlighted mark whose label found no room gets one anyway, at the first candidate position
-          const tx = X(p.recall[0]), ty = Y(p.precision[0]), x = g(p.id, "x"), y = g(p.id, "y");
+          const tx = X(xCI(p)[0]), ty = Y(yCI(p)[0]), x = g(p.id, "x"), y = g(p.id, "y");
           const li = pts.indexOf(p), l0 = li >= 0 ? labels[li] : null;
           const l = !pointLabels ? null : l0 ? { x: l0.x - tx, y: l0.y - ty, text: l0.text } : hl === p.id ? { x: O(p), y: -6.5 * s, text: p.name + (p.subset ? " *" : "") } : null;
           const hitR = Math.max(9, markR(p) + 3);
