@@ -90,7 +90,7 @@ const ALL_PRIMARY: { key: string; color: string; short: string; shortInMaker?: s
   { key: "jev@base", color: "var(--c-jev)", short: "Jev · Noul", note: "TypeSafe Jev 1.13, Noul: one yes/no Noul per issue, prose criteria, RFP phrasing, matter context as a structured object. On by default." },
   { key: "jev@choice", color: "var(--v3)", short: "Jev · Choice", note: "TypeSafe Jev 1.13, Choice: the same instruction and criteria, asked as a Choice between the two labels rather than a yes/no Noul. On by default." },
   { key: "jev@score", color: "var(--v5)", short: "Jev · Score", note: "TypeSafe Jev 1.13, Score: the issue is asked as a five-point Score from 'clearly not responsive' to 'clearly responsive'; the scored probability is the level divided by four. On by default." },
-  { key: "jev@decompose", color: "var(--v1)", short: "Jev · Decomposed Sub-Questions", note: "TypeSafe Jev 1.13, Decomposed Sub-Questions: each issue is split into the atomic sub-questions in the task file; each is asked as its own Noul and the issue probability is the maximum (logical OR). Strongest Jev row on TREC 2016." },
+  { key: "jev@decompose", color: "var(--v1)", short: "Jev · Facets", note: "TypeSafe Jev 1.13, Facets: each issue is asked as the facets (sub-questions) the task file defines for it; each facet is its own Noul and the issue probability is the maximum (logical OR). Strongest Jev row on TREC 2016." },
   { key: "jev@ensemble", color: "var(--v9)", short: "Jev · Three-Phrasing Ensemble", note: "TypeSafe Jev 1.13, Three-Phrasing Ensemble: the same issue is asked three ways (RFP text, literal, title + positive description) and the probabilities are averaged." },
   { key: "jev@gate", color: "var(--v14)", short: "Jev · Relevance Gate", note: "TypeSafe Jev 1.13, Relevance Gate: an extra Noul first asks whether the document has anything to do with the matter; each issue probability is multiplied by that gate. Trades recall for precision." },
   { key: "laya-ft", color: "var(--c-laya-ft)", short: "Laya", kind: "system1", note: "ConvAI Laya, fine-tuned: the one supervised row in this zero-shot comparison. Fine-tuned (RLCD) on a 30% document-level dev split of the same corpus and scored on the held-out 70%; every other row is zero-shot. The labeled data it needed is not counted in the time and cost panels. Zero-shot Laya configurations are on the Configurations page." },
@@ -134,7 +134,7 @@ export const ABLATION_GROUPS: { id: string; label: string; recipe: string; note:
 export const VARIANT_ORDER = ["base", "choice", "score", "crit_none", "crit_struct", "literal", "no_context", "state_string", "gate", "ensemble", "decompose", "preview", "compact", "chunk", "recipe", "recipe_choice"];
 export const VARIANT_LABEL: Record<string, string> = {
   base: "Noul Question", choice: "Choice Question", score: "Five-Point Score", crit_none: "No Criteria", crit_struct: "Structured Criteria", literal: "Plain-Language Phrasing",
-  no_context: "No Matter Context", state_string: "Flat-Text State", gate: "Relevance Gate", ensemble: "Three-Phrasing Ensemble", decompose: "Decomposed Sub-Questions",
+  no_context: "No Matter Context", state_string: "Flat-Text State", gate: "Relevance Gate", ensemble: "Three-Phrasing Ensemble", decompose: "Facets",
   preview: "Jev Preview Model", compact: "Compact Question", chunk: "Chunked Document", recipe: "Compact + Chunked", recipe_choice: "Compact + Chunked, Choice",
 };
 /**
@@ -155,7 +155,7 @@ export const VARIANT_DEFINITION: Record<string, string> = {
   "jev@state_string": "the state is a single flat string ('MATTER BACKGROUND: … DOCUMENT: …') instead of a structured object with named fields",
   "jev@gate": "an extra Noul first asks whether the document has anything to do with the matter at all, and each issue probability is multiplied by that gate probability",
   "jev@ensemble": "three phrasings of the same question (RFP text, literal, title + positive description) are asked as three Nouls and their probabilities averaged",
-  "jev@decompose": "each issue is split into the atomic sub-questions the task file defines for it; each is asked as its own Noul and the issue probability is the maximum across them (logical OR)",
+  "jev@decompose": "each issue is asked as the facets (sub-questions) the task file defines for it; each facet is its own Noul and the issue probability is the maximum across them (logical OR)",
   "jev@preview": "the request is identical to the Noul Question configuration but is sent to the jev-preview model instead of jev-1.13.0",
   // Laya, zero-shot (also the typed and multilingual checkpoints)
   "laya@base": "the same request as Jev's default, run through the local Laya encoder, which packs the question head into at most 192 tokens and the whole input into 512, so the instruction and criteria are truncated and most documents are cut from the right",
