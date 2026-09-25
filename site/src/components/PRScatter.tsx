@@ -71,6 +71,9 @@ export const LEADER_STYLE = { strokeWidth: "calc(0.75 * var(--sw-mult, 1))" } as
  * A Jev item's mark (`jev`, logos.tsx isJev) reads --mark-jev in place of --mark-user: the studio's Jev mark size control (an absolute factor, set
  * inline on the panel; unset it falls back to --mark-user, so the site and the control's "= marks" setting draw every mark alike).
  * The vendor glyph (logos on) is scaled by the same product where it is drawn (glyphScale). `fixed` draws at the base size, for legend swatches.
+ * A sized mark given a position is drawn at the origin of a group translated to (cx, cy), so the scale's origin is the SVG default (0 0) and never a
+ * `transform-origin: cx cy` in px: WebKit resolves those lengths with the page zoom folded in, so on a zoomed page (Safari at anything but 100%)
+ * the mark scaled about a point off to the side and drifted across the chart, the ranked view's marks landing on its value columns.
  */
 export type MarkShape = "dot" | "plus" | "x" | "ring" | "square" | "diamond";
 export const MARK_SHAPES: { id: MarkShape; label: string }[] = [{ id: "dot", label: "dot" }, { id: "plus", label: "plus" }, { id: "x", label: "×" }, { id: "ring", label: "ring" }, { id: "square", label: "square" }, { id: "diamond", label: "diamond" }];
@@ -79,8 +82,9 @@ const userScale = (jev: boolean) => (jev ? "var(--mark-jev, var(--mark-user, 1))
 /** The CSS transform that sizes a vendor glyph: the studio's Mark size (or Jev mark size, for a Jev row) × the high-contrast enlargement. */
 export const glyphScale = (jev: boolean) => `scale(calc(var(--mark-scale, 1) * ${userScale(jev)}))`;
 export function Mark({ shape = "dot", cx = 0, cy = 0, r, color, fixed = false, jev = false, className }: { shape?: MarkShape; cx?: number; cy?: number; r: number; color: string; fixed?: boolean; jev?: boolean; className?: string }) {
+  if (!fixed && (cx || cy)) return <g transform={`translate(${cx} ${cy})`}><Mark shape={shape} r={r} color={color} jev={jev} className={className} /></g>;
   const scale = fixed ? undefined : shape === "dot" ? `scale(${userScale(jev)})` : glyphScale(jev);
-  const st = scale ? ({ transform: scale, transformOrigin: `${cx}px ${cy}px` } as React.CSSProperties) : undefined;
+  const st = scale ? ({ transform: scale, transformOrigin: "0px 0px" } as React.CSSProperties) : undefined;
   if (shape === "dot") return <circle className={className} cx={cx} cy={cy} r={r} fill={color} style={{ ...st, r: fixed ? undefined : `calc(${r}px + var(--r-add, 0px))` } as React.CSSProperties} />;
   if (shape === "ring") return <circle className={className} cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth={1.5} style={{ ...st, strokeWidth: "calc(1.5 * var(--sw-mult, 1))" }} />;
   // the size transform goes on an outer group (a CSS transform would replace an element's own transform attribute), the turn on the inner one
