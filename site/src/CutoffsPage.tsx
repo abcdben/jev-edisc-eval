@@ -311,7 +311,7 @@ export default function CutoffsPage() {
     L.push(`# Cutoffs · ${c.label} · ${meta.short} (${modelKey}) · ${gray === "all" ? "all gold" : "gray excluded"} · ${level} level`, "");
     L.push(`| Pooled (${levelWord}) | Benchmark 0.5 | Current | Δ pts |`, "|---|---:|---:|---:|");
     const row = (k: string, a: number | null, b: number | null) => L.push(`| ${k} | ${pts(a)} | ${pts(b)} | ${a == null || b == null ? "—" : ((b - a) * 100).toFixed(1)} |`);
-    row("Recall", def.recall, cur.recall); row("Precision", def.precision, cur.precision); row("F1", def.f1, cur.f1); row("Elusion", def.elusion, cur.elusion); row("Review share", def.reviewShare, cur.reviewShare);
+    row("Recall", def.recall, cur.recall); row("Precision", def.precision, cur.precision); row("F1", def.f1, cur.f1);
     if (compareRows.length > 1) {
       const d = (a: number | null, b: number | null) => (a == null || b == null ? "—" : ((b - a) * 100).toFixed(1));
       L.push("", `## Models compared (${levelWord})`, "");
@@ -387,8 +387,6 @@ export default function CutoffsPage() {
                     { k: "Benchmark 0.5", v: "The published figures: the model's stated label for every decision, which is p ≥ 0.5 except where a model contradicted its own probability." },
                     { k: "Current", v: "The same decisions re-called at the per-issue cutoffs set below: responsive when p ≥ cutoff." },
                     { k: "Level", v: levelNote },
-                    { k: "Elusion", v: "Share of the documents (or decisions) left unflagged that are in fact responsive." },
-                    { k: "Review share", v: "Share flagged for review." },
                   ]} /></span>
                 </div>
                 <table className="cut-pool">
@@ -397,14 +395,11 @@ export default function CutoffsPage() {
                     <tr><th>Recall</th><td className="num">{pts(def.recall)}%</td><td className="num hl">{pts(cur.recall)}%</td><td><Delta cur={cur.recall} ref={def.recall} /></td></tr>
                     <tr><th>Precision</th><td className="num">{pts(def.precision)}%</td><td className="num hl">{pts(cur.precision)}%</td><td><Delta cur={cur.precision} ref={def.precision} /></td></tr>
                     <tr className="f1"><th>F1</th><td className="num">{pts(def.f1)}%</td><td className="num hl">{pts(cur.f1)}%</td><td><Delta cur={cur.f1} ref={def.f1} /></td></tr>
-                    <tr><th>Elusion</th><td className="num">{pts(def.elusion)}%</td><td className="num">{pts(cur.elusion)}%</td><td><Delta cur={cur.elusion} ref={def.elusion} good="down" /></td></tr>
-                    <tr><th>Review share</th><td className="num">{pts(def.reviewShare)}%</td><td className="num">{pts(cur.reviewShare)}%</td><td><Delta cur={cur.reviewShare} ref={def.reviewShare} good={null} /></td></tr>
                     <tr className="cnt"><th>Flagged · positives</th><td className="num">{fmtInt(def.flagged)} · {fmtInt(def.nPos)}</td><td className="num">{fmtInt(cur.flagged)} · {fmtInt(cur.nPos)}</td><td /></tr>
                   </tbody>
                 </table>
                 {m.nDocs < c.nDocs && <p className="cut-note">Scored on {fmtInt(m.nDocs)} of {fmtInt(c.nDocs)} documents (a stratified subsample); every figure here is over those.</p>}
                 {m.nErr > 0 && <p className="cut-note">{fmtInt(m.nErr)} decisions errored and are left out, as in the benchmark.</p>}
-                {m.nDisagree > 0 && <p className="cut-note">On {fmtInt(m.nDisagree)} decisions this model's stated label contradicts its probability (for example “not responsive” at p = 0.99). The benchmark scored the label; this page thresholds the probability, so the current figures at 0.5 differ from the published ones for this model.</p>}
               </div>
               <div className="card">
                 <div className="card-t">
@@ -527,13 +522,13 @@ export default function CutoffsPage() {
                         <tr key={r.iss.id} className={miss ? "miss" : ""}>
                           <td className="iss">
                             <div className="t" title={r.iss.title}>{r.iss.short}</div>
-                            <div className="s">{fmtPct(r.nPos / Math.max(1, r.n), 1)} · {fmtInt(r.nPos)} of {fmtInt(r.n)}{r.iss.n_gray > 0 ? ` · ${fmtInt(r.iss.n_gray)} gray` : ""}{miss ? " · target only at 0" : ""}</div>
+                            <div className="s">prevalence = {fmtPct(r.nPos / Math.max(1, r.n), 1)}{miss ? " · target only at 0" : ""}</div>
                           </td>
                           <td className="cut">
                             <CutoffSlider idx={idx} onChange={(i) => setCutoffs(cutoffs.map((v, q) => (q === r.q ? i : v)))} color={color} label={r.iss.short} />
                             <input className="cut-num" type="number" min={0} max={1} step={0.005} value={gridValue(idx).toFixed(3)} onChange={(e) => { const v = Number(e.target.value); if (Number.isFinite(v)) setCutoffs(cutoffs.map((x, q) => (q === r.q ? Math.min(GRID_N, Math.max(0, Math.round(v * GRID_N))) : x))); }} aria-label={`${r.iss.short} cutoff value`} />
                           </td>
-                          <td className="r num"><div>top {fmtInt(r.cur.flagged)}</div><div className="s">{fmtPct(r.cur.reviewShare)} of {fmtInt(r.n)}</div></td>
+                          <td className="r num"><div>top {fmtInt(r.cur.flagged)}</div></td>
                           <td className="r num"><div>{pts(r.cur.recall)}%</div><Delta cur={r.cur.recall} ref={r.def.recall} /></td>
                           <td className="r num"><div>{pts(r.cur.precision)}%</div><Delta cur={r.cur.precision} ref={r.def.precision} /></td>
                           <td className="r num f1">
@@ -548,10 +543,8 @@ export default function CutoffsPage() {
                 </table>
               </div>
               <div className="legend-note">
-                <span>{spark === "hist" ? "Scores: the issue's decisions by probability in 0.05 bins, gold not-responsive above the line and responsive below, each side scaled to its own peak; the rule is the cutoff and the tinted side is flagged." : `PR: the issue's precision (y) against recall (x) over every cutoff; hollow mark at 0.5, filled at the current cutoff${cmpData.length ? "; small dots: the compared models at the same cutoff, in their colours" : ""}.`}</span>
+                {spark === "pr" && <span>{`PR: the issue's precision (y) against recall (x) over every cutoff; hollow mark at 0.5, filled at the current cutoff${cmpData.length ? "; small dots: the compared models at the same cutoff, in their colours" : ""}.`}</span>}
                 {cmpData.length === 1 && <span>Under F1, in {cmpData[0].name}'s colour: that model's F1 for the issue at the same cutoff.</span>}
-                <span>Flagged: decisions at or above the cutoff, i.e. the top k documents for that issue and the share of the corpus that is.</span>
-                <span>Prevalence and counts are over the decisions this model has{gray === "nogray" ? ", gray excluded" : ""}.</span>
               </div>
             </div>
           </section>
