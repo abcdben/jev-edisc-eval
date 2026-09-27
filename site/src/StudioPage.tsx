@@ -4,8 +4,8 @@ import { ModelPicker, useCompareItems, type View } from "./App";
 import { INTERVAL_MODES, MARK_SHAPES, PRScatter, intervalHasArea, type PRDomain } from "./components/PRScatter";
 import { FILL_MODES, isOutlined } from "./components/hatch";
 import { PRRail } from "./components/PRRail";
-import { StudioBars, StudioScatter } from "./components/StudioCharts";
-import { COST_UNIT, STAB_T0, costAxis, costCaption, costPts, costRows, fmtMoneyTick, fmtMsTick, fmtPctTick, speedAxis, speedCaption, speedRows, stabAxis, stabCaption, stabPaired, stabRows, type StabT0 } from "./opsRows";
+import { StudioArmsMap, StudioBars, StudioScatter } from "./components/StudioCharts";
+import { ARMS_KEY_NAMES, ARMS_LAYOUTS, ARMS_METRICS, COST_UNIT, STAB_T0, armsAxis, armsCaption, armsPts, armsRows, costAxis, costCaption, costPts, costRows, fmtMoneyTick, fmtMsTick, fmtPctTick, speedAxis, speedCaption, speedRows, stabAxis, stabCaption, stabPaired, stabRows, type StabT0 } from "./opsRows";
 import { Control, Seg } from "./components/ui";
 import { Section, sectionsApi, summarize } from "./components/Inspector";
 import type { PlotBg } from "./components/plotBg";
@@ -177,7 +177,7 @@ export default function StudioPage() {
   // every remembered field whose stored form changed goes back to its own key, as the page always wrote it (studioState.ts FIELDS)
   useEffect(() => { if (!persistRef.current) return; writeChanged(lastWritten.current, state); lastWritten.current = state; }, [state]);
   const {
-    plot, corpus, issue, on, chart, costChart, costUnit, costScale, speedChart, speedUnit, stabChart, stabT0, stabT0Tag, stabT0Key, hideUnmeasured, orient, axes, ax, swap, ticks,
+    plot, corpus, issue, on, chart, costChart, costUnit, costScale, speedChart, speedUnit, stabChart, stabT0, stabT0Tag, stabT0Key, hideUnmeasured, orient, armsMetric, armsLayout, armsDelta, armsKey, axes, ax, swap, ticks,
     mark, markSize, jevSize, fill: fillMode, interval, labels: labelsMode, leaders, key, famBasic, famComposed, w, h, title, frame, legend, logos, bg, style, colors: colorMode, custom, text, contrast,
     scheme, schemeName, exScale, exBg, theme,
   } = state;
@@ -185,9 +185,10 @@ export default function StudioPage() {
   // the controls' setters, one per field (the JSX below reads as it did when each was its own useState)
   const setPlot = setter("plot"), setCorpus = (c: string) => patch({ corpus: siteCorpus(c), issue: null }), setIssue = setter("issue"), setOn = setter("on");
   const setChart = setter("chart"), setCostChart = setter("costChart"), setCostUnit = setter("costUnit"), setCostScale = setter("costScale"), setSpeedChart = setter("speedChart"), setSpeedUnit = setter("speedUnit");
-  const setStabChart = setter("stabChart"), setStabT0 = setter("stabT0"), setStabT0Tag = setter("stabT0Tag"), setStabT0Key = setter("stabT0Key"), setHideUnmeasured = setter("hideUnmeasured"), setOrient = setter("orient"), setAxes = setter("axes"), setSwap = setter("swap"), setTicks = setter("ticks");
+  const setStabChart = setter("stabChart"), setStabT0 = setter("stabT0"), setStabT0Tag = setter("stabT0Tag"), setStabT0Key = setter("stabT0Key"), setHideUnmeasured = setter("hideUnmeasured"), setOrient = setter("orient"), setArmsMetric = setter("armsMetric"), setArmsLayout = setter("armsLayout"), setArmsDelta = setter("armsDelta"), setArmsKey = setter("armsKey"), setAxes = setter("axes"), setSwap = setter("swap"), setTicks = setter("ticks");
   // the bar charts (StudioCharts.tsx StudioBars, in any of their modes): the plots the Orientation control applies to; `vertical` is columns
-  const barPlot = (plot === "cost" && costChart !== "scatter") || plot === "speed" || plot === "stability";
+  const armsMap = plot === "arms" && armsLayout === "map";
+  const barPlot = (plot === "cost" && costChart !== "scatter") || plot === "speed" || plot === "stability" || (plot === "arms" && !armsMap);
   const vertical = barPlot && orient === "v";
   // Temperature 0 as drawn (opsRows.ts StabT0): paired bars on the dot chart become the lollipop, and the lollipop is a dot chart whatever Chart says
   const stabT0Draw: StabT0 = stabT0 === "paired" && stabChart === "dots" ? "dots" : stabT0;
@@ -431,9 +432,9 @@ export default function StudioPage() {
 
   // Which charts fill the panel's height (the map-like ones); the row-based ones take their height from the rows (the panel's `auto` mode).
   // A bar chart in columns (Orientation → vertical) fills the panel too: the columns take the height, the names run along the bottom.
-  const fills = (plot === "pr" && chart === "map") || (plot === "cost" && costChart === "scatter") || vertical;
+  const fills = (plot === "pr" && chart === "map") || (plot === "cost" && costChart === "scatter") || armsMap || vertical;
   // Which plots draw bars (StudioBars kind "bar"), and so take the Fill control with the map; the dot and scatter views have no area to fill.
-  const hasBars = (plot === "cost" && costChart === "bars") || (plot === "speed" && speedChart !== "dots") || (plot === "stability" && !stabDots);
+  const hasBars = (plot === "cost" && costChart === "bars") || (plot === "speed" && speedChart !== "dots") || (plot === "stability" && !stabDots) || (plot === "arms" && armsLayout === "paired");
   // the map's Fill applies to the Interval modes with an area (box, ellipse); whiskers, brackets and none have nothing to fill
   const showFill = (plot === "pr" && chart === "map" && intervalArea) || hasBars;
 
@@ -461,6 +462,9 @@ export default function StudioPage() {
   const stabRowsKeyed = stab.rows.map(keyed);
   // whether the chart draws a t = 0 element for some selected model (the paired modes engage only where a t = 0 cell exists)
   const stabT0Drawn = stabPaired(stabT0Draw) && stab.rows.some((r) => r.value != null && r.t0);
+  // Single vs bundled (opsRows.ts armsRows): each selected model's bundled figure with its one-issue figure as the row's second element
+  const arms = armsRows(sel, armsMetric);
+  const armsRowsKeyed = arms.rows.map(keyed);
 
   const emptyText = "Select at least one model.";
   // What the panel actually draws for the 95% interval, read off its computed variables after each style-affecting change (preset, Custom sliders,
@@ -500,6 +504,8 @@ export default function StudioPage() {
     }
     if (plot === "cost") return barNote(costCaption(costChart, costUnit, costScale, marks.whiskers));
     if (plot === "speed") return barNote(speedCaption(speedChart, marks.whiskers));
+    // the dumbbell (StudioBars' lollipop) draws no whiskers: the segment between the two dots takes the row
+    if (plot === "arms") return barNote(armsCaption(armsLayout, armsMetric, meta, arms.missing, marks.whiskers && !(armsLayout === "dumbbell" && arms.hasSingle), armsDelta && arms.hasSingle));
     // the lollipop (Temperature 0 → dots) draws no whiskers: the segment between the two dots takes the row
     return barNote(stabCaption(stabChart, stabT0Draw, stab.sameRuns, marks.whiskers && !(stabT0Draw === "dots" && stabT0Drawn), stab.runsNotes));
   };
@@ -523,7 +529,7 @@ export default function StudioPage() {
   const showIssue = plot === "pr" || (plot === "cost" && costChart === "scatter");
   /** e.g. jev-recall-precision-map-trec-linkedin-1200x675@2x.png; the size is the panel's rendered CSS size (the PNG is that × scale). */
   const exportName = (el: HTMLElement) => {
-    const chartId = plot === "pr" ? chart : plot === "cost" ? costChart : plot === "speed" ? speedChart : stabChart;
+    const chartId = plot === "pr" ? chart : plot === "cost" ? costChart : plot === "speed" ? speedChart : plot === "arms" ? `${armsMetric}-${armsLayout}` : stabChart;
     const styleId = style === "custom" && schemeName.trim() ? `custom-${schemeName.trim()}` : style;
     const t0Id = plot === "stability" && stabT0Draw !== "off" ? `t0-${stabT0Draw}` : "";
     return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, t0Id, vertical ? "vertical" : "", plot === "pr" && chart === "map" && swap ? "precision-x" : "", corpus, styleId, colorMode === "style" ? "" : colorMode, byMaker ? "by-maker" : byFamily ? "by-family" : ""].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
@@ -538,7 +544,8 @@ export default function StudioPage() {
     plot === "speed" && (speedChart === "throughput" ? "docs per hour" : `${speedChart === "dots" ? "dots · log" : "bars"} · ${speedUnit} per document`),
     plot === "stability" && (stabChart === "agree" ? "agreement · zoomed" : stabChart === "dots" ? "dots" : "disagreement bars"),
     plot === "stability" && (stabT0 === "off" ? "default sampling" : stabT0 === "t0" ? "t = 0 only" : `t = 0 ${STAB_T0.find((o) => o.id === stabT0)?.label}${stabT0Tag ? "" : " · no tag"}${stabT0Key ? "" : " · no key"}`),
-    plot === "stability" && hideUnmeasured && "unmeasured hidden", vertical && "vertical",
+    plot === "stability" && hideUnmeasured && "unmeasured hidden",
+    plot === "arms" && `${ARMS_METRICS.find((m) => m.id === armsMetric)?.label} · ${ARMS_LAYOUTS.find((l) => l.id === armsLayout)?.label}${armsDelta || armsMap ? "" : " · no Δ"}${armsKey ? "" : " · no key"}`, vertical && "vertical",
     ticks !== "normal" && (ticks === "none" ? "no gridlines" : `${ticks} gridlines`), markText,
     // the interval mark: "filled boxes" / "hatched ellipses" in the area modes (the Fill folded in), the mode's own name otherwise; the bar charts name their Fill alone
     plot === "pr" && (showFill ? `${FILL_MODES.find((m) => m.id === fillMode)?.label} ${interval === "ellipse" ? "ellipses" : "boxes"}` : INTERVAL_MODES.find((m) => m.id === interval)?.label),
@@ -563,7 +570,7 @@ export default function StudioPage() {
       {/* Top bar: what is plotted, and the PNG export at the right (the export's scale and backdrop are in the Export section below). */}
       <div className="controls studio-bar">
         <Control label="Plot">
-          <Seg value={plot} onChange={setPlot} options={[{ id: "pr", label: "Recall / precision" }, { id: "cost", label: "Cost" }, { id: "speed", label: "Speed" }, { id: "stability", label: "Stability" }]} />
+          <Seg value={plot} onChange={setPlot} options={[{ id: "pr", label: "Recall / precision" }, { id: "cost", label: "Cost" }, { id: "speed", label: "Speed" }, { id: "stability", label: "Stability" }, { id: "arms", label: "Single vs bundled", title: "multi = all eleven issues in one request; single = one issue per request" }]} />
         </Control>
         <Control label="Corpus">
           <Seg value={corpus} onChange={setCorpus} options={CORPORA.map((c) => ({ id: c.id, label: c.label }))} />
@@ -714,6 +721,23 @@ export default function StudioPage() {
               )}
               <Control label="Unmeasured">
                 <Seg value={hideUnmeasured ? "hide" : "show"} onChange={(x) => setHideUnmeasured(x === "hide")} options={[{ id: "show", label: "list unmeasured" }, { id: "hide", label: "hide unmeasured" }]} />
+              </Control>
+            </>
+          )}
+          {plot === "arms" && (
+            <>
+              {/* Single vs bundled (opsRows.ts): the figure compared and how the two arms are drawn (dumbbell = StudioBars' lollipop, paired bars, or the arrow map) */}
+              <Control label="Metric">
+                <Seg value={armsMetric} onChange={setArmsMetric} options={ARMS_METRICS} />
+              </Control>
+              <Control label="Layout">
+                <Seg value={armsLayout} onChange={setArmsLayout} options={ARMS_LAYOUTS} />
+                {!arms.hasSingle && sel.length > 0 && <span className="studio-hint small">no selected model was run one issue at a time</span>}
+              </Control>
+              <Control label="Arm marks">
+                {!armsMap && <Seg value={armsDelta ? "on" : "off"} onChange={(x) => setArmsDelta(x === "on")} options={[{ id: "on", label: "Δ label", title: "A small grey signed difference (single − bundled, in points) after the single-issue value" }, { id: "off", label: "no Δ", title: "The single-issue value alone" }]} />}
+                <Seg value={armsKey ? "on" : "off"} onChange={(x) => setArmsKey(x === "on")} options={[{ id: "on", label: "key", title: legend ? "A two-entry key (bundled / single issue) on the chart" : "Shown when Canvas → Legend is on" }, { id: "off", label: "no key", title: "No key on the chart; the caption still names the two arms" }]} />
+                {!legend && armsKey && <span className="studio-hint small">Canvas → Legend is off, so the key is hidden</span>}
               </Control>
             </>
           )}
@@ -984,6 +1008,17 @@ export default function StudioPage() {
                 axis={stabAxis(stabChart, stabT0Draw)}
                 fmtTick={fmtPctTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} ticks={ticks}
                 t0={stabT0Draw === "paired" ? "paired" : stabT0Draw === "dots" ? "dots" : "none"} t0Tag={stabT0Tag} t0Key={legend && stabT0Key} orient={orient}
+              />,
+            )}
+            {armsMap && (
+              <div className="studio-canvas">
+                <StudioArmsMap pts={armsPts(sel).map(keyed)} whiskers={marks.whiskers} keyOn={legend && armsKey} keyNames={ARMS_KEY_NAMES} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} bg={plotBg("dots")} groups={groups} ticks={ticks} />
+              </div>
+            )}
+            {plot === "arms" && !armsMap && barHost(
+              <StudioBars
+                rows={armsRowsKeyed} kind={armsLayout === "dumbbell" ? "dot" : "bar"} domain={armsLayout === "dumbbell" ? arms.domain : undefined} axis={armsAxis(armsMetric)} fmtTick={fmtPctTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} ticks={ticks}
+                t0={armsLayout === "dumbbell" ? "dots" : "paired"} t0Tag={armsDelta} t0Key={legend && armsKey} keyNames={ARMS_KEY_NAMES} orient={orient}
               />,
             )}
             {legend && legendLines.length > 0 && (

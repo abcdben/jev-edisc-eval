@@ -1,6 +1,6 @@
 import { DATA, PRIMARY_BY_KEY, costPerDoc, fmtInt, fmtPct, isDecider, pick, starOf, type Rec } from "./data";
 import { detFor } from "./components/Consistency";
-import type { StudioRow, StudioScatterPt } from "./components/StudioCharts";
+import type { StudioArmsPt, StudioRow, StudioScatterPt } from "./components/StudioCharts";
 import type { View } from "./App";
 
 /**
@@ -151,6 +151,92 @@ export function stabCaption(chart: StabChart, t0: StabT0, sameRuns: string | nul
   if (chart === "agree") return [`${mark}: agreement, the probability two identical runs give the same decision (1 − pairwise disagreement)${whiskers ? "; whisker: 95% bootstrap interval" : ""}. Axis zoomed to the measured range.${only}`, where];
   return [`${mark}: probability two identical runs disagree on a decision (pairwise)${whiskers ? "; whisker: 95% bootstrap interval over decisions" : ""}.${only}`, where];
 }
+
+// ---- the Single vs bundled chart (the studio's `arms` plot): each model's bundled (multi) run against its one-issue (single) run ----
+
+/** The figure compared: recall, precision or F1 at document level (`all.doc`); F1 carries no interval. */
+export type ArmsMetric = "recall" | "precision" | "f1";
+export const ARMS_METRICS: { id: ArmsMetric; label: string; title: string }[] = [
+  { id: "recall", label: "recall", title: "Document-level recall, with its 95% interval" },
+  { id: "precision", label: "precision", title: "Document-level precision, with its 95% interval" },
+  { id: "f1", label: "F1", title: "Document-level F1 (no interval is published for it)" },
+];
+/**
+ * How the two arms are drawn: `dumbbell`, a filled dot at the bundled figure and a hollow dot at the single figure joined in the model's colour
+ * (StudioBars' lollipop); `paired`, a bar for the bundled figure with a lighter one under it for the single; `map`, recall across and precision up
+ * as on the recall/precision map, one arrow per model from its bundled point to its single point (StudioArmsMap).
+ */
+export type ArmsLayout = "dumbbell" | "paired" | "map";
+export const ARMS_LAYOUTS: { id: ArmsLayout; label: string; title: string }[] = [
+  { id: "dumbbell", label: "dumbbell", title: "Filled dot: bundled; hollow dot: one issue per request; a segment in the model's colour joins them" },
+  { id: "paired", label: "paired bars", title: "A bar for the bundled run, a lighter bar under it for the one-issue run" },
+  { id: "map", label: "map", title: "Recall across, precision up: an arrow per model from its bundled point to its one-issue point" },
+];
+/** The chart's two-entry key. */
+export const ARMS_KEY_NAMES: [string, string] = ["bundled", "single issue"];
+
+/** The one-issue-per-request record of a bundled record's model on the same corpus, or null where the model was not run that way. */
+export const singleOf = (r: Rec): Rec | null => (r.arm === "single" ? r : DATA.records.find((x) => x.corpus === r.corpus && x.tag === r.tag && x.model === r.model && x.arm === "single") ?? null);
+/** A record's document-level figure: the point with its interval, or the point alone for F1 (null where the record has none). */
+const armFig = (r: Rec, metric: ArmsMetric): { value: number; lo: number | null; hi: number | null } | null => {
+  const s = r.all.doc;
+  if (metric === "f1") return s.f1 == null ? null : { value: s.f1, lo: null, hi: null };
+  const ci = s[metric];
+  return ci ? { value: ci[0], lo: ci[1], hi: ci[2] } : null;
+};
+/** The single − bundled difference in percentage points, signed, with a real minus: "Δ −6.4", "Δ +0.5", "Δ 0.0". */
+export const armsDelta = (bundled: number, single: number): string => {
+  const d = +((single - bundled) * 100).toFixed(1);
+  return `Δ ${d > 0 ? "+" : d < 0 ? "−" : ""}${Math.abs(d).toFixed(1)}`;
+};
+
+/**
+ * The bar and dumbbell rows: one per selected model, its bundled figure as the row's value and its one-issue figure as the row's second figure
+ * (StudioRow.t0, drawn as the paired bar or the hollow dot), tagged with the signed difference. A model without a one-issue run keeps the one
+ * element; `missing` names those models for the caption. `domain` is the axis zoomed to the drawn figures (whole tenths, capped at 100%), for the
+ * dumbbell; the bars start at zero.
+ */
+export function armsRows(sel: Rec[], metric: ArmsMetric): { rows: StudioRow[]; missing: string[]; hasSingle: boolean; domain: [number, number] } {
+  const missing: string[] = [];
+  const rows = sel.map((r): StudioRow => {
+    const b = armFig(r, metric), single = singleOf(r), s = single ? armFig(single, metric) : null;
+    if (!b) return { ...rowBase(r), value: null, label: "", empty: "not measured" };
+    if (!s) missing.push(PRIMARY_BY_KEY[r.model].short);
+    return { ...rowBase(r), ...b, label: fmtPct(b.value), ...(s ? { t0: { ...s, label: fmtPct(s.value), tag: armsDelta(b.value, s.value) } } : {}) };
+  });
+  const vals = rows.flatMap((r) => (r.value == null ? [] : [r.value, ...(r.t0 ? [r.t0.value] : [])]));
+  const domain: [number, number] = vals.length ? [Math.max(0, Math.floor((Math.min(...vals) - 0.03) * 10) / 10), Math.min(1, Math.ceil((Math.max(...vals) + 0.03) * 10) / 10)] : [0, 1];
+  return { rows, missing, hasSingle: rows.some((r) => r.t0), domain };
+}
+
+/** The arms map's points (StudioCharts.tsx StudioArmsPt): each model's bundled recall and precision, and its one-issue ones where it was run that way. */
+export function armsPts(sel: Rec[]): StudioArmsPt[] {
+  return sel.map((r) => {
+    const single = singleOf(r);
+    return { ...rowBase(r), bundled: { recall: r.all.doc.recall, precision: r.all.doc.precision }, single: single ? { recall: single.all.doc.recall, precision: single.all.doc.precision } : null };
+  });
+}
+
+const NUM_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+/**
+ * The arms caption: the marks, then what the arms are, the interval and the corpus. `whiskers` says whether the chart draws its intervals (off for F1,
+ * which has none, and where the style hides them); `delta` whether the Δ tags are on; `missing` names the models with no one-issue run.
+ */
+export function armsCaption(layout: ArmsLayout, metric: ArmsMetric, meta: { display: string; n_docs: number; n_issues: number } | undefined, missing: string[], whiskers = true, delta = true): string[] {
+  const m = metric === "f1" ? "F1" : metric;
+  const marks =
+    layout === "paired" ? `Bar: ${m} with every issue in one request; lighter bar: one issue per request`
+    : layout === "dumbbell" ? `Filled dot: ${m} with every issue in one request; hollow dot: one issue per request; the segment joins a model's two runs`
+    : "Filled dot: every issue in one request; hollow dot: one issue per request; the arrow points from the bundled run to the single-issue run";
+  const dl = delta && layout !== "map" ? "; Δ: single − bundled, in points" : "";
+  const zoom = layout === "dumbbell" ? " Axis zoomed to the measured range." : "";
+  const issues = meta ? NUM_WORDS[meta.n_issues] ?? String(meta.n_issues) : "eleven";
+  const corpus = meta ? `${meta.display.replace(/\s*\(.*\)$/, "")}, ${fmtInt(meta.n_docs)} emails, document level.` : "Document level.";
+  const wilson = whiskers && metric !== "f1" ? " Whiskers: 95% Wilson intervals." : "";
+  const notRun = missing.length ? ` Not run one issue at a time: ${missing.join(", ")}.` : "";
+  return [`${marks}${dl}.${zoom}`, `Bundled: all ${issues} issues in one request per email (the published figures). Single: one issue per request.${wilson} ${corpus}${notRun}`];
+}
+export const armsAxis = (metric: ArmsMetric) => `${metric === "f1" ? "F1" : metric}, document level`;
 
 /** Axis titles, as the studio writes them. */
 export const costAxis = (chart: CostChart, unit: CostUnit, scale: CostScale) => COST_UNIT[unit].axis + (chart === "dots" || scale === "log" ? " (log)" : "");

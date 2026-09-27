@@ -4,7 +4,7 @@ import { INTERVAL_MODES, MARK_SHAPES, type IntervalMode, type LabelsMode, type M
 import { FILL_MODES, type FillMode } from "./components/hatch";
 import { TICK_DENSITIES, type TickDensity } from "./components/ticks";
 import type { Orient } from "./components/StudioCharts";
-import { STAB_T0, type CostChart, type CostScale, type CostUnit, type SpeedChart, type SpeedUnit, type StabChart, type StabT0 } from "./opsRows";
+import { ARMS_LAYOUTS, ARMS_METRICS, STAB_T0, type ArmsLayout, type ArmsMetric, type CostChart, type CostScale, type CostUnit, type SpeedChart, type SpeedUnit, type StabChart, type StabT0 } from "./opsRows";
 import type { ExportBackground } from "./exportPng";
 import { PALETTES, varOf, type PaletteId } from "./palettes";
 import type { LogosMode } from "./logos";
@@ -22,8 +22,8 @@ import { THEMES, THEME_KEY, type Theme } from "./theme";
  * `#p=` payload (encodeHash / decodeHash). Built-in presets (BUILTIN_PRESETS) are partial states over the defaults.
  */
 
-export const PLOTS = ["pr", "cost", "speed", "stability"] as const;
-/** The four plots. `pr` is the site's recall/precision chart (map or ranked); the others are the studio's own bar, dot and scatter charts (opsRows.ts). */
+export const PLOTS = ["pr", "cost", "speed", "stability", "arms"] as const;
+/** The five plots. `pr` is the site's recall/precision chart (map or ranked); the others are the studio's own bar, dot and scatter charts (opsRows.ts); `arms` is Single vs bundled, each model's one-issue run against its all-issues run. */
 export type Plot = (typeof PLOTS)[number];
 export const PLOT_STYLES = ["site", "journal", "newsroom", "linkedin", "slate", "economist", "epoch", "typesafe", "custom"] as const;
 export type PlotStyle = (typeof PLOT_STYLES)[number];
@@ -77,6 +77,8 @@ export type StudioState = {
   stabT0: StabT0; stabT0Tag: boolean; stabT0Key: boolean; hideUnmeasured: boolean;
   /** Orientation of the bar charts (Cost, Speed, Stability; components/StudioCharts.tsx Orient): rows (`h`, the site's) or columns (`v`). */
   orient: Orient;
+  /** Single vs bundled (opsRows.ts): the figure compared, the layout, and its two marks: the signed Δ tag after the single-issue value and the two-entry key (bundled / single issue). */
+  armsMetric: ArmsMetric; armsLayout: ArmsLayout; armsDelta: boolean; armsKey: boolean;
   axes: Axes; ax: AxBounds; swap: boolean; ticks: TickDensity;
   mark: MarkShape; markSize: MarkSize; jevSize: JevMarkSize; fill: FillMode; interval: IntervalMode; labels: LabelsMode; leaders: boolean; key: KeyMode;
   /** Key → by family swatches: a hex over the style's own colour for the Jev basic forms / composed variants, or "" for the style's (makers.ts FAMILY_*_VAR). */
@@ -137,6 +139,10 @@ export const FIELDS: Fields = {
   stabT0Key: { dflt: true, coerce: bool },
   hideUnmeasured: { dflt: false, coerce: bool },
   orient: { dflt: "h", key: "studio-orient", store: "string", coerce: oneOf(["h", "v"] as const) },
+  armsMetric: { dflt: "recall", coerce: oneOf(ids(ARMS_METRICS)) },
+  armsLayout: { dflt: "dumbbell", coerce: oneOf(ids(ARMS_LAYOUTS)) },
+  armsDelta: { dflt: true, coerce: bool },
+  armsKey: { dflt: true, coerce: bool },
   axes: { dflt: "zoom", coerce: oneOf(["full", "zoom", "custom"] as const) },
   ax: {
     dflt: { xlo: 50, xhi: 100, ylo: 50, yhi: 100 },

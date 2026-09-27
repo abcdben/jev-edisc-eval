@@ -1,4 +1,4 @@
-import { useId, useMemo, useRef, type CSSProperties } from "react";
+import { useId, useMemo, useRef, type CSSProperties, type ReactNode } from "react";
 import type { CI } from "../data";
 import { LogoGlyph, isJev, logoFor, logoShown, logosMode, type LogosMode } from "../logos";
 import { LEADER_STYLE, LEGEND_CLS, LEGEND_GAP, Legend, Mark, NAME_CLS, axisMargins, glyphScale, leaderFor, legendGroups, legendLayout, legendSwatch, userScale, type LabelsMode, type LegendGroup, type MarkShape } from "./PRScatter";
@@ -18,8 +18,8 @@ const useBgId = () => `bg-${useId().replace(/[^A-Za-z0-9_-]/g, "")}`;
  * Gridlines carry className="gl" like PRScatter's so a preset can dot them.
  */
 
-/** A second figure a row may carry (the Stability chart's temperature-0 rerun): drawn as a lighter bar or a hollow dot when the chart's `t0` mode is on. */
-export type StudioRowT0 = { value: number; lo?: number | null; hi?: number | null; label: string };
+/** A second figure a row may carry (the Stability chart's temperature-0 rerun; the arms chart's one-issue run): drawn as a lighter bar or a hollow dot when the chart's `t0` mode is on. `tag` is the small grey text after its label ("t = 0" unset; the arms chart's signed Δ). */
+export type StudioRowT0 = { value: number; lo?: number | null; hi?: number | null; label: string; tag?: string };
 /** One row of a StudioBars chart. `lo`/`hi` draw a whisker (an interval around `value`); `empty` replaces "not measured"; `t0` is the row's temperature-0 figure (StudioRowT0). */
 export type StudioRow = { id: string; name: string; color: string; value: number | null; lo?: number | null; hi?: number | null; label: string; empty?: string; decider?: boolean; subset?: string | null; t0?: StudioRowT0 };
 
@@ -33,6 +33,8 @@ export type T0Mode = "none" | "paired" | "dots";
 /** The t = 0 tint: the row's colour mixed half-and-half with the panel, so the second bar reads as the same hue, lighter, under any Fill mode. */
 const T0_TINT = (color: string) => `color-mix(in srgb, ${color} 50%, var(--panel))`;
 const T0_TAG = "t = 0";
+/** The two-entry key's names unset (Stability): the arms chart passes its own. */
+const T0_KEY_NAMES: [string, string] = ["default sampling", "temperature 0"];
 /** The lollipop's segment and hollow-dot stroke: 1.75 px × the high-contrast multiplier (the dot itself follows the Mark size, --mark-user). */
 const T0_STROKE_W = "calc(1.75px * var(--sw-mult, 1))";
 
@@ -95,9 +97,9 @@ function axisTicks(scale: "linear" | "log", dom: [number, number], density: Tick
  * `t0` (T0Mode; `none` by default) draws each row's temperature-0 figure (StudioRow.t0) as a second, lighter bar or as the hollow dot of a lollipop;
  * `t0Tag` (on by default) puts a small grey "t = 0" after that figure's label; `t0Key` (off by default) draws a two-entry key (default sampling /
  * temperature 0) above the rows. The `dots` mode draws the chart as dots whatever `kind` says. Nothing changes while no row carries a `t0`.
- * `orient` (Orient; `h` by default) lays the chart out as rows or as columns (see Orient).
+ * `orient` (Orient; `h` by default) lays the chart out as rows or as columns (see Orient). `keyNames` are the key's two entries (default sampling / temperature 0 unset).
  */
-export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domain, sort = "asc", axis, fmtTick, logos: logosIn, labelW, textScale = 1, mark: markIn = "dot", onSelect, bg = "none", bars: barMode = "filled", ticks: density = "normal", t0: t0Mode = "none", t0Tag = true, t0Key = false, orient = "h" }: { rows: StudioRow[]; kind?: "bar" | "dot"; scale?: "linear" | "log"; domain?: [number, number]; sort?: "asc" | "desc" | "none"; axis: string; fmtTick: (v: number) => string; logos?: boolean | LogosMode; labelW?: number; textScale?: number; mark?: MarkShape; onSelect?: (id: string) => void; bg?: PlotBg; bars?: FillMode; ticks?: TickDensity; t0?: T0Mode; t0Tag?: boolean; t0Key?: boolean; orient?: Orient }) {
+export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domain, sort = "asc", axis, fmtTick, logos: logosIn, labelW, textScale = 1, mark: markIn = "dot", onSelect, bg = "none", bars: barMode = "filled", ticks: density = "normal", t0: t0Mode = "none", t0Tag = true, t0Key = false, orient = "h", keyNames = T0_KEY_NAMES }: { rows: StudioRow[]; kind?: "bar" | "dot"; scale?: "linear" | "log"; domain?: [number, number]; sort?: "asc" | "desc" | "none"; axis: string; fmtTick: (v: number) => string; logos?: boolean | LogosMode; labelW?: number; textScale?: number; mark?: MarkShape; onSelect?: (id: string) => void; bg?: PlotBg; bars?: FillMode; ticks?: TickDensity; t0?: T0Mode; t0Tag?: boolean; t0Key?: boolean; orient?: Orient; keyNames?: [string, string] }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const vertical = orient === "v";
   const logosOn = logosMode(logosIn, true), logos = logosOn !== "none";
@@ -126,14 +128,15 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
   const LABEL_W = labelW ?? Math.min(260 * s, Math.max(170 * s, ...rows.map((r) => nameW(r) + (logos ? 44 : 24) * s)));
   // the value labels' sizes: a paired row's two figures are a touch smaller (11.5 s) so both fit the row; the tag is 10 s
   const FS_VAL = paired ? 11.5 * s : 12 * s, FS_TAG = 10 * s, TAG_GAP = 5 * s;
-  const tagW = t0Tag ? TAG_GAP + measure(T0_TAG, FS_TAG) : 0;
-  const t0LabelW = (r: StudioRow) => { const t = t0Of(r); return t ? measure(t.label, FS_VAL, "mono") + tagW : 0; };
+  const tagOf = (r: StudioRow) => r.t0?.tag ?? T0_TAG;
+  const tagW = (r: StudioRow) => (t0Tag ? TAG_GAP + measure(tagOf(r), FS_TAG) : 0);
+  const t0LabelW = (r: StudioRow) => { const t = t0Of(r); return t ? measure(t.label, FS_VAL, "mono") + tagW(r) : 0; };
   // the value column after the longest bar: the figure, then the muted secondary figure when a row carries one, and 14 s of air; a paired row's t = 0 label
   // (with its tag) counts too; in the lollipop the labels are centred on their dots, so the overhang is half a label (plus the tag after the t = 0 one)
   const VALUE_W = Math.max(90 * s, ...rows.map((r) => {
     if (r.value == null) return measure(r.empty ?? "not measured", 11.5 * s) + 14 * s;
     const main = measure(r.label, FS_VAL, "mono");
-    if (lolli && t0Of(r)) return Math.max(main / 2, measure(t0Of(r)!.label, FS_VAL, "mono") / 2 + tagW) + 14 * s;
+    if (lolli && t0Of(r)) return Math.max(main / 2, measure(t0Of(r)!.label, FS_VAL, "mono") / 2 + tagW(r)) + 14 * s;
     return Math.max(main, t0LabelW(r)) + 14 * s;
   }));
   const sorted = sort === "none" ? rows : [...rows].sort((a, b) => {
@@ -168,9 +171,9 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
   // the hatch tiles: one per measured row and, with paired bars, one per t = 0 figure in the tint
   const hatchItems = paired ? [...measured, ...measured.filter((r) => t0Of(r)).map((r) => ({ id: `${r.id}~t0`, color: T0_TINT(r.color) }))] : measured;
   // the "t = 0" tag after a t = 0 figure's label: small, muted, plain face
-  const tag = (x: number, y: number) => (t0Tag ? <text x={x} y={y} fontSize={FS_TAG} fill="var(--ink-3)">{T0_TAG}</text> : null);
+  const tag = (r: StudioRow, x: number, y: number) => (t0Tag ? <text x={x} y={y} fontSize={FS_TAG} fill="var(--ink-3)">{tagOf(r)}</text> : null);
   // the two-entry key's swatches and names, drawn from (kx, kcy): the chart's own elements in ink (a bar and its lighter twin, or a filled and a hollow dot)
-  const KEY_NAMES = ["default sampling", "temperature 0"], KEY_FS = 11 * s, KEY_SW = 10 * s, KEY_GAP = 6 * s, KEY_ITEM = 18 * s;
+  const KEY_NAMES = keyNames, KEY_FS = 11 * s, KEY_SW = 10 * s, KEY_GAP = 6 * s, KEY_ITEM = 18 * s;
   const keyW = KEY_SW + KEY_GAP + measure(KEY_NAMES[0], KEY_FS, LEGEND_CLS) + KEY_ITEM + KEY_SW + KEY_GAP + measure(KEY_NAMES[1], KEY_FS, LEGEND_CLS);
   const keyAt = (kx: number, kcy: number) => {
     const x1 = kx + KEY_SW + KEY_GAP + measure(KEY_NAMES[0], KEY_FS, LEGEND_CLS) + KEY_ITEM;
@@ -276,25 +279,25 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
     // value labels shrink together (to 70% at the least) where the widest would not fit its slot: a column, or half of one in a paired row; the t = 0 tag
     // sits beside its label where the half-column takes both, else on the line above it
     const slotW = (two: boolean) => (two ? colW / 2 - 3 * s : colW - 4 * s);
-    const tagBeside = sorted.every((r) => !(paired && t0Of(r)) || measure(t0Of(r)!.label, FS_VAL, "mono") + tagW <= slotW(true));
+    const tagBeside = sorted.every((r) => !(paired && t0Of(r)) || measure(t0Of(r)!.label, FS_VAL, "mono") + tagW(r) <= slotW(true));
     const need = Math.max(1e-9, ...sorted.flatMap((r) => {
       if (r.value == null) return [0];
       const two = paired && !!t0Of(r), lw = measure(r.label, FS_VAL, "mono"), slot = slotW(two);
-      const tl = t0Of(r) ? measure(t0Of(r)!.label, FS_VAL, "mono") + (tagBeside && !lolli ? tagW : lolli ? tagW : 0) : 0;
+      const tl = t0Of(r) ? measure(t0Of(r)!.label, FS_VAL, "mono") + (tagBeside || lolli ? tagW(r) : 0) : 0;
       return [lw / slot, tl / (lolli ? colW - 4 * s : slot)];
     }));
     const fsv = FS_VAL * Math.min(1, Math.max(0.7, 1 / need));
     const fst = FS_TAG * (fsv / FS_VAL), tgap = TAG_GAP * (fsv / FS_VAL);
-    const mw = (t: string) => measure(t, fsv, "mono"), tagWv = t0Tag ? tgap + measure(T0_TAG, fst) : 0;
-    const vtag = (x: number, y: number) => (t0Tag ? <text x={x} y={y} fontSize={fst} fill="var(--ink-3)">{T0_TAG}</text> : null);
-    // a label with its tag, centred as a group on `cx` with its baseline at `y`
-    const labelGroup = (text: string, cx: number, y: number, withTag: boolean, halo = false) => {
-      const w = mw(text) + (withTag ? tagWv : 0), x = Math.max(PL + 2 * s + w / 2, Math.min(W - 2 * s - w / 2, cx));
+    const mw = (t: string) => measure(t, fsv, "mono"), tagWv = (r: StudioRow) => (t0Tag ? tgap + measure(tagOf(r), fst) : 0);
+    const vtag = (r: StudioRow, x: number, y: number) => (t0Tag ? <text x={x} y={y} fontSize={fst} fill="var(--ink-3)">{tagOf(r)}</text> : null);
+    // a label, with the row's tag where `withTag`, centred as a group on `cx` with its baseline at `y`
+    const labelGroup = (text: string, cx: number, y: number, withTag: StudioRow | null, halo = false) => {
+      const w = mw(text) + (withTag ? tagWv(withTag) : 0), x = Math.max(PL + 2 * s + w / 2, Math.min(W - 2 * s - w / 2, cx));
       const st: CSSProperties | undefined = halo ? { paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 3, strokeLinejoin: "round" } : undefined;
       return (
         <>
           <text x={x - w / 2} y={y} fontSize={fsv} fill="var(--ink)" className="mono" style={st}>{text}</text>
-          {withTag && vtag(x - w / 2 + mw(text) + tgap, y)}
+          {withTag && vtag(withTag, x - w / 2 + mw(text) + tgap, y)}
         </>
       );
     };
@@ -361,11 +364,11 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
                         {(t!.lo != null || t!.hi != null) && ytlo - ythi > 0.5 && whiskerLines(ythi, ytlo, xB, "y")}
                       </>
                     )}
-                    {labelGroup(r.label, xA, topA - 6 * s, false)}
-                    {two && (tagBeside ? labelGroup(t!.label, xB, topB - 6 * s, true) : (
+                    {labelGroup(r.label, xA, topA - 6 * s, null)}
+                    {two && (tagBeside ? labelGroup(t!.label, xB, topB - 6 * s, r) : (
                       <>
-                        {labelGroup(t!.label, xB, topB - 6 * s, false)}
-                        {vtag(xB - measure(T0_TAG, fst) / 2, topB - 6 * s - fsv * 1.05)}
+                        {labelGroup(t!.label, xB, topB - 6 * s, null)}
+                        {vtag(r, xB - measure(tagOf(r), fst) / 2, topB - 6 * s - fsv * 1.05)}
                       </>
                     ))}
                   </>
@@ -380,22 +383,22 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
                       // the higher dot's label above it, the lower dot's below it (on a panel halo, over the stem)
                       yv <= yt ? (
                         <>
-                          {labelGroup(r.label, cx, yv - 9 * s, false)}
-                          {labelGroup(t.label, cx, yt + 9 * s + fsv * 0.8, true, true)}
+                          {labelGroup(r.label, cx, yv - 9 * s, null)}
+                          {labelGroup(t.label, cx, yt + 9 * s + fsv * 0.8, r, true)}
                         </>
                       ) : (
                         <>
-                          {labelGroup(t.label, cx, yt - 9 * s, true)}
-                          {labelGroup(r.label, cx, yv + 9 * s + fsv * 0.8, false, true)}
+                          {labelGroup(t.label, cx, yt - 9 * s, r)}
+                          {labelGroup(r.label, cx, yv + 9 * s + fsv * 0.8, null, true)}
                         </>
                       )
-                    ) : labelGroup(r.label, cx, yv - 9 * s, false)}
+                    ) : labelGroup(r.label, cx, yv - 9 * s, null)}
                   </>
                 ) : (
                   <>
                     {ylo - yhi > 0.5 && <line x1={cx} x2={cx} y1={yhi} y2={ylo} stroke={r.color} strokeWidth={1.75} style={SW(1.75)} />}
                     <Mark shape={mark} cx={cx} cy={yv} r={4.5} color={r.color} jev={isJev(r.id)} />
-                    {labelGroup(r.label, cx, Math.min(yv, yhi) - 9 * s, false)}
+                    {labelGroup(r.label, cx, Math.min(yv, yhi) - 9 * s, null)}
                   </>
                 )}
               </g>
@@ -481,7 +484,7 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
                   {two && (
                     <>
                       <text x={tEnd} y={cB + 4 * s} fontSize={FS_VAL} fill="var(--ink)" className="mono">{t!.label}</text>
-                      {tag(tEnd + tlw + TAG_GAP, cB + 4 * s)}
+                      {tag(r, tEnd + tlw + TAG_GAP, cB + 4 * s)}
                     </>
                   )}
                 </>
@@ -496,7 +499,7 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
                     <>
                       <text x={lx} y={cy - 9 * s} fontSize={FS_VAL} textAnchor="middle" fill="var(--ink)" className="mono">{r.label}</text>
                       <text x={tlx} y={cy + 17 * s} fontSize={FS_VAL} textAnchor="middle" fill="var(--ink)" className="mono">{t.label}</text>
-                      {tag(tlx + tlw / 2 + TAG_GAP, cy + 17 * s)}
+                      {tag(r, tlx + tlw / 2 + TAG_GAP, cy + 17 * s)}
                     </>
                   ) : (
                     <>
@@ -623,6 +626,154 @@ export function StudioScatter({ pts, xLabel, yLabel = "Recall", fmtX, logos: log
               </g>
               {/* the glyph is drawn at the origin of a group translated to the point and scaled about 0 0 (PRScatter.tsx Mark): a `transform-origin: x y` in px drifts on a zoomed WebKit page */}
               {hasLogo(p) ? <g transform={`translate(${x} ${y})`}><g color={p.color} style={{ transform: glyphScale(isJev(p.id)) }}><LogoGlyph model={p.id} cx={0} cy={0} size={13} /></g></g> : <Mark shape={mark} cx={x} cy={y} r={4} color={p.color} jev={isJev(p.id)} />}
+              {l && <text x={l.x} y={l.y + 10.5 * s} fontSize={11.5 * s} fill="var(--ink)" className="nm" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round" }}>{l.text}</text>}
+            </g>
+          );
+        })}
+        {drawn.length === 0 && <text x={W / 2} y={H / 2} textAnchor="middle" fontSize={13 * s} fill="var(--ink-4)">{emptyText}</text>}
+      </svg>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------------------------------------
+// The Single vs bundled map (the studio's `arms` plot, Layout → map; opsRows.ts armsPts): recall across and precision up as on the recall/precision
+// map, one arrow per model from its bundled point (filled mark) to its one-issue point (hollow dot).
+
+/** A point of the arms map: the model's bundled recall and precision, and its one-issue ones where it was run that way (opsRows.ts StudioArmsPt). */
+export type StudioArmsPt = { id: string; name: string; color: string; bundled: { recall: CI; precision: CI }; single: { recall: CI; precision: CI } | null; decider?: boolean; subset?: string | null };
+type ArmsXY = { x: number; y: number; xlo: number; xhi: number; ylo: number; yhi: number };
+
+/**
+ * Sized to the host's box like StudioScatter (host must be positioned). `domain` fixes both axes (the studio's Axes control: 0–100% or custom bounds);
+ * unset, the axes fit the drawn points and their intervals. `whiskers` draws the 95% intervals as a faint cross at each point (the style's --op-whisker
+ * still applies). `keyOn` draws the two-entry key (`keyNames`: bundled / single issue) at the top right. `logos`, `leaders`, `labels`, `mark`,
+ * `markSize`, `jevMarkSize`, `groups` and `ticks` as on StudioScatter; the labels sit by the bundled point.
+ */
+export function StudioArmsMap({ pts, domain, whiskers = true, keyOn = false, keyNames = ["bundled", "single issue"], logos: logosIn, emptyText = "Select at least one model.", textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, bg = "none", groups, ticks: density = "normal" }: { pts: StudioArmsPt[]; domain?: { x: [number, number]; y: [number, number] }; whiskers?: boolean; keyOn?: boolean; keyNames?: [string, string]; logos?: boolean | LogosMode; emptyText?: string; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; bg?: PlotBg; groups?: (id: string) => LegendGroup; ticks?: TickDensity }) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const logos = logosMode(logosIn, true);
+  const hasLogo = (p: StudioArmsPt) => logoShown(logos, p.id) && !!logoFor(p.id);
+  const bgId = useBgId();
+  const sz = useSize(hostRef, { w: 900, h: 520 });
+  const W = sz.w, H = Math.max(300, sz.h);
+  const s = textScale;
+  const { measure, probes } = useTextMeasure([LEGEND_CLS, NAME_CLS, "mono"]);
+  const xy = (a: { recall: CI; precision: CI } | null): ArmsXY | null => (a && a.recall && a.precision ? { x: a.recall[0], y: a.precision[0], xlo: a.recall[1], xhi: a.recall[2], ylo: a.precision[1], yhi: a.precision[2] } : null);
+  const drawn = pts.flatMap((p) => { const b = xy(p.bundled); return b ? [{ p, b, sg: xy(p.single) }] : []; });
+  const ends = drawn.flatMap((d) => [d.b, ...(d.sg ? [d.sg] : [])]);
+  const fit = (lo: number, hi: number): [number, number] => { const pad = Math.max(0.02, (hi - lo) * 0.12); return [Math.max(0, lo - pad), Math.min(1, hi + pad)]; };
+  const xd: [number, number] = domain?.x ?? (ends.length ? fit(Math.min(...ends.map((e) => (whiskers ? e.xlo : e.x))), Math.max(...ends.map((e) => (whiskers ? e.xhi : e.x)))) : [0, 1]);
+  const yd: [number, number] = domain?.y ?? (ends.length ? fit(Math.min(...ends.map((e) => (whiskers ? e.ylo : e.y))), Math.max(...ends.map((e) => (whiskers ? e.yhi : e.y)))) : [0, 1]);
+  const tickLabel = (t: number) => `${+(t * 100).toFixed(1)}%`;
+  const { PL, PB, titleX } = axisMargins(linTicks(yd[0], yd[1], linTarget(density)).map(tickLabel), s);
+  const grouped = labelsMode === "legend" && groups ? legendGroups(drawn.map((d) => d.p.id), groups) : null;
+  const legendItems = grouped ?? drawn.map(({ p }) => ({ id: p.id, name: `${p.name}${p.subset ? " *" : ""}`, color: p.color, sample: p.id }));
+  const pointLabels = labelsMode === "beside" || !!grouped;
+  // the two-entry key (filled mark: bundled; hollow dot: single issue) at the top right, above the plot; the item legend, when on, sits below it
+  const KEY_FS = 11 * s, KEY_SW = 10 * s, KEY_GAP = 6 * s, KEY_ITEM = 18 * s, KEY_ROW = 16 * s;
+  const keyW = keyOn ? KEY_SW + KEY_GAP + measure(keyNames[0], KEY_FS, LEGEND_CLS) + KEY_ITEM + KEY_SW + KEY_GAP + measure(keyNames[1], KEY_FS, LEGEND_CLS) : 0;
+  const keyH = keyOn ? KEY_ROW + 4 * s : 0;
+  const LEGEND_Y = 4 + keyH, legendH = labelsMode === "legend" ? legendLayout(legendItems.map((i) => i.name), s, PL, W - PR, measure).height : 0;
+  const top = Math.max(PT, (labelsMode === "legend" ? LEGEND_Y + legendH : keyH) + (keyOn || labelsMode === "legend" ? LEGEND_GAP * s : 0));
+  const xt = axisTicks("linear", xd, density, W - PL - PR, (t) => measure(tickLabel(t), 10.5 * s, "mono") + 8 * s), yt = axisTicks("linear", yd, density, H - top - PB, () => 10.5 * s * 1.4);
+  const grid = gridOn(density);
+  const X = (v: number) => PL + ((v - xd[0]) / (xd[1] - xd[0] || 1)) * (W - PL - PR);
+  const Y = (v: number) => top + (1 - (v - yd[0]) / (yd[1] - yd[0] || 1)) * (H - top - PB);
+  const sizeOf = (p: StudioArmsPt) => (isJev(p.id) ? jevMarkSize : markSize);
+  const markR = (p: StudioArmsPt) => (hasLogo(p) ? 6.5 : 4) * sizeOf(p);
+  const hollowR = (p: StudioArmsPt) => 4 * sizeOf(p);
+  const growOf = (p: StudioArmsPt) => Math.max(0, 6.5 * sizeOf(p) - 6.5), O = (p: StudioArmsPt) => 11 * s + growOf(p);
+  // labels by the bundled point: right of it, else left, above, below; kept clear of every mark (both ends) and of one another
+  const placed: { x: number; y: number; w: number; h: number }[] = [];
+  const dots = drawn.flatMap((d) => [{ x: X(d.b.x), y: Y(d.b.y), avoid: 6 + growOf(d.p) }, ...(d.sg ? [{ x: X(d.sg.x), y: Y(d.sg.y), avoid: 6 + growOf(d.p) }] : [])]);
+  const clash = (a: { x: number; y: number; w: number; h: number }) => placed.some((b) => a.x < b.x + b.w + 2 && a.x + a.w + 2 > b.x && a.y < b.y + b.h + 1 && a.y + a.h + 1 > b.y) || dots.some((d) => d.x > a.x - d.avoid && d.x < a.x + a.w + d.avoid && d.y > a.y - d.avoid && d.y < a.y + a.h + d.avoid);
+  const labels = drawn.map(({ p, b, sg }) => {
+    if (!pointLabels) return null;
+    const text = `${p.name}${p.subset ? " *" : ""}`, w = measure(text, 11.5 * s, NAME_CLS) + 4, h = 14 * s, o = O(p), x = X(b.x), y = Y(b.y);
+    // the side away from the arrow first, so the label does not sit on the segment
+    const away = sg ? X(sg.x) < x : false;
+    const side = [{ x: x + o, y: y - h / 2 }, { x: x - o - w, y: y - h / 2 }];
+    const cands = [...(away ? side : [side[1], side[0]]), { x: x - w / 2, y: y - 14 * s - h }, { x: x - w / 2, y: y + 14 * s }];
+    const c = cands.find((cc) => cc.x >= PL && cc.x + w <= W - 2 && cc.y >= top - h && !clash({ ...cc, w, h }));
+    if (c) placed.push({ ...c, w, h });
+    return c ? { ...c, w, h, text } : null;
+  });
+  const kx = W - PR - keyW, kcy = 4 + KEY_ROW / 2, kx1 = kx + KEY_SW + KEY_GAP + measure(keyNames[0], KEY_FS, LEGEND_CLS) + KEY_ITEM;
+  return (
+    <div ref={hostRef} style={{ position: "absolute", inset: 0 }}>
+      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ display: "block", overflow: "visible" }}>
+        <defs><PlotBgPattern id={bgId} kind={bg} s={s} /></defs>
+        {bg !== "none" && <rect x={PL} y={top} width={W - PR - PL} height={H - PB - top} fill={`url(#${bgId})`} />}
+        {xt.map(({ t, label }) => (
+          <g key={`x${t}`}>
+            {grid && <line className="gl" x1={X(t)} x2={X(t)} y1={top} y2={H - PB} stroke="var(--grid-x, var(--grid))" />}
+            {label && <text x={X(t)} y={H - PB + 16 * s} fontSize={10.5 * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{tickLabel(t)}</text>}
+          </g>
+        ))}
+        {yt.map(({ t, label }) => (
+          <g key={`y${t}`}>
+            {grid && <line className="gl" x1={PL} x2={W - PR} y1={Y(t)} y2={Y(t)} stroke="var(--grid)" />}
+            {label && <text x={PL - 8} y={Y(t) + 3.5 * s} fontSize={10.5 * s} textAnchor="end" fill="var(--ink-3)" className="mono">{tickLabel(t)}</text>}
+          </g>
+        ))}
+        <g stroke="var(--axis)" style={SW(1)}>
+          <line x1={PL} x2={W - PR} y1={H - PB} y2={H - PB} />
+          <line x1={PL} x2={PL} y1={top} y2={H - PB} stroke="var(--axis-y, var(--axis))" />
+        </g>
+        <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax">Recall, document level</text>
+        <text x={titleX} y={(top + H - PB) / 2} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(top + H - PB) / 2})`}>Precision, document level</text>
+        {keyOn && (
+          <g className="pr-legend">
+            <Mark shape={mark} cx={kx + KEY_SW / 2} cy={kcy} r={4} color="var(--ink-2)" fixed />
+            <text x={kx + KEY_SW + KEY_GAP} y={kcy + 4 * s} fontSize={KEY_FS} fill="var(--ink-2)" className={LEGEND_CLS}>{keyNames[0]}</text>
+            <circle cx={kx1 + KEY_SW / 2} cy={kcy} r={4} fill="var(--panel)" stroke="var(--ink-2)" strokeWidth={1.5} />
+            <text x={kx1 + KEY_SW + KEY_GAP} y={kcy + 4 * s} fontSize={KEY_FS} fill="var(--ink-2)" className={LEGEND_CLS}>{keyNames[1]}</text>
+          </g>
+        )}
+        {labelsMode === "legend" && <Legend items={legendItems} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={(id) => legendSwatch(logos, mark)(legendItems.find((i) => i.id === id)?.sample ?? id)} measure={measure} />}
+        {probes}
+        {/* the 95% intervals as a faint cross at each point, under everything else */}
+        {whiskers && drawn.map(({ p, b, sg }) => (
+          <g key={`w${p.id}`} stroke={p.color} strokeWidth={1} style={{ ...SW(1), opacity: "calc(var(--op-whisker, 0.75) * 0.6)" }}>
+            {[b, ...(sg ? [sg] : [])].map((e, j) => (
+              <g key={j}>
+                <line x1={X(e.xlo)} x2={X(e.xhi)} y1={Y(e.y)} y2={Y(e.y)} />
+                <line x1={X(e.x)} x2={X(e.x)} y1={Y(e.yhi)} y2={Y(e.ylo)} />
+              </g>
+            ))}
+          </g>
+        ))}
+        {leaders && pointLabels && drawn.map(({ p, b }, i) => {
+          const l = labels[i];
+          if (!l) return null;
+          const x = X(b.x), y = Y(b.y);
+          const ld = leaderFor({ x: l.x - x, y: l.y - y, w: l.w, h: l.h }, markR(p), O(p));
+          return ld && <line key={`l${p.id}`} className="pr-leader" x1={x + ld.x1} y1={y + ld.y1} x2={x + ld.x2} y2={y + ld.y2} stroke={p.color} strokeOpacity={0.7} style={LEADER_STYLE} />;
+        })}
+        {drawn.map(({ p, b, sg }, i) => {
+          const x = X(b.x), y = Y(b.y), l = labels[i];
+          // the arrow: from the bundled mark's edge to the hollow dot's edge, a small head just short of the dot
+          let arrow: ReactNode = null;
+          if (sg) {
+            const x2 = X(sg.x), y2 = Y(sg.y), dx = x2 - x, dy = y2 - y, len = Math.hypot(dx, dy);
+            if (len > markR(p) + hollowR(p) + 2) {
+              const ux = dx / len, uy = dy / len, r0 = markR(p) + 1, r1 = hollowR(p) + 1.5;
+              const ax = x + ux * r0, ay = y + uy * r0, bx = x2 - ux * r1, by = y2 - uy * r1;
+              const hl = Math.min(7 * sizeOf(p), (len - r0 - r1) * 0.6), hw = hl * 0.5, tx = bx - ux * hl, ty = by - uy * hl;
+              arrow = (
+                <g>
+                  <line x1={ax} y1={ay} x2={tx} y2={ty} stroke={p.color} strokeWidth={1.75} strokeLinecap="round" style={{ strokeWidth: T0_STROKE_W }} />
+                  <path d={`M${bx} ${by} L${tx - uy * hw} ${ty + ux * hw} L${tx + uy * hw} ${ty - ux * hw} Z`} fill={p.color} />
+                </g>
+              );
+            }
+          }
+          return (
+            <g key={p.id}>
+              {arrow}
+              {hasLogo(p) ? <g transform={`translate(${x} ${y})`}><g color={p.color} style={{ transform: glyphScale(isJev(p.id)) }}><LogoGlyph model={p.id} cx={0} cy={0} size={13} /></g></g> : <Mark shape={mark} cx={x} cy={y} r={4} color={p.color} jev={isJev(p.id)} />}
+              {sg && <circle cx={X(sg.x)} cy={Y(sg.y)} r={4} fill="var(--panel)" stroke={p.color} strokeWidth={1.75} style={{ transform: `scale(${userScale(isJev(p.id))})`, transformOrigin: `${X(sg.x)}px ${Y(sg.y)}px`, r: "calc(4px + var(--r-add, 0px))", strokeWidth: T0_STROKE_W } as CSSProperties} />}
               {l && <text x={l.x} y={l.y + 10.5 * s} fontSize={11.5 * s} fill="var(--ink)" className="nm" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round" }}>{l.text}</text>}
             </g>
           );
