@@ -145,7 +145,7 @@ function CompareTabs({ v, on, explain }: CompareProps) {
           rows={stab.rows} kind={stabChart === "dots" ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? stab.agreeDomain : undefined}
           axis={stabAxis(stabChart, stabT0Of(stabSetting))} fmtTick={fmtPctTick} onSelect={explain}
         />
-        {caption(stabCaption(stabChart, stabT0Of(stabSetting), stab.sameRuns))}
+        {caption(stabCaption(stabChart, stabT0Of(stabSetting), stab.sameRuns, true, stab.runsNotes))}
       </div>
     );
   }

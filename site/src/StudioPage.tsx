@@ -501,7 +501,7 @@ export default function StudioPage() {
     if (plot === "cost") return barNote(costCaption(costChart, costUnit, costScale, marks.whiskers));
     if (plot === "speed") return barNote(speedCaption(speedChart, marks.whiskers));
     // the lollipop (Temperature 0 → dots) draws no whiskers: the segment between the two dots takes the row
-    return barNote(stabCaption(stabChart, stabT0Draw, stab.sameRuns, marks.whiskers && !(stabT0Draw === "dots" && stabT0Drawn)));
+    return barNote(stabCaption(stabChart, stabT0Draw, stab.sameRuns, marks.whiskers && !(stabT0Draw === "dots" && stabT0Drawn), stab.runsNotes));
   };
   // A bar chart's caption (opsRows.ts, written for a filled bar) names the Fill mode: its leading "Bar:" becomes "Hatched bar:" and the like; a caption
   // that does not open on the bar (Cost, throughput) is prefixed with it instead. Filled bars, and the dot and scatter views, keep the caption as written.

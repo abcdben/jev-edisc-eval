@@ -20,8 +20,8 @@ const useBgId = () => `bg-${useId().replace(/[^A-Za-z0-9_-]/g, "")}`;
 
 /** A second figure a row may carry (the Stability chart's temperature-0 rerun): drawn as a lighter bar or a hollow dot when the chart's `t0` mode is on. */
 export type StudioRowT0 = { value: number; lo?: number | null; hi?: number | null; label: string };
-/** One row of a StudioBars chart. `lo`/`hi` draw a whisker (an interval around `value`); `sub` is a muted secondary figure after the label; `empty` replaces "not measured"; `t0` is the row's temperature-0 figure (StudioRowT0). */
-export type StudioRow = { id: string; name: string; color: string; value: number | null; lo?: number | null; hi?: number | null; label: string; sub?: string; empty?: string; decider?: boolean; subset?: string | null; t0?: StudioRowT0 };
+/** One row of a StudioBars chart. `lo`/`hi` draw a whisker (an interval around `value`); `empty` replaces "not measured"; `t0` is the row's temperature-0 figure (StudioRowT0). */
+export type StudioRow = { id: string; name: string; color: string; value: number | null; lo?: number | null; hi?: number | null; label: string; empty?: string; decider?: boolean; subset?: string | null; t0?: StudioRowT0 };
 
 /**
  * How a row's temperature-0 figure (StudioRow.t0) is drawn (the studio's Stability → Temperature 0 control, opsRows.ts StabT0): `none` ignores it;
@@ -41,7 +41,7 @@ const T0_STROKE_W = "calc(1.75px * var(--sw-mult, 1))";
  * (the site's charts; the height follows the rows); `v`, one column per model rising from a baseline, names along the bottom, values up the left
  * axis, the chart filling its host's box like the scatters (the host must be positioned). Every mode (paired t = 0 bars, the lollipop, hatching,
  * whiskers, the agreement view) draws in both; in `v` the value labels sit above the columns (above and below the two dots of a lollipop) and a
- * row's `sub` under its name. Names wrap onto two lines where a column is too narrow for one; where any name cannot be wrapped into its column
+ * Names wrap onto two lines where a column is too narrow for one; where any name cannot be wrapped into its column
  * every name turns 35° instead, so a chart is either all upright or all turned.
  */
 export type Orient = "h" | "v";
@@ -132,7 +132,7 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
   // (with its tag) counts too; in the lollipop the labels are centred on their dots, so the overhang is half a label (plus the tag after the t = 0 one)
   const VALUE_W = Math.max(90 * s, ...rows.map((r) => {
     if (r.value == null) return measure(r.empty ?? "not measured", 11.5 * s) + 14 * s;
-    const main = measure(r.label, FS_VAL, "mono") + (r.sub ? measure(r.sub, 10.5 * s, "mono") + 10 * s : 0);
+    const main = measure(r.label, FS_VAL, "mono");
     if (lolli && t0Of(r)) return Math.max(main / 2, measure(t0Of(r)!.label, FS_VAL, "mono") / 2 + tagW) + 14 * s;
     return Math.max(main, t0LabelW(r)) + 14 * s;
   }));
@@ -224,9 +224,9 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
   const emptyOf = (r: StudioRow) => r.empty ?? "not measured";
 
   if (vertical) {
-    // ---- columns: one per model across the width, the value axis up the left, the names (and glyphs, and a row's `sub`) along the bottom ----
+    // ---- columns: one per model across the width, the value axis up the left, the names (and glyphs) along the bottom ----
     const H = Math.max(300, sz.h);
-    const FS_TICK = 11 * s, FS_NAME = 12.5 * s, FS_SUB = 10.5 * s, LINE = 14 * s;
+    const FS_TICK = 11 * s, FS_NAME = 12.5 * s, FS_EMPTY = 10.5 * s, LINE = 14 * s;
     const PR = 10 * s;
     // the left margin holds the value tick labels (widest measured) and 8 s to the axis; the ticks depend on the plot height, which depends on the bottom margin,
     // which depends only on the names, so the names' layout comes first
@@ -250,18 +250,11 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
     const wrapped = sorted.map(wrapName);
     const turned = wrapped.some((w) => w == null);
     const lines = sorted.map((r, i) => (turned ? [labelOf(r)] : wrapped[i]!));
-    // a row's `sub` under its name: whole where it fits the column, else its first " · " segment (the runs count of "4 runs · 2,400 decisions")
-    const subOf = (r: StudioRow): string | null => {
-      if (!r.sub) return null;
-      if (turned || measure(r.sub, FS_SUB, "mono") <= colW - 4 * s) return r.sub;
-      return r.sub.split(" · ")[0];
-    };
-    const anySub = sorted.some((r) => r.value != null && subOf(r));
     const glyphH = logos ? 20 * s : 0;
-    // the bottom margin: the axis, the glyph slot, the name lines (or the turned names' extent) and the sub line
+    // the bottom margin: the axis, the glyph slot and the name lines (or the turned names' extent)
     const maxNameW = Math.max(0, ...sorted.map((r) => measure(labelOf(r), FS_NAME, nameCls(r))));
     const rad = (NAME_ANGLE * Math.PI) / 180;
-    const namesH = turned ? Math.sin(rad) * maxNameW + Math.cos(rad) * LINE * (anySub ? 2 : 1) + 4 * s : LINE * Math.max(1, ...lines.map((l) => l.length)) + (anySub ? LINE - 1 * s : 0);
+    const namesH = turned ? Math.sin(rad) * maxNameW + Math.cos(rad) * LINE + 4 * s : LINE * Math.max(1, ...lines.map((l) => l.length));
     const PB = Math.round(8 * s + glyphH + namesH + 6 * s);
     // the top: no value-axis title in columns (the caption under the chart names the measure; a line of it floating above the plot read as a stray
     // subtitle), so the t = 0 key alone sits at the plot's top right, clear of the tallest column's label by the headroom below; then that headroom
@@ -322,23 +315,21 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
           ))}
           {sorted.map((r, i) => {
             const cx = PL + colW * (i + 0.5);
-            const label = labelOf(r), ls = lines[i], sub = r.value == null ? null : subOf(r);
+            const label = labelOf(r), ls = lines[i];
             const sel = onSelect ? selectable(onSelect, r.id, label) : {};
             const hit = onSelect ? <rect className="hit" x={cx - colW / 2} y={top} width={colW} height={H - top} fill="transparent" /> : null;
             const ink = r.value == null ? "var(--ink-4)" : "var(--ink-2)";
-            // the name block under the axis: the glyph, then the name lines (or the turned name with its sub as a second line), then the sub
+            // the name block under the axis: the glyph, then the name lines (or the turned name)
             const ny = baseline + 8 * s + glyphH + FS_NAME * 0.85;
             const nameEl = turned ? (
               <text x={cx} y={ny} fontSize={FS_NAME} textAnchor="end" fill={ink} className="nm" style={r.decider ? DECIDER_TEXT : undefined} transform={`rotate(-${NAME_ANGLE} ${cx} ${ny})`}>
                 {label}
-                {sub && <tspan x={cx} dy={LINE} fontSize={FS_SUB} fill="var(--ink-3)" className="mono" style={{ fontWeight: 400 }}>{sub}</tspan>}
               </text>
             ) : (
               <>
                 <text x={cx} y={ny} fontSize={FS_NAME} textAnchor="middle" fill={ink} className="nm" style={r.decider ? DECIDER_TEXT : undefined}>
                   {ls.map((l, k) => <tspan key={k} x={cx} dy={k ? LINE : 0}>{l}</tspan>)}
                 </text>
-                {sub && <text x={cx} y={ny + LINE * ls.length - 1 * s} fontSize={FS_SUB} textAnchor="middle" fill="var(--ink-3)" className="mono">{sub}</text>}
               </>
             );
             const glyphEl = glyphOf(r) && <g color={r.value == null ? "var(--ink-4)" : "var(--ink-2)"}><LogoGlyph model={r.id} cx={cx} cy={baseline + 8 * s + 8 * s} size={14 * s} opacity={r.value == null ? 0.6 : undefined} /></g>;
@@ -346,7 +337,7 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
               return (
                 <g key={r.id} {...sel}>
                   {hit}{glyphEl}{nameEl}
-                  <text x={cx + 4 * s} y={baseline - 6 * s} fontSize={FS_SUB} fill="var(--ink-4)" transform={`rotate(-90 ${cx + 4 * s} ${baseline - 6 * s})`}>{emptyOf(r)}</text>
+                  <text x={cx + 4 * s} y={baseline - 6 * s} fontSize={FS_EMPTY} fill="var(--ink-4)" transform={`rotate(-90 ${cx + 4 * s} ${baseline - 6 * s})`}>{emptyOf(r)}</text>
                 </g>
               );
             }
@@ -487,7 +478,6 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
                     </>
                   )}
                   <text x={end} y={cA + 4 * s} fontSize={FS_VAL} fill="var(--ink)" className="mono">{r.label}</text>
-                  {r.sub && <text x={end + lw + 10 * s} y={cA + 4 * s} fontSize={10.5 * s} fill="var(--ink-3)" className="mono">{r.sub}</text>}
                   {two && (
                     <>
                       <text x={tEnd} y={cB + 4 * s} fontSize={FS_VAL} fill="var(--ink)" className="mono">{t!.label}</text>
@@ -505,14 +495,12 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
                   {t ? (
                     <>
                       <text x={lx} y={cy - 9 * s} fontSize={FS_VAL} textAnchor="middle" fill="var(--ink)" className="mono">{r.label}</text>
-                      {r.sub && <text x={lx + lw / 2 + 8 * s} y={cy - 9 * s} fontSize={10.5 * s} fill="var(--ink-3)" className="mono">{r.sub}</text>}
                       <text x={tlx} y={cy + 17 * s} fontSize={FS_VAL} textAnchor="middle" fill="var(--ink)" className="mono">{t.label}</text>
                       {tag(tlx + tlw / 2 + TAG_GAP, cy + 17 * s)}
                     </>
                   ) : (
                     <>
                       <text x={xv + 9 * s} y={cy + 4.5 * s} fontSize={FS_VAL} fill="var(--ink)" className="mono">{r.label}</text>
-                      {r.sub && <text x={xv + 9 * s + lw + 10 * s} y={cy + 4.5 * s} fontSize={10.5 * s} fill="var(--ink-3)" className="mono">{r.sub}</text>}
                     </>
                   )}
                 </>
@@ -521,7 +509,6 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
                   {xhi - xlo > 0.5 && <line x1={xlo} x2={xhi} y1={cy} y2={cy} stroke={r.color} strokeWidth={1.75} style={SW(1.75)} />}
                   <Mark shape={mark} cx={xv} cy={cy} r={4.5} color={r.color} jev={isJev(r.id)} />
                   <text x={end} y={cy + 4.5 * s} fontSize={FS_VAL} fill="var(--ink)" className="mono">{r.label}</text>
-                  {r.sub && <text x={end + lw + 10 * s} y={cy + 4.5 * s} fontSize={10.5 * s} fill="var(--ink-3)" className="mono">{r.sub}</text>}
                 </>
               )}
             </g>
