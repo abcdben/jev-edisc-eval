@@ -118,8 +118,8 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
   const W = sz.w;
   const s = textScale, ROW = (paired ? ROW_PAIRED : lolli ? ROW_LOLLI : ROW0) * s;
   const keyOn = t0Key && anyT0, keyH = keyOn ? (KEY_ROW + 8) * s : 0, TOP = TOP0 * s + keyH;
-  // text widths as drawn (measure.tsx): names (.nm, the decider rows heavier), figures (.mono), the plain "not measured", the key's names (.lg) and the axis title (.ax)
-  const { measure, probes } = useTextMeasure([NAME_CLS, { key: "dec", className: NAME_CLS, style: DECIDER_TEXT }, "mono", "", LEGEND_CLS, "ax"]);
+  // text widths as drawn (measure.tsx): names (.nm, the decider rows heavier), figures (.mono), the plain "not measured", the key's names (.lg)
+  const { measure, probes } = useTextMeasure([NAME_CLS, { key: "dec", className: NAME_CLS, style: DECIDER_TEXT }, "mono", "", LEGEND_CLS]);
   const labelOf = (r: StudioRow) => `${r.name}${r.subset ? " *" : ""}`;
   const nameW = (r: StudioRow) => measure(labelOf(r), 12.5 * s, r.decider ? "dec" : NAME_CLS);
   // the name column: the glyph (30 s to the name's start) or a 10 s pad, the widest name, 14 s to the axis; at least 170 s, at most 260 s
@@ -226,7 +226,7 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
   if (vertical) {
     // ---- columns: one per model across the width, the value axis up the left, the names (and glyphs, and a row's `sub`) along the bottom ----
     const H = Math.max(300, sz.h);
-    const FS_TICK = 11 * s, FS_AX = 11.5 * s, FS_NAME = 12.5 * s, FS_SUB = 10.5 * s, LINE = 14 * s;
+    const FS_TICK = 11 * s, FS_NAME = 12.5 * s, FS_SUB = 10.5 * s, LINE = 14 * s;
     const PR = 10 * s;
     // the left margin holds the value tick labels (widest measured) and 8 s to the axis; the ticks depend on the plot height, which depends on the bottom margin,
     // which depends only on the names, so the names' layout comes first
@@ -263,11 +263,10 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
     const rad = (NAME_ANGLE * Math.PI) / 180;
     const namesH = turned ? Math.sin(rad) * maxNameW + Math.cos(rad) * LINE * (anySub ? 2 : 1) + 4 * s : LINE * Math.max(1, ...lines.map((l) => l.length)) + (anySub ? LINE - 1 * s : 0);
     const PB = Math.round(8 * s + glyphH + namesH + 6 * s);
-    // the top: the axis title at the left and, where it fits beside it, the key at the right (else on its own line); then headroom for the labels above the tallest column
-    const titleW = measure(axis, FS_AX, "ax");
-    const keyBeside = keyOn && titleW + keyW + 24 * s <= plotW;
-    const TITLE_Y = TOP0 * s + FS_AX;
-    const top = TITLE_Y + 8 * s + (keyOn && !keyBeside ? KEY_ROW * s + 2 * s : 0);
+    // the top: no value-axis title in columns (the caption under the chart names the measure; a line of it floating above the plot read as a stray
+    // subtitle), so the t = 0 key alone sits at the plot's top right, clear of the tallest column's label by the headroom below; then that headroom
+    const KEY_Y = TOP0 * s + (KEY_ROW * s) / 2;
+    const top = TOP0 * s + (keyOn ? KEY_ROW * s + 4 * s : 0);
     const baseline = H - PB, plotTop = top + 18 * s;
     const plotH = Math.max(60, baseline - plotTop);
     const Y = (v: number) => {
@@ -313,8 +312,7 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
             <PlotBgPattern id={bgId} kind={bg} s={s} />
             <HatchDefs items={hatchItems} s={s} hatchId={hatchId} on={hatched} />
           </defs>
-          <text x={PL} y={TITLE_Y} fontSize={FS_AX} fill="var(--ink-3)" className="ax">{axis}</text>
-          {keyOn && keyAt(keyBeside ? PL + plotW - keyW : PL, keyBeside ? TITLE_Y - FS_AX * 0.35 : TITLE_Y + 8 * s + (KEY_ROW * s) / 2)}
+          {keyOn && keyAt(PL + plotW - keyW, KEY_Y)}
           {bg !== "none" && n > 0 && <rect x={PL} y={top} width={plotW} height={baseline - top} fill={`url(#${bgId})`} />}
           {vticks.map(({ t, label }) => (
             <g key={t}>
