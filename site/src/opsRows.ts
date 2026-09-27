@@ -224,17 +224,19 @@ const NUM_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven"
  */
 export function armsCaption(layout: ArmsLayout, metric: ArmsMetric, meta: { display: string; n_docs: number; n_issues: number } | undefined, missing: string[], whiskers = true, delta = true): string[] {
   const m = metric === "f1" ? "F1" : metric;
-  const marks =
-    layout === "paired" ? `Bar: ${m} with every issue in one request; lighter bar: one issue per request`
-    : layout === "dumbbell" ? `Filled dot: ${m} with every issue in one request; hollow dot: one issue per request; the segment joins a model's two runs`
-    : "Filled dot: every issue in one request; hollow dot: one issue per request; the arrow points from the bundled run to the single-issue run";
-  const dl = delta && layout !== "map" ? "; Δ: single − bundled, in points" : "";
-  const zoom = layout === "dumbbell" ? " Axis zoomed to the measured range." : "";
+  // one line: the two marks named with what they stand for, then the Δ tag, whiskers, corpus and the models without a single-issue run
   const issues = meta ? NUM_WORDS[meta.n_issues] ?? String(meta.n_issues) : "eleven";
+  const bundled = `all ${issues} issues in one request per email, the published figures`;
+  const marks =
+    layout === "paired" ? `Bar: ${m} with ${bundled}; lighter bar: one issue per request.`
+    : layout === "dumbbell" ? `Filled dot: ${m} with ${bundled}; hollow dot: one issue per request; the segment joins a model's two runs.`
+    : `Filled dot: ${bundled}; hollow dot: one issue per request; the arrow points from the bundled run to the single-issue run.`;
+  const dl = delta && layout !== "map" ? " Δ: single − bundled, in points." : "";
+  const zoom = layout === "dumbbell" ? " Axis zoomed to the measured range." : "";
   const corpus = meta ? `${meta.display.replace(/\s*\(.*\)$/, "")}, ${fmtInt(meta.n_docs)} emails, document level.` : "Document level.";
   const wilson = whiskers && metric !== "f1" ? " Whiskers: 95% Wilson intervals." : "";
   const notRun = missing.length ? ` Not run one issue at a time: ${missing.join(", ")}.` : "";
-  return [`${marks}${dl}.${zoom}`, `Bundled: all ${issues} issues in one request per email (the published figures). Single: one issue per request.${wilson} ${corpus}${notRun}`];
+  return [`${marks}${dl}${zoom}${wilson} ${corpus}${notRun}`];
 }
 export const armsAxis = (metric: ArmsMetric) => `${metric === "f1" ? "F1" : metric}, document level`;
 

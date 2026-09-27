@@ -178,12 +178,13 @@ export default function StudioPage() {
   useEffect(() => { if (!persistRef.current) return; writeChanged(lastWritten.current, state); lastWritten.current = state; }, [state]);
   const {
     plot, corpus, issue, on, chart, costChart, costUnit, costScale, speedChart, speedUnit, stabChart, stabT0, stabT0Tag, stabT0Key, hideUnmeasured, orient, armsMetric, armsLayout, armsDelta, armsKey, axes, ax, swap, ticks,
-    mark, markSize, jevSize, fill: fillMode, interval, labels: labelsMode, leaders, key, famBasic, famComposed, w, h, title, frame, legend, logos, bg, style, colors: colorMode, custom, text, contrast,
+    mark, markSize, jevSize, fill: fillMode, interval, labels: labelsMode, leaders, key, famBasic, famComposed, w, h, title, frame, legend, caption, logos, bg, style, colors: colorMode, custom, text, contrast,
     scheme, schemeName, exScale, exBg, theme,
   } = state;
 
   // the controls' setters, one per field (the JSX below reads as it did when each was its own useState)
-  const setPlot = setter("plot"), setCorpus = (c: string) => patch({ corpus: siteCorpus(c), issue: null }), setIssue = setter("issue"), setOn = setter("on");
+  // a typed title belongs to the chart it was written for: changing the plot clears it, so a Stability title never sits over the Cost chart
+  const setPlot = (p: StudioState["plot"]) => { if (p !== plot) patch({ plot: p, title: "" }); }, setCorpus = (c: string) => patch({ corpus: siteCorpus(c), issue: null }), setIssue = setter("issue"), setOn = setter("on");
   const setChart = setter("chart"), setCostChart = setter("costChart"), setCostUnit = setter("costUnit"), setCostScale = setter("costScale"), setSpeedChart = setter("speedChart"), setSpeedUnit = setter("speedUnit");
   const setStabChart = setter("stabChart"), setStabT0 = setter("stabT0"), setStabT0Tag = setter("stabT0Tag"), setStabT0Key = setter("stabT0Key"), setHideUnmeasured = setter("hideUnmeasured"), setOrient = setter("orient"), setArmsMetric = setter("armsMetric"), setArmsLayout = setter("armsLayout"), setArmsDelta = setter("armsDelta"), setArmsKey = setter("armsKey"), setAxes = setter("axes"), setSwap = setter("swap"), setTicks = setter("ticks");
   // the bar charts (StudioCharts.tsx StudioBars, in any of their modes): the plots the Orientation control applies to; `vertical` is columns
@@ -194,7 +195,7 @@ export default function StudioPage() {
   const stabT0Draw: StabT0 = stabT0 === "paired" && stabChart === "dots" ? "dots" : stabT0;
   const stabDots = stabChart === "dots" || stabT0Draw === "dots";
   const setMark = setter("mark"), setMarkSize = setter("markSize"), setJevSize = setter("jevSize"), setFillMode = setter("fill"), setIntervalMode = setter("interval"), setLabelsMode = setter("labels"), setLeaders = setter("leaders"), setKey = setter("key");
-  const setW = setter("w"), setH = setter("h"), setTitle = setter("title"), setFrame = setter("frame"), setLegend = setter("legend"), setLogos = setter("logos"), setBg = setter("bg");
+  const setW = setter("w"), setH = setter("h"), setTitle = setter("title"), setFrame = setter("frame"), setLegend = setter("legend"), setCaption = setter("caption"), setLogos = setter("logos"), setBg = setter("bg");
   const setText = setter("text"), setContrast = setter("contrast"), setExScale = setter("exScale"), setExBg = setter("exBg"), setTheme = setter("theme");
   const v: View = { corpus, tag: "", arm: "multi", gray: "all", level: "doc", issue };
   const meta = DATA.corpora[corpusKey(v.corpus, v.tag)];
@@ -551,7 +552,7 @@ export default function StudioPage() {
     plot === "pr" && (showFill ? `${FILL_MODES.find((m) => m.id === fillMode)?.label} ${interval === "ellipse" ? "ellipses" : "boxes"}` : INTERVAL_MODES.find((m) => m.id === interval)?.label),
     hasBars && `${FILL_MODES.find((m) => m.id === fillMode)?.label} bars`, fills && `labels ${labelsMode}`, fills && pointLabels && leaders && "leaders", byMaker ? "key by maker" : byFamily && "key by family",
   );
-  const canvasSummary = summarize(`${w} × ${fills ? h : "auto"} px`, title.trim() && `“${title.trim()}”`, frame ? "framed" : "plain", legend ? "legend" : "no legend", LOGOS_OPTIONS.find((o) => o.id === logos)?.label, BG_SUMMARY[bg]);
+  const canvasSummary = summarize(`${w} × ${fills ? h : "auto"} px`, title.trim() && `“${title.trim()}”`, frame ? "framed" : "plain", legend ? "key" : "no key", caption ? "caption" : "no caption", LOGOS_OPTIONS.find((o) => o.id === logos)?.label, BG_SUMMARY[bg]);
   const styleSummary = summarize(
     STYLES.find((s) => s.id === style)?.label, style === "custom" && schemeName.trim(),
     colorMode === "style" ? null : colorMode === "custom" ? "custom colours" : PALETTES.find((p) => p.id === colorMode)?.label, `Text ${text.toUpperCase()}`, `${contrast} contrast`,
@@ -715,8 +716,8 @@ export default function StudioPage() {
               {stabPaired(stabT0) && (
                 <Control label="t = 0 marks">
                   <Seg value={stabT0Tag ? "on" : "off"} onChange={(x) => setStabT0Tag(x === "on")} options={[{ id: "on", label: "t = 0 label", title: "A small grey “t = 0” tag after the temperature-0 value" }, { id: "off", label: "no label", title: "The temperature-0 value alone" }]} />
-                  <Seg value={stabT0Key ? "on" : "off"} onChange={(x) => setStabT0Key(x === "on")} options={[{ id: "on", label: "key", title: legend ? "A two-entry key (default sampling / temperature 0) above the rows" : "Shown when Canvas → Legend is on" }, { id: "off", label: "no key", title: "No key on the chart; the caption still names the reruns" }]} />
-                  {!legend && stabT0Key && <span className="studio-hint small">Canvas → Legend is off, so the key is hidden</span>}
+                  <Seg value={stabT0Key ? "on" : "off"} onChange={(x) => setStabT0Key(x === "on")} options={[{ id: "on", label: "key", title: legend ? "A two-entry key (default sampling / temperature 0) above the rows" : "Shown when Canvas → Panel → key is on" }, { id: "off", label: "no key", title: "No key on the chart; the caption still names the reruns" }]} />
+                  {!legend && stabT0Key && <span className="studio-hint small">Canvas → Panel → key is off, so the key is hidden</span>}
                 </Control>
               )}
               <Control label="Unmeasured">
@@ -736,8 +737,8 @@ export default function StudioPage() {
               </Control>
               <Control label="Arm marks">
                 {!armsMap && <Seg value={armsDelta ? "on" : "off"} onChange={(x) => setArmsDelta(x === "on")} options={[{ id: "on", label: "Δ label", title: "A small grey signed difference (single − bundled, in points) after the single-issue value" }, { id: "off", label: "no Δ", title: "The single-issue value alone" }]} />}
-                <Seg value={armsKey ? "on" : "off"} onChange={(x) => setArmsKey(x === "on")} options={[{ id: "on", label: "key", title: legend ? "A two-entry key (bundled / single issue) on the chart" : "Shown when Canvas → Legend is on" }, { id: "off", label: "no key", title: "No key on the chart; the caption still names the two arms" }]} />
-                {!legend && armsKey && <span className="studio-hint small">Canvas → Legend is off, so the key is hidden</span>}
+                <Seg value={armsKey ? "on" : "off"} onChange={(x) => setArmsKey(x === "on")} options={[{ id: "on", label: "key", title: legend ? "A two-entry key (bundled / single issue) on the chart" : "Shown when Canvas → Panel → key is on" }, { id: "off", label: "no key", title: "No key on the chart; the caption still names the two arms" }]} />
+                {!legend && armsKey && <span className="studio-hint small">Canvas → Panel → key is off, so the key is hidden</span>}
               </Control>
             </>
           )}
@@ -843,12 +844,13 @@ export default function StudioPage() {
           </Control>
           <Control label="Title">
             <span className="studio-size">
-              <input type="text" className="ttl" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="none" spellCheck={false} aria-label="chart title" title="A bold title at the panel's top-left, above the chart; leave empty for none. Part of the PNG export." />
+              <input type="text" className="ttl" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="none" spellCheck={false} aria-label="chart title" title="A bold title at the panel's top-left, above the chart; leave empty for none. Part of the PNG export. Cleared when the Plot changes." />
             </span>
           </Control>
           <Control label="Panel">
             <Seg value={frame ? "card" : "plain"} onChange={(x) => setFrame(x === "card")} options={[{ id: "card", label: "framed" }, { id: "plain", label: "plain" }]} />
-            <Seg value={legend ? "on" : "off"} onChange={(x) => setLegend(x === "on")} options={[{ id: "on", label: "legend" }, { id: "off", label: "no legend" }]} />
+            <Seg value={legend ? "on" : "off"} onChange={(x) => setLegend(x === "on")} options={[{ id: "on", label: "key", title: "The key drawn on the chart: default sampling / temperature 0 on Stability, bundled / single issue on Single vs bundled" }, { id: "off", label: "no key" }]} />
+            <Seg value={caption ? "on" : "off"} onChange={(x) => setCaption(x === "on")} options={[{ id: "on", label: "caption", title: "The note under the chart: what the marks and whiskers are and where the figures come from. Part of the PNG export." }, { id: "off", label: "no caption", title: "The chart alone; the panel's auto height shrinks with it" }]} />
             <Seg value={logos} onChange={setLogos} options={LOGOS_OPTIONS} />
           </Control>
           <Control label="Background">
@@ -1021,7 +1023,7 @@ export default function StudioPage() {
                 t0={armsLayout === "dumbbell" ? "dots" : "paired"} t0Tag={armsDelta} t0Key={legend && armsKey} keyNames={ARMS_KEY_NAMES} orient={orient}
               />,
             )}
-            {legend && legendLines.length > 0 && (
+            {caption && legendLines.length > 0 && (
               <div className="legend-note">
                 {legendLines.map((t, i) => <span key={i}>{t}</span>)}
                 {plot === "pr" && chart === "map" && items.some((i) => i.subset) && <span>* scored on a stratified subset</span>}

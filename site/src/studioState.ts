@@ -83,7 +83,8 @@ export type StudioState = {
   mark: MarkShape; markSize: MarkSize; jevSize: JevMarkSize; fill: FillMode; interval: IntervalMode; labels: LabelsMode; leaders: boolean; key: KeyMode;
   /** Key → by family swatches: a hex over the style's own colour for the Jev basic forms / composed variants, or "" for the style's (makers.ts FAMILY_*_VAR). */
   famBasic: string; famComposed: string;
-  w: number; h: number; title: string; frame: boolean; legend: boolean; logos: LogosMode; bg: Bg;
+  /** `legend`: the on-chart key (Stability's default/t = 0, Single vs bundled's bundled/single); `caption`: the note under the chart (what the marks and whiskers are, where the figures come from). */
+  w: number; h: number; title: string; frame: boolean; legend: boolean; caption: boolean; logos: LogosMode; bg: Bg;
   style: PlotStyle; colors: ColorMode; custom: Record<string, string>; text: TextSize; contrast: Contrast;
   scheme: Vars; schemeName: string;
   exScale: ExportScale; exBg: ExportBackground;
@@ -169,6 +170,7 @@ export const FIELDS: Fields = {
   title: { dflt: "", key: "studio-title", store: "string", coerce: str(300) },
   frame: { dflt: true, coerce: bool },
   legend: { dflt: true, coerce: bool },
+  caption: { dflt: true, coerce: bool },
   logos: { dflt: "all", key: "studio-logos", store: "string", coerce: oneOf(["all", "jev", "none"] as const) },
   bg: { dflt: "auto", key: "studio-bg", store: "string", coerce: oneOf(["auto", "off", "dots", "grid"] as const) },
   style: { dflt: "site", key: "studio-style", store: "string", coerce: oneOf(PLOT_STYLES) },
