@@ -79,7 +79,7 @@ export const LEADER_STYLE = { strokeWidth: "calc(0.75 * var(--sw-mult, 1))" } as
 export type MarkShape = "dot" | "plus" | "x" | "ring" | "square" | "diamond";
 export const MARK_SHAPES: { id: MarkShape; label: string }[] = [{ id: "dot", label: "dot" }, { id: "plus", label: "plus" }, { id: "x", label: "×" }, { id: "ring", label: "ring" }, { id: "square", label: "square" }, { id: "diamond", label: "diamond" }];
 /** The user's size factor on a mark: the Jev mark size where the item is a Jev row and the control is set, else the Mark size. */
-const userScale = (jev: boolean) => (jev ? "var(--mark-jev, var(--mark-user, 1))" : "var(--mark-user, 1)");
+export const userScale = (jev: boolean) => (jev ? "var(--mark-jev, var(--mark-user, 1))" : "var(--mark-user, 1)");
 /** The CSS transform that sizes a vendor glyph: the studio's Mark size (or Jev mark size, for a Jev row) × the high-contrast enlargement. */
 export const glyphScale = (jev: boolean) => `scale(calc(var(--mark-scale, 1) * ${userScale(jev)}))`;
 export function Mark({ shape = "dot", cx = 0, cy = 0, r, color, fixed = false, jev = false, className }: { shape?: MarkShape; cx?: number; cy?: number; r: number; color: string; fixed?: boolean; jev?: boolean; className?: string }) {

@@ -3,7 +3,7 @@ import type { Chart } from "./App";
 import { INTERVAL_MODES, MARK_SHAPES, type IntervalMode, type LabelsMode, type MarkShape } from "./components/PRScatter";
 import { FILL_MODES, type FillMode } from "./components/hatch";
 import { TICK_DENSITIES, type TickDensity } from "./components/ticks";
-import type { CostChart, CostScale, CostUnit, SpeedChart, SpeedUnit, StabChart, StabSetting } from "./opsRows";
+import { STAB_T0, type CostChart, type CostScale, type CostUnit, type SpeedChart, type SpeedUnit, type StabChart, type StabT0 } from "./opsRows";
 import type { ExportBackground } from "./exportPng";
 import { PALETTES, varOf, type PaletteId } from "./palettes";
 import type { LogosMode } from "./logos";
@@ -70,7 +70,9 @@ export const cleanVars = (o: Vars): Vars => Object.fromEntries(Object.entries(o)
 /** Every setting the studio holds; one preset captures all of them. */
 export type StudioState = {
   plot: Plot; corpus: string; issue: string | null; on: Set<string>;
-  chart: Chart; costChart: CostChart; costUnit: CostUnit; costScale: CostScale; speedChart: SpeedChart; speedUnit: SpeedUnit; stabChart: StabChart; stabSetting: StabSetting; hideUnmeasured: boolean;
+  chart: Chart; costChart: CostChart; costUnit: CostUnit; costScale: CostScale; speedChart: SpeedChart; speedUnit: SpeedUnit; stabChart: StabChart;
+  /** Stability → Temperature 0 (opsRows.ts StabT0), and its two marks: the small grey "t = 0" tag after the t = 0 value label, and the two-entry key (default sampling / temperature 0) drawn on the chart (with Canvas → Legend on). */
+  stabT0: StabT0; stabT0Tag: boolean; stabT0Key: boolean; hideUnmeasured: boolean;
   axes: Axes; ax: AxBounds; swap: boolean; ticks: TickDensity;
   mark: MarkShape; markSize: MarkSize; jevSize: JevMarkSize; fill: FillMode; interval: IntervalMode; labels: LabelsMode; leaders: boolean; key: KeyMode;
   /** Key → by family swatches: a hex over the style's own colour for the Jev basic forms / composed variants, or "" for the style's (makers.ts FAMILY_*_VAR). */
@@ -126,7 +128,9 @@ export const FIELDS: Fields = {
   speedChart: { dflt: "bars", coerce: oneOf(["bars", "dots", "throughput"] as const) },
   speedUnit: { dflt: "ms", coerce: oneOf(["ms", "s"] as const) },
   stabChart: { dflt: "bars", coerce: oneOf(["bars", "agree", "dots"] as const) },
-  stabSetting: { dflt: "default", coerce: oneOf(["default", "t0"] as const) },
+  stabT0: { dflt: "off", coerce: oneOf(ids(STAB_T0)) },
+  stabT0Tag: { dflt: true, coerce: bool },
+  stabT0Key: { dflt: true, coerce: bool },
   hideUnmeasured: { dflt: false, coerce: bool },
   axes: { dflt: "zoom", coerce: oneOf(["full", "zoom", "custom"] as const) },
   ax: {
@@ -233,6 +237,8 @@ export function fromPreset(raw: unknown): StudioState {
     const v = field(k).coerce(raw[k]);
     if (v !== undefined) (s as Record<string, unknown>)[k] = v;
   }
+  // presets and links saved before the Temperature 0 control carried the two-way `stabSetting` ("default" | "t0"); its t = 0 is the `t0` mode
+  if (!("stabT0" in raw) && raw.stabSetting === "t0") s.stabT0 = "t0";
   if (s.issue && !(s.issue in (DATA.corpora[s.corpus]?.issues ?? {}))) s.issue = null;
   return s;
 }

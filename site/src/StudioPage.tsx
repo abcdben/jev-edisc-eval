@@ -5,7 +5,7 @@ import { INTERVAL_MODES, MARK_SHAPES, PRScatter, intervalHasArea, type PRDomain 
 import { FILL_MODES, isOutlined } from "./components/hatch";
 import { PRRail } from "./components/PRRail";
 import { StudioBars, StudioScatter } from "./components/StudioCharts";
-import { COST_UNIT, costAxis, costCaption, costPts, costRows, fmtMoneyTick, fmtMsTick, fmtPctTick, speedAxis, speedCaption, speedRows, stabAxis, stabCaption, stabRows } from "./opsRows";
+import { COST_UNIT, STAB_T0, costAxis, costCaption, costPts, costRows, fmtMoneyTick, fmtMsTick, fmtPctTick, speedAxis, speedCaption, speedRows, stabAxis, stabCaption, stabPaired, stabRows, type StabT0 } from "./opsRows";
 import { Control, Seg } from "./components/ui";
 import { Section, sectionsApi, summarize } from "./components/Inspector";
 import type { PlotBg } from "./components/plotBg";
@@ -176,7 +176,7 @@ export default function StudioPage() {
   // every remembered field whose stored form changed goes back to its own key, as the page always wrote it (studioState.ts FIELDS)
   useEffect(() => { if (!persistRef.current) return; writeChanged(lastWritten.current, state); lastWritten.current = state; }, [state]);
   const {
-    plot, corpus, issue, on, chart, costChart, costUnit, costScale, speedChart, speedUnit, stabChart, stabSetting, hideUnmeasured, axes, ax, swap, ticks,
+    plot, corpus, issue, on, chart, costChart, costUnit, costScale, speedChart, speedUnit, stabChart, stabT0, stabT0Tag, stabT0Key, hideUnmeasured, axes, ax, swap, ticks,
     mark, markSize, jevSize, fill: fillMode, interval, labels: labelsMode, leaders, key, famBasic, famComposed, w, h, title, frame, legend, logos, bg, style, colors: colorMode, custom, text, contrast,
     scheme, schemeName, exScale, exBg, theme,
   } = state;
@@ -184,7 +184,10 @@ export default function StudioPage() {
   // the controls' setters, one per field (the JSX below reads as it did when each was its own useState)
   const setPlot = setter("plot"), setCorpus = (c: string) => patch({ corpus: siteCorpus(c), issue: null }), setIssue = setter("issue"), setOn = setter("on");
   const setChart = setter("chart"), setCostChart = setter("costChart"), setCostUnit = setter("costUnit"), setCostScale = setter("costScale"), setSpeedChart = setter("speedChart"), setSpeedUnit = setter("speedUnit");
-  const setStabChart = setter("stabChart"), setStabSetting = setter("stabSetting"), setHideUnmeasured = setter("hideUnmeasured"), setAxes = setter("axes"), setSwap = setter("swap"), setTicks = setter("ticks");
+  const setStabChart = setter("stabChart"), setStabT0 = setter("stabT0"), setStabT0Tag = setter("stabT0Tag"), setStabT0Key = setter("stabT0Key"), setHideUnmeasured = setter("hideUnmeasured"), setAxes = setter("axes"), setSwap = setter("swap"), setTicks = setter("ticks");
+  // Temperature 0 as drawn (opsRows.ts StabT0): paired bars on the dot chart become the lollipop, and the lollipop is a dot chart whatever Chart says
+  const stabT0Draw: StabT0 = stabT0 === "paired" && stabChart === "dots" ? "dots" : stabT0;
+  const stabDots = stabChart === "dots" || stabT0Draw === "dots";
   const setMark = setter("mark"), setMarkSize = setter("markSize"), setJevSize = setter("jevSize"), setFillMode = setter("fill"), setIntervalMode = setter("interval"), setLabelsMode = setter("labels"), setLeaders = setter("leaders"), setKey = setter("key");
   const setW = setter("w"), setH = setter("h"), setTitle = setter("title"), setFrame = setter("frame"), setLegend = setter("legend"), setLogos = setter("logos"), setBg = setter("bg");
   const setText = setter("text"), setContrast = setter("contrast"), setExScale = setter("exScale"), setExBg = setter("exBg"), setTheme = setter("theme");
@@ -425,7 +428,7 @@ export default function StudioPage() {
   // Which charts fill the panel's height (the map-like ones); the row-based ones take their height from the rows (the panel's `auto` mode).
   const fills = (plot === "pr" && chart === "map") || (plot === "cost" && costChart === "scatter");
   // Which plots draw bars (StudioBars kind "bar"), and so take the Fill control with the map; the dot and scatter views have no area to fill.
-  const hasBars = (plot === "cost" && costChart === "bars") || (plot === "speed" && speedChart !== "dots") || (plot === "stability" && stabChart !== "dots");
+  const hasBars = (plot === "cost" && costChart === "bars") || (plot === "speed" && speedChart !== "dots") || (plot === "stability" && !stabDots);
   // the map's Fill applies to the Interval modes with an area (box, ellipse); whiskers, brackets and none have nothing to fill
   const showFill = (plot === "pr" && chart === "map" && intervalArea) || hasBars;
 
@@ -449,8 +452,10 @@ export default function StudioPage() {
 
   // ---- rows for the studio's own charts, from the selected roster records (opsRows.ts: colours and short names from the roster, so Style presets apply) ----
   const cu = COST_UNIT[costUnit];
-  const stab = stabRows(sel, v.arm, stabChart, stabSetting, hideUnmeasured);
+  const stab = stabRows(sel, v.arm, stabChart, stabT0Draw, hideUnmeasured);
   const stabRowsKeyed = stab.rows.map(keyed);
+  // whether the chart draws a t = 0 element for some selected model (the paired modes engage only where a t = 0 cell exists)
+  const stabT0Drawn = stabPaired(stabT0Draw) && stab.rows.some((r) => r.value != null && r.t0);
 
   const emptyText = "Select at least one model.";
   // What the panel actually draws for the 95% interval, read off its computed variables after each style-affecting change (preset, Custom sliders,
@@ -490,7 +495,8 @@ export default function StudioPage() {
     }
     if (plot === "cost") return barNote(costCaption(costChart, costUnit, costScale, marks.whiskers));
     if (plot === "speed") return barNote(speedCaption(speedChart, marks.whiskers));
-    return barNote(stabCaption(stabChart, stabSetting, stab.sameRuns, marks.whiskers));
+    // the lollipop (Temperature 0 → dots) draws no whiskers: the segment between the two dots takes the row
+    return barNote(stabCaption(stabChart, stabT0Draw, stab.sameRuns, marks.whiskers && !(stabT0Draw === "dots" && stabT0Drawn)));
   };
   // A bar chart's caption (opsRows.ts, written for a filled bar) names the Fill mode: its leading "Bar:" becomes "Hatched bar:" and the like; a caption
   // that does not open on the bar (Cost, throughput) is prefixed with it instead. Filled bars, and the dot and scatter views, keep the caption as written.
@@ -502,7 +508,8 @@ export default function StudioPage() {
   const exportName = (el: HTMLElement) => {
     const chartId = plot === "pr" ? chart : plot === "cost" ? costChart : plot === "speed" ? speedChart : stabChart;
     const styleId = style === "custom" && schemeName.trim() ? `custom-${schemeName.trim()}` : style;
-    return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, plot === "pr" && chart === "map" && swap ? "precision-x" : "", corpus, styleId, colorMode === "style" ? "" : colorMode, byMaker ? "by-maker" : byFamily ? "by-family" : ""].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
+    const t0Id = plot === "stability" && stabT0Draw !== "off" ? `t0-${stabT0Draw}` : "";
+    return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, t0Id, plot === "pr" && chart === "map" && swap ? "precision-x" : "", corpus, styleId, colorMode === "style" ? "" : colorMode, byMaker ? "by-maker" : byFamily ? "by-family" : ""].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
   };
   const exportSize = `${w * Number(exScale)} × ${fills ? h * Number(exScale) : "auto"} px`;
 
@@ -512,7 +519,9 @@ export default function StudioPage() {
     plot === "pr" && chart, plot === "pr" && (axes === "full" ? "0–100%" : axes === "zoom" ? "fit to data" : `${ax.xlo}–${ax.xhi}%${chart === "map" ? ` × ${ax.ylo}–${ax.yhi}%` : ""}`), plot === "pr" && chart === "map" && swap && "precision on x",
     plot === "cost" && (costChart === "scatter" ? "cost vs recall" : costChart === "dots" ? "dots · log" : `bars · ${costScale}`), plot === "cost" && COST_UNIT[costUnit].axis,
     plot === "speed" && (speedChart === "throughput" ? "docs per hour" : `${speedChart === "dots" ? "dots · log" : "bars"} · ${speedUnit} per document`),
-    plot === "stability" && (stabChart === "agree" ? "agreement · zoomed" : stabChart === "dots" ? "dots" : "disagreement bars"), plot === "stability" && (stabSetting === "t0" ? "t = 0" : "default sampling"), plot === "stability" && hideUnmeasured && "unmeasured hidden",
+    plot === "stability" && (stabChart === "agree" ? "agreement · zoomed" : stabChart === "dots" ? "dots" : "disagreement bars"),
+    plot === "stability" && (stabT0 === "off" ? "default sampling" : stabT0 === "t0" ? "t = 0 only" : `t = 0 ${STAB_T0.find((o) => o.id === stabT0)?.label}${stabT0Tag ? "" : " · no tag"}${stabT0Key ? "" : " · no key"}`),
+    plot === "stability" && hideUnmeasured && "unmeasured hidden",
     ticks !== "normal" && (ticks === "none" ? "no gridlines" : `${ticks} gridlines`), markText,
     // the interval mark: "filled boxes" / "hatched ellipses" in the area modes (the Fill folded in), the mode's own name otherwise; the bar charts name their Fill alone
     plot === "pr" && (showFill ? `${FILL_MODES.find((m) => m.id === fillMode)?.label} ${interval === "ellipse" ? "ellipses" : "boxes"}` : INTERVAL_MODES.find((m) => m.id === interval)?.label),
@@ -673,8 +682,20 @@ export default function StudioPage() {
               <Control label="Chart">
                 <Seg value={stabChart} onChange={setStabChart} options={[{ id: "bars", label: "disagreement bars" }, { id: "agree", label: "agreement · zoomed" }, { id: "dots", label: "dots" }]} />
               </Control>
-              <Control label="Setting">
-                <Seg value={stabSetting} onChange={setStabSetting} options={[{ id: "default", label: "default", title: "Vendor default sampling" }, { id: "t0", label: "t = 0", title: stab.hasT0 ? "Temperature 0 where the API accepts it" : "No t = 0 cell among the selected models" }]} />
+              {/* Temperature 0 (opsRows.ts StabT0): the default cell alone, both cells per model as paired bars or a lollipop, or the t = 0 cell alone */}
+              <Control label="Temperature 0">
+                <Seg value={stabT0} onChange={setStabT0} options={STAB_T0.map((o) => ({ id: o.id, label: o.label, title: o.id === "off" ? o.title : stab.hasT0 ? o.title : "No t = 0 cell among the selected models" }))} />
+                {stabT0 === "paired" && stabChart === "dots" && <span className="studio-hint small">on the dot chart, paired bars draw as the dots</span>}
+                {stabT0 !== "off" && !stab.hasT0 && <span className="studio-hint small">no selected model has a t = 0 cell</span>}
+              </Control>
+              {stabPaired(stabT0) && (
+                <Control label="t = 0 marks">
+                  <Seg value={stabT0Tag ? "on" : "off"} onChange={(x) => setStabT0Tag(x === "on")} options={[{ id: "on", label: "t = 0 label", title: "A small grey “t = 0” tag after the temperature-0 value" }, { id: "off", label: "no label", title: "The temperature-0 value alone" }]} />
+                  <Seg value={stabT0Key ? "on" : "off"} onChange={(x) => setStabT0Key(x === "on")} options={[{ id: "on", label: "key", title: legend ? "A two-entry key (default sampling / temperature 0) above the rows" : "Shown when Canvas → Legend is on" }, { id: "off", label: "no key", title: "No key on the chart; the caption still names the reruns" }]} />
+                  {!legend && stabT0Key && <span className="studio-hint small">Canvas → Legend is off, so the key is hidden</span>}
+                </Control>
+              )}
+              <Control label="Unmeasured">
                 <Seg value={hideUnmeasured ? "hide" : "show"} onChange={(x) => setHideUnmeasured(x === "hide")} options={[{ id: "show", label: "list unmeasured" }, { id: "hide", label: "hide unmeasured" }]} />
               </Control>
             </>
@@ -935,9 +956,10 @@ export default function StudioPage() {
             )}
             {plot === "stability" && (
               <StudioBars
-                rows={stabRowsKeyed} kind={stabChart === "dots" ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? stab.agreeDomain : undefined}
-                axis={stabAxis(stabChart, stabSetting)}
+                rows={stabRowsKeyed} kind={stabDots ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? stab.agreeDomain : undefined}
+                axis={stabAxis(stabChart, stabT0Draw)}
                 fmtTick={fmtPctTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} ticks={ticks}
+                t0={stabT0Draw === "paired" ? "paired" : stabT0Draw === "dots" ? "dots" : "none"} t0Tag={stabT0Tag} t0Key={legend && stabT0Key}
               />
             )}
             {legend && legendLines.length > 0 && (

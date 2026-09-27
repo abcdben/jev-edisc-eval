@@ -6,7 +6,7 @@ import { Hint, Seg } from "./components/ui";
 import { StudioBars, StudioScatter } from "./components/StudioCharts";
 import { DET_ITEMS } from "./components/Consistency";
 import {
-  COST_UNIT, costAxis, costCaption, costPts, costRows, fmtMoneyTick, fmtMsTick, fmtPctTick, speedAxis, speedCaption, speedRows, stabAxis, stabCaption, stabRows,
+  COST_UNIT, costAxis, costCaption, costPts, costRows, fmtMoneyTick, fmtMsTick, fmtPctTick, speedAxis, speedCaption, speedRows, stabAxis, stabCaption, stabRows, stabT0Of,
   type CostChart, type CostScale, type CostUnit, type SpeedChart, type SpeedUnit, type StabChart, type StabSetting,
 } from "./opsRows";
 
@@ -126,7 +126,7 @@ function CompareTabs({ v, on, explain }: CompareProps) {
       </div>
     );
   } else {
-    const stab = stabRows(sel, v.arm, stabChart, stabSetting, hideUnmeasured);
+    const stab = stabRows(sel, v.arm, stabChart, stabT0Of(stabSetting), hideUnmeasured);
     const det = DATA.determinism;
     const runs = det?.cells.find((c) => c.setting === "default")?.k ?? 5;
     card = (
@@ -143,9 +143,9 @@ function CompareTabs({ v, on, explain }: CompareProps) {
         </div>
         <StudioBars
           rows={stab.rows} kind={stabChart === "dots" ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? stab.agreeDomain : undefined}
-          axis={stabAxis(stabChart, stabSetting)} fmtTick={fmtPctTick} onSelect={explain}
+          axis={stabAxis(stabChart, stabT0Of(stabSetting))} fmtTick={fmtPctTick} onSelect={explain}
         />
-        {caption(stabCaption(stabChart, stabSetting, stab.sameRuns))}
+        {caption(stabCaption(stabChart, stabT0Of(stabSetting), stab.sameRuns))}
       </div>
     );
   }

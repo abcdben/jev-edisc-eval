@@ -16,7 +16,24 @@ export type CostScale = "linear" | "log";
 export type SpeedChart = "bars" | "dots" | "throughput";
 export type SpeedUnit = "ms" | "s";
 export type StabChart = "bars" | "agree" | "dots";
+/** The dashboard's Stability setting switch (AppB.tsx): the default-sampling cell, or the t = 0 cell where one exists. */
 export type StabSetting = "default" | "t0";
+/**
+ * The studio's Temperature 0 control: `off` draws the default-sampling cell alone (the site's chart); `paired` adds a second, lighter-tinted bar
+ * per model at its t = 0 rate; `dots` is a lollipop (filled dot at the default rate, hollow dot at t = 0, joined in the model's colour); `t0` draws
+ * the t = 0 cell alone where one exists, the default cell otherwise (the dashboard's t = 0 setting). Models without a t = 0 cell keep one element.
+ */
+export type StabT0 = "off" | "paired" | "dots" | "t0";
+export const STAB_T0: { id: StabT0; label: string; title: string }[] = [
+  { id: "off", label: "off", title: "Vendor default sampling only" },
+  { id: "paired", label: "paired bars", title: "A second, lighter bar per model at its temperature-0 rate; models without a t = 0 cell keep one bar" },
+  { id: "dots", label: "dots", title: "Lollipop: filled dot at the default rate, hollow dot at temperature 0, joined in the model's colour" },
+  { id: "t0", label: "t = 0 only", title: "Temperature 0 where the API accepts it, the default cell otherwise; deciders expose no sampling control" },
+];
+/** The dashboard's two-way setting as a studio mode. */
+export const stabT0Of = (s: StabSetting): StabT0 => (s === "t0" ? "t0" : "off");
+/** Whether a mode draws both cells per model (a second element for the t = 0 rate). */
+export const stabPaired = (t0: StabT0) => t0 === "paired" || t0 === "dots";
 
 export const COST_UNIT: Record<CostUnit, { mult: (r: Rec) => number; axis: string; short: string }> = {
   "1k": { mult: () => 1e3, axis: "US dollars per 1,000 documents", short: "per 1,000 docs" },
@@ -59,23 +76,34 @@ export function speedRows(sel: Rec[], chart: SpeedChart, unit: SpeedUnit): Studi
 const isLLM = (r: Rec) => r.kind === "llm" || r.kind === "local_llm";
 const stabLbl = (p: number) => (p === 0 ? "0" : fmtPct(p, p < 0.001 ? 2 : 1));
 
+type Det = NonNullable<ReturnType<typeof detFor>>;
+const runsLbl = (c: Det) => `${c.cell.k} runs · ${fmtInt(c.cell.n_decisions)} decisions`;
+
 /**
  * The Stability rows for `sel`. `sameRuns` is "5 runs · 2,400 decisions" when every measured row shares it (for the caption; otherwise each row
- * carries its own); `agreeDomain` is the zoomed axis of the agreement view; `hasT0` says whether any selected model has a temperature-0 cell.
+ * carries its own, so a Gemma "(4 runs)" cell puts the runs on every row); `agreeDomain` is the zoomed axis of the agreement view; `hasT0` says
+ * whether any selected model has a temperature-0 cell. In the paired modes (stabPaired) a row whose model has a t = 0 cell carries it as `t0`,
+ * in the chart's figure (disagreement or agreement), for the second bar or the hollow dot; the row's own value stays the default cell.
  */
-export function stabRows(sel: Rec[], arm: "multi" | "single", chart: StabChart, setting: StabSetting, hideUnmeasured: boolean): { rows: StudioRow[]; sameRuns: string | null; agreeDomain: [number, number]; hasT0: boolean } {
-  const cells = sel.map((r) => { const d = detFor(r, arm, "default"), t0 = detFor(r, arm, "t0"); return { r, d, c: setting === "t0" ? (t0 ?? (isLLM(r) ? null : d)) : d }; });
-  // "5 runs · 2,400 decisions" goes in the legend when every measured row shares it, on each row otherwise
-  const runsOf = new Set(cells.filter((x) => x.c).map((x) => `${x.c!.cell.k} runs · ${fmtInt(x.c!.cell.n_decisions)} decisions`));
+export function stabRows(sel: Rec[], arm: "multi" | "single", chart: StabChart, t0: StabT0, hideUnmeasured: boolean): { rows: StudioRow[]; sameRuns: string | null; agreeDomain: [number, number]; hasT0: boolean } {
+  const both = stabPaired(t0);
+  const cells = sel.map((r) => { const d = detFor(r, arm, "default"), t = detFor(r, arm, "t0"); return { r, d, t: both ? t : null, c: t0 === "t0" ? (t ?? (isLLM(r) ? null : d)) : d }; });
+  // "5 runs · 2,400 decisions" goes in the legend when every measured row (and every t = 0 rerun drawn) shares it, on each row otherwise
+  const runsOf = new Set(cells.flatMap((x) => [x.c, x.t].filter((c): c is Det => !!c).map(runsLbl)));
   const sameRuns = runsOf.size === 1 ? [...runsOf][0] : null;
-  const all: StudioRow[] = cells.map(({ r, d, c }) => {
-    if (!c) return { ...rowBase(r), value: null, label: "", empty: setting === "t0" && d ? "API rejects temperature" : "not measured" };
-    const [p, lo, hi] = c.pairwise, runs = `${c.cell.k} runs · ${fmtInt(c.cell.n_decisions)} decisions`;
-    if (chart === "agree") return { ...rowBase(r), value: 1 - p, lo: 1 - hi, hi: 1 - lo, label: p === 0 ? "100%" : fmtPct(1 - p, p < 0.001 ? 2 : 1), sub: `disagree ${stabLbl(p)}` };
-    return { ...rowBase(r), value: p, lo, hi, label: stabLbl(p), sub: sameRuns ? undefined : runs };
+  // a cell as the chart's figure: pairwise disagreement, or agreement (1 − it) with the interval turned round
+  const fig = (c: Det) => {
+    const [p, lo, hi] = c.pairwise;
+    return chart === "agree" ? { value: 1 - p, lo: 1 - hi, hi: 1 - lo, label: p === 0 ? "100%" : fmtPct(1 - p, p < 0.001 ? 2 : 1) } : { value: p, lo, hi, label: stabLbl(p) };
+  };
+  const all: StudioRow[] = cells.map(({ r, d, c, t }) => {
+    if (!c) return { ...rowBase(r), value: null, label: "", empty: t0 === "t0" && d ? "API rejects temperature" : "not measured" };
+    const pair = t ? { t0: fig(t) } : {};
+    if (chart === "agree") return { ...rowBase(r), ...fig(c), sub: `disagree ${stabLbl(c.pairwise[0])}`, ...pair };
+    return { ...rowBase(r), ...fig(c), sub: sameRuns ? undefined : runsLbl(c), ...pair };
   });
   const rows = hideUnmeasured ? all.filter((x) => x.value != null) : all;
-  const agreeLo = Math.min(1, ...rows.map((x) => (x.value == null ? 1 : (x.lo ?? x.value))));
+  const agreeLo = Math.min(1, ...rows.flatMap((x) => (x.value == null ? [1] : [x.lo ?? x.value, ...(x.t0 ? [x.t0.lo ?? x.t0.value] : [])])));
   const agreeDomain: [number, number] = [Math.max(0, Math.floor((agreeLo - 0.003) * 200) / 200), 1];
   const hasT0 = sel.some((r) => detFor(r, arm, "t0"));
   return { rows, sameRuns, agreeDomain, hasT0 };
@@ -101,14 +129,20 @@ export function speedCaption(chart: SpeedChart, whiskers = true): string[] {
   return [`${chart === "bars" ? "Bar" : "Dot"}: median wall-clock per request to score one document${chart === "dots" ? ", on a log axis" : ""}${whiskers ? "; whisker: 95% bootstrap interval for the median" : ""}.`, SPEED_SOURCE];
 }
 
-export function stabCaption(chart: StabChart, setting: StabSetting, sameRuns: string | null, whiskers = true): string[] {
-  const t0 = setting === "t0" ? " Temperature 0 where the API accepts it; deciders expose no sampling control." : "";
-  const where = `Measured on ${MEASURED_ON}${sameRuns ? ` (${sameRuns} per model)` : " scored 5 times"}; the same cells are shown for every corpus.`;
-  if (chart === "agree") return [`Bar: agreement, the probability two identical runs give the same decision (1 − pairwise disagreement)${whiskers ? "; whisker: 95% bootstrap interval" : ""}. Axis zoomed to the measured range.${t0}`, where];
-  return [`${chart === "bars" ? "Bar" : "Dot"}: probability two identical runs disagree on a decision (pairwise)${whiskers ? "; whisker: 95% bootstrap interval over decisions" : ""}.${t0}`, where];
+/**
+ * The Stability caption. `t0` is the mode as drawn: in `t0` the first line says where temperature 0 applies; in the paired modes the measured-where
+ * line gains "; temperature-0 reruns shown as lighter bars" / "hollow dots". The `dots` mode is a dot chart whatever `chart` says (the studio draws it so).
+ */
+export function stabCaption(chart: StabChart, t0: StabT0, sameRuns: string | null, whiskers = true): string[] {
+  const only = t0 === "t0" ? " Temperature 0 where the API accepts it; deciders expose no sampling control." : "";
+  const reruns = t0 === "paired" ? "; temperature-0 reruns shown as lighter bars" : t0 === "dots" ? "; temperature-0 reruns shown as hollow dots" : "";
+  const where = `Measured on ${MEASURED_ON}${sameRuns ? ` (${sameRuns} per model)` : " scored 5 times"}; the same cells are shown for every corpus${reruns}.`;
+  const mark = chart === "dots" || t0 === "dots" ? "Dot" : "Bar";
+  if (chart === "agree") return [`${mark}: agreement, the probability two identical runs give the same decision (1 − pairwise disagreement)${whiskers ? "; whisker: 95% bootstrap interval" : ""}. Axis zoomed to the measured range.${only}`, where];
+  return [`${mark}: probability two identical runs disagree on a decision (pairwise)${whiskers ? "; whisker: 95% bootstrap interval over decisions" : ""}.${only}`, where];
 }
 
 /** Axis titles, as the studio writes them. */
 export const costAxis = (chart: CostChart, unit: CostUnit, scale: CostScale) => COST_UNIT[unit].axis + (chart === "dots" || scale === "log" ? " (log)" : "");
 export const speedAxis = (chart: SpeedChart) => (chart === "throughput" ? "sequential documents per hour (3,600,000 ÷ median ms per document)" : `median latency per document${chart === "dots" ? " (log)" : ""}`);
-export const stabAxis = (chart: StabChart, setting: StabSetting) => (chart === "agree" ? `agreement: probability two identical runs give the same decision${setting === "t0" ? " · temperature 0" : ""}` : `probability two identical runs disagree${setting === "t0" ? " · temperature 0" : ""}`);
+export const stabAxis = (chart: StabChart, t0: StabT0) => (chart === "agree" ? `agreement: probability two identical runs give the same decision${t0 === "t0" ? " · temperature 0" : ""}` : `probability two identical runs disagree${t0 === "t0" ? " · temperature 0" : ""}`);
