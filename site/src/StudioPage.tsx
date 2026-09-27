@@ -464,7 +464,9 @@ export default function StudioPage() {
   // whether the chart draws a t = 0 element for some selected model (the paired modes engage only where a t = 0 cell exists)
   const stabT0Drawn = stabPaired(stabT0Draw) && stab.rows.some((r) => r.value != null && r.t0);
   // Single vs bundled (opsRows.ts armsRows): each selected model's bundled figure with its one-issue figure as the row's second element
-  const arms = armsRows(sel, armsMetric);
+  // the same slice as the recall/precision scatter (data.ts pick under the studio's view: corpus and issue; level and gray set are fixed here), for both arms
+  const arms = armsRows(sel, armsMetric, v);
+  const armsIssue = v.issue ? issueLabel(meta, v.issue).split(" · ")[0] : null;
   const armsRowsKeyed = arms.rows.map(keyed);
 
   const emptyText = "Select at least one model.";
@@ -506,7 +508,7 @@ export default function StudioPage() {
     if (plot === "cost") return barNote(costCaption(costChart, costUnit, costScale, marks.whiskers));
     if (plot === "speed") return barNote(speedCaption(speedChart, marks.whiskers));
     // the dumbbell (StudioBars' lollipop) draws no whiskers: the segment between the two dots takes the row
-    if (plot === "arms") return barNote(armsCaption(armsLayout, armsMetric, meta, arms.missing, marks.whiskers && !(armsLayout === "dumbbell" && arms.hasSingle), armsDelta && arms.hasSingle));
+    if (plot === "arms") return barNote(armsCaption(armsLayout, armsMetric, meta, arms.missing, v, armsIssue, marks.whiskers && !(armsLayout === "dumbbell" && arms.hasSingle), armsDelta && arms.hasSingle));
     // the lollipop (Temperature 0 → dots) draws no whiskers: the segment between the two dots takes the row
     return barNote(stabCaption(stabChart, stabT0Draw, stab.sameRuns, marks.whiskers && !(stabT0Draw === "dots" && stabT0Drawn), stab.runsNotes));
   };
@@ -527,7 +529,7 @@ export default function StudioPage() {
   const legendLines = legendText();
   /** A bar chart's host: the filling canvas in columns (the chart sizes to its box), the chart alone in rows (it sizes to them). */
   const barHost = (chart: React.ReactNode) => (vertical ? <div className="studio-canvas">{chart}</div> : chart);
-  const showIssue = plot === "pr" || (plot === "cost" && costChart === "scatter");
+  const showIssue = plot === "pr" || (plot === "cost" && costChart === "scatter") || plot === "arms";
   /** e.g. jev-recall-precision-map-trec-linkedin-1200x675@2x.png; the size is the panel's rendered CSS size (the PNG is that × scale). */
   const exportName = (el: HTMLElement) => {
     const chartId = plot === "pr" ? chart : plot === "cost" ? costChart : plot === "speed" ? speedChart : plot === "arms" ? `${armsMetric}-${armsLayout}` : stabChart;
@@ -1014,12 +1016,12 @@ export default function StudioPage() {
             )}
             {armsMap && (
               <div className="studio-canvas">
-                <StudioArmsMap pts={armsPts(sel).map(keyed)} whiskers={marks.whiskers} keyOn={legend && armsKey} keyNames={ARMS_KEY_NAMES} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} bg={plotBg("dots")} groups={groups} ticks={ticks} />
+                <StudioArmsMap pts={armsPts(sel, v).map(keyed)} xLabel={armsAxis("recall", v, armsIssue)} yLabel={armsAxis("precision", v, armsIssue)} whiskers={marks.whiskers} keyOn={legend && armsKey} keyNames={ARMS_KEY_NAMES} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} bg={plotBg("dots")} groups={groups} ticks={ticks} />
               </div>
             )}
             {plot === "arms" && !armsMap && barHost(
               <StudioBars
-                rows={armsRowsKeyed} kind={armsLayout === "dumbbell" ? "dot" : "bar"} domain={armsLayout === "dumbbell" ? arms.domain : undefined} axis={armsAxis(armsMetric)} fmtTick={fmtPctTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} ticks={ticks}
+                rows={armsRowsKeyed} kind={armsLayout === "dumbbell" ? "dot" : "bar"} domain={armsLayout === "dumbbell" ? arms.domain : undefined} axis={armsAxis(armsMetric, v, armsIssue)} fmtTick={fmtPctTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} ticks={ticks}
                 t0={armsLayout === "dumbbell" ? "dots" : "paired"} t0Tag={armsDelta} t0Key={legend && armsKey} keyNames={ARMS_KEY_NAMES} orient={orient}
               />,
             )}

@@ -177,12 +177,26 @@ export const ARMS_KEY_NAMES: [string, string] = ["bundled", "single issue"];
 
 /** The one-issue-per-request record of a bundled record's model on the same corpus, or null where the model was not run that way. */
 export const singleOf = (r: Rec): Rec | null => (r.arm === "single" ? r : DATA.records.find((x) => x.corpus === r.corpus && x.tag === r.tag && x.model === r.model && x.arm === "single") ?? null);
-/** A record's document-level figure: the point with its interval, or the point alone for F1 (null where the record has none). */
-const armFig = (r: Rec, metric: ArmsMetric): { value: number; lo: number | null; hi: number | null } | null => {
-  const s = r.all.doc;
-  if (metric === "f1") return s.f1 == null ? null : { value: s.f1, lo: null, hi: null };
-  const ci = s[metric];
+/**
+ * A record's figure under the studio's view: the same slice the recall/precision scatter plots (data.ts pick: the view's level and gray set, or the one
+ * issue where one is selected), so the two charts agree to the decimal. Recall and precision come with their interval; F1 is the exported figure for the
+ * pooled slices and, for one issue (which publishes no F1), the harmonic mean of the plotted recall and precision points, as the ranked view sorts by.
+ */
+const armFig = (r: Rec, metric: ArmsMetric, v: View): { value: number; lo: number | null; hi: number | null } | null => {
+  const { recall, precision, detail } = pick(r, v.level, v.gray, v.issue);
+  if (metric === "f1") {
+    const f1 = detail && "f1" in detail ? detail.f1 : recall && precision ? (2 * recall[0] * precision[0]) / (recall[0] + precision[0] || 1) : null;
+    return f1 == null ? null : { value: f1, lo: null, hi: null };
+  }
+  const ci = metric === "recall" ? recall : precision;
   return ci ? { value: ci[0], lo: ci[1], hi: ci[2] } : null;
+};
+/** Whether the view plots the published figures: the pooled document-level, gray-included slice. */
+export const armsPublished = (v: View) => !v.issue && v.level === "doc" && v.gray === "all";
+/** The slice in words, for the caption: "document level", "every decision", "Bottled water: one issue, decision level", with ", gray labels excluded" where the view drops them. */
+export const armsSlice = (v: View, issueName: string | null): string => {
+  const scope = v.issue ? `${issueName ?? v.issue}: one issue, decision level` : v.level === "decision" ? "every decision" : "document level";
+  return v.gray === "nogray" && !v.issue ? `${scope}, gray labels excluded` : scope;
 };
 /** The single − bundled difference in percentage points, signed, with a real minus: "Δ −6.4", "Δ +0.5", "Δ 0.0". */
 export const armsDelta = (bundled: number, single: number): string => {
@@ -196,10 +210,10 @@ export const armsDelta = (bundled: number, single: number): string => {
  * element; `missing` names those models for the caption. `domain` is the axis zoomed to the drawn figures (whole tenths, capped at 100%), for the
  * dumbbell; the bars start at zero.
  */
-export function armsRows(sel: Rec[], metric: ArmsMetric): { rows: StudioRow[]; missing: string[]; hasSingle: boolean; domain: [number, number] } {
+export function armsRows(sel: Rec[], metric: ArmsMetric, v: View): { rows: StudioRow[]; missing: string[]; hasSingle: boolean; domain: [number, number] } {
   const missing: string[] = [];
   const rows = sel.map((r): StudioRow => {
-    const b = armFig(r, metric), single = singleOf(r), s = single ? armFig(single, metric) : null;
+    const b = armFig(r, metric, v), single = singleOf(r), s = single ? armFig(single, metric, v) : null;
     if (!b) return { ...rowBase(r), value: null, label: "", empty: "not measured" };
     if (!s) missing.push(PRIMARY_BY_KEY[r.model].short);
     return { ...rowBase(r), ...b, label: fmtPct(b.value), ...(s ? { t0: { ...s, label: fmtPct(s.value), tag: armsDelta(b.value, s.value) } } : {}) };
@@ -210,35 +224,36 @@ export function armsRows(sel: Rec[], metric: ArmsMetric): { rows: StudioRow[]; m
 }
 
 /** The arms map's points (StudioCharts.tsx StudioArmsPt): each model's bundled recall and precision, and its one-issue ones where it was run that way. */
-export function armsPts(sel: Rec[]): StudioArmsPt[] {
-  return sel.map((r) => {
-    const single = singleOf(r);
-    return { ...rowBase(r), bundled: { recall: r.all.doc.recall, precision: r.all.doc.precision }, single: single ? { recall: single.all.doc.recall, precision: single.all.doc.precision } : null };
-  });
+export function armsPts(sel: Rec[], v: View): StudioArmsPt[] {
+  const at = (r: Rec) => { const { recall, precision } = pick(r, v.level, v.gray, v.issue); return { recall, precision }; };
+  return sel.map((r) => { const single = singleOf(r); return { ...rowBase(r), bundled: at(r), single: single ? at(single) : null }; });
 }
 
 const NUM_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
 /**
  * The arms caption: the marks, then what the arms are, the interval and the corpus. `whiskers` says whether the chart draws its intervals (off for F1,
- * which has none, and where the style hides them); `delta` whether the Δ tags are on; `missing` names the models with no one-issue run.
+ * which has none, and where the style hides them); `delta` whether the Δ tags are on; `missing` names the models with no one-issue run. `v` is the
+ * studio's view: the slice plotted (armsSlice) closes the corpus clause, and "the published figures" is said only of the pooled document-level view.
  */
-export function armsCaption(layout: ArmsLayout, metric: ArmsMetric, meta: { display: string; n_docs: number; n_issues: number } | undefined, missing: string[], whiskers = true, delta = true): string[] {
+export function armsCaption(layout: ArmsLayout, metric: ArmsMetric, meta: { display: string; n_docs: number; n_issues: number } | undefined, missing: string[], v: View, issueName: string | null, whiskers = true, delta = true): string[] {
   const m = metric === "f1" ? "F1" : metric;
   // one line: the two marks named with what they stand for, then the Δ tag, whiskers, corpus and the models without a single-issue run
   const issues = meta ? NUM_WORDS[meta.n_issues] ?? String(meta.n_issues) : "eleven";
-  const bundled = `all ${issues} issues in one request per email, the published figures`;
+  const bundled = `all ${issues} issues in one request per email${armsPublished(v) ? ", the published figures" : ""}`;
   const marks =
     layout === "paired" ? `Bar: ${m} with ${bundled}; lighter bar: one issue per request.`
     : layout === "dumbbell" ? `Filled dot: ${m} with ${bundled}; hollow dot: one issue per request; the segment joins a model's two runs.`
     : `Filled dot: ${bundled}; hollow dot: one issue per request; the arrow points from the bundled run to the single-issue run.`;
   const dl = delta && layout !== "map" ? " Δ: single − bundled, in points." : "";
   const zoom = layout === "dumbbell" ? " Axis zoomed to the measured range." : "";
-  const corpus = meta ? `${meta.display.replace(/\s*\(.*\)$/, "")}, ${fmtInt(meta.n_docs)} emails, document level.` : "Document level.";
+  const slice = armsSlice(v, issueName);
+  const corpus = meta ? `${meta.display.replace(/\s*\(.*\)$/, "")}, ${fmtInt(meta.n_docs)} emails, ${slice}.` : `${slice[0].toUpperCase()}${slice.slice(1)}.`;
   const wilson = whiskers && metric !== "f1" ? " Whiskers: 95% Wilson intervals." : "";
   const notRun = missing.length ? ` Not run one issue at a time: ${missing.join(", ")}.` : "";
   return [`${marks}${dl}${zoom}${wilson} ${corpus}${notRun}`];
 }
-export const armsAxis = (metric: ArmsMetric) => `${metric === "f1" ? "F1" : metric}, document level`;
+/** The value axis title: the metric and the slice ("recall, document level"; "recall · Bottled water" for one issue, as the cost scatter titles its axis). */
+export const armsAxis = (metric: ArmsMetric, v: View, issueName: string | null) => { const m = metric === "f1" ? "F1" : metric; return v.issue ? `${m} · ${issueName ?? v.issue}` : `${m}, ${armsSlice(v, null)}`; };
 
 /** Axis titles, as the studio writes them. */
 export const costAxis = (chart: CostChart, unit: CostUnit, scale: CostScale) => COST_UNIT[unit].axis + (chart === "dots" || scale === "log" ? " (log)" : "");

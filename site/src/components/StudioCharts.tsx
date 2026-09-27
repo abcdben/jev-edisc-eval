@@ -647,10 +647,10 @@ type ArmsXY = { x: number; y: number; xlo: number; xhi: number; ylo: number; yhi
 /**
  * Sized to the host's box like StudioScatter (host must be positioned). `domain` fixes both axes (the studio's Axes control: 0–100% or custom bounds);
  * unset, the axes fit the drawn points and their intervals. `whiskers` draws the 95% intervals as a faint cross at each point (the style's --op-whisker
- * still applies). `keyOn` draws the two-entry key (`keyNames`: bundled / single issue) at the top right. `logos`, `leaders`, `labels`, `mark`,
+ * still applies). `keyOn` draws the two-entry key (`keyNames`: bundled / single issue) at the top right. `xLabel` / `yLabel` are the axis titles (the studio names the slice). `logos`, `leaders`, `labels`, `mark`,
  * `markSize`, `jevMarkSize`, `groups` and `ticks` as on StudioScatter; the labels sit by the bundled point.
  */
-export function StudioArmsMap({ pts, domain, whiskers = true, keyOn = false, keyNames = ["bundled", "single issue"], logos: logosIn, emptyText = "Select at least one model.", textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, bg = "none", groups, ticks: density = "normal" }: { pts: StudioArmsPt[]; domain?: { x: [number, number]; y: [number, number] }; whiskers?: boolean; keyOn?: boolean; keyNames?: [string, string]; logos?: boolean | LogosMode; emptyText?: string; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; bg?: PlotBg; groups?: (id: string) => LegendGroup; ticks?: TickDensity }) {
+export function StudioArmsMap({ pts, domain, whiskers = true, keyOn = false, keyNames = ["bundled", "single issue"], xLabel = "Recall, document level", yLabel = "Precision, document level", logos: logosIn, emptyText = "Select at least one model.", textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, bg = "none", groups, ticks: density = "normal" }: { pts: StudioArmsPt[]; domain?: { x: [number, number]; y: [number, number] }; whiskers?: boolean; keyOn?: boolean; keyNames?: [string, string]; xLabel?: string; yLabel?: string; logos?: boolean | LogosMode; emptyText?: string; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; bg?: PlotBg; groups?: (id: string) => LegendGroup; ticks?: TickDensity }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const logos = logosMode(logosIn, true);
   const hasLogo = (p: StudioArmsPt) => logoShown(logos, p.id) && !!logoFor(p.id);
@@ -721,8 +721,8 @@ export function StudioArmsMap({ pts, domain, whiskers = true, keyOn = false, key
           <line x1={PL} x2={W - PR} y1={H - PB} y2={H - PB} />
           <line x1={PL} x2={PL} y1={top} y2={H - PB} stroke="var(--axis-y, var(--axis))" />
         </g>
-        <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax">Recall, document level</text>
-        <text x={titleX} y={(top + H - PB) / 2} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(top + H - PB) / 2})`}>Precision, document level</text>
+        <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
+        <text x={titleX} y={(top + H - PB) / 2} fontSize={12 * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(top + H - PB) / 2})`}>{yLabel}</text>
         {keyOn && (
           <g className="pr-legend">
             <Mark shape={mark} cx={kx + KEY_SW / 2} cy={kcy} r={4} color="var(--ink-2)" fixed />
