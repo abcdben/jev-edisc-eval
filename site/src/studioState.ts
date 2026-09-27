@@ -8,6 +8,7 @@ import { STAB_T0, type CostChart, type CostScale, type CostUnit, type SpeedChart
 import type { ExportBackground } from "./exportPng";
 import { PALETTES, varOf, type PaletteId } from "./palettes";
 import type { LogosMode } from "./logos";
+import { THEMES, THEME_KEY, type Theme } from "./theme";
 
 /**
  * The studio's settings as one object (StudioPage.tsx holds one `StudioState` in state), and the registry that knows, for each field, its default,
@@ -44,7 +45,7 @@ export type KeyMode = "model" | "maker" | "family";
 export type ExportScale = "1" | "2" | "3";
 export type Bg = "auto" | "off" | "dots" | "grid";
 export type Axes = "full" | "zoom" | "custom";
-export type Theme = "dark" | "light";
+export type { Theme };
 export type AxBounds = { xlo: number; xhi: number; ylo: number; yhi: number };
 export type Vars = Record<string, string>;
 
@@ -177,7 +178,7 @@ export const FIELDS: Fields = {
   exScale: { dflt: "2", key: "studio-export-scale", store: "string", coerce: oneOf(["1", "2", "3"] as const) },
   exBg: { dflt: "panel", key: "studio-export-bg", store: "string", coerce: oneOf(["panel", "transparent"] as const) },
   sections: { dflt: DEFAULT_SECTIONS, key: "studio-sections", store: "json", coerce: (r) => (isOpenMap(r) ? { ...DEFAULT_SECTIONS, ...r } : undefined) },
-  theme: { dflt: "light", key: "theme", store: "string", coerce: oneOf(["dark", "light"] as const) },
+  theme: { dflt: "light", key: THEME_KEY, store: "string", coerce: oneOf(THEMES) },
 };
 export const STATE_KEYS = Object.keys(FIELDS) as (keyof StudioState)[];
 /** Fields left out of the "modified since loaded" comparison: opening or closing an inspector section is not a change to the chart. */

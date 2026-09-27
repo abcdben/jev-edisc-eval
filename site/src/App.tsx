@@ -15,6 +15,7 @@ import { ExplainModal, type MetricSection, type Metrics } from "./components/Exp
 import { Picker, type PickGroup } from "./components/Picker";
 import { DisclaimerLink, DisclaimerModal, useDisclaimer } from "./components/Disclaimer";
 import { Logo } from "./logos";
+import { THEME_KEY, THEME_OPTIONS, readTheme, type Theme } from "./theme";
 
 /** The recall/precision card's views. `ranked` is drawn by PRRail on Compare models (rank rail) and by PRHeat on Compare configurations (vs default), chosen by PRCard's `ranked` prop. */
 export type Chart = "map" | "ranked";
@@ -407,8 +408,8 @@ export function Shell({ Compare = CompareSection, mast, controlsTail, compareHas
   const [grp, setGrp] = useState("jev");
   const off = useMemo(() => new Set<string>(), []); // every configuration of the family is shown
   const corpusTitle = `${fmtInt(meta.n_docs)} documents · ${meta.n_issues} issues · ${fmtInt(meta.n_pos_docs_any)} responsive to at least one (${fmtPct(meta.n_pos_docs_any / meta.n_docs, 0)}) · gold: ${meta.gold}`;
-  const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "light");
-  useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
+  const [theme, setTheme] = useState<Theme>(readTheme);
+  useEffect(() => { document.documentElement.dataset.theme = theme; try { localStorage.setItem(THEME_KEY, theme); } catch { /* storage denied: the choice lasts the session */ } }, [theme]);
   const [pageId, setPageId] = useState<Page>(() => (location.hash === "#configurations" ? "configurations" : "compare"));
   useEffect(() => {
     const onHash = () => setPageId(location.hash === "#configurations" ? "configurations" : "compare");
@@ -427,7 +428,7 @@ export function Shell({ Compare = CompareSection, mast, controlsTail, compareHas
           ))}
         </nav>
         {mast}
-        <span className="theme"><Seg value={theme} onChange={setTheme} options={[{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }]} /></span>
+        <span className="theme"><Seg value={theme} onChange={setTheme} options={THEME_OPTIONS} /></span>
       </header>
 
       <div className="controls">

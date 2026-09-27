@@ -3,6 +3,7 @@ import { CORPORA, DEFAULT_CORPUS, PRIMARY, PRIMARY_BY_KEY, fmtInt, fmtPct, model
 import { Control, Hint, Seg } from "./components/ui";
 import { Picker, type PickGroup } from "./components/Picker";
 import { Logo } from "./logos";
+import { THEME_KEY, THEME_OPTIONS, readTheme, type Theme } from "./theme";
 import { IssueSpark, PRCurveChart, type GhostCurve, type PRPoint } from "./components/CutoffCharts";
 import {
   DEFAULT_CUTOFF_IDX, GRID_N, buildIssueStats, decodeCutoffs, gridValue, issueCountsLabel, issueCurve, issueHistogram, issueMetrics, metrics,
@@ -71,8 +72,8 @@ function useCopy() {
 }
 
 export default function CutoffsPage() {
-  const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "light");
-  useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem("theme", theme); }, [theme]);
+  const [theme, setTheme] = useState<Theme>(readTheme);
+  useEffect(() => { document.documentElement.dataset.theme = theme; try { localStorage.setItem(THEME_KEY, theme); } catch { /* storage denied: the choice lasts the session */ } }, [theme]);
 
   const [data, setData] = useState<CutoffsFile | null>(null);
   const [loadErr, setLoadErr] = useState<string | null>(null);
@@ -337,7 +338,7 @@ export default function CutoffsPage() {
     <div className="page cutoffs">
       <header className="masthead">
         <h1 className="title"><em>Cutoffs ·</em> Jev vs Frontier LLMs</h1>
-        <span className="theme"><Seg value={theme} onChange={setTheme} options={[{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }]} /></span>
+        <span className="theme"><Seg value={theme} onChange={setTheme} options={THEME_OPTIONS} /></span>
       </header>
       <p className="lede cut-lede">
         Every model returns a probability that a document is responsive to each issue; the benchmark calls it responsive at 0.5. A <b>cutoff</b> is that line:

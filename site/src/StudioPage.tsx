@@ -13,6 +13,7 @@ import { TICK_DENSITIES } from "./components/ticks";
 import { copyPng, downloadBlob, renderPanelPng, slug } from "./exportPng";
 import { PALETTES, siblingHue, toHex, toVars, varOf } from "./palettes";
 import type { LogosMode } from "./logos";
+import { THEME_OPTIONS } from "./theme";
 import { FAMILIES, FAMILY_BASIC_VAR, FAMILY_COMPOSED_VAR, FAMILY_MEMBERS, MAKERS, familyColor, familyOf, makerColor, makerName, makerOf } from "./makers";
 import {
   BUILTIN_PRESETS, BUILTIN_PREFIX, JEV_SCALE, MARK_SCALE, SCHEME_MODELS, SCHEME_SLIDERS, SCHEME_SURFACE, SCHEME_VARS, TEXT_SCALE, builtinState, cleanVars, decodeHash, defaults, encodeHash,
@@ -556,7 +557,7 @@ export default function StudioPage() {
       <header className="masthead">
         <h1 className="title"><em>Studio ·</em> Jev vs Frontier LLMs</h1>
         <span className="studio-hint">Set the chart up here, then screenshot the panel below. Controls never draw on the panel.</span>
-        <span className="theme"><Seg value={theme} onChange={setTheme} options={[{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }]} /></span>
+        <span className="theme"><Seg value={theme} onChange={setTheme} options={THEME_OPTIONS} /></span>
       </header>
 
       {/* Top bar: what is plotted, and the PNG export at the right (the export's scale and backdrop are in the Export section below). */}

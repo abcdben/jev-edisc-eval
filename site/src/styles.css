@@ -96,6 +96,25 @@
   --v8: #f2a1d8; --v9: #c9ab2a; --v10: #ead45c; --v11: #a9c060; --v12: #8b8e89; --v13: #5b5f5a; --v14: #23b39a; --v15: #5fd8bb;
 }
 
+/* white theme (theme.ts): the light palette's model colours and highlight on a pure white page; panels are white too and stand off the page by a
+   hairline border (--line) alone. Neutral (not warm) greys for the ink steps, lines and grid; --bg-2 is the raised/hover tint (Seg hover, menu rows). */
+[data-theme="white"] {
+  --bg: #ffffff;
+  --bg-2: #f4f5f7;
+  --panel: #ffffff;
+  --ink: #1a1a1a;
+  --ink-2: #4a4c4f;
+  --ink-3: #7a7d82;
+  --ink-4: #a8abb0;
+  --line: #e3e5e8;
+  --line-2: #cfd2d6;
+  --grid: #eef0f2;
+  --dots: #d6d9dd;
+  --axis: #cfd2d6;
+  --hl: #f4fbd0;
+  --hl-line: #dbe9a0;
+}
+
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body {
