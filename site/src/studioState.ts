@@ -3,6 +3,7 @@ import type { Chart } from "./App";
 import { INTERVAL_MODES, MARK_SHAPES, type IntervalMode, type LabelsMode, type MarkShape } from "./components/PRScatter";
 import { FILL_MODES, type FillMode } from "./components/hatch";
 import { TICK_DENSITIES, type TickDensity } from "./components/ticks";
+import type { Orient } from "./components/StudioCharts";
 import { STAB_T0, type CostChart, type CostScale, type CostUnit, type SpeedChart, type SpeedUnit, type StabChart, type StabT0 } from "./opsRows";
 import type { ExportBackground } from "./exportPng";
 import { PALETTES, varOf, type PaletteId } from "./palettes";
@@ -73,6 +74,8 @@ export type StudioState = {
   chart: Chart; costChart: CostChart; costUnit: CostUnit; costScale: CostScale; speedChart: SpeedChart; speedUnit: SpeedUnit; stabChart: StabChart;
   /** Stability → Temperature 0 (opsRows.ts StabT0), and its two marks: the small grey "t = 0" tag after the t = 0 value label, and the two-entry key (default sampling / temperature 0) drawn on the chart (with Canvas → Legend on). */
   stabT0: StabT0; stabT0Tag: boolean; stabT0Key: boolean; hideUnmeasured: boolean;
+  /** Orientation of the bar charts (Cost, Speed, Stability; components/StudioCharts.tsx Orient): rows (`h`, the site's) or columns (`v`). */
+  orient: Orient;
   axes: Axes; ax: AxBounds; swap: boolean; ticks: TickDensity;
   mark: MarkShape; markSize: MarkSize; jevSize: JevMarkSize; fill: FillMode; interval: IntervalMode; labels: LabelsMode; leaders: boolean; key: KeyMode;
   /** Key → by family swatches: a hex over the style's own colour for the Jev basic forms / composed variants, or "" for the style's (makers.ts FAMILY_*_VAR). */
@@ -132,6 +135,7 @@ export const FIELDS: Fields = {
   stabT0Tag: { dflt: true, coerce: bool },
   stabT0Key: { dflt: true, coerce: bool },
   hideUnmeasured: { dflt: false, coerce: bool },
+  orient: { dflt: "h", key: "studio-orient", store: "string", coerce: oneOf(["h", "v"] as const) },
   axes: { dflt: "zoom", coerce: oneOf(["full", "zoom", "custom"] as const) },
   ax: {
     dflt: { xlo: 50, xhi: 100, ylo: 50, yhi: 100 },
