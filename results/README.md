@@ -51,7 +51,7 @@ Each archive was created from the repository root with `tar --zstd -cf results-<
 # needs zstd: brew install zstd  |  apt install zstd
 cd <repo root>
 gh release download v1.0-results --repo abcdben/jev-edisc-eval --dir /tmp/jev-results      # or download from the release page
-shasum -a 256 -c /tmp/jev-results/SHA256SUMS --ignore-missing 2>/dev/null || (cd /tmp/jev-results && shasum -a 256 -c SHA256SUMS)
+(cd /tmp/jev-results && shasum -a 256 -c SHA256SUMS)
 for f in /tmp/jev-results/results-*.tar.zst; do tar --zstd -xf "$f"; done
 ```
 
