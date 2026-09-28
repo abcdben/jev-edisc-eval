@@ -13,14 +13,15 @@ Source: NIST TREC Total Recall track, <https://trec.nist.gov/data/total-recall/>
 | `raw/README.html` | NIST's index page for the download | yes |
 | `eval_ids.jsonl`, `dev_ids.jsonl`, `lat200_ids.jsonl` | the exact evaluation, development and latency samples used in the study, **without document text**: `id`, `labels`, `gray`, `meta` (docno, stratum, facet, importance) | yes |
 | `dev_ids.txt`, `seen_ids.txt` | docnos excluded from `eval`/`full` (dev set; documents the analyst read while exploring) | yes |
-| `eval.jsonl`, `dev.jsonl`, `lat200.jsonl`, `full.jsonl`, `local_subset.jsonl` | the same rows **with text** | no (`.gitignore`) |
+| `eval.jsonl`, `dev.jsonl`, `lat200.jsonl`, `full.jsonl` | the same rows **with text** | no (`.gitignore`) |
+| `local_subset.jsonl` | 600 e-mails **with text**, an early local-model pilot subset | yes, since 2026-09-20 (legacy; see `Article/github_publication_audit.md` §1.6 — to be removed, with a history rewrite, before any public release) |
 | `../../TREC/Jeb Bush TXT/<docno>.txt` | the document collection | no (`.gitignore`) |
 
 The topics and qrels are redistributed as-is from trec.nist.gov (US-government research data, freely downloadable; NIST is the source of record).
 
 ## The document collection is not redistributed
 
-The Jeb Bush e-mail collection is distributed by NIST under the **TREC Total Recall Organizational/Individual Usage Agreement** (<https://trec.nist.gov/data/total-recall/>), which restricts use to research and prohibits redistribution of the documents. Nothing in this repository contains the e-mail text; the id manifests above are the "summaries" the agreement allows, from which the text cannot be reconstructed.
+The Jeb Bush e-mail collection is distributed by NIST under the **TREC Total Recall Organizational/Individual Usage Agreement** (<https://trec.nist.gov/data/total-recall/>), which restricts use to research and prohibits redistribution of the documents. Apart from the legacy `local_subset.jsonl` noted above and the two worked examples in `results/examples.json`, this repository contains no e-mail text; the id manifests above are the "summaries" the agreement allows, from which the text cannot be reconstructed.
 
 To reproduce the corpus files:
 
