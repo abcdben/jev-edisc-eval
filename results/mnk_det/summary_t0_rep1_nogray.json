@@ -1,0 +1,182 @@
+{
+  "gemini-3.8-flash [single]": {
+    "pooled": {
+      "question": "pooled(2 q)",
+      "n": 568,
+      "n_pos": 48,
+      "n_errors": 0,
+      "precision": 1.0,
+      "recall": 0.9791666666666666,
+      "recall_ci": [
+        0.8910053086246883,
+        0.9963129840206002
+      ],
+      "f1": 0.9894736842105263,
+      "specificity": 1.0,
+      "elusion": 0.0019193857965451055,
+      "kappa": 0.9885131855686782,
+      "accuracy": 0.9982394366197183,
+      "tp": 47,
+      "fp": 0,
+      "fn": 1,
+      "tn": 520,
+      "roc_auc": 0.9999399038461538,
+      "pr_auc": 0.9987745098039216,
+      "brier": 0.0020405316901408455,
+      "log_loss": 0.020025840766528365,
+      "ece": 0.015285211267605627,
+      "best_f1": 0.9894736842105263,
+      "best_f1_threshold": 0.85,
+      "recall_targets": {
+        "recall@75": {
+          "threshold": 0.95,
+          "precision": 1.0,
+          "recall": 0.75,
+          "review_fraction": 0.06338028169014084
+        },
+        "recall@80": {
+          "threshold": 0.95,
+          "precision": 1.0,
+          "recall": 0.8125,
+          "review_fraction": 0.06866197183098592
+        },
+        "recall@90": {
+          "threshold": 0.92,
+          "precision": 1.0,
+          "recall": 0.9166666666666666,
+          "review_fraction": 0.07746478873239436
+        },
+        "recall@95": {
+          "threshold": 0.85,
+          "precision": 1.0,
+          "recall": 0.9583333333333334,
+          "review_fraction": 0.08098591549295775
+        }
+      }
+    },
+    "questions": {
+      "som_narrow": {
+        "question": "som_narrow",
+        "n": 280,
+        "n_pos": 18,
+        "n_errors": 0,
+        "precision": 1.0,
+        "recall": 0.9444444444444444,
+        "recall_ci": [
+          0.7424220019799247,
+          0.9901250641690756
+        ],
+        "f1": 0.9714285714285714,
+        "specificity": 1.0,
+        "elusion": 0.0038022813688212928,
+        "kappa": 0.9695254680017414,
+        "accuracy": 0.9964285714285714,
+        "tp": 17,
+        "fp": 0,
+        "fn": 1,
+        "tn": 262,
+        "roc_auc": 0.9997879558948262,
+        "pr_auc": 0.9944444444444444,
+        "brier": 0.003613275000000001,
+        "log_loss": 0.025929545744255406,
+        "ece": 0.01659642857142857,
+        "best_f1": 0.9714285714285714,
+        "best_f1_threshold": 0.85,
+        "recall_targets": {
+          "recall@75": {
+            "threshold": 0.95,
+            "precision": 1.0,
+            "recall": 0.7777777777777778,
+            "review_fraction": 0.05
+          },
+          "recall@80": {
+            "threshold": 0.92,
+            "precision": 1.0,
+            "recall": 0.8333333333333334,
+            "review_fraction": 0.05357142857142857
+          },
+          "recall@90": {
+            "threshold": 0.85,
+            "precision": 1.0,
+            "recall": 0.9444444444444444,
+            "review_fraction": 0.060714285714285714
+          },
+          "recall@95": {
+            "threshold": 0.2,
+            "precision": 1.0,
+            "recall": 1.0,
+            "review_fraction": 0.06428571428571428
+          }
+        }
+      },
+      "dea_narrow": {
+        "question": "dea_narrow",
+        "n": 288,
+        "n_pos": 30,
+        "n_errors": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "recall_ci": [
+          0.8864829086095221,
+          1.0
+        ],
+        "f1": 1.0,
+        "specificity": 1.0,
+        "elusion": 0.0,
+        "kappa": 1.0,
+        "accuracy": 1.0,
+        "tp": 30,
+        "fp": 0,
+        "fn": 0,
+        "tn": 258,
+        "roc_auc": 1.0,
+        "pr_auc": 1.0,
+        "brier": 0.0005114756944444447,
+        "log_loss": 0.014286127593738183,
+        "ece": 0.014010416666666702,
+        "best_f1": 1.0,
+        "best_f1_threshold": 0.85,
+        "recall_targets": {
+          "recall@75": {
+            "threshold": 0.98,
+            "precision": 1.0,
+            "recall": 0.7666666666666667,
+            "review_fraction": 0.0798611111111111
+          },
+          "recall@80": {
+            "threshold": 0.95,
+            "precision": 1.0,
+            "recall": 0.8,
+            "review_fraction": 0.08333333333333333
+          },
+          "recall@90": {
+            "threshold": 0.95,
+            "precision": 1.0,
+            "recall": 0.9,
+            "review_fraction": 0.09375
+          },
+          "recall@95": {
+            "threshold": 0.95,
+            "precision": 1.0,
+            "recall": 0.9666666666666667,
+            "review_fraction": 0.10069444444444445
+          }
+        }
+      }
+    },
+    "ops": {
+      "latency_p50_ms": 1158.086666604504,
+      "latency_p95_ms": 2351.2233460671255,
+      "input_tokens_mean": 1883.44,
+      "output_tokens_mean": 27.835,
+      "cached_tokens_mean": 0.0,
+      "total_cost_usd": 0.91017675,
+      "total_list_cost_usd": 0.91017675,
+      "cost_per_1k_docs_usd": 1.5169612499999998,
+      "pricing_modes": {
+        "standard": 600
+      },
+      "label_prob_inconsistent": 0.0
+    }
+  }
+}

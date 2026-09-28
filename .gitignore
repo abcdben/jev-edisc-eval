@@ -3,13 +3,42 @@ __pycache__/
 *.pyc
 *.egg-info/
 .env
-results/
-!results/.gitkeep
 data/private/
 Screenshot*.png
 .DS_Store
 models/
+*.log
+*-venv/
+Article/.docx-venv/
 
 # results site
 site/node_modules/
 site/dist/
+
+# --- corpora that are not redistributed -------------------------------------
+# TREC 2016 Total Recall (athome4) document collection: NIST usage agreement.
+# Obtain from NIST and place at TREC/Jeb Bush TXT/<docno>.txt, then
+# `bench trec-build` regenerates data/trec/{eval,dev,full}.jsonl.
+# (anchored: on case-insensitive filesystems an unanchored `TREC/` would also
+# swallow data/trec/)
+/TREC/
+data/trec/*.jsonl
+!data/trec/*_ids.jsonl
+# CUAD upstream files: re-downloaded by `bench cuad-build`.
+data/cuad/raw/
+
+# --- results ----------------------------------------------------------------
+# Per-decision .jsonl records live in the GitHub Release (see results/README.md).
+# Only aggregates are tracked: results/*.json, per-corpus summary*.json and
+# REPORT.md, and results/trec_lat/sample_ids.json.
+results/*
+!results/.gitkeep
+!results/README.md
+!results/*.json
+!results/*/
+results/*/*
+!results/*/summary*.json
+!results/*/REPORT.md
+!results/trec_lat/sample_ids.json
+results/**/*.jsonl
+results_gpu*/

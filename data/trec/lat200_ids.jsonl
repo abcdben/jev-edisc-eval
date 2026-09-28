@@ -1,0 +1,200 @@
+{"id": "JB-001899", "labels": {}, "gray": [], "meta": {"docno": "1899", "n_chars": 676, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-006325", "labels": {}, "gray": [], "meta": {"docno": "6325", "n_chars": 3634, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-010311", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "10311", "n_chars": 2600, "important": ["marketing"], "facet": {"marketing": "95"}, "stratum": "pos:marketing"}}
+{"id": "JB-015427", "labels": {"a1_manatee_county": "responsive"}, "gray": [], "meta": {"docno": "15427", "n_chars": 4195, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-016262", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "16262", "n_chars": 621, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-021256", "labels": {}, "gray": [], "meta": {"docno": "21256", "n_chars": 1907, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-022450", "labels": {}, "gray": [], "meta": {"docno": "22450", "n_chars": 1556, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-023183", "labels": {"nra_rifle": "responsive", "a1_tort_reform": "responsive"}, "gray": [], "meta": {"docno": "23183", "n_chars": 6098, "important": [], "facet": {"nra_rifle": "152"}, "stratum": "pos:nra_rifle"}}
+{"id": "JB-025591", "labels": {"a1_school_funding": "responsive"}, "gray": [], "meta": {"docno": "25591", "n_chars": 946, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-027192", "labels": {}, "gray": [], "meta": {"docno": "27192", "n_chars": 501, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-027396", "labels": {}, "gray": [], "meta": {"docno": "27396", "n_chars": 304, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-027443", "labels": {}, "gray": [], "meta": {"docno": "27443", "n_chars": 1573, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-027703", "labels": {}, "gray": [], "meta": {"docno": "27703", "n_chars": 1493, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-028131", "labels": {}, "gray": [], "meta": {"docno": "28131", "n_chars": 1063, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-029052", "labels": {}, "gray": [], "meta": {"docno": "29052", "n_chars": 2753, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-029396", "labels": {}, "gray": [], "meta": {"docno": "29396", "n_chars": 736, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-030075", "labels": {"a1_school_funding": "responsive"}, "gray": [], "meta": {"docno": "30075", "n_chars": 1556, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-031807", "labels": {}, "gray": [], "meta": {"docno": "31807", "n_chars": 9779, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-032897", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "32897", "n_chars": 978, "important": [], "facet": {"nra_rifle": "157"}, "stratum": "pos:nra_rifle"}}
+{"id": "JB-033628", "labels": {}, "gray": [], "meta": {"docno": "33628", "n_chars": 11658, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-034372", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "34372", "n_chars": 3376, "important": [], "facet": {"gw_bush": "75"}, "stratum": "random"}}
+{"id": "JB-035183", "labels": {}, "gray": [], "meta": {"docno": "35183", "n_chars": 1227, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-035605", "labels": {}, "gray": [], "meta": {"docno": "35605", "n_chars": 1048, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-038666", "labels": {}, "gray": [], "meta": {"docno": "38666", "n_chars": 2069, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-041103", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "41103", "n_chars": 1781, "important": [], "facet": {"nra_rifle": "152"}, "stratum": "pos:nra_rifle"}}
+{"id": "JB-041330", "labels": {}, "gray": [], "meta": {"docno": "41330", "n_chars": 492, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-041695", "labels": {}, "gray": [], "meta": {"docno": "41695", "n_chars": 2568, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-042717", "labels": {}, "gray": [], "meta": {"docno": "42717", "n_chars": 1160, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-045412", "labels": {}, "gray": [], "meta": {"docno": "45412", "n_chars": 565, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-046354", "labels": {}, "gray": [], "meta": {"docno": "46354", "n_chars": 1367, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-046427", "labels": {}, "gray": [], "meta": {"docno": "46427", "n_chars": 885, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-048034", "labels": {}, "gray": [], "meta": {"docno": "48034", "n_chars": 564, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-050324", "labels": {}, "gray": [], "meta": {"docno": "50324", "n_chars": 791, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-050369", "labels": {}, "gray": [], "meta": {"docno": "50369", "n_chars": 10361, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-052529", "labels": {}, "gray": [], "meta": {"docno": "52529", "n_chars": 1079, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-053627", "labels": {}, "gray": [], "meta": {"docno": "53627", "n_chars": 433, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-053827", "labels": {}, "gray": [], "meta": {"docno": "53827", "n_chars": 463, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-053853", "labels": {}, "gray": [], "meta": {"docno": "53853", "n_chars": 193, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-054824", "labels": {}, "gray": [], "meta": {"docno": "54824", "n_chars": 534, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-055112", "labels": {}, "gray": [], "meta": {"docno": "55112", "n_chars": 590, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-055676", "labels": {}, "gray": [], "meta": {"docno": "55676", "n_chars": 514, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-056112", "labels": {}, "gray": [], "meta": {"docno": "56112", "n_chars": 149, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-057344", "labels": {}, "gray": [], "meta": {"docno": "57344", "n_chars": 532, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-059705", "labels": {}, "gray": [], "meta": {"docno": "59705", "n_chars": 993, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-060393", "labels": {}, "gray": [], "meta": {"docno": "60393", "n_chars": 125, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-062638", "labels": {}, "gray": [], "meta": {"docno": "62638", "n_chars": 1619, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-062719", "labels": {}, "gray": [], "meta": {"docno": "62719", "n_chars": 402, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-062920", "labels": {}, "gray": [], "meta": {"docno": "62920", "n_chars": 1073, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-063416", "labels": {}, "gray": [], "meta": {"docno": "63416", "n_chars": 544, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-066445", "labels": {"gw_bush": "responsive", "recount_2000": "responsive"}, "gray": [], "meta": {"docno": "66445", "n_chars": 829, "important": [], "facet": {"gw_bush": "87", "recount_2000": "48"}, "stratum": "pos:recount_2000"}}
+{"id": "JB-067165", "labels": {}, "gray": [], "meta": {"docno": "67165", "n_chars": 201, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-067576", "labels": {}, "gray": [], "meta": {"docno": "67576", "n_chars": 779, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-068515", "labels": {}, "gray": [], "meta": {"docno": "68515", "n_chars": 4263, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-072768", "labels": {}, "gray": [], "meta": {"docno": "72768", "n_chars": 7225, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-075072", "labels": {}, "gray": [], "meta": {"docno": "75072", "n_chars": 1291, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-075516", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "75516", "n_chars": 4313, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "64"}, "stratum": "pos:medicaid_reform"}}
+{"id": "JB-076005", "labels": {}, "gray": [], "meta": {"docno": "76005", "n_chars": 1921, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-078700", "labels": {}, "gray": [], "meta": {"docno": "78700", "n_chars": 979, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-079318", "labels": {}, "gray": [], "meta": {"docno": "79318", "n_chars": 406, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-086581", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "86581", "n_chars": 6232, "important": ["marketing"], "facet": {"marketing": "96"}, "stratum": "pos:marketing"}}
+{"id": "JB-088192", "labels": {}, "gray": [], "meta": {"docno": "88192", "n_chars": 342, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-090945", "labels": {}, "gray": [], "meta": {"docno": "90945", "n_chars": 251, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-092308", "labels": {}, "gray": [], "meta": {"docno": "92308", "n_chars": 658, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-093924", "labels": {}, "gray": [], "meta": {"docno": "93924", "n_chars": 5014, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-094558", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "94558", "n_chars": 1255, "important": ["marketing"], "facet": {"marketing": "96"}, "stratum": "pos:marketing"}}
+{"id": "JB-097186", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "97186", "n_chars": 3412, "important": [], "facet": {"rilya_wilson": "117"}, "stratum": "pos:rilya_wilson"}}
+{"id": "JB-097615", "labels": {}, "gray": [], "meta": {"docno": "97615", "n_chars": 835, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-097920", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "97920", "n_chars": 2768, "important": ["marketing"], "facet": {"marketing": "96"}, "stratum": "pos:marketing"}}
+{"id": "JB-100756", "labels": {}, "gray": [], "meta": {"docno": "100756", "n_chars": 1594, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-102575", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "102575", "n_chars": 2360, "important": [], "facet": {"faith_based": "358"}, "stratum": "pos:faith_based"}}
+{"id": "JB-104512", "labels": {}, "gray": [], "meta": {"docno": "104512", "n_chars": 3861, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-104655", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "104655", "n_chars": 1777, "important": [], "facet": {"recount_2000": "30"}, "stratum": "pos:recount_2000"}}
+{"id": "JB-111476", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "111476", "n_chars": 1442, "important": [], "facet": {"faith_based": "344"}, "stratum": "pos:faith_based"}}
+{"id": "JB-114618", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "114618", "n_chars": 1763, "important": ["marketing"], "facet": {"marketing": "90"}, "stratum": "pos:marketing"}}
+{"id": "JB-117761", "labels": {"nra_aliens": "responsive"}, "gray": [], "meta": {"docno": "117761", "n_chars": 951, "important": [], "facet": {"nra_aliens": "146"}, "stratum": "pos:nra_aliens"}}
+{"id": "JB-117968", "labels": {}, "gray": [], "meta": {"docno": "117968", "n_chars": 2304, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-119592", "labels": {}, "gray": [], "meta": {"docno": "119592", "n_chars": 551, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-120391", "labels": {}, "gray": [], "meta": {"docno": "120391", "n_chars": 1490, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-121474", "labels": {}, "gray": [], "meta": {"docno": "121474", "n_chars": 987, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-121547", "labels": {}, "gray": [], "meta": {"docno": "121547", "n_chars": 5880, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-122234", "labels": {"nra_aliens": "responsive"}, "gray": [], "meta": {"docno": "122234", "n_chars": 1024, "important": ["nra_aliens"], "facet": {"nra_aliens": "145"}, "stratum": "pos:nra_aliens"}}
+{"id": "JB-125665", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "125665", "n_chars": 4315, "important": ["nra_rifle"], "facet": {"nra_rifle": "149"}, "stratum": "pos:nra_rifle"}}
+{"id": "JB-125703", "labels": {}, "gray": [], "meta": {"docno": "125703", "n_chars": 11549, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-129060", "labels": {}, "gray": [], "meta": {"docno": "129060", "n_chars": 491, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-129415", "labels": {}, "gray": [], "meta": {"docno": "129415", "n_chars": 2024, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-130511", "labels": {"medicaid_reform": "responsive", "a1_affirmative_action": "responsive"}, "gray": [], "meta": {"docno": "130511", "n_chars": 4568, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "71"}, "stratum": "pos:medicaid_reform"}}
+{"id": "JB-130522", "labels": {"medicaid_reform": "responsive", "a1_affirmative_action": "responsive"}, "gray": [], "meta": {"docno": "130522", "n_chars": 3235, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "71"}, "stratum": "pos:medicaid_reform"}}
+{"id": "JB-131477", "labels": {"nra_aliens": "responsive"}, "gray": [], "meta": {"docno": "131477", "n_chars": 2768, "important": ["nra_aliens"], "facet": {"nra_aliens": "143"}, "stratum": "pos:nra_aliens"}}
+{"id": "JB-132446", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "132446", "n_chars": 2040, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "73"}, "stratum": "pos:medicaid_reform"}}
+{"id": "JB-135444", "labels": {}, "gray": [], "meta": {"docno": "135444", "n_chars": 3406, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-136132", "labels": {}, "gray": [], "meta": {"docno": "136132", "n_chars": 9505, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-136626", "labels": {}, "gray": [], "meta": {"docno": "136626", "n_chars": 161, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-138290", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "138290", "n_chars": 5349, "important": [], "facet": {"condominiums": "14"}, "stratum": "pos:condominiums"}}
+{"id": "JB-138901", "labels": {}, "gray": [], "meta": {"docno": "138901", "n_chars": 1315, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-140290", "labels": {}, "gray": [], "meta": {"docno": "140290", "n_chars": 6439, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-141978", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "141978", "n_chars": 1642, "important": ["marketing"], "facet": {"marketing": "93"}, "stratum": "pos:marketing"}}
+{"id": "JB-143253", "labels": {}, "gray": [], "meta": {"docno": "143253", "n_chars": 4585, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-144990", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "144990", "n_chars": 1718, "important": ["marketing"], "facet": {"marketing": "96"}, "stratum": "pos:marketing"}}
+{"id": "JB-146841", "labels": {}, "gray": [], "meta": {"docno": "146841", "n_chars": 1422, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-147614", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "147614", "n_chars": 1498, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "62"}, "stratum": "pos:medicaid_reform"}}
+{"id": "JB-151151", "labels": {}, "gray": [], "meta": {"docno": "151151", "n_chars": 1980, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-152711", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "152711", "n_chars": 1510, "important": ["recount_2000"], "facet": {"recount_2000": "38"}, "stratum": "pos:recount_2000"}}
+{"id": "JB-154067", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "154067", "n_chars": 1110, "important": [], "facet": {"condominiums": "12"}, "stratum": "pos:condominiums"}}
+{"id": "JB-154291", "labels": {}, "gray": [], "meta": {"docno": "154291", "n_chars": 174, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-154500", "labels": {}, "gray": [], "meta": {"docno": "154500", "n_chars": 325, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-154694", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "154694", "n_chars": 4846, "important": [], "facet": {"rilya_wilson": "123"}, "stratum": "pos:rilya_wilson"}}
+{"id": "JB-154829", "labels": {}, "gray": [], "meta": {"docno": "154829", "n_chars": 2224, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-155061", "labels": {"a1_school_funding": "responsive"}, "gray": [], "meta": {"docno": "155061", "n_chars": 5498, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-155145", "labels": {}, "gray": [], "meta": {"docno": "155145", "n_chars": 1791, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-155274", "labels": {}, "gray": [], "meta": {"docno": "155274", "n_chars": 1785, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-155532", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "155532", "n_chars": 4027, "important": [], "facet": {"nra_rifle": "157"}, "stratum": "pos:nra_rifle"}}
+{"id": "JB-155834", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "155834", "n_chars": 3648, "important": [], "facet": {"rilya_wilson": "123"}, "stratum": "pos:rilya_wilson"}}
+{"id": "JB-161117", "labels": {}, "gray": [], "meta": {"docno": "161117", "n_chars": 3131, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-162361", "labels": {}, "gray": [], "meta": {"docno": "162361", "n_chars": 1724, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-163088", "labels": {}, "gray": [], "meta": {"docno": "163088", "n_chars": 431, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-164945", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "164945", "n_chars": 1422, "important": [], "facet": {"gw_bush": "75"}, "stratum": "pos:gw_bush"}}
+{"id": "JB-166773", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "166773", "n_chars": 1626, "important": [], "facet": {"faith_based": "360"}, "stratum": "pos:faith_based"}}
+{"id": "JB-167972", "labels": {}, "gray": [], "meta": {"docno": "167972", "n_chars": 1102, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-168913", "labels": {}, "gray": [], "meta": {"docno": "168913", "n_chars": 890, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-169767", "labels": {}, "gray": [], "meta": {"docno": "169767", "n_chars": 135, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-171209", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "171209", "n_chars": 3036, "important": [], "facet": {"bottled_water": "297"}, "stratum": "pos:bottled_water"}}
+{"id": "JB-172003", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "172003", "n_chars": 3055, "important": [], "facet": {"bottled_water": "297"}, "stratum": "pos:bottled_water"}}
+{"id": "JB-172230", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "172230", "n_chars": 3059, "important": [], "facet": {"bottled_water": "297"}, "stratum": "pos:bottled_water"}}
+{"id": "JB-172291", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "172291", "n_chars": 3063, "important": [], "facet": {"bottled_water": "297"}, "stratum": "pos:bottled_water"}}
+{"id": "JB-173205", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "173205", "n_chars": 2092, "important": [], "facet": {"condominiums": "7"}, "stratum": "pos:condominiums"}}
+{"id": "JB-174129", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "174129", "n_chars": 2897, "important": [], "facet": {"faith_based": "344"}, "stratum": "pos:faith_based"}}
+{"id": "JB-174463", "labels": {}, "gray": [], "meta": {"docno": "174463", "n_chars": 2341, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-176264", "labels": {"gw_bush": "responsive", "faith_based": "responsive"}, "gray": [], "meta": {"docno": "176264", "n_chars": 7453, "important": [], "facet": {"gw_bush": "75", "faith_based": "363"}, "stratum": "pos:faith_based"}}
+{"id": "JB-177195", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "177195", "n_chars": 3071, "important": [], "facet": {"bottled_water": "297"}, "stratum": "random"}}
+{"id": "JB-180035", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "180035", "n_chars": 3648, "important": ["marketing"], "facet": {"marketing": "96"}, "stratum": "pos:marketing"}}
+{"id": "JB-183253", "labels": {}, "gray": [], "meta": {"docno": "183253", "n_chars": 5284, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-185302", "labels": {}, "gray": [], "meta": {"docno": "185302", "n_chars": 1314, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-187334", "labels": {"gw_bush": "responsive", "recount_2000": "responsive"}, "gray": [], "meta": {"docno": "187334", "n_chars": 1422, "important": [], "facet": {"gw_bush": "75", "recount_2000": "43"}, "stratum": "pos:recount_2000"}}
+{"id": "JB-188876", "labels": {}, "gray": [], "meta": {"docno": "188876", "n_chars": 1939, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-189362", "labels": {}, "gray": [], "meta": {"docno": "189362", "n_chars": 843, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-190050", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "190050", "n_chars": 4640, "important": [], "facet": {"rilya_wilson": "122"}, "stratum": "pos:rilya_wilson"}}
+{"id": "JB-190053", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "190053", "n_chars": 194, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-194695", "labels": {}, "gray": [], "meta": {"docno": "194695", "n_chars": 2315, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-196655", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "196655", "n_chars": 8744, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "69"}, "stratum": "pos:medicaid_reform"}}
+{"id": "JB-197502", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "197502", "n_chars": 1812, "important": ["marketing"], "facet": {"marketing": "89"}, "stratum": "pos:marketing"}}
+{"id": "JB-200247", "labels": {}, "gray": [], "meta": {"docno": "200247", "n_chars": 1846, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-203558", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "203558", "n_chars": 253, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-204560", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "204560", "n_chars": 8035, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-204850", "labels": {}, "gray": [], "meta": {"docno": "204850", "n_chars": 1252, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-206652", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "206652", "n_chars": 951, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-212083", "labels": {}, "gray": [], "meta": {"docno": "212083", "n_chars": 398, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-212705", "labels": {}, "gray": [], "meta": {"docno": "212705", "n_chars": 6350, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-213366", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "213366", "n_chars": 600, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-214264", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "214264", "n_chars": 1255, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-216444", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "216444", "n_chars": 2017, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-216710", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "216710", "n_chars": 474, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-217348", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "217348", "n_chars": 484, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-217552", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "217552", "n_chars": 563, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-219768", "labels": {"nra_rifle": "responsive"}, "gray": ["nra_rifle"], "meta": {"docno": "219768", "n_chars": 1973, "important": ["nra_rifle"], "facet": {"nra_rifle": "154"}, "stratum": "pos:nra_rifle"}}
+{"id": "JB-220066", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "220066", "n_chars": 1203, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-220304", "labels": {}, "gray": [], "meta": {"docno": "220304", "n_chars": 644, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-222652", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "222652", "n_chars": 1691, "important": [], "facet": {"rilya_wilson": "123"}, "stratum": "pos:rilya_wilson"}}
+{"id": "JB-222711", "labels": {"a1_judicial_selection": "responsive"}, "gray": [], "meta": {"docno": "222711", "n_chars": 677, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-223433", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "223433", "n_chars": 3061, "important": [], "facet": {"bottled_water": "297"}, "stratum": "pos:bottled_water"}}
+{"id": "JB-223670", "labels": {}, "gray": [], "meta": {"docno": "223670", "n_chars": 6853, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-224298", "labels": {}, "gray": [], "meta": {"docno": "224298", "n_chars": 309, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-224666", "labels": {}, "gray": [], "meta": {"docno": "224666", "n_chars": 2138, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-225192", "labels": {"a1_school_funding": "responsive"}, "gray": [], "meta": {"docno": "225192", "n_chars": 5328, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-225830", "labels": {}, "gray": [], "meta": {"docno": "225830", "n_chars": 1125, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-226319", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "226319", "n_chars": 9637, "important": [], "facet": {"nra_rifle": "157"}, "stratum": "pos:nra_rifle"}}
+{"id": "JB-227221", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "227221", "n_chars": 7280, "important": [], "facet": {"rilya_wilson": "117"}, "stratum": "pos:rilya_wilson"}}
+{"id": "JB-228666", "labels": {}, "gray": [], "meta": {"docno": "228666", "n_chars": 4171, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-231294", "labels": {"a1_judicial_selection": "responsive"}, "gray": [], "meta": {"docno": "231294", "n_chars": 3103, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-238784", "labels": {"bottled_water": "responsive"}, "gray": [], "meta": {"docno": "238784", "n_chars": 1661, "important": ["bottled_water"], "facet": {"bottled_water": "300"}, "stratum": "pos:bottled_water"}}
+{"id": "JB-238981", "labels": {}, "gray": [], "meta": {"docno": "238981", "n_chars": 3459, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-239480", "labels": {}, "gray": [], "meta": {"docno": "239480", "n_chars": 984, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-243419", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "243419", "n_chars": 1669, "important": [], "facet": {"nra_rifle": "148"}, "stratum": "pos:nra_rifle"}}
+{"id": "JB-243894", "labels": {}, "gray": [], "meta": {"docno": "243894", "n_chars": 977, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-246151", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "246151", "n_chars": 817, "important": [], "facet": {"movie_gallery": "98"}, "stratum": "random"}}
+{"id": "JB-246711", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "246711", "n_chars": 1018, "important": [], "facet": {"movie_gallery": "98"}, "stratum": "pos:movie_gallery"}}
+{"id": "JB-247191", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "247191", "n_chars": 656, "important": ["movie_gallery"], "facet": {"movie_gallery": "102"}, "stratum": "pos:movie_gallery"}}
+{"id": "JB-248264", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "248264", "n_chars": 786, "important": [], "facet": {"movie_gallery": "98"}, "stratum": "pos:movie_gallery"}}
+{"id": "JB-250742", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "250742", "n_chars": 897, "important": [], "facet": {"movie_gallery": "98"}, "stratum": "pos:movie_gallery"}}
+{"id": "JB-251813", "labels": {"gw_bush": "responsive", "faith_based": "responsive"}, "gray": [], "meta": {"docno": "251813", "n_chars": 3273, "important": [], "facet": {"gw_bush": "75", "faith_based": "344"}, "stratum": "pos:faith_based"}}
+{"id": "JB-253658", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "253658", "n_chars": 1061, "important": [], "facet": {"medicaid_reform": "68"}, "stratum": "pos:medicaid_reform"}}
+{"id": "JB-255501", "labels": {}, "gray": [], "meta": {"docno": "255501", "n_chars": 502, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-257079", "labels": {}, "gray": [], "meta": {"docno": "257079", "n_chars": 5044, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-258685", "labels": {}, "gray": [], "meta": {"docno": "258685", "n_chars": 2515, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-258712", "labels": {}, "gray": [], "meta": {"docno": "258712", "n_chars": 765, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-262995", "labels": {}, "gray": [], "meta": {"docno": "262995", "n_chars": 1772, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-265666", "labels": {}, "gray": [], "meta": {"docno": "265666", "n_chars": 1052, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-265754", "labels": {}, "gray": [], "meta": {"docno": "265754", "n_chars": 1739, "important": [], "facet": {}, "stratum": "random"}}
+{"id": "JB-265884", "labels": {}, "gray": [], "meta": {"docno": "265884", "n_chars": 2058, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-265959", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "265959", "n_chars": 1449, "important": [], "facet": {"recount_2000": "34"}, "stratum": "pos:recount_2000"}}
+{"id": "JB-266308", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "266308", "n_chars": 776, "important": [], "facet": {"medicaid_reform": "71"}, "stratum": "pos:medicaid_reform"}}
+{"id": "JB-269879", "labels": {}, "gray": [], "meta": {"docno": "269879", "n_chars": 601, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-272315", "labels": {}, "gray": [], "meta": {"docno": "272315", "n_chars": 1933, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-273961", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "273961", "n_chars": 980, "important": [], "facet": {"condominiums": "6"}, "stratum": "pos:condominiums"}}
+{"id": "JB-274359", "labels": {}, "gray": [], "meta": {"docno": "274359", "n_chars": 1061, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-274739", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "274739", "n_chars": 709, "important": [], "facet": {"condominiums": "19"}, "stratum": "pos:condominiums"}}
+{"id": "JB-276650", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "276650", "n_chars": 229, "important": [], "facet": {"condominiums": "6"}, "stratum": "pos:condominiums"}}
+{"id": "JB-277684", "labels": {}, "gray": [], "meta": {"docno": "277684", "n_chars": 1252, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-279440", "labels": {}, "gray": [], "meta": {"docno": "279440", "n_chars": 1614, "important": [], "facet": {}, "stratum": "hard_neg"}}
+{"id": "JB-286763", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "286763", "n_chars": 5656, "important": [], "facet": {"nra_rifle": "157"}, "stratum": "pos:nra_rifle"}}
+{"id": "JB-287328", "labels": {}, "gray": [], "meta": {"docno": "287328", "n_chars": 2265, "important": [], "facet": {}, "stratum": "hard_neg"}}

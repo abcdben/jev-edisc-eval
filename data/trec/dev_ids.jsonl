@@ -1,0 +1,668 @@
+{"id": "JB-000010", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "10", "n_chars": 4667, "important": [], "facet": {"rilya_wilson": "124"}, "dev_topic": "419"}}
+{"id": "JB-000100", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "100", "n_chars": 1247, "important": [], "facet": {"eminent_domain": "305"}, "dev_topic": "404"}}
+{"id": "JB-000575", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "575", "n_chars": 2568, "important": [], "facet": {"rilya_wilson": "119"}, "dev_topic": "419"}}
+{"id": "JB-000806", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "806", "n_chars": 2627, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "415"}}
+{"id": "JB-000911", "labels": {}, "gray": [], "meta": {"docno": "911", "n_chars": 1449, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-001172", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "1172", "n_chars": 4073, "important": ["eminent_domain"], "facet": {"eminent_domain": "305"}, "dev_topic": "404"}}
+{"id": "JB-002141", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "2141", "n_chars": 2913, "important": [], "facet": {"gw_bush": "76"}, "dev_topic": "415"}}
+{"id": "JB-002528", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "2528", "n_chars": 4179, "important": [], "facet": {"recount_2000": "49"}, "dev_topic": "412"}}
+{"id": "JB-002952", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "2952", "n_chars": 1182, "important": [], "facet": {"nra_rifle": "151"}, "dev_topic": "423"}}
+{"id": "JB-003266", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "3266", "n_chars": 1829, "important": [], "facet": {"faith_based": "344"}, "dev_topic": "407"}}
+{"id": "JB-003607", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "3607", "n_chars": 2489, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "70"}, "dev_topic": "414"}}
+{"id": "JB-003852", "labels": {}, "gray": [], "meta": {"docno": "3852", "n_chars": 1192, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-004023", "labels": {}, "gray": [], "meta": {"docno": "4023", "n_chars": 417, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-004419", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "4419", "n_chars": 3906, "important": ["marketing"], "facet": {"marketing": "94"}, "dev_topic": "416"}}
+{"id": "JB-004830", "labels": {"gw_bush": "responsive", "condominiums": "responsive"}, "gray": [], "meta": {"docno": "4830", "n_chars": 4508, "important": [], "facet": {"gw_bush": "75", "condominiums": "1"}, "dev_topic": "415"}}
+{"id": "JB-004895", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "4895", "n_chars": 6406, "important": [], "facet": {"eminent_domain": "305"}, "dev_topic": "404"}}
+{"id": "JB-004929", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "4929", "n_chars": 7313, "important": [], "facet": {"faith_based": "344"}, "dev_topic": "407"}}
+{"id": "JB-005092", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "5092", "n_chars": 3731, "important": [], "facet": {"rilya_wilson": "124"}, "dev_topic": "419"}}
+{"id": "JB-005154", "labels": {}, "gray": [], "meta": {"docno": "5154", "n_chars": 4784, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-005309", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "5309", "n_chars": 602, "important": ["rilya_wilson"], "facet": {"rilya_wilson": "127"}, "dev_topic": "419"}}
+{"id": "JB-005650", "labels": {}, "gray": [], "meta": {"docno": "5650", "n_chars": 6755, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-005891", "labels": {}, "gray": [], "meta": {"docno": "5891", "n_chars": 736, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-006621", "labels": {}, "gray": [], "meta": {"docno": "6621", "n_chars": 6395, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-006915", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "6915", "n_chars": 2055, "important": [], "facet": {"rilya_wilson": "114"}, "dev_topic": "419"}}
+{"id": "JB-006955", "labels": {}, "gray": [], "meta": {"docno": "6955", "n_chars": 6665, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-007818", "labels": {}, "gray": [], "meta": {"docno": "7818", "n_chars": 1364, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-007874", "labels": {}, "gray": [], "meta": {"docno": "7874", "n_chars": 936, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-007915", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "7915", "n_chars": 9188, "important": ["eminent_domain"], "facet": {"eminent_domain": "305"}, "dev_topic": "404"}}
+{"id": "JB-007962", "labels": {"a1_capital_punishment": "responsive"}, "gray": [], "meta": {"docno": "7962", "n_chars": 4605, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-008246", "labels": {"faith_based": "responsive", "a1_affirmative_action": "responsive"}, "gray": [], "meta": {"docno": "8246", "n_chars": 1874, "important": [], "facet": {"faith_based": "362"}, "dev_topic": "407"}}
+{"id": "JB-008280", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "8280", "n_chars": 1713, "important": [], "facet": {"faith_based": "352"}, "dev_topic": "407"}}
+{"id": "JB-008529", "labels": {"bottled_water": "responsive"}, "gray": [], "meta": {"docno": "8529", "n_chars": 770, "important": ["bottled_water"], "facet": {"bottled_water": "296"}, "dev_topic": "403"}}
+{"id": "JB-009715", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "9715", "n_chars": 10436, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "415"}}
+{"id": "JB-010261", "labels": {}, "gray": [], "meta": {"docno": "10261", "n_chars": 481, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-010298", "labels": {"nra_rifle": "responsive", "nra_aliens": "responsive"}, "gray": ["nra_rifle"], "meta": {"docno": "10298", "n_chars": 1204, "important": ["nra_rifle"], "facet": {"nra_rifle": "154", "nra_aliens": "143"}, "dev_topic": "423"}}
+{"id": "JB-010305", "labels": {"nra_aliens": "responsive"}, "gray": [], "meta": {"docno": "10305", "n_chars": 263, "important": [], "facet": {"nra_aliens": "143"}, "dev_topic": "423"}}
+{"id": "JB-010385", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "10385", "n_chars": 6056, "important": [], "facet": {"rilya_wilson": "117"}, "dev_topic": "419"}}
+{"id": "JB-011333", "labels": {}, "gray": [], "meta": {"docno": "11333", "n_chars": 3604, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-011345", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "11345", "n_chars": 1915, "important": [], "facet": {"recount_2000": "50"}, "dev_topic": "412"}}
+{"id": "JB-011698", "labels": {}, "gray": [], "meta": {"docno": "11698", "n_chars": 6825, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-011958", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "11958", "n_chars": 3102, "important": [], "facet": {"rilya_wilson": "122"}, "dev_topic": "419"}}
+{"id": "JB-012969", "labels": {}, "gray": [], "meta": {"docno": "12969", "n_chars": 245, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-013057", "labels": {}, "gray": [], "meta": {"docno": "13057", "n_chars": 979, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-013410", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "13410", "n_chars": 1896, "important": [], "facet": {"faith_based": "345"}, "dev_topic": "407"}}
+{"id": "JB-013843", "labels": {"a1_tort_reform": "responsive"}, "gray": [], "meta": {"docno": "13843", "n_chars": 405, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-014087", "labels": {}, "gray": [], "meta": {"docno": "14087", "n_chars": 871, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-014825", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "14825", "n_chars": 2199, "important": [], "facet": {"faith_based": "346"}, "dev_topic": "407"}}
+{"id": "JB-015065", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "15065", "n_chars": 4315, "important": ["nra_rifle"], "facet": {"nra_rifle": "149"}, "dev_topic": "423"}}
+{"id": "JB-016026", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "16026", "n_chars": 142, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-016298", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "16298", "n_chars": 566, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-016586", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "16586", "n_chars": 1724, "important": [], "facet": {"faith_based": "354"}, "dev_topic": "407"}}
+{"id": "JB-017179", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "17179", "n_chars": 1435, "important": [], "facet": {"recount_2000": "39"}, "dev_topic": "412"}}
+{"id": "JB-018145", "labels": {"nra_rifle": "responsive", "nra_aliens": "responsive"}, "gray": ["nra_rifle"], "meta": {"docno": "18145", "n_chars": 1406, "important": ["nra_rifle", "nra_aliens"], "facet": {"nra_rifle": "154", "nra_aliens": "143"}, "dev_topic": "423"}}
+{"id": "JB-018477", "labels": {}, "gray": [], "meta": {"docno": "18477", "n_chars": 4207, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-018513", "labels": {}, "gray": [], "meta": {"docno": "18513", "n_chars": 4588, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-018668", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "18668", "n_chars": 1744, "important": [], "facet": {"nra_rifle": "157"}, "dev_topic": "423"}}
+{"id": "JB-018774", "labels": {"gw_bush": "responsive", "rilya_wilson": "responsive", "faith_based": "responsive"}, "gray": [], "meta": {"docno": "18774", "n_chars": 11106, "important": [], "facet": {"gw_bush": "75", "rilya_wilson": "114", "faith_based": "344"}, "dev_topic": "415"}}
+{"id": "JB-018971", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "18971", "n_chars": 1435, "important": [], "facet": {"gw_bush": "86"}, "dev_topic": "415"}}
+{"id": "JB-022268", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "22268", "n_chars": 1182, "important": [], "facet": {"nra_rifle": "158"}, "dev_topic": "423"}}
+{"id": "JB-023065", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "23065", "n_chars": 1935, "important": [], "facet": {"nra_rifle": "155"}, "dev_topic": "423"}}
+{"id": "JB-023634", "labels": {}, "gray": [], "meta": {"docno": "23634", "n_chars": 691, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-025309", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "25309", "n_chars": 693, "important": ["nra_rifle"], "facet": {"nra_rifle": "149"}, "dev_topic": "423"}}
+{"id": "JB-027092", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "27092", "n_chars": 1642, "important": [], "facet": {"faith_based": "359"}, "dev_topic": "407"}}
+{"id": "JB-027818", "labels": {}, "gray": [], "meta": {"docno": "27818", "n_chars": 2551, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-028228", "labels": {}, "gray": [], "meta": {"docno": "28228", "n_chars": 7074, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-030569", "labels": {}, "gray": [], "meta": {"docno": "30569", "n_chars": 5919, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-031220", "labels": {}, "gray": [], "meta": {"docno": "31220", "n_chars": 462, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-032938", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "32938", "n_chars": 4946, "important": [], "facet": {"rilya_wilson": "123"}, "dev_topic": "419"}}
+{"id": "JB-033130", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "33130", "n_chars": 748, "important": [], "facet": {"marketing": "93"}, "dev_topic": "416"}}
+{"id": "JB-034186", "labels": {"a1_judicial_selection": "responsive"}, "gray": [], "meta": {"docno": "34186", "n_chars": 1701, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-034268", "labels": {}, "gray": [], "meta": {"docno": "34268", "n_chars": 354, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-035026", "labels": {}, "gray": [], "meta": {"docno": "35026", "n_chars": 2742, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-035967", "labels": {}, "gray": [], "meta": {"docno": "35967", "n_chars": 505, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-036549", "labels": {}, "gray": [], "meta": {"docno": "36549", "n_chars": 1493, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-038369", "labels": {}, "gray": [], "meta": {"docno": "38369", "n_chars": 3418, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-039007", "labels": {"a1_affirmative_action": "responsive"}, "gray": [], "meta": {"docno": "39007", "n_chars": 878, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-040913", "labels": {}, "gray": [], "meta": {"docno": "40913", "n_chars": 1115, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-040966", "labels": {}, "gray": [], "meta": {"docno": "40966", "n_chars": 1058, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-040992", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "40992", "n_chars": 1521, "important": [], "facet": {"nra_rifle": "152"}, "dev_topic": "423"}}
+{"id": "JB-042481", "labels": {}, "gray": [], "meta": {"docno": "42481", "n_chars": 482, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-042883", "labels": {"a1_affirmative_action": "responsive"}, "gray": [], "meta": {"docno": "42883", "n_chars": 262, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-043436", "labels": {}, "gray": [], "meta": {"docno": "43436", "n_chars": 2617, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-043972", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "43972", "n_chars": 1295, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "415"}}
+{"id": "JB-044622", "labels": {}, "gray": [], "meta": {"docno": "44622", "n_chars": 6599, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-045092", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "45092", "n_chars": 865, "important": [], "facet": {"gw_bush": "85"}, "dev_topic": "415"}}
+{"id": "JB-045257", "labels": {}, "gray": [], "meta": {"docno": "45257", "n_chars": 742, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-045260", "labels": {}, "gray": [], "meta": {"docno": "45260", "n_chars": 742, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-045446", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "45446", "n_chars": 898, "important": ["eminent_domain"], "facet": {"eminent_domain": "308"}, "dev_topic": "404"}}
+{"id": "JB-046423", "labels": {}, "gray": [], "meta": {"docno": "46423", "n_chars": 98, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-046949", "labels": {}, "gray": [], "meta": {"docno": "46949", "n_chars": 275, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-047691", "labels": {}, "gray": [], "meta": {"docno": "47691", "n_chars": 377, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-047709", "labels": {}, "gray": [], "meta": {"docno": "47709", "n_chars": 221, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-047879", "labels": {}, "gray": [], "meta": {"docno": "47879", "n_chars": 526, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-047975", "labels": {}, "gray": [], "meta": {"docno": "47975", "n_chars": 2994, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-048654", "labels": {}, "gray": [], "meta": {"docno": "48654", "n_chars": 275, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-048973", "labels": {"bottled_water": "responsive"}, "gray": [], "meta": {"docno": "48973", "n_chars": 2808, "important": ["bottled_water"], "facet": {"bottled_water": "299"}, "dev_topic": "403"}}
+{"id": "JB-050145", "labels": {}, "gray": [], "meta": {"docno": "50145", "n_chars": 2134, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-052775", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "52775", "n_chars": 3734, "important": [], "facet": {"condominiums": "15"}, "dev_topic": "410"}}
+{"id": "JB-053893", "labels": {}, "gray": [], "meta": {"docno": "53893", "n_chars": 171, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-053898", "labels": {"bottled_water": "responsive"}, "gray": [], "meta": {"docno": "53898", "n_chars": 195, "important": ["bottled_water"], "facet": {"bottled_water": "298"}, "dev_topic": "403"}}
+{"id": "JB-054178", "labels": {}, "gray": [], "meta": {"docno": "54178", "n_chars": 132, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-054285", "labels": {}, "gray": [], "meta": {"docno": "54285", "n_chars": 243, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-055055", "labels": {"bottled_water": "responsive"}, "gray": [], "meta": {"docno": "55055", "n_chars": 153, "important": [], "facet": {"bottled_water": "300"}, "dev_topic": "403"}}
+{"id": "JB-055598", "labels": {}, "gray": [], "meta": {"docno": "55598", "n_chars": 127, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-055615", "labels": {}, "gray": [], "meta": {"docno": "55615", "n_chars": 135, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-055778", "labels": {}, "gray": [], "meta": {"docno": "55778", "n_chars": 473, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-055887", "labels": {"bottled_water": "responsive"}, "gray": [], "meta": {"docno": "55887", "n_chars": 692, "important": ["bottled_water"], "facet": {"bottled_water": "299"}, "dev_topic": "403"}}
+{"id": "JB-056809", "labels": {}, "gray": [], "meta": {"docno": "56809", "n_chars": 146, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-057264", "labels": {}, "gray": [], "meta": {"docno": "57264", "n_chars": 272, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-057839", "labels": {}, "gray": [], "meta": {"docno": "57839", "n_chars": 625, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-057854", "labels": {}, "gray": [], "meta": {"docno": "57854", "n_chars": 178, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-057979", "labels": {}, "gray": [], "meta": {"docno": "57979", "n_chars": 2005, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-059464", "labels": {"bottled_water": "responsive"}, "gray": [], "meta": {"docno": "59464", "n_chars": 4187, "important": ["bottled_water"], "facet": {"bottled_water": "296"}, "dev_topic": "403"}}
+{"id": "JB-059490", "labels": {"bottled_water": "responsive"}, "gray": [], "meta": {"docno": "59490", "n_chars": 2393, "important": ["bottled_water"], "facet": {"bottled_water": "298"}, "dev_topic": "403"}}
+{"id": "JB-060299", "labels": {"bottled_water": "responsive"}, "gray": [], "meta": {"docno": "60299", "n_chars": 5691, "important": ["bottled_water"], "facet": {"bottled_water": "298"}, "dev_topic": "403"}}
+{"id": "JB-062221", "labels": {}, "gray": [], "meta": {"docno": "62221", "n_chars": 1865, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-063685", "labels": {"gw_bush": "responsive", "a1_capital_punishment": "responsive"}, "gray": [], "meta": {"docno": "63685", "n_chars": 649, "important": [], "facet": {"gw_bush": "81"}, "dev_topic": "415"}}
+{"id": "JB-063850", "labels": {"faith_based": "responsive", "marketing": "responsive"}, "gray": [], "meta": {"docno": "63850", "n_chars": 5611, "important": ["marketing"], "facet": {"faith_based": "344", "marketing": "93"}, "dev_topic": "407"}}
+{"id": "JB-064431", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "64431", "n_chars": 486, "important": [], "facet": {"recount_2000": "37"}, "dev_topic": "412"}}
+{"id": "JB-064493", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "64493", "n_chars": 1023, "important": [], "facet": {"recount_2000": "35"}, "dev_topic": "412"}}
+{"id": "JB-064590", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "64590", "n_chars": 1769, "important": [], "facet": {"recount_2000": "28"}, "dev_topic": "412"}}
+{"id": "JB-064592", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "64592", "n_chars": 242, "important": [], "facet": {"recount_2000": "48"}, "dev_topic": "412"}}
+{"id": "JB-064827", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "64827", "n_chars": 802, "important": [], "facet": {"recount_2000": "48"}, "dev_topic": "412"}}
+{"id": "JB-064875", "labels": {"gw_bush": "responsive", "recount_2000": "responsive"}, "gray": [], "meta": {"docno": "64875", "n_chars": 1797, "important": [], "facet": {"gw_bush": "88", "recount_2000": "27"}, "dev_topic": "415"}}
+{"id": "JB-064898", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "64898", "n_chars": 2718, "important": [], "facet": {"recount_2000": "51"}, "dev_topic": "412"}}
+{"id": "JB-064907", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "64907", "n_chars": 1921, "important": [], "facet": {"recount_2000": "25"}, "dev_topic": "415"}}
+{"id": "JB-065288", "labels": {"recount_2000": "responsive", "a1_capital_punishment": "responsive"}, "gray": [], "meta": {"docno": "65288", "n_chars": 2527, "important": [], "facet": {"recount_2000": "45"}, "dev_topic": "412"}}
+{"id": "JB-065904", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "65904", "n_chars": 8646, "important": [], "facet": {"recount_2000": "30"}, "dev_topic": "412"}}
+{"id": "JB-066122", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "66122", "n_chars": 2370, "important": [], "facet": {"recount_2000": "36"}, "dev_topic": "412"}}
+{"id": "JB-066338", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "66338", "n_chars": 1971, "important": [], "facet": {"gw_bush": "87"}, "dev_topic": "415"}}
+{"id": "JB-066347", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "66347", "n_chars": 1128, "important": [], "facet": {"recount_2000": "29"}, "dev_topic": "412"}}
+{"id": "JB-066388", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "66388", "n_chars": 958, "important": [], "facet": {"recount_2000": "38"}, "dev_topic": "412"}}
+{"id": "JB-066560", "labels": {}, "gray": [], "meta": {"docno": "66560", "n_chars": 7173, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-067578", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "67578", "n_chars": 986, "important": [], "facet": {"gw_bush": "86"}, "dev_topic": "415"}}
+{"id": "JB-068224", "labels": {}, "gray": [], "meta": {"docno": "68224", "n_chars": 245, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-068340", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "68340", "n_chars": 490, "important": [], "facet": {"eminent_domain": "305"}, "dev_topic": "404"}}
+{"id": "JB-069102", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "69102", "n_chars": 1883, "important": [], "facet": {"faith_based": "358"}, "dev_topic": "407"}}
+{"id": "JB-069174", "labels": {}, "gray": [], "meta": {"docno": "69174", "n_chars": 1189, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-069470", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "69470", "n_chars": 4987, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "415"}}
+{"id": "JB-070549", "labels": {"a1_judicial_selection": "responsive"}, "gray": [], "meta": {"docno": "70549", "n_chars": 1117, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-070621", "labels": {"a1_capital_punishment": "responsive"}, "gray": [], "meta": {"docno": "70621", "n_chars": 2644, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-071463", "labels": {}, "gray": [], "meta": {"docno": "71463", "n_chars": 403, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-071525", "labels": {}, "gray": [], "meta": {"docno": "71525", "n_chars": 3712, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-071876", "labels": {}, "gray": [], "meta": {"docno": "71876", "n_chars": 2110, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-072740", "labels": {}, "gray": [], "meta": {"docno": "72740", "n_chars": 3867, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-073003", "labels": {}, "gray": [], "meta": {"docno": "73003", "n_chars": 3867, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-073387", "labels": {}, "gray": [], "meta": {"docno": "73387", "n_chars": 2451, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-073988", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "73988", "n_chars": 8907, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "415"}}
+{"id": "JB-074502", "labels": {"rilya_wilson": "responsive", "a1_scarlet_letter": "responsive"}, "gray": [], "meta": {"docno": "74502", "n_chars": 806, "important": [], "facet": {"rilya_wilson": "117"}, "dev_topic": "419"}}
+{"id": "JB-075502", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "75502", "n_chars": 4493, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "64"}, "dev_topic": "407"}}
+{"id": "JB-075505", "labels": {}, "gray": [], "meta": {"docno": "75505", "n_chars": 1283, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-075635", "labels": {}, "gray": [], "meta": {"docno": "75635", "n_chars": 11861, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-075781", "labels": {}, "gray": [], "meta": {"docno": "75781", "n_chars": 1445, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-075837", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "75837", "n_chars": 2226, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "64"}, "dev_topic": "407"}}
+{"id": "JB-076770", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "76770", "n_chars": 1555, "important": [], "facet": {"faith_based": "355"}, "dev_topic": "407"}}
+{"id": "JB-077315", "labels": {}, "gray": [], "meta": {"docno": "77315", "n_chars": 5710, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-077365", "labels": {}, "gray": [], "meta": {"docno": "77365", "n_chars": 317, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-078772", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "78772", "n_chars": 1270, "important": ["marketing"], "facet": {"marketing": "93"}, "dev_topic": "416"}}
+{"id": "JB-080113", "labels": {}, "gray": [], "meta": {"docno": "80113", "n_chars": 2041, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-080201", "labels": {}, "gray": [], "meta": {"docno": "80201", "n_chars": 287, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-082871", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "82871", "n_chars": 1012, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "415"}}
+{"id": "JB-083153", "labels": {}, "gray": [], "meta": {"docno": "83153", "n_chars": 476, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-083559", "labels": {}, "gray": [], "meta": {"docno": "83559", "n_chars": 2500, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-083969", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "83969", "n_chars": 261, "important": ["eminent_domain"], "facet": {"eminent_domain": "304"}, "dev_topic": "404"}}
+{"id": "JB-085278", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "85278", "n_chars": 4246, "important": ["nra_rifle"], "facet": {"nra_rifle": "153"}, "dev_topic": "423"}}
+{"id": "JB-085357", "labels": {}, "gray": [], "meta": {"docno": "85357", "n_chars": 1085, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-085623", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "85623", "n_chars": 5000, "important": ["marketing"], "facet": {"marketing": "93"}, "dev_topic": "416"}}
+{"id": "JB-085704", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "85704", "n_chars": 8665, "important": ["marketing"], "facet": {"marketing": "89"}, "dev_topic": "416"}}
+{"id": "JB-086001", "labels": {}, "gray": [], "meta": {"docno": "86001", "n_chars": 804, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-086487", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "86487", "n_chars": 2125, "important": ["marketing"], "facet": {"marketing": "89"}, "dev_topic": "416"}}
+{"id": "JB-086601", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "86601", "n_chars": 3425, "important": ["marketing"], "facet": {"marketing": "91"}, "dev_topic": "416"}}
+{"id": "JB-086604", "labels": {"nra_aliens": "responsive"}, "gray": [], "meta": {"docno": "86604", "n_chars": 611, "important": [], "facet": {"nra_aliens": "144"}, "dev_topic": "422"}}
+{"id": "JB-086613", "labels": {"nra_aliens": "responsive"}, "gray": [], "meta": {"docno": "86613", "n_chars": 253, "important": [], "facet": {"nra_aliens": "144"}, "dev_topic": "422"}}
+{"id": "JB-086992", "labels": {}, "gray": [], "meta": {"docno": "86992", "n_chars": 300, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-087283", "labels": {"condominiums": "responsive", "nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "87283", "n_chars": 1236, "important": [], "facet": {"condominiums": "17", "nra_rifle": "148"}, "dev_topic": "410"}}
+{"id": "JB-087337", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "87337", "n_chars": 7171, "important": ["nra_rifle"], "facet": {"nra_rifle": "153"}, "dev_topic": "410"}}
+{"id": "JB-087663", "labels": {}, "gray": [], "meta": {"docno": "87663", "n_chars": 564, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-088014", "labels": {}, "gray": [], "meta": {"docno": "88014", "n_chars": 251, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-088829", "labels": {}, "gray": [], "meta": {"docno": "88829", "n_chars": 2342, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-089066", "labels": {}, "gray": [], "meta": {"docno": "89066", "n_chars": 3333, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-089087", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "89087", "n_chars": 7056, "important": ["marketing"], "facet": {"marketing": "90"}, "dev_topic": "416"}}
+{"id": "JB-089356", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "89356", "n_chars": 496, "important": ["eminent_domain"], "facet": {"eminent_domain": "305"}, "dev_topic": "404"}}
+{"id": "JB-091011", "labels": {}, "gray": [], "meta": {"docno": "91011", "n_chars": 5854, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-092037", "labels": {}, "gray": [], "meta": {"docno": "92037", "n_chars": 412, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-092156", "labels": {}, "gray": [], "meta": {"docno": "92156", "n_chars": 23, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-092180", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "92180", "n_chars": 2661, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "415"}}
+{"id": "JB-092615", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "92615", "n_chars": 2562, "important": ["marketing"], "facet": {"marketing": "94"}, "dev_topic": "416"}}
+{"id": "JB-093329", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "93329", "n_chars": 5095, "important": [], "facet": {"nra_rifle": "157"}, "dev_topic": "423"}}
+{"id": "JB-093667", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "93667", "n_chars": 7795, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "415"}}
+{"id": "JB-093925", "labels": {}, "gray": [], "meta": {"docno": "93925", "n_chars": 5403, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-094582", "labels": {"eminent_domain": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "94582", "n_chars": 2044, "important": ["eminent_domain"], "facet": {"eminent_domain": "303"}, "dev_topic": "407"}}
+{"id": "JB-094623", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "94623", "n_chars": 2762, "important": ["eminent_domain"], "facet": {"eminent_domain": "303"}, "dev_topic": "404"}}
+{"id": "JB-094627", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "94627", "n_chars": 2343, "important": ["eminent_domain"], "facet": {"eminent_domain": "303"}, "dev_topic": "404"}}
+{"id": "JB-095225", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "95225", "n_chars": 1104, "important": ["marketing"], "facet": {"marketing": "89"}, "dev_topic": "416"}}
+{"id": "JB-096441", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "96441", "n_chars": 3341, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "415"}}
+{"id": "JB-097097", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "97097", "n_chars": 1603, "important": ["marketing"], "facet": {"marketing": "94"}, "dev_topic": "416"}}
+{"id": "JB-097254", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "97254", "n_chars": 4550, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "415"}}
+{"id": "JB-097344", "labels": {}, "gray": [], "meta": {"docno": "97344", "n_chars": 4900, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-097973", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "97973", "n_chars": 975, "important": ["marketing"], "facet": {"marketing": "96"}, "dev_topic": "416"}}
+{"id": "JB-098179", "labels": {}, "gray": [], "meta": {"docno": "98179", "n_chars": 409, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-099025", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "99025", "n_chars": 624, "important": [], "facet": {"recount_2000": "46"}, "dev_topic": "412"}}
+{"id": "JB-099840", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "99840", "n_chars": 4215, "important": [], "facet": {"medicaid_reform": "59"}, "dev_topic": "414"}}
+{"id": "JB-099850", "labels": {}, "gray": [], "meta": {"docno": "99850", "n_chars": 4412, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-100286", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "100286", "n_chars": 1168, "important": ["marketing"], "facet": {"marketing": "92"}, "dev_topic": "416"}}
+{"id": "JB-100839", "labels": {}, "gray": [], "meta": {"docno": "100839", "n_chars": 2308, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-100923", "labels": {}, "gray": [], "meta": {"docno": "100923", "n_chars": 554, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-101316", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "101316", "n_chars": 2561, "important": [], "facet": {"nra_rifle": "152"}, "dev_topic": "423"}}
+{"id": "JB-101722", "labels": {}, "gray": [], "meta": {"docno": "101722", "n_chars": 1483, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-101997", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "101997", "n_chars": 148, "important": [], "facet": {"eminent_domain": "305"}, "dev_topic": "404"}}
+{"id": "JB-102401", "labels": {}, "gray": [], "meta": {"docno": "102401", "n_chars": 783, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-102430", "labels": {}, "gray": [], "meta": {"docno": "102430", "n_chars": 1516, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-102778", "labels": {}, "gray": [], "meta": {"docno": "102778", "n_chars": 1301, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-102853", "labels": {}, "gray": [], "meta": {"docno": "102853", "n_chars": 6844, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-102909", "labels": {}, "gray": [], "meta": {"docno": "102909", "n_chars": 385, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-103597", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "103597", "n_chars": 3203, "important": ["marketing"], "facet": {"marketing": "92"}, "dev_topic": "416"}}
+{"id": "JB-105163", "labels": {}, "gray": [], "meta": {"docno": "105163", "n_chars": 2097, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-105337", "labels": {}, "gray": [], "meta": {"docno": "105337", "n_chars": 970, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-105823", "labels": {}, "gray": [], "meta": {"docno": "105823", "n_chars": 2565, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-105986", "labels": {}, "gray": [], "meta": {"docno": "105986", "n_chars": 1070, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-106439", "labels": {}, "gray": [], "meta": {"docno": "106439", "n_chars": 391, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-106579", "labels": {}, "gray": [], "meta": {"docno": "106579", "n_chars": 711, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-106845", "labels": {}, "gray": [], "meta": {"docno": "106845", "n_chars": 902, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-107151", "labels": {}, "gray": [], "meta": {"docno": "107151", "n_chars": 3685, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-108281", "labels": {}, "gray": [], "meta": {"docno": "108281", "n_chars": 1253, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-108467", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "108467", "n_chars": 1036, "important": [], "facet": {"gw_bush": "82"}, "dev_topic": "415"}}
+{"id": "JB-108605", "labels": {}, "gray": [], "meta": {"docno": "108605", "n_chars": 6018, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-108652", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "108652", "n_chars": 3114, "important": ["eminent_domain"], "facet": {"eminent_domain": "302"}, "dev_topic": "404"}}
+{"id": "JB-109445", "labels": {}, "gray": [], "meta": {"docno": "109445", "n_chars": 615, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-110262", "labels": {}, "gray": [], "meta": {"docno": "110262", "n_chars": 2612, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-110321", "labels": {}, "gray": [], "meta": {"docno": "110321", "n_chars": 1293, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-110752", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "110752", "n_chars": 1225, "important": [], "facet": {"faith_based": "361"}, "dev_topic": "407"}}
+{"id": "JB-111191", "labels": {}, "gray": [], "meta": {"docno": "111191", "n_chars": 5185, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-111794", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "111794", "n_chars": 2619, "important": ["marketing"], "facet": {"marketing": "89"}, "dev_topic": "416"}}
+{"id": "JB-112158", "labels": {"nra_aliens": "responsive"}, "gray": [], "meta": {"docno": "112158", "n_chars": 948, "important": ["nra_aliens"], "facet": {"nra_aliens": "144"}, "dev_topic": "422"}}
+{"id": "JB-112170", "labels": {}, "gray": [], "meta": {"docno": "112170", "n_chars": 364, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-112171", "labels": {"nra_aliens": "responsive"}, "gray": [], "meta": {"docno": "112171", "n_chars": 1206, "important": ["nra_aliens"], "facet": {"nra_aliens": "144"}, "dev_topic": "422"}}
+{"id": "JB-112176", "labels": {"nra_aliens": "responsive"}, "gray": [], "meta": {"docno": "112176", "n_chars": 1426, "important": [], "facet": {"nra_aliens": "144"}, "dev_topic": "422"}}
+{"id": "JB-113498", "labels": {}, "gray": [], "meta": {"docno": "113498", "n_chars": 715, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-113573", "labels": {"nra_rifle": "responsive", "nra_aliens": "responsive"}, "gray": ["nra_rifle"], "meta": {"docno": "113573", "n_chars": 2330, "important": ["nra_rifle", "nra_aliens"], "facet": {"nra_rifle": "154", "nra_aliens": "145"}, "dev_topic": "423"}}
+{"id": "JB-114513", "labels": {}, "gray": [], "meta": {"docno": "114513", "n_chars": 1257, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-114647", "labels": {}, "gray": [], "meta": {"docno": "114647", "n_chars": 1163, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-115478", "labels": {}, "gray": [], "meta": {"docno": "115478", "n_chars": 765, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-115520", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "115520", "n_chars": 710, "important": [], "facet": {"nra_rifle": "157"}, "dev_topic": "423"}}
+{"id": "JB-115942", "labels": {"nra_aliens": "responsive"}, "gray": [], "meta": {"docno": "115942", "n_chars": 1648, "important": ["nra_aliens"], "facet": {"nra_aliens": "143"}, "dev_topic": "422"}}
+{"id": "JB-116182", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "116182", "n_chars": 851, "important": [], "facet": {"eminent_domain": "305"}, "dev_topic": "404"}}
+{"id": "JB-116317", "labels": {}, "gray": [], "meta": {"docno": "116317", "n_chars": 3796, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-117089", "labels": {"nra_aliens": "responsive"}, "gray": [], "meta": {"docno": "117089", "n_chars": 903, "important": [], "facet": {"nra_aliens": "146"}, "dev_topic": "423"}}
+{"id": "JB-117156", "labels": {}, "gray": [], "meta": {"docno": "117156", "n_chars": 2200, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-117163", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "117163", "n_chars": 6367, "important": ["marketing"], "facet": {"marketing": "95"}, "dev_topic": "416"}}
+{"id": "JB-117348", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "117348", "n_chars": 2203, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "74"}, "dev_topic": "414"}}
+{"id": "JB-117639", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "117639", "n_chars": 2577, "important": ["marketing"], "facet": {"marketing": "92"}, "dev_topic": "416"}}
+{"id": "JB-118589", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "118589", "n_chars": 3183, "important": [], "facet": {"rilya_wilson": "115"}, "dev_topic": "419"}}
+{"id": "JB-118799", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "118799", "n_chars": 431, "important": [], "facet": {"rilya_wilson": "114"}, "dev_topic": "419"}}
+{"id": "JB-118988", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "118988", "n_chars": 1244, "important": ["rilya_wilson"], "facet": {"rilya_wilson": "128"}, "dev_topic": "419"}}
+{"id": "JB-119145", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "119145", "n_chars": 1793, "important": ["rilya_wilson"], "facet": {"rilya_wilson": "127"}, "dev_topic": "419"}}
+{"id": "JB-119685", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "119685", "n_chars": 8378, "important": ["marketing"], "facet": {"marketing": "89"}, "dev_topic": "416"}}
+{"id": "JB-119725", "labels": {}, "gray": [], "meta": {"docno": "119725", "n_chars": 2485, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-120078", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "120078", "n_chars": 6373, "important": ["rilya_wilson"], "facet": {"rilya_wilson": "118"}, "dev_topic": "419"}}
+{"id": "JB-120179", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "120179", "n_chars": 5077, "important": [], "facet": {"rilya_wilson": "118"}, "dev_topic": "419"}}
+{"id": "JB-120274", "labels": {}, "gray": [], "meta": {"docno": "120274", "n_chars": 2763, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-120706", "labels": {}, "gray": [], "meta": {"docno": "120706", "n_chars": 2673, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-120708", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "120708", "n_chars": 4159, "important": [], "facet": {"marketing": "89"}, "dev_topic": "416"}}
+{"id": "JB-120778", "labels": {"gw_bush": "responsive", "marketing": "responsive"}, "gray": [], "meta": {"docno": "120778", "n_chars": 5101, "important": ["marketing"], "facet": {"gw_bush": "75", "marketing": "96"}, "dev_topic": "415"}}
+{"id": "JB-120880", "labels": {}, "gray": [], "meta": {"docno": "120880", "n_chars": 10939, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-121361", "labels": {}, "gray": [], "meta": {"docno": "121361", "n_chars": 931, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-121576", "labels": {}, "gray": [], "meta": {"docno": "121576", "n_chars": 1538, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-121756", "labels": {}, "gray": [], "meta": {"docno": "121756", "n_chars": 1468, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-121834", "labels": {}, "gray": [], "meta": {"docno": "121834", "n_chars": 2919, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-121841", "labels": {"gw_bush": "responsive", "a1_judicial_selection": "responsive"}, "gray": [], "meta": {"docno": "121841", "n_chars": 5877, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "415"}}
+{"id": "JB-122088", "labels": {}, "gray": [], "meta": {"docno": "122088", "n_chars": 2181, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-122318", "labels": {}, "gray": [], "meta": {"docno": "122318", "n_chars": 4915, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-122349", "labels": {}, "gray": [], "meta": {"docno": "122349", "n_chars": 1330, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-122501", "labels": {"a1_school_funding": "responsive", "a1_capital_punishment": "responsive"}, "gray": [], "meta": {"docno": "122501", "n_chars": 8324, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-122665", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "122665", "n_chars": 4046, "important": ["marketing"], "facet": {"marketing": "93"}, "dev_topic": "416"}}
+{"id": "JB-122704", "labels": {}, "gray": [], "meta": {"docno": "122704", "n_chars": 3082, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-122837", "labels": {"gw_bush": "responsive", "faith_based": "responsive"}, "gray": [], "meta": {"docno": "122837", "n_chars": 4830, "important": [], "facet": {"gw_bush": "75", "faith_based": "351"}, "dev_topic": "415"}}
+{"id": "JB-123579", "labels": {"gw_bush": "responsive", "recount_2000": "responsive"}, "gray": [], "meta": {"docno": "123579", "n_chars": 3277, "important": [], "facet": {"gw_bush": "75", "recount_2000": "41"}, "dev_topic": "415"}}
+{"id": "JB-123972", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "123972", "n_chars": 1688, "important": [], "facet": {"rilya_wilson": "116"}, "dev_topic": "419"}}
+{"id": "JB-123978", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "123978", "n_chars": 371, "important": [], "facet": {"recount_2000": "24"}, "dev_topic": "412"}}
+{"id": "JB-124422", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "124422", "n_chars": 2133, "important": ["recount_2000"], "facet": {"recount_2000": "40"}, "dev_topic": "412"}}
+{"id": "JB-124522", "labels": {}, "gray": [], "meta": {"docno": "124522", "n_chars": 1407, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-124686", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "124686", "n_chars": 1123, "important": [], "facet": {"faith_based": "350"}, "dev_topic": "407"}}
+{"id": "JB-124694", "labels": {}, "gray": [], "meta": {"docno": "124694", "n_chars": 1694, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-124743", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "124743", "n_chars": 1920, "important": [], "facet": {"rilya_wilson": "121"}, "dev_topic": "419"}}
+{"id": "JB-124907", "labels": {}, "gray": [], "meta": {"docno": "124907", "n_chars": 4038, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-125342", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "125342", "n_chars": 1926, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "415"}}
+{"id": "JB-125462", "labels": {"a1_capital_punishment": "responsive"}, "gray": [], "meta": {"docno": "125462", "n_chars": 277, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-125468", "labels": {}, "gray": [], "meta": {"docno": "125468", "n_chars": 4495, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-125579", "labels": {}, "gray": [], "meta": {"docno": "125579", "n_chars": 7001, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-125920", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "125920", "n_chars": 3359, "important": [], "facet": {"rilya_wilson": "116"}, "dev_topic": "419"}}
+{"id": "JB-126043", "labels": {}, "gray": [], "meta": {"docno": "126043", "n_chars": 1719, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-126289", "labels": {}, "gray": [], "meta": {"docno": "126289", "n_chars": 449, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-126291", "labels": {}, "gray": [], "meta": {"docno": "126291", "n_chars": 1047, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-126570", "labels": {"bottled_water": "responsive"}, "gray": [], "meta": {"docno": "126570", "n_chars": 2879, "important": ["bottled_water"], "facet": {"bottled_water": "296"}, "dev_topic": "403"}}
+{"id": "JB-126851", "labels": {}, "gray": [], "meta": {"docno": "126851", "n_chars": 2022, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-127060", "labels": {"a1_capital_punishment": "responsive"}, "gray": [], "meta": {"docno": "127060", "n_chars": 1214, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-128299", "labels": {"bottled_water": "responsive"}, "gray": [], "meta": {"docno": "128299", "n_chars": 3245, "important": ["bottled_water"], "facet": {"bottled_water": "300"}, "dev_topic": "403"}}
+{"id": "JB-128686", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "128686", "n_chars": 5449, "important": [], "facet": {"faith_based": "357"}, "dev_topic": "407"}}
+{"id": "JB-128694", "labels": {}, "gray": [], "meta": {"docno": "128694", "n_chars": 2621, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-128761", "labels": {}, "gray": [], "meta": {"docno": "128761", "n_chars": 2581, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-128911", "labels": {"gw_bush": "responsive", "medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "128911", "n_chars": 4830, "important": ["medicaid_reform"], "facet": {"gw_bush": "75", "medicaid_reform": "73"}, "dev_topic": "415"}}
+{"id": "JB-129030", "labels": {"gw_bush": "responsive", "rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "129030", "n_chars": 5127, "important": [], "facet": {"gw_bush": "75", "rilya_wilson": "122"}, "dev_topic": "415"}}
+{"id": "JB-129452", "labels": {"gw_bush": "responsive", "medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "129452", "n_chars": 9816, "important": [], "facet": {"gw_bush": "75", "medicaid_reform": "73"}, "dev_topic": "415"}}
+{"id": "JB-129616", "labels": {"gw_bush": "responsive", "faith_based": "responsive"}, "gray": [], "meta": {"docno": "129616", "n_chars": 3961, "important": [], "facet": {"gw_bush": "75", "faith_based": "365"}, "dev_topic": "415"}}
+{"id": "JB-129638", "labels": {}, "gray": [], "meta": {"docno": "129638", "n_chars": 1962, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-129645", "labels": {"a1_manatee_county": "responsive"}, "gray": [], "meta": {"docno": "129645", "n_chars": 2598, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-129937", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "129937", "n_chars": 5250, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "71"}, "dev_topic": "414"}}
+{"id": "JB-130567", "labels": {}, "gray": [], "meta": {"docno": "130567", "n_chars": 4239, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-130573", "labels": {}, "gray": [], "meta": {"docno": "130573", "n_chars": 3689, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-130800", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "130800", "n_chars": 846, "important": [], "facet": {"recount_2000": "42"}, "dev_topic": "412"}}
+{"id": "JB-130841", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "130841", "n_chars": 589, "important": [], "facet": {"recount_2000": "24"}, "dev_topic": "412"}}
+{"id": "JB-130871", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "130871", "n_chars": 2535, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "69"}, "dev_topic": "414"}}
+{"id": "JB-130898", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "130898", "n_chars": 1298, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "69"}, "dev_topic": "414"}}
+{"id": "JB-131053", "labels": {}, "gray": [], "meta": {"docno": "131053", "n_chars": 1428, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-131203", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "131203", "n_chars": 1742, "important": [], "facet": {"faith_based": "368"}, "dev_topic": "407"}}
+{"id": "JB-131574", "labels": {"gw_bush": "responsive", "medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "131574", "n_chars": 4236, "important": ["medicaid_reform"], "facet": {"gw_bush": "75", "medicaid_reform": "59"}, "dev_topic": "415"}}
+{"id": "JB-131710", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "131710", "n_chars": 888, "important": [], "facet": {"faith_based": "364"}, "dev_topic": "407"}}
+{"id": "JB-131798", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "131798", "n_chars": 1303, "important": ["nra_rifle"], "facet": {"nra_rifle": "151"}, "dev_topic": "423"}}
+{"id": "JB-132577", "labels": {}, "gray": [], "meta": {"docno": "132577", "n_chars": 6691, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-132624", "labels": {}, "gray": [], "meta": {"docno": "132624", "n_chars": 4570, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-132644", "labels": {}, "gray": [], "meta": {"docno": "132644", "n_chars": 1596, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-133008", "labels": {}, "gray": [], "meta": {"docno": "133008", "n_chars": 1562, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-133363", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "133363", "n_chars": 1443, "important": [], "facet": {"recount_2000": "30"}, "dev_topic": "412"}}
+{"id": "JB-133517", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "133517", "n_chars": 2080, "important": [], "facet": {"faith_based": "347"}, "dev_topic": "407"}}
+{"id": "JB-133536", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "133536", "n_chars": 5500, "important": ["marketing"], "facet": {"marketing": "96"}, "dev_topic": "416"}}
+{"id": "JB-133866", "labels": {}, "gray": [], "meta": {"docno": "133866", "n_chars": 4685, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-134339", "labels": {}, "gray": [], "meta": {"docno": "134339", "n_chars": 909, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-134512", "labels": {}, "gray": [], "meta": {"docno": "134512", "n_chars": 1906, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-134614", "labels": {}, "gray": [], "meta": {"docno": "134614", "n_chars": 222, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-134680", "labels": {}, "gray": [], "meta": {"docno": "134680", "n_chars": 1782, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-134747", "labels": {}, "gray": [], "meta": {"docno": "134747", "n_chars": 683, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-134996", "labels": {}, "gray": [], "meta": {"docno": "134996", "n_chars": 145, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-135030", "labels": {}, "gray": [], "meta": {"docno": "135030", "n_chars": 455, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-135495", "labels": {}, "gray": [], "meta": {"docno": "135495", "n_chars": 652, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-135852", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "135852", "n_chars": 1115, "important": [], "facet": {"movie_gallery": "97"}, "dev_topic": "417"}}
+{"id": "JB-135924", "labels": {}, "gray": [], "meta": {"docno": "135924", "n_chars": 1062, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-136001", "labels": {}, "gray": [], "meta": {"docno": "136001", "n_chars": 935, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-136006", "labels": {}, "gray": [], "meta": {"docno": "136006", "n_chars": 1688, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-136163", "labels": {}, "gray": [], "meta": {"docno": "136163", "n_chars": 2118, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-136396", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "136396", "n_chars": 595, "important": [], "facet": {"movie_gallery": "97"}, "dev_topic": "417"}}
+{"id": "JB-136398", "labels": {}, "gray": [], "meta": {"docno": "136398", "n_chars": 593, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-136916", "labels": {}, "gray": [], "meta": {"docno": "136916", "n_chars": 3278, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-137786", "labels": {}, "gray": [], "meta": {"docno": "137786", "n_chars": 204, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-139763", "labels": {}, "gray": [], "meta": {"docno": "139763", "n_chars": 2311, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-140525", "labels": {}, "gray": [], "meta": {"docno": "140525", "n_chars": 986, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-140876", "labels": {}, "gray": [], "meta": {"docno": "140876", "n_chars": 4231, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-140892", "labels": {}, "gray": [], "meta": {"docno": "140892", "n_chars": 9839, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-141362", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "141362", "n_chars": 9493, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "410"}}
+{"id": "JB-141465", "labels": {}, "gray": [], "meta": {"docno": "141465", "n_chars": 3011, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-141915", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "141915", "n_chars": 1358, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "63"}, "dev_topic": "414"}}
+{"id": "JB-142254", "labels": {}, "gray": [], "meta": {"docno": "142254", "n_chars": 1704, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-142421", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "142421", "n_chars": 8324, "important": ["marketing"], "facet": {"marketing": "91"}, "dev_topic": "416"}}
+{"id": "JB-143770", "labels": {}, "gray": [], "meta": {"docno": "143770", "n_chars": 1241, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-144569", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "144569", "n_chars": 7461, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "62"}, "dev_topic": "414"}}
+{"id": "JB-144582", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "144582", "n_chars": 8061, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "62"}, "dev_topic": "414"}}
+{"id": "JB-144968", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "144968", "n_chars": 2063, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "62"}, "dev_topic": "414"}}
+{"id": "JB-145149", "labels": {}, "gray": [], "meta": {"docno": "145149", "n_chars": 918, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-146507", "labels": {}, "gray": [], "meta": {"docno": "146507", "n_chars": 1690, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-146608", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "146608", "n_chars": 3490, "important": [], "facet": {"rilya_wilson": "126"}, "dev_topic": "419"}}
+{"id": "JB-146719", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "146719", "n_chars": 1958, "important": ["marketing"], "facet": {"marketing": "95"}, "dev_topic": "416"}}
+{"id": "JB-146966", "labels": {}, "gray": [], "meta": {"docno": "146966", "n_chars": 4816, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-147055", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "147055", "n_chars": 4347, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "72"}, "dev_topic": "414"}}
+{"id": "JB-148116", "labels": {}, "gray": [], "meta": {"docno": "148116", "n_chars": 1101, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-148387", "labels": {}, "gray": [], "meta": {"docno": "148387", "n_chars": 1414, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-148411", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "148411", "n_chars": 1480, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-149696", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "149696", "n_chars": 4075, "important": ["marketing"], "facet": {"marketing": "91"}, "dev_topic": "416"}}
+{"id": "JB-149913", "labels": {}, "gray": [], "meta": {"docno": "149913", "n_chars": 3826, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-150026", "labels": {}, "gray": [], "meta": {"docno": "150026", "n_chars": 2177, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-151200", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "151200", "n_chars": 1753, "important": [], "facet": {"nra_rifle": "153"}, "dev_topic": "423"}}
+{"id": "JB-151291", "labels": {"gw_bush": "responsive", "recount_2000": "responsive"}, "gray": [], "meta": {"docno": "151291", "n_chars": 2238, "important": ["recount_2000"], "facet": {"gw_bush": "75", "recount_2000": "32"}, "dev_topic": "412"}}
+{"id": "JB-151318", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "151318", "n_chars": 8767, "important": [], "facet": {"condominiums": "8"}, "dev_topic": "410"}}
+{"id": "JB-151691", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "151691", "n_chars": 4425, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "66"}, "dev_topic": "414"}}
+{"id": "JB-152871", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "152871", "n_chars": 2610, "important": [], "facet": {"recount_2000": "34"}, "dev_topic": "412"}}
+{"id": "JB-152968", "labels": {}, "gray": [], "meta": {"docno": "152968", "n_chars": 2705, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-153646", "labels": {}, "gray": [], "meta": {"docno": "153646", "n_chars": 588, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-153712", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "153712", "n_chars": 1053, "important": [], "facet": {"condominiums": "14"}, "dev_topic": "410"}}
+{"id": "JB-153718", "labels": {"gw_bush": "responsive", "rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "153718", "n_chars": 4629, "important": [], "facet": {"gw_bush": "75", "rilya_wilson": "126"}, "dev_topic": "419"}}
+{"id": "JB-153966", "labels": {}, "gray": [], "meta": {"docno": "153966", "n_chars": 1046, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-154173", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "154173", "n_chars": 940, "important": [], "facet": {"condominiums": "14"}, "dev_topic": "410"}}
+{"id": "JB-154314", "labels": {}, "gray": [], "meta": {"docno": "154314", "n_chars": 539, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-154902", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "154902", "n_chars": 2826, "important": [], "facet": {"condominiums": "14"}, "dev_topic": "415"}}
+{"id": "JB-155611", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "155611", "n_chars": 7345, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "74"}, "dev_topic": "414"}}
+{"id": "JB-156501", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "156501", "n_chars": 2479, "important": [], "facet": {"medicaid_reform": "71"}, "dev_topic": "414"}}
+{"id": "JB-157612", "labels": {"a1_school_funding": "responsive"}, "gray": [], "meta": {"docno": "157612", "n_chars": 2115, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-157805", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "157805", "n_chars": 2512, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "72"}, "dev_topic": "414"}}
+{"id": "JB-157994", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "157994", "n_chars": 4879, "important": [], "facet": {"rilya_wilson": "120"}, "dev_topic": "419"}}
+{"id": "JB-158696", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "158696", "n_chars": 2758, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "416"}}
+{"id": "JB-159769", "labels": {}, "gray": [], "meta": {"docno": "159769", "n_chars": 3710, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-160020", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "160020", "n_chars": 452, "important": [], "facet": {"faith_based": "356"}, "dev_topic": "407"}}
+{"id": "JB-160787", "labels": {}, "gray": [], "meta": {"docno": "160787", "n_chars": 492, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-161509", "labels": {}, "gray": [], "meta": {"docno": "161509", "n_chars": 4730, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-161540", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "161540", "n_chars": 3223, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "412"}}
+{"id": "JB-162643", "labels": {}, "gray": [], "meta": {"docno": "162643", "n_chars": 98, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-162876", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "162876", "n_chars": 8184, "important": ["condominiums"], "facet": {"condominiums": "17"}, "dev_topic": "410"}}
+{"id": "JB-163111", "labels": {}, "gray": [], "meta": {"docno": "163111", "n_chars": 740, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-163938", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "163938", "n_chars": 4194, "important": [], "facet": {"faith_based": "367"}, "dev_topic": "407"}}
+{"id": "JB-164458", "labels": {}, "gray": [], "meta": {"docno": "164458", "n_chars": 4120, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-164482", "labels": {}, "gray": [], "meta": {"docno": "164482", "n_chars": 1207, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-164492", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "164492", "n_chars": 4138, "important": [], "facet": {"nra_rifle": "153"}, "dev_topic": "410"}}
+{"id": "JB-164948", "labels": {}, "gray": [], "meta": {"docno": "164948", "n_chars": 4507, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-165130", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "165130", "n_chars": 3170, "important": [], "facet": {"rilya_wilson": "123"}, "dev_topic": "419"}}
+{"id": "JB-165703", "labels": {}, "gray": [], "meta": {"docno": "165703", "n_chars": 3417, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-165984", "labels": {}, "gray": [], "meta": {"docno": "165984", "n_chars": 1358, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-166522", "labels": {}, "gray": [], "meta": {"docno": "166522", "n_chars": 2343, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-166750", "labels": {}, "gray": [], "meta": {"docno": "166750", "n_chars": 1365, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-166871", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "166871", "n_chars": 2534, "important": [], "facet": {"recount_2000": "33"}, "dev_topic": "412"}}
+{"id": "JB-167134", "labels": {}, "gray": [], "meta": {"docno": "167134", "n_chars": 618, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-167221", "labels": {}, "gray": [], "meta": {"docno": "167221", "n_chars": 1464, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-167223", "labels": {}, "gray": [], "meta": {"docno": "167223", "n_chars": 280, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-167436", "labels": {}, "gray": [], "meta": {"docno": "167436", "n_chars": 491, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-167441", "labels": {}, "gray": [], "meta": {"docno": "167441", "n_chars": 3351, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-168025", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "168025", "n_chars": 4444, "important": ["marketing"], "facet": {"marketing": "96"}, "dev_topic": "416"}}
+{"id": "JB-168029", "labels": {"a1_affirmative_action": "responsive"}, "gray": [], "meta": {"docno": "168029", "n_chars": 4076, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-169256", "labels": {"nra_rifle": "responsive"}, "gray": ["nra_rifle"], "meta": {"docno": "169256", "n_chars": 4820, "important": [], "facet": {"nra_rifle": "154"}, "dev_topic": "423"}}
+{"id": "JB-169494", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "169494", "n_chars": 1559, "important": [], "facet": {"faith_based": "348"}, "dev_topic": "407"}}
+{"id": "JB-169711", "labels": {}, "gray": [], "meta": {"docno": "169711", "n_chars": 1210, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-169886", "labels": {}, "gray": [], "meta": {"docno": "169886", "n_chars": 3122, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-171539", "labels": {}, "gray": [], "meta": {"docno": "171539", "n_chars": 648, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-171674", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "171674", "n_chars": 2226, "important": [], "facet": {"medicaid_reform": "65"}, "dev_topic": "414"}}
+{"id": "JB-171709", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "171709", "n_chars": 934, "important": [], "facet": {"medicaid_reform": "65"}, "dev_topic": "414"}}
+{"id": "JB-171934", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "171934", "n_chars": 3048, "important": [], "facet": {"bottled_water": "297"}, "dev_topic": "403"}}
+{"id": "JB-172122", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "172122", "n_chars": 3050, "important": [], "facet": {"bottled_water": "297"}, "dev_topic": "403"}}
+{"id": "JB-172394", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "172394", "n_chars": 3055, "important": [], "facet": {"bottled_water": "297"}, "dev_topic": "403"}}
+{"id": "JB-172417", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "172417", "n_chars": 3056, "important": [], "facet": {"bottled_water": "297"}, "dev_topic": "403"}}
+{"id": "JB-172447", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "172447", "n_chars": 3053, "important": [], "facet": {"bottled_water": "297"}, "dev_topic": "403"}}
+{"id": "JB-172569", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "172569", "n_chars": 3052, "important": [], "facet": {"bottled_water": "297"}, "dev_topic": "403"}}
+{"id": "JB-172739", "labels": {}, "gray": [], "meta": {"docno": "172739", "n_chars": 1753, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-173216", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "173216", "n_chars": 1116, "important": ["condominiums"], "facet": {"condominiums": "7"}, "dev_topic": "410"}}
+{"id": "JB-173254", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "173254", "n_chars": 302, "important": [], "facet": {"condominiums": "7"}, "dev_topic": "410"}}
+{"id": "JB-173412", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "173412", "n_chars": 577, "important": ["condominiums"], "facet": {"condominiums": "8"}, "dev_topic": "410"}}
+{"id": "JB-173452", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "173452", "n_chars": 3629, "important": [], "facet": {"bottled_water": "297"}, "dev_topic": "403"}}
+{"id": "JB-175552", "labels": {}, "gray": [], "meta": {"docno": "175552", "n_chars": 5228, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-175646", "labels": {}, "gray": [], "meta": {"docno": "175646", "n_chars": 5014, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-176308", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "176308", "n_chars": 2116, "important": ["condominiums"], "facet": {"condominiums": "15"}, "dev_topic": "410"}}
+{"id": "JB-177074", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "177074", "n_chars": 3039, "important": [], "facet": {"bottled_water": "297"}, "dev_topic": "403"}}
+{"id": "JB-177235", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "177235", "n_chars": 3067, "important": [], "facet": {"bottled_water": "297"}, "dev_topic": "403"}}
+{"id": "JB-177533", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "177533", "n_chars": 3053, "important": [], "facet": {"bottled_water": "297"}, "dev_topic": "403"}}
+{"id": "JB-177647", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "177647", "n_chars": 3053, "important": [], "facet": {"bottled_water": "297"}, "dev_topic": "403"}}
+{"id": "JB-179377", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "179377", "n_chars": 3049, "important": [], "facet": {"bottled_water": "297"}, "dev_topic": "403"}}
+{"id": "JB-180986", "labels": {}, "gray": [], "meta": {"docno": "180986", "n_chars": 1609, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-181106", "labels": {}, "gray": [], "meta": {"docno": "181106", "n_chars": 923, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-181748", "labels": {}, "gray": [], "meta": {"docno": "181748", "n_chars": 1223, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-182747", "labels": {"bottled_water": "responsive"}, "gray": [], "meta": {"docno": "182747", "n_chars": 2452, "important": ["bottled_water"], "facet": {"bottled_water": "301"}, "dev_topic": "403"}}
+{"id": "JB-182753", "labels": {"bottled_water": "responsive"}, "gray": [], "meta": {"docno": "182753", "n_chars": 1524, "important": ["bottled_water"], "facet": {"bottled_water": "301"}, "dev_topic": "403"}}
+{"id": "JB-182848", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "182848", "n_chars": 4407, "important": [], "facet": {"rilya_wilson": "122"}, "dev_topic": "419"}}
+{"id": "JB-184519", "labels": {}, "gray": [], "meta": {"docno": "184519", "n_chars": 7971, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-184622", "labels": {}, "gray": [], "meta": {"docno": "184622", "n_chars": 472, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-185637", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "185637", "n_chars": 1488, "important": [], "facet": {"movie_gallery": "97"}, "dev_topic": "417"}}
+{"id": "JB-185972", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "185972", "n_chars": 3779, "important": [], "facet": {"faith_based": "349"}, "dev_topic": "407"}}
+{"id": "JB-186153", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "186153", "n_chars": 1146, "important": [], "facet": {"faith_based": "360"}, "dev_topic": "407"}}
+{"id": "JB-186549", "labels": {}, "gray": [], "meta": {"docno": "186549", "n_chars": 1854, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-187204", "labels": {}, "gray": [], "meta": {"docno": "187204", "n_chars": 2283, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-187262", "labels": {"gw_bush": "responsive"}, "gray": [], "meta": {"docno": "187262", "n_chars": 2289, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "412"}}
+{"id": "JB-187707", "labels": {"gw_bush": "responsive", "recount_2000": "responsive"}, "gray": [], "meta": {"docno": "187707", "n_chars": 1049, "important": [], "facet": {"gw_bush": "75", "recount_2000": "43"}, "dev_topic": "412"}}
+{"id": "JB-187867", "labels": {}, "gray": [], "meta": {"docno": "187867", "n_chars": 1091, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-187882", "labels": {}, "gray": [], "meta": {"docno": "187882", "n_chars": 1820, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-188178", "labels": {}, "gray": [], "meta": {"docno": "188178", "n_chars": 799, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-188295", "labels": {}, "gray": [], "meta": {"docno": "188295", "n_chars": 1235, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-188804", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "188804", "n_chars": 3053, "important": [], "facet": {"bottled_water": "297"}, "dev_topic": "403"}}
+{"id": "JB-189602", "labels": {}, "gray": [], "meta": {"docno": "189602", "n_chars": 1281, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-189677", "labels": {}, "gray": [], "meta": {"docno": "189677", "n_chars": 569, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-189913", "labels": {"faith_based": "responsive", "a1_school_funding": "responsive", "a1_manatee_protection": "responsive", "a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "189913", "n_chars": 3787, "important": [], "facet": {"faith_based": "344"}, "dev_topic": "407"}}
+{"id": "JB-189923", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "189923", "n_chars": 2211, "important": ["marketing"], "facet": {"marketing": "96"}, "dev_topic": "416"}}
+{"id": "JB-190042", "labels": {}, "gray": [], "meta": {"docno": "190042", "n_chars": 3871, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-190827", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "190827", "n_chars": 6046, "important": [], "facet": {"condominiums": "16"}, "dev_topic": "410"}}
+{"id": "JB-191088", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "191088", "n_chars": 3961, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "64"}, "dev_topic": "414"}}
+{"id": "JB-191434", "labels": {}, "gray": [], "meta": {"docno": "191434", "n_chars": 11284, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-191481", "labels": {}, "gray": [], "meta": {"docno": "191481", "n_chars": 2493, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-192390", "labels": {}, "gray": [], "meta": {"docno": "192390", "n_chars": 2311, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-193707", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "193707", "n_chars": 1465, "important": [], "facet": {"condominiums": "16"}, "dev_topic": "410"}}
+{"id": "JB-194035", "labels": {}, "gray": [], "meta": {"docno": "194035", "n_chars": 2848, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-194542", "labels": {}, "gray": [], "meta": {"docno": "194542", "n_chars": 2361, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-194954", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "194954", "n_chars": 770, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "60"}, "dev_topic": "414"}}
+{"id": "JB-195417", "labels": {}, "gray": [], "meta": {"docno": "195417", "n_chars": 2383, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-195553", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "195553", "n_chars": 576, "important": [], "facet": {"rilya_wilson": "120"}, "dev_topic": "419"}}
+{"id": "JB-195726", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "195726", "n_chars": 4571, "important": [], "facet": {"faith_based": "344"}, "dev_topic": "407"}}
+{"id": "JB-196058", "labels": {}, "gray": [], "meta": {"docno": "196058", "n_chars": 792, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-196152", "labels": {}, "gray": [], "meta": {"docno": "196152", "n_chars": 2018, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-196208", "labels": {}, "gray": [], "meta": {"docno": "196208", "n_chars": 543, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-196246", "labels": {}, "gray": [], "meta": {"docno": "196246", "n_chars": 559, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-196319", "labels": {}, "gray": [], "meta": {"docno": "196319", "n_chars": 859, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-196356", "labels": {}, "gray": [], "meta": {"docno": "196356", "n_chars": 658, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-196366", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "196366", "n_chars": 1632, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "69"}, "dev_topic": "407"}}
+{"id": "JB-196398", "labels": {}, "gray": [], "meta": {"docno": "196398", "n_chars": 666, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-196600", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "196600", "n_chars": 2213, "important": [], "facet": {"medicaid_reform": "70"}, "dev_topic": "414"}}
+{"id": "JB-197180", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "197180", "n_chars": 1979, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "61"}, "dev_topic": "414"}}
+{"id": "JB-197328", "labels": {"bottled_water": "responsive"}, "gray": [], "meta": {"docno": "197328", "n_chars": 1765, "important": ["bottled_water"], "facet": {"bottled_water": "301"}, "dev_topic": "403"}}
+{"id": "JB-198283", "labels": {}, "gray": [], "meta": {"docno": "198283", "n_chars": 3624, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-199253", "labels": {}, "gray": [], "meta": {"docno": "199253", "n_chars": 699, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-199759", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "199759", "n_chars": 829, "important": [], "facet": {"medicaid_reform": "67"}, "dev_topic": "414"}}
+{"id": "JB-200767", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "200767", "n_chars": 3858, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-201550", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "201550", "n_chars": 945, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "69"}, "dev_topic": "414"}}
+{"id": "JB-202356", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "202356", "n_chars": 114, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-202543", "labels": {"gw_bush": "responsive", "a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "202543", "n_chars": 690, "important": [], "facet": {"gw_bush": "84"}, "dev_topic": "417"}}
+{"id": "JB-202800", "labels": {"gw_bush": "responsive", "a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "202800", "n_chars": 752, "important": [], "facet": {"gw_bush": "84"}, "dev_topic": "417"}}
+{"id": "JB-203385", "labels": {}, "gray": [], "meta": {"docno": "203385", "n_chars": 5273, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-203896", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "203896", "n_chars": 9963, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-204393", "labels": {"gw_bush": "responsive", "a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "204393", "n_chars": 9972, "important": [], "facet": {"gw_bush": "75"}, "dev_topic": "422"}}
+{"id": "JB-204526", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "204526", "n_chars": 1117, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-204602", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "204602", "n_chars": 3911, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-204919", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "204919", "n_chars": 5999, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-205780", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "205780", "n_chars": 150, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-206776", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "206776", "n_chars": 169, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-206994", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "206994", "n_chars": 477, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-206995", "labels": {}, "gray": [], "meta": {"docno": "206995", "n_chars": 439, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-207128", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "207128", "n_chars": 485, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-207237", "labels": {}, "gray": [], "meta": {"docno": "207237", "n_chars": 933, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-207307", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "207307", "n_chars": 956, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-208365", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "208365", "n_chars": 4708, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-209054", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "209054", "n_chars": 5686, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-209226", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "209226", "n_chars": 710, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-209728", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "209728", "n_chars": 6409, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-210648", "labels": {}, "gray": [], "meta": {"docno": "210648", "n_chars": 659, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-210827", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "210827", "n_chars": 3516, "important": ["recount_2000"], "facet": {"recount_2000": "32"}, "dev_topic": "412"}}
+{"id": "JB-211005", "labels": {"gw_bush": "responsive", "a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "211005", "n_chars": 3810, "important": [], "facet": {"gw_bush": "83"}, "dev_topic": "410"}}
+{"id": "JB-211874", "labels": {"medicaid_reform": "responsive"}, "gray": [], "meta": {"docno": "211874", "n_chars": 996, "important": ["medicaid_reform"], "facet": {"medicaid_reform": "68"}, "dev_topic": "414"}}
+{"id": "JB-214069", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "214069", "n_chars": 4323, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-214969", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "214969", "n_chars": 751, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-215091", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "215091", "n_chars": 344, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-215177", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "215177", "n_chars": 118, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-215452", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "215452", "n_chars": 399, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-217472", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "217472", "n_chars": 252, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-218076", "labels": {}, "gray": [], "meta": {"docno": "218076", "n_chars": 5267, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-218821", "labels": {"a1_terri_schiavo": "responsive"}, "gray": [], "meta": {"docno": "218821", "n_chars": 250, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-218839", "labels": {}, "gray": [], "meta": {"docno": "218839", "n_chars": 1865, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-219616", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "219616", "n_chars": 6563, "important": ["marketing"], "facet": {"marketing": "90"}, "dev_topic": "416"}}
+{"id": "JB-220390", "labels": {}, "gray": [], "meta": {"docno": "220390", "n_chars": 510, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-220757", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "220757", "n_chars": 4162, "important": [], "facet": {"rilya_wilson": "123"}, "dev_topic": "419"}}
+{"id": "JB-221221", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "221221", "n_chars": 676, "important": [], "facet": {"faith_based": "344"}, "dev_topic": "407"}}
+{"id": "JB-221404", "labels": {}, "gray": [], "meta": {"docno": "221404", "n_chars": 754, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-221708", "labels": {"nra_rifle": "responsive"}, "gray": ["nra_rifle"], "meta": {"docno": "221708", "n_chars": 3239, "important": ["nra_rifle"], "facet": {"nra_rifle": "154"}, "dev_topic": "423"}}
+{"id": "JB-221981", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "221981", "n_chars": 8602, "important": [], "facet": {"condominiums": "17"}, "dev_topic": "410"}}
+{"id": "JB-222386", "labels": {}, "gray": [], "meta": {"docno": "222386", "n_chars": 426, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-222763", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "222763", "n_chars": 1110, "important": [], "facet": {"recount_2000": "31"}, "dev_topic": "412"}}
+{"id": "JB-223985", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "223985", "n_chars": 3073, "important": [], "facet": {"bottled_water": "297"}, "dev_topic": "403"}}
+{"id": "JB-224030", "labels": {}, "gray": [], "meta": {"docno": "224030", "n_chars": 2338, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-224046", "labels": {"a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "224046", "n_chars": 1671, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-224109", "labels": {}, "gray": [], "meta": {"docno": "224109", "n_chars": 3176, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-224417", "labels": {}, "gray": [], "meta": {"docno": "224417", "n_chars": 740, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-224815", "labels": {"marketing": "responsive"}, "gray": [], "meta": {"docno": "224815", "n_chars": 1586, "important": ["marketing"], "facet": {"marketing": "95"}, "dev_topic": "416"}}
+{"id": "JB-225151", "labels": {}, "gray": [], "meta": {"docno": "225151", "n_chars": 1460, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-225297", "labels": {}, "gray": [], "meta": {"docno": "225297", "n_chars": 1149, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-226411", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "226411", "n_chars": 2564, "important": [], "facet": {"condominiums": "10"}, "dev_topic": "410"}}
+{"id": "JB-226532", "labels": {}, "gray": [], "meta": {"docno": "226532", "n_chars": 11442, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-226749", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "226749", "n_chars": 2952, "important": [], "facet": {"condominiums": "15"}, "dev_topic": "410"}}
+{"id": "JB-227066", "labels": {}, "gray": [], "meta": {"docno": "227066", "n_chars": 957, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-227587", "labels": {"gw_bush": "responsive", "bottled_water": "responsive"}, "gray": [], "meta": {"docno": "227587", "n_chars": 2735, "important": ["bottled_water"], "facet": {"gw_bush": "75", "bottled_water": "301"}, "dev_topic": "403"}}
+{"id": "JB-229762", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "229762", "n_chars": 2736, "important": [], "facet": {"faith_based": "353"}, "dev_topic": "407"}}
+{"id": "JB-230414", "labels": {}, "gray": [], "meta": {"docno": "230414", "n_chars": 2702, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-231027", "labels": {"bottled_water": "responsive"}, "gray": [], "meta": {"docno": "231027", "n_chars": 1914, "important": ["bottled_water"], "facet": {"bottled_water": "301"}, "dev_topic": "403"}}
+{"id": "JB-231149", "labels": {}, "gray": [], "meta": {"docno": "231149", "n_chars": 3434, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-231563", "labels": {}, "gray": [], "meta": {"docno": "231563", "n_chars": 2703, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-232735", "labels": {"recount_2000": "responsive"}, "gray": [], "meta": {"docno": "232735", "n_chars": 493, "important": [], "facet": {"recount_2000": "47"}, "dev_topic": "412"}}
+{"id": "JB-233488", "labels": {}, "gray": [], "meta": {"docno": "233488", "n_chars": 2830, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-233828", "labels": {}, "gray": [], "meta": {"docno": "233828", "n_chars": 268, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-234818", "labels": {}, "gray": [], "meta": {"docno": "234818", "n_chars": 10235, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-234853", "labels": {}, "gray": [], "meta": {"docno": "234853", "n_chars": 10249, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-235533", "labels": {}, "gray": [], "meta": {"docno": "235533", "n_chars": 1643, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-237145", "labels": {}, "gray": [], "meta": {"docno": "237145", "n_chars": 1088, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-237403", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "237403", "n_chars": 2231, "important": [], "facet": {"condominiums": "15"}, "dev_topic": "410"}}
+{"id": "JB-237901", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "237901", "n_chars": 4145, "important": [], "facet": {"rilya_wilson": "125"}, "dev_topic": "419"}}
+{"id": "JB-237923", "labels": {"bottled_water": "responsive", "a1_manatee_protection": "responsive"}, "gray": [], "meta": {"docno": "237923", "n_chars": 3045, "important": [], "facet": {"bottled_water": "297"}, "dev_topic": "403"}}
+{"id": "JB-240821", "labels": {}, "gray": [], "meta": {"docno": "240821", "n_chars": 7267, "important": [], "facet": {}, "dev_topic": "419"}}
+{"id": "JB-241453", "labels": {}, "gray": [], "meta": {"docno": "241453", "n_chars": 79, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-241601", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "241601", "n_chars": 886, "important": [], "facet": {"eminent_domain": "304"}, "dev_topic": "404"}}
+{"id": "JB-241753", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "241753", "n_chars": 3924, "important": [], "facet": {"eminent_domain": "304"}, "dev_topic": "404"}}
+{"id": "JB-242598", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "242598", "n_chars": 1645, "important": [], "facet": {"nra_rifle": "150"}, "dev_topic": "423"}}
+{"id": "JB-244964", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "244964", "n_chars": 1235, "important": [], "facet": {"condominiums": "15"}, "dev_topic": "410"}}
+{"id": "JB-245327", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "245327", "n_chars": 805, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-245905", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "245905", "n_chars": 807, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-245906", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "245906", "n_chars": 801, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-245951", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "245951", "n_chars": 1083, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-246134", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "246134", "n_chars": 808, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-246371", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "246371", "n_chars": 816, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-247013", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "247013", "n_chars": 814, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-247484", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "247484", "n_chars": 777, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-247694", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "247694", "n_chars": 812, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-248095", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "248095", "n_chars": 807, "important": ["movie_gallery"], "facet": {"movie_gallery": "99"}, "dev_topic": "417"}}
+{"id": "JB-248403", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "248403", "n_chars": 802, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-248415", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "248415", "n_chars": 777, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-248737", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "248737", "n_chars": 793, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-249450", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "249450", "n_chars": 417, "important": ["movie_gallery"], "facet": {"movie_gallery": "102"}, "dev_topic": "417"}}
+{"id": "JB-249470", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "249470", "n_chars": 1849, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-249719", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "249719", "n_chars": 826, "important": ["movie_gallery"], "facet": {"movie_gallery": "100"}, "dev_topic": "417"}}
+{"id": "JB-250379", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "250379", "n_chars": 837, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-250557", "labels": {}, "gray": [], "meta": {"docno": "250557", "n_chars": 641, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-250752", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "250752", "n_chars": 788, "important": ["movie_gallery"], "facet": {"movie_gallery": "101"}, "dev_topic": "417"}}
+{"id": "JB-250804", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "250804", "n_chars": 835, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-250891", "labels": {}, "gray": [], "meta": {"docno": "250891", "n_chars": 1274, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-251293", "labels": {}, "gray": [], "meta": {"docno": "251293", "n_chars": 449, "important": [], "facet": {}, "dev_topic": "422"}}
+{"id": "JB-251445", "labels": {}, "gray": [], "meta": {"docno": "251445", "n_chars": 900, "important": [], "facet": {}, "dev_topic": "417"}}
+{"id": "JB-251575", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "251575", "n_chars": 804, "important": ["movie_gallery"], "facet": {"movie_gallery": "102"}, "dev_topic": "417"}}
+{"id": "JB-251632", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "251632", "n_chars": 795, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-251937", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "251937", "n_chars": 661, "important": ["movie_gallery"], "facet": {"movie_gallery": "102"}, "dev_topic": "417"}}
+{"id": "JB-252475", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "252475", "n_chars": 1129, "important": [], "facet": {"nra_rifle": "150"}, "dev_topic": "423"}}
+{"id": "JB-252531", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "252531", "n_chars": 627, "important": ["movie_gallery"], "facet": {"movie_gallery": "101"}, "dev_topic": "417"}}
+{"id": "JB-253045", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "253045", "n_chars": 670, "important": ["movie_gallery"], "facet": {"movie_gallery": "102"}, "dev_topic": "417"}}
+{"id": "JB-253333", "labels": {}, "gray": [], "meta": {"docno": "253333", "n_chars": 2556, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-253567", "labels": {}, "gray": [], "meta": {"docno": "253567", "n_chars": 7242, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-253816", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "253816", "n_chars": 1193, "important": [], "facet": {"nra_rifle": "156"}, "dev_topic": "423"}}
+{"id": "JB-254514", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "254514", "n_chars": 2640, "important": ["movie_gallery"], "facet": {"movie_gallery": "99"}, "dev_topic": "417"}}
+{"id": "JB-254773", "labels": {}, "gray": [], "meta": {"docno": "254773", "n_chars": 248, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-254783", "labels": {}, "gray": [], "meta": {"docno": "254783", "n_chars": 693, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-254787", "labels": {}, "gray": [], "meta": {"docno": "254787", "n_chars": 571, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-255072", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "255072", "n_chars": 1808, "important": [], "facet": {"movie_gallery": "98"}, "dev_topic": "417"}}
+{"id": "JB-256003", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "256003", "n_chars": 2822, "important": ["eminent_domain"], "facet": {"eminent_domain": "304"}, "dev_topic": "404"}}
+{"id": "JB-256057", "labels": {}, "gray": [], "meta": {"docno": "256057", "n_chars": 2041, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-256326", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "256326", "n_chars": 2809, "important": [], "facet": {"condominiums": "14"}, "dev_topic": "410"}}
+{"id": "JB-256506", "labels": {}, "gray": [], "meta": {"docno": "256506", "n_chars": 4967, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-257384", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "257384", "n_chars": 2645, "important": [], "facet": {"eminent_domain": "302"}, "dev_topic": "404"}}
+{"id": "JB-258931", "labels": {}, "gray": [], "meta": {"docno": "258931", "n_chars": 2538, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-259018", "labels": {"faith_based": "responsive"}, "gray": [], "meta": {"docno": "259018", "n_chars": 1367, "important": [], "facet": {"faith_based": "344"}, "dev_topic": "407"}}
+{"id": "JB-259437", "labels": {}, "gray": [], "meta": {"docno": "259437", "n_chars": 1698, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-260174", "labels": {}, "gray": [], "meta": {"docno": "260174", "n_chars": 2747, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-260364", "labels": {"condominiums": "responsive", "nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "260364", "n_chars": 860, "important": [], "facet": {"condominiums": "16", "nra_rifle": "148"}, "dev_topic": "410"}}
+{"id": "JB-260944", "labels": {}, "gray": [], "meta": {"docno": "260944", "n_chars": 2243, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-261022", "labels": {}, "gray": [], "meta": {"docno": "261022", "n_chars": 3412, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-263191", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "263191", "n_chars": 8006, "important": [], "facet": {"condominiums": "12"}, "dev_topic": "410"}}
+{"id": "JB-265500", "labels": {}, "gray": [], "meta": {"docno": "265500", "n_chars": 546, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-266375", "labels": {}, "gray": [], "meta": {"docno": "266375", "n_chars": 1689, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-267282", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "267282", "n_chars": 4824, "important": ["nra_rifle"], "facet": {"nra_rifle": "152"}, "dev_topic": "423"}}
+{"id": "JB-268944", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "268944", "n_chars": 2782, "important": [], "facet": {"condominiums": "18"}, "dev_topic": "412"}}
+{"id": "JB-269602", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "269602", "n_chars": 2202, "important": [], "facet": {"condominiums": "18"}, "dev_topic": "412"}}
+{"id": "JB-269795", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "269795", "n_chars": 2082, "important": ["eminent_domain"], "facet": {"eminent_domain": "302"}, "dev_topic": "404"}}
+{"id": "JB-270632", "labels": {}, "gray": [], "meta": {"docno": "270632", "n_chars": 510, "important": [], "facet": {}, "dev_topic": "403"}}
+{"id": "JB-270832", "labels": {}, "gray": [], "meta": {"docno": "270832", "n_chars": 1004, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-270939", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "270939", "n_chars": 3057, "important": [], "facet": {"condominiums": "15"}, "dev_topic": "410"}}
+{"id": "JB-270952", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "270952", "n_chars": 365, "important": [], "facet": {"condominiums": "6"}, "dev_topic": "410"}}
+{"id": "JB-271931", "labels": {}, "gray": [], "meta": {"docno": "271931", "n_chars": 2373, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-271953", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "271953", "n_chars": 888, "important": [], "facet": {"rilya_wilson": "125"}, "dev_topic": "419"}}
+{"id": "JB-272039", "labels": {}, "gray": [], "meta": {"docno": "272039", "n_chars": 2373, "important": [], "facet": {}, "dev_topic": "407"}}
+{"id": "JB-272621", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "272621", "n_chars": 5112, "important": ["nra_rifle"], "facet": {"nra_rifle": "152"}, "dev_topic": "423"}}
+{"id": "JB-273173", "labels": {"a1_judicial_selection": "responsive"}, "gray": [], "meta": {"docno": "273173", "n_chars": 1004, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-273246", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "273246", "n_chars": 1362, "important": [], "facet": {"condominiums": "5"}, "dev_topic": "410"}}
+{"id": "JB-273790", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "273790", "n_chars": 272, "important": [], "facet": {"nra_rifle": "156"}, "dev_topic": "423"}}
+{"id": "JB-273888", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "273888", "n_chars": 754, "important": ["eminent_domain"], "facet": {"eminent_domain": "308"}, "dev_topic": "410"}}
+{"id": "JB-274460", "labels": {}, "gray": [], "meta": {"docno": "274460", "n_chars": 8965, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-274530", "labels": {}, "gray": [], "meta": {"docno": "274530", "n_chars": 1447, "important": [], "facet": {}, "dev_topic": "414"}}
+{"id": "JB-274549", "labels": {}, "gray": [], "meta": {"docno": "274549", "n_chars": 2135, "important": [], "facet": {}, "dev_topic": "416"}}
+{"id": "JB-274592", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "274592", "n_chars": 180, "important": [], "facet": {"condominiums": "19"}, "dev_topic": "410"}}
+{"id": "JB-274607", "labels": {}, "gray": [], "meta": {"docno": "274607", "n_chars": 4382, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-274636", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "274636", "n_chars": 312, "important": [], "facet": {"condominiums": "19"}, "dev_topic": "410"}}
+{"id": "JB-274757", "labels": {"condominiums": "responsive"}, "gray": [], "meta": {"docno": "274757", "n_chars": 2881, "important": [], "facet": {"condominiums": "13"}, "dev_topic": "410"}}
+{"id": "JB-275039", "labels": {}, "gray": [], "meta": {"docno": "275039", "n_chars": 177, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-275673", "labels": {"movie_gallery": "responsive"}, "gray": [], "meta": {"docno": "275673", "n_chars": 1727, "important": ["movie_gallery"], "facet": {"movie_gallery": "101"}, "dev_topic": "417"}}
+{"id": "JB-275686", "labels": {}, "gray": [], "meta": {"docno": "275686", "n_chars": 2058, "important": [], "facet": {}, "dev_topic": "404"}}
+{"id": "JB-275726", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "275726", "n_chars": 9579, "important": ["nra_rifle"], "facet": {"nra_rifle": "155"}, "dev_topic": "423"}}
+{"id": "JB-275735", "labels": {"nra_rifle": "responsive"}, "gray": [], "meta": {"docno": "275735", "n_chars": 961, "important": [], "facet": {"nra_rifle": "155"}, "dev_topic": "423"}}
+{"id": "JB-276679", "labels": {}, "gray": [], "meta": {"docno": "276679", "n_chars": 131, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-277195", "labels": {}, "gray": [], "meta": {"docno": "277195", "n_chars": 3409, "important": [], "facet": {}, "dev_topic": "415"}}
+{"id": "JB-277364", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "277364", "n_chars": 1714, "important": ["eminent_domain"], "facet": {"eminent_domain": "302"}, "dev_topic": "410"}}
+{"id": "JB-277912", "labels": {}, "gray": [], "meta": {"docno": "277912", "n_chars": 8991, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-278048", "labels": {"rilya_wilson": "responsive"}, "gray": [], "meta": {"docno": "278048", "n_chars": 2431, "important": [], "facet": {"rilya_wilson": "124"}, "dev_topic": "419"}}
+{"id": "JB-278169", "labels": {}, "gray": [], "meta": {"docno": "278169", "n_chars": 1762, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-279587", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "279587", "n_chars": 7063, "important": ["eminent_domain"], "facet": {"eminent_domain": "308"}, "dev_topic": "404"}}
+{"id": "JB-282735", "labels": {}, "gray": [], "meta": {"docno": "282735", "n_chars": 1175, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-283475", "labels": {}, "gray": [], "meta": {"docno": "283475", "n_chars": 147, "important": [], "facet": {}, "dev_topic": "410"}}
+{"id": "JB-283636", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "283636", "n_chars": 5663, "important": [], "facet": {"eminent_domain": "308"}, "dev_topic": "404"}}
+{"id": "JB-283768", "labels": {}, "gray": [], "meta": {"docno": "283768", "n_chars": 2088, "important": [], "facet": {}, "dev_topic": "412"}}
+{"id": "JB-284843", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "284843", "n_chars": 4761, "important": ["eminent_domain"], "facet": {"eminent_domain": "302"}, "dev_topic": "404"}}
+{"id": "JB-288149", "labels": {}, "gray": [], "meta": {"docno": "288149", "n_chars": 3641, "important": [], "facet": {}, "dev_topic": "423"}}
+{"id": "JB-288485", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "288485", "n_chars": 5402, "important": ["eminent_domain"], "facet": {"eminent_domain": "306"}, "dev_topic": "404"}}
+{"id": "JB-288486", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "288486", "n_chars": 5430, "important": ["eminent_domain"], "facet": {"eminent_domain": "306"}, "dev_topic": "404"}}
+{"id": "JB-288487", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "288487", "n_chars": 5431, "important": ["eminent_domain"], "facet": {"eminent_domain": "306"}, "dev_topic": "404"}}
+{"id": "JB-288700", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "288700", "n_chars": 1399, "important": ["eminent_domain"], "facet": {"eminent_domain": "306"}, "dev_topic": "404"}}
+{"id": "JB-288866", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "288866", "n_chars": 6864, "important": ["eminent_domain"], "facet": {"eminent_domain": "307"}, "dev_topic": "404"}}
+{"id": "JB-288867", "labels": {"eminent_domain": "responsive"}, "gray": [], "meta": {"docno": "288867", "n_chars": 6256, "important": ["eminent_domain"], "facet": {"eminent_domain": "307"}, "dev_topic": "404"}}
+{"id": "JB-289434", "labels": {}, "gray": [], "meta": {"docno": "289434", "n_chars": 335, "important": [], "facet": {}, "dev_topic": "412"}}

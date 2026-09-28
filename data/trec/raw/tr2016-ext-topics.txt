@@ -1,0 +1,34 @@
+401  Summer Olympics -- All documents concerning a bid to host the Summer Olympic Games in Florida.
+402  Space -- All documents concerning the space industry, the space program, space travel (whether manned or unmanned, public or private), and the study or exploration of space in Florida.
+403  Bottled Water -- All documents concerning the extraction of water in Florida for bottling by commercial enterprises.
+404  Eminent Domain -- All documents concerning the legality or morality of expropriating land in Florida for commercial development.
+405 Newt Gingrich -- All documents concerning House Speaker Newt Gingrich or any entities or personnel associated with Newt Gingrich.
+406  Felon Disenfranchisement -- All documents concerning the right of felons to vote in Florida, including but not limited to voter purges and reinstatement of voter rights.  Individual clemency cases in Florida are not relevant.
+407  Faith-Based Initiatives -- All documents concerning grants or other initiatives in Florida to offload social services to so-called faith-based agencies.  Services include but are not limited to education, prisons, and emergency relief.
+408  Invasive Species -- All documents concerning the problem of invasive species in Florida, that is, non-native plants or animals that threaten the Florida ecosystem.
+409  Climate Change -- All documents concerning climate change, global warming, or carbon emissions, whether in Florida or otherwise.
+410  Condominiums -- All documents concerning the rules and organizations governing Florida condominium associations and conflicts between owners and managers in Florida.  Relevant documents include those concerning the establishment of the Florida office of ombudsman, and issues relating to hiring and firing the ombudsman.
+411  "Stand Your Ground" -- All documents concerning a Florida bill permitting the use of deadly force to protect one’s self or one’s property.
+412  2000 Recount -- All documents concerning the contested result of the 2000 presidential election.
+413  James V. Crosby -- All documents concerning James V. Crosby, including but not limited to his relationship with Governor Bush before being appointed as Florida Secretary of Corrections, his role as Secretary, his firing,  and any criminal allegations against Mr. Crosby.
+414  Medicaid Reform -- All documents concerning efforts to reform Medicaid.
+415  George W. Bush -- All documents concerning George W. Bush, whether by explicit reference or by his relationship to Governor Bush.
+416  Marketing -- All documents concerning advertising or marketing efforts undertaken by the Florida Governor’s office or any other institution of the State of Florida. 
+417  Movie Gallery -- All documents concerning investments or divestments by the State of Florida in Movie Gallery. 
+418  War Preparations -- All documents concerning preparations for the Iraq War undertaken in Florida before the March 20, 2003 invasion.
+419  Lost Foster Child Rilya Wilson -- All documents concerning the disappearance of lost foster child, Rilya Wilson, and the impact or aftermath in Florida resulting from the loss.
+420  Billboards -- All documents concerning rights and control of billboards in Florida.  Different legislative efforts should be considered to be separate sub-categories.
+421  Traffic Cameras -- All documents involving discussions of the use of unattended cameras to enforce traffic laws in Florida.
+422  Non-Resident Aliens (NRA) -- All  documents involving discussions of the non-resident alien issue.  Documents concerning the National Rifle Association are not relevant.
+423  National Rifle Association (NRA) -- All documents concerning the National Rifle Association, its members, and its influences.  Documents concerning the non-resident alien issue are not relevant.
+424  Gulf Drilling -- All documents involving discussions of off-shore drilling for oil or gas.  Drilling of wells for water is not relevant.
+425  Civil Rights Act of 2003 -- All documents involving discussions of the Florida Civil Rights Act of 2003.
+426  Jeffrey Goldhagen -- All documents related to Jeffrey Goldhagen’s role in the Bush administration, his firing, and reinstatement.
+427  Slot Machines -- All documents concerning the definition, legality, and licensing of “slot machines” in Florida.
+428  New Stadiums and Arenas -- All documents involving discussions of the construction of new sports stadiums or arenas in Florida.
+429  Cuban Child, Elian Gonzales -- All documents involving discussions of the Cuban child, Elian Gonzales, and his whereabouts or status.
+430  Restraints and Helmets -- All documents involving discussions of seat belts, child seats, and helmet mandates.
+431  Agency Credit Ratings -- All documents involving discussions of credit ratings of Florida institutions, including but not limited to those undertaken by Standard and Poor’s, Fitch’s, and Moody’s.
+432  Gay Adoption -- All documents involving discussions of the gay adoption issue in Florida.
+433  Abstinence -- All discussions of abstinence and abstinence-only programs in Florida to supplant birth control or sex education.
+434  Bacardi Trademark Lobbying -- Documents related to the Jeb Bush administration's involvement in a trademark dispute between Bacardi and the U.S. Patent and Trademark Office.

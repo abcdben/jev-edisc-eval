@@ -1,0 +1,351 @@
+JEV ARTICLE - QUESTIONS FOR THE AUTHOR, BY PRIORITY
+====================================================
+
+How to use: type after each "ANSWER:" line. Short is fine ("A", "yes", "drop",
+"use your default"). Leave a line blank and I will apply the DEFAULT shown.
+Paragraph numbers (P<n>) refer to Article/draft_extracted.md. Q numbers match
+Article/review.md section 1.
+
+
+########################################################################
+#  PRIORITY 1 - FACTUAL. These change a number or a claim. Answer first. #
+########################################################################
+
+1.1  [Q15] P26 / P49 - "prompts are untreated" / "not iterated upon"
+     Not true. Criteria were written from the NIST topic sentence, refined ONCE
+     on a separate 668-email calibration set (with Jev + Gemini Flash-Lite),
+     then frozen and given to every model verbatim. That pass moved Jev Noul
+     recall 55.6 -> 78.5 and Sonnet 5 63.4 -> 89.7.
+     Proposed wording: "The criteria were written once, refined once on a
+     separate calibration set of 668 emails (using Jev and Gemini Flash-Lite,
+     so if anything they favor those two), then frozen and given to every model
+     verbatim. Nobody tuned a prompt to a model, and nobody tuned Jev's 0.5
+     cutoff."
+     DEFAULT: use proposed wording.
+     ANSWER: Just say how prmopts/criteria were only allowed one round of iteration which was performed on a separate sample from the control/validation sample.
+
+1.2  [Q24] P63 - "150 unique classifications on 1M documents for less than the
+     cheapest LLM"
+     At list price 150 questions/email ~ $1,320 per million emails; the cheapest
+     LLM (Luna) on 11 issues is $1,238. A tie, not a win, and assumes linear
+     scaling we did not measure.
+       A) "All eleven topics on a million emails for about $156; the cheapest
+          LLM we tested would cost about $1,240 and Sonnet 5 about $16,700."
+       B) "Roughly 80 separate classifications on a million emails for what the
+          cheapest LLM charges for eleven."
+       C) Keep the 150 claim but say "roughly the same price as the cheapest
+          LLM on eleven".
+     DEFAULT: A.
+     ANSWER: I like A but use your judgement. 
+
+1.3  [Q21] P50 / P54 - Stability section
+     The chart is MALLINCKRODT (300 opioid-litigation emails, 8 issues, 5
+     identical runs, pairwise disagreement), a corpus the article never
+     introduces.
+     (a) Introduce Mallinckrodt in one sentence, or drop the section?
+         DEFAULT: introduce it.
+     (b) Include the temperature-0 caveat? (LLMs ran at default temperature.
+         At t=0 Haiku 1.8% -> 0.4%, Flash 0.9 -> 0.7; Luna 1.7 and Flash-Lite
+         2.2 barely move; Jev 0.27-0.38% either way.)
+         DEFAULT: include, one sentence.
+     ANSWER (a): NO ignore chart we'll fic it
+     ANSWER (b): Yes talk about the temperature zero caveat and let's add another line or two about that.
+
+1.4  [Q11] P18 - Gemma 3 12B and Laya
+     Gemma is in the model list but in NONE of the five charts (TREC: recall
+     83.8 / precision 71.8 on a 400-600 doc subsample; 12.8 s/doc on a rented
+     A100). It is open-weight run locally, not "commercially available".
+       A) Add Gemma to all charts and fix the wording to "six commercial LLMs
+          and one open-weight model run locally".
+       B) Drop Gemma from the text entirely.
+     Laya (ConvAI's fine-tuned decision model, on the site) is not mentioned
+     at all - leave out on purpose?
+     DEFAULT: A for Gemma; leave Laya out.
+     ANSWER (Gemma): Sounds good. A
+     ANSWER (Laya): Drop completely
+
+1.5  [Q12 + Q30] Charts - re-export all five?
+     Four of five carry the wrong title ("Cost per 1,000 Douments" on the
+     speed, recall/precision and composed maps; "Douments" misspelled on the
+     cost chart too). Cost unit conflicts: P22 says per 100,000, P37 and the
+     chart say per 1,000. Site uses per 100,000.
+     (a) OK to re-export all five from the Studio (settings in review.md s4)?
+     (b) Cost unit: per 100k or per 1k?
+     DEFAULT: yes; per 100k.
+     ANSWER (a): Yes
+     ANSWER (b): Yes
+
+1.6  [Q13] P24 - "since Jev is trained entirely on synthetic data"
+     Not on docs.typesafe.ai or the launch post. Source? If none:
+     "TypeSafe says Jev is not trained on customer data, and there is no reason
+     to think the Bush emails are in its training set."
+     DEFAULT: replace with the fallback sentence.
+     ANSWER: I'm pretty sure there is something about it not being trained on real data. Can oyu research and do whatever you think is appropriate based on that?
+
+1.7  [Q27] P72 - "isn't available in Azure or AWS"
+     Unverifiable either way. Verified: early access via TypeSafe's own API
+     (api.typesafe.ai), Python + JS SDKs, waitlist.
+     Proposed: "Today Jev is in early access through TypeSafe's own API and
+     SDKs; there is a waitlist, and rate limits are still moving."
+     DEFAULT: proposed sentence, drop the Azure/AWS clause.
+     ANSWER: yes sounds good
+
+1.8  [Q2] P2 - "Last week, they released Jev."
+     Launch post is dated September 15, 2026.
+     DEFAULT: "On September 15, TypeSafe AI released Jev, ..."
+     ANSWER: Approve
+
+1.9  [Q23] P61 - "its deeper thinking LLM counterparts"
+     LLMs ran with reasoning disabled/minimal.
+       A) "its LLM counterparts"   B) "even with reasoning switched off"
+     DEFAULT: A.
+     ANSWER: use mine it's just meant figuratively not to imply reasoning was on.
+
+1.10 [Q20] P44 - "outperforming some LLMs by more than 10% in precision"
+     True for exactly two (Luna 12.1 pts, Flash-Lite 11.0); Haiku is 9.2.
+     DEFAULT: "10 or more points ahead of two of them on precision".
+     ANSWER: outperforming some LLMs by more than 10 points in precision.
+
+1.11 [Q18] P3 - TypeSafe's "two orders of magnitude faster"
+     Our data: 9-23x (one order). Say so explicitly?
+     DEFAULT: yes, one sentence in the speed section.
+     ANSWER: Yeah show this and state the gap between the claim and what we're seeing but not in a way tha discredits them, just like "in our implementation..."
+
+1.12 [Q25] P64 / P68 - CMU quote
+     Verified: arXiv:2609.26550, Sep 22 2026, a 3-day-old preprint.
+     (a) Call it "a preprint from Carnegie Mellon"?  DEFAULT: yes.
+     (b) Add the abstract's next (unfavorable) sentence: "Larger gaps arise
+         when judgments require checking a derivation or resisting an
+         elaborately written wrong answer."  DEFAULT: yes.
+     (c) Replace the 540 KB screenshot with a link?  DEFAULT: yes.
+     ANSWER: A Yes; B Yes; C - No
+
+
+########################################################################
+#  PRIORITY 2 - STRUCTURE AND CONTENT YOU HAVE TO AUTHOR OR APPROVE      #
+########################################################################
+
+2.1  [s2] Lead position and section order
+     First result number is at P44, ~1,100 words in.
+     Proposed: state the finding right after the hook (78.5/79.6 zero-shot,
+     mid-pack F1, 9-23x faster, 8-107x cheaper; Facets 89/75), then Recall/
+     precision BEFORE Speed/Cost, then Stability. Full order in review.md s2.
+       A) Adopt the proposed order.
+       B) Keep Speed -> Cost -> Accuracy build-up but add the finding to the
+          lead.
+       C) Leave order as is.
+     DEFAULT: A.
+     ANSWER: A 
+
+2.2  [Q29] Title
+       A) Benchmarking Jev vs the LLMs: Are Decision Models Ready for
+          eDiscovery?
+       B) Jev vs the LLMs: Benchmarking Results for Document Review (current)
+       C) Zero-Shot Throwdown (needs the 1.1 disclosure)
+       D) other: ____
+     DEFAULT: A.
+     ANSWER: A
+
+2.3  [Q28] P72 - "If you're really adventurous, (start this from scratch...)"
+     No sentence to work from. What is the thrust?
+       A) Try it on your own matter with your own gold set.
+       B) If you're a provider, wire it in as a TAR engine and validate it
+          like any other.
+       C) Build the composed configurations (Facets etc.) yourself.
+       D) other: ____
+     DEFAULT: A + B in one sentence.
+     ANSWER: Remove it. 
+
+2.4  [Q10] P16 - FRCP / Sedona paragraph (YOU ARE THE LAWYER - check it)
+     Draft: "To be clear, if you're a lawyer conducting a review for production,
+     whether by humans, an LLM or Jev, there is more to consider than recall
+     and precision. The obligation under the Federal Rules is a reasonable
+     inquiry (Rule 26(g)) and a process proportional to the needs of the case
+     (Rule 26(b)(1)), and the Sedona Principles leave the choice of method to
+     the responding party (Principle 6). That means weighing cost, timing, the
+     risk profile of what is missed, privilege and confidentiality handling,
+     defensibility of the workflow and how you will validate and document it,
+     not a single accuracy number."
+     Right rules and principle? Edits?
+     ANSWER: YES
+
+2.5  [Q26] P70 - Limitations paragraph + Relativity aiR for Review
+     Drafted paragraph in review.md Q26 using vendor quotes ("do not write
+     replies, produce code, or generate explanations of their reasoning";
+     "accuracy falls as the state grows with content unrelated to the
+     decision"). Please CONFIRM the aiR description (returns rationale,
+     considerations and citations alongside the call) - not verified by me.
+     DEFAULT: use the draft, aiR description as you wrote it.
+     ANSWER: YES CONFIRMED
+
+2.6  [Q31] New limitations list - which to include? (tick numbers)
+       1) Enriched sample: precision here is not collection precision
+          (richness under 1% on most topics)
+       2) One corpus, one gold standard, eleven topics
+       3) Criteria refined once on a calibration set (ties to 1.1)
+       4) Jev 0.5 cutoff untuned; per-topic cutoffs add ~2.4 F1 held-out
+       5) Per-topic variance: Jev Noul 36% (Rilya Wilson), 43% (recount) vs
+          96-99% (Bottled water, Movie Gallery)
+       6) Short English emails only, no long attachments
+       7) LLMs at minimal reasoning with structured output; a different prompt
+          could do better, as could a tuned Jev
+       8) Early-access pricing and rate limits may change
+     DEFAULT: all eight, one compact paragraph.
+     ANSWER:  3, 4, but these are study limitations right not Jev limitations which is a section I already have. 
+
+2.7  [Q14] P25 / P27 - Eleven topics vs ten; topic list and sampling
+     Keep eleven (ten means re-running everything). Drafted paragraph lists
+     the topics and the dropped 12th (Eminent domain, assessor agreement
+     7-28%). Drafted sampling sentence (3,016 emails: 100 gold positives per
+     topic + 1,000 judged non-relevant + 1,000 random) in review.md s6.
+     Include per-topic richness (GWB ~4%, Movie Gallery ~2%, rest under 1%)?
+     DEFAULT: eleven; use both drafts; mention richness in one clause.
+     ANSWER: I'm not sure what you mean. Do what you think here. 
+
+2.8  [C14/C15] P26 - Primitives / how the models were asked
+     Full section drafted in review.md s6 ("Proposed P26 section") using
+     Faith-based initiatives as the penumbra example; covers Noul, Choice,
+     Score, Facets, the 0.5 cutoff, and the "can be wrong but can't answer
+     outside the labels" point.
+     DEFAULT: use the draft.
+     ANSWER: Yes use the draft
+
+2.9  [Q9] P15 - "courts have thus far treated LLM-based review as a form of TAR"
+     Emory/Pickens/Louis argue GenAI SHOULD follow the TAR 1 process; I found
+     no court survey in it. Is the "courts have treated" clause yours or theirs?
+     If yours: "The Sedona Conference's TAR 1 Reference Model (Emory, Pickens
+     and Louis, 2024) treats GenAI as a new engine inside the same defensible
+     TAR 1 process, and in practice courts have so far ..."
+     ANSWER: My phrase due to recent decision in california treating GenAI review as TAR you can look it up
+
+2.10 [Q8] P15 - "TAR1 or unsupervised"
+     Say TAR 1, not unsupervised (unsupervised = no labels at all, e.g.
+     clustering). Proposed: "While the engines differ, LLMs essentially slot
+     into a TAR 1 workflow: the model is configured up front, applied to the
+     whole population in a single pass, and validated with a sample; the
+     practical difference is that the configuration step is prompt iteration
+     rather than a human-labeled training set."
+     DEFAULT: use proposed.
+     ANSWER: Use proposed
+
+2.11 [Q22] P56 - "creative approaches"
+     -> "composed configurations". Also mention Relevance Gate (70/82) and
+     Three-Phrasing Ensemble (81/79), both on the chart, and that Facets costs
+     $25.5 vs $15.6 per 100k?
+     DEFAULT: yes to all.
+     ANSWER: yes to all
+
+2.12 [Q17] P30 - Speed sentence and caveat
+     (a) Term: "System One model" (TypeSafe's) or "decision model"?
+         DEFAULT: "System One model" first mention, "decision model" after.
+     (b) Add the measurement caveat (Jev/Claude/GPT from a single-request
+         sample of 200 emails; Gemini from run timings with 8 in flight; read
+         ratios not milliseconds)?  DEFAULT: yes.
+     ANSWER: yes
+
+2.13 [Q4] P8 - TypeSafe GIF
+     (a) Permission/attribution sorted?
+     (b) LinkedIn won't animate it reliably - static frame + link?
+     (c) Quote their own caveat ("relatively shorter input paints our model in
+         an advantageous light")?
+     DEFAULT: static frame + link; include the caveat.
+     ANSWER: keep it as is
+
+2.14 [s6 #10] Add a one-line "how to reproduce" pointing to
+     decider.tarcalc.com (criteria, prompts, per-document outputs published)?
+     And name the version once: "Jev 1.13 (jev-1.13.0)".
+     DEFAULT: yes to both.
+     ANSWER: Don't include a reference here to the decider.tarcalc.com but yes to mentioning the version.
+
+
+########################################################################
+#  PRIORITY 3 - VOICE, WORDING, HOUSEKEEPING                             #
+########################################################################
+
+3.1  [Q1] P2 - Hook
+       A) "How big a model do you need to tell whether an email is about
+          bottled water?"
+       B) "It takes a data center to write a sonnet. Does it take one to label
+          an email?"
+       C) Yours, trimmed: "How many H100s does it take to play SimCity? How big
+          an LLM do you need to label an email?"
+     And "more than 2 trillion parameters" - no lab publishes counts.
+     DEFAULT: C; "parameter counts in the trillions".
+     ANSWER: C 
+
+3.2  [Q3] P4 - "(Before you get your hype-triggered hackles up...)"
+       A) Cut it, start at "There may be something to this."
+       B) "Before your hype detector goes off, consider that there may be
+          something to this."
+     DEFAULT: A.
+     ANSWER: B is better
+
+3.3  [s2] Collapse P4 / P9 / P10 / P42 (four "don't believe the hype, don't
+     dismiss it" paragraphs) into one, keeping P42 as the bridge into
+     accuracy? Cut the "not a verdict" line from P16 (kept in P74)? Cut P61
+     (restates three sections)? Cut "The more you think, the more ideas start
+     to flow"?
+     DEFAULT: yes to all.
+     ANSWER: Yes to all
+
+3.4  [Q6] P12 - Voice: "my readers" / "I" vs "we"/"our"
+     DEFAULT: "we/our" throughout; P12 -> "As most readers of this page know".
+     ANSWER: Yes
+
+3.5  [Q7] P13 - "codify"
+       A) measure   B) document   C) certify
+     DEFAULT: A.
+     ANSWER: C
+
+3.6  [Q16] P28 - Segue
+       A) "With the setup out of the way, here is what we found, starting with
+          the part you came for." (if accuracy first)
+       B) "...starting with the part that surprised us least." (if speed first)
+     DEFAULT: follows 2.1.
+     ANSWER: Skip this neither 
+
+3.7  [Q19] P44 - "in the same stratosphere"
+       A) "in the same league as"   B) "in the same ballpark as"
+     DEFAULT: A.
+     ANSWER:
+
+3.8  [Q32] Add "error bars are 95% confidence intervals" once?
+     DEFAULT: yes.
+     ANSWER: Yes
+
+3.9  [Q5] Delete the 21 "Minimize image / Edit image / Delete image" lines
+     (LinkedIn UI pasted in)?
+     DEFAULT: yes.
+     ANSWER: yes
+
+3.10 Remaining wording I left alone (say "fix all" or pick):
+       a) P50 "our LLM models" -> "the LLMs"; tense "We measure"/"were curious"
+       b) P56 "Using the three primitives, there is a lot of room" ->
+          "The three primitives leave a lot of room for creativity"
+       c) P70 "are better for LLMs" -> "are better left to LLMs"
+       d) P72 "Relativity are surely evaluating" -> "are presumably evaluating"
+       e) P74 commas inside quotation marks (US style)
+       f) P3 "-TypeSafe AI" -> em dash + "launch post, Sep 15, 2026"
+     DEFAULT: fix all.
+     ANSWER:fix 
+
+3.11 Legal facts I INSERTED in the edited copy - please verify:
+       - Da Silva Moore v. Publicis Groupe, 287 F.R.D. 182 (S.D.N.Y. 2012),
+         Peck, M.J. (draft said 2014)
+       - Rio Tinto PLC v. Vale S.A., 306 F.R.D. 125 (S.D.N.Y. 2015), with the
+         verbatim "black letter law" quotation
+       - Emory, Pickens & Louis, "TAR 1 Reference Model: An Established
+         Framework Unifying Traditional and GenAI Approaches to Technology-
+         Assisted Review," Sedona Conference Journal vol. 25 (2024)
+     ANSWER (ok / corrections): ok
+
+3.12 Delete the title-brainstorm block (P76-80) before publishing?
+     DEFAULT: yes, once 2.2 is answered.
+     ANSWER: Yes
+
+
+----------------------------------------------------------------------
+Anything else you want changed, added or left alone:
+
+
+Add "RFP or issue specific tagging, rank cut-offs and validation" as an future opportunity to use Jev outside of first pass review

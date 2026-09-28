@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this benchmark, its data or its results, please cite it as below."
+type: dataset
+title: "Jev vs the LLMs: an eDiscovery relevance-review benchmark"
+authors:
+  - family-names: Sexton
+    given-names: Ben
+year: 2026
+date-released: 2026-09-27
+version: "1.0"
+url: "https://decider.tarcalc.com"
+repository-code: "https://github.com/abcdben/jev-edisc-eval"
+license: MIT
+abstract: >-
+  A benchmark comparing TypeSafe AI's Jev with frontier generative LLMs
+  (Anthropic, OpenAI, Google) and a fine-tuned open model on eDiscovery
+  relevance review across four corpora (synthetic Veridian matter, Mallinckrodt
+  opioid-litigation e-mails, CUAD contract clauses, TREC 2016 Total Recall /
+  Jeb Bush e-mails), on quality, calibration, determinism, speed and cost.
+  Code is MIT; author-created data and results are CC BY 4.0 (see
+  data/LICENSE-DATA.md).
+keywords:
+  - eDiscovery
+  - technology-assisted review
+  - relevance classification
+  - large language models
+  - benchmark

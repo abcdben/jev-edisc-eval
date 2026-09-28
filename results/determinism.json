@@ -1,0 +1,6061 @@
+{
+ "sample": {
+  "n_docs": 300,
+  "strata": {
+   "gray": 100,
+   "pos": 100,
+   "neg": 100
+  },
+  "corpus_strata": {
+   "pos": 584,
+   "gray": 774,
+   "neg": 482
+  },
+  "focus_issues": [
+   "som_narrow",
+   "dea_narrow"
+  ]
+ },
+ "cells": [
+  {
+   "arm": "multi",
+   "setting": "default",
+   "model": "jev@base",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0054,
+    0.0032,
+    0.0092
+   ],
+   "decision_flip_weighted": 0.0063,
+   "pairwise": [
+    0.0027,
+    0.0014,
+    0.0043
+   ],
+   "identical_prob": [
+    0.4896,
+    0.4696,
+    0.5096
+   ],
+   "prob_spread_median": 0.01,
+   "prob_spread_p95": 0.05,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0016
+   ],
+   "confident_share_of_flips": 0.0,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.0073
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.002
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.0167,
+      0.0071,
+      0.0384
+     ],
+     "pairwise": 0.0087
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0112,
+      0.0059,
+      0.0212
+     ],
+     "pairwise": 0.0058
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0037,
+      0.0013,
+      0.011
+     ],
+     "pairwise": 0.0017
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0013,
+      0.0002,
+      0.007
+     ],
+     "pairwise": 0.0008
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.0551,
+      0.027,
+      0.1094
+     ],
+     "pairwise": 0.0283
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0172,
+      0.0067,
+      0.0433
+     ],
+     "pairwise": 0.0086
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.001,
+      0.0003,
+      0.0036
+     ],
+     "pairwise": 0.0005
+    }
+   },
+   "recall_range": [
+    0.8514,
+    0.8551
+   ],
+   "precision_range": [
+    0.8736,
+    0.8806
+   ],
+   "majority": {
+    "recall": 0.8551,
+    "precision": 0.8806
+   },
+   "doc_flip": [
+    0.0233,
+    0.0113,
+    0.0474
+   ],
+   "doc_pairwise": 0.012
+  },
+  {
+   "arm": "multi",
+   "setting": "default",
+   "model": "jev@choice",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0075,
+    0.0047,
+    0.0118
+   ],
+   "decision_flip_weighted": 0.0084,
+   "pairwise": [
+    0.0038,
+    0.0021,
+    0.0058
+   ],
+   "identical_prob": [
+    0.7312,
+    0.7132,
+    0.7486
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.06,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0016
+   ],
+   "confident_share_of_flips": 0.0,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.002
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.0233,
+      0.0113,
+      0.0474
+     ],
+     "pairwise": 0.012
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.004
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.0047
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.004
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0125,
+      0.0068,
+      0.0229
+     ],
+     "pairwise": 0.0063
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0088,
+      0.0042,
+      0.018
+     ],
+     "pairwise": 0.0045
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0013,
+      0.0002,
+      0.007
+     ],
+     "pairwise": 0.0008
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.0394,
+      0.0169,
+      0.0889
+     ],
+     "pairwise": 0.022
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.03,
+      0.0146,
+      0.0607
+     ],
+     "pairwise": 0.0146
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0029,
+      0.0013,
+      0.0064
+     ],
+     "pairwise": 0.0015
+    }
+   },
+   "recall_range": [
+    0.8514,
+    0.8623
+   ],
+   "precision_range": [
+    0.8704,
+    0.8745
+   ],
+   "majority": {
+    "recall": 0.8587,
+    "precision": 0.8745
+   },
+   "doc_flip": [
+    0.0167,
+    0.0071,
+    0.0384
+   ],
+   "doc_pairwise": 0.0093
+  },
+  {
+   "arm": "multi",
+   "setting": "default",
+   "model": "jev@score",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0063,
+    0.0038,
+    0.0103
+   ],
+   "decision_flip_weighted": 0.007,
+   "pairwise": [
+    0.0032,
+    0.0017,
+    0.005
+   ],
+   "identical_prob": [
+    0.285,
+    0.2673,
+    0.3034
+   ],
+   "prob_spread_median": 0.005,
+   "prob_spread_p95": 0.05,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0016
+   ],
+   "confident_share_of_flips": 0.0,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.0053
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.0027
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.0053
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.0033
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.006
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.002
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0112,
+      0.0059,
+      0.0212
+     ],
+     "pairwise": 0.0055
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.005,
+      0.0019,
+      0.0128
+     ],
+     "pairwise": 0.0027
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0025,
+      0.0007,
+      0.0091
+     ],
+     "pairwise": 0.0015
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.0394,
+      0.0169,
+      0.0889
+     ],
+     "pairwise": 0.0173
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0129,
+      0.0044,
+      0.0372
+     ],
+     "pairwise": 0.0077
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0034,
+      0.0017,
+      0.0071
+     ],
+     "pairwise": 0.0019
+    }
+   },
+   "recall_range": [
+    0.837,
+    0.8478
+   ],
+   "precision_range": [
+    0.8727,
+    0.8797
+   ],
+   "majority": {
+    "recall": 0.8442,
+    "precision": 0.8694
+   },
+   "doc_flip": [
+    0.02,
+    0.0092,
+    0.0429
+   ],
+   "doc_pairwise": 0.0107
+  },
+  {
+   "arm": "multi",
+   "setting": "default",
+   "model": "jev@state_string",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0088,
+    0.0057,
+    0.0133
+   ],
+   "decision_flip_weighted": 0.0099,
+   "pairwise": [
+    0.0042,
+    0.0026,
+    0.0063
+   ],
+   "identical_prob": [
+    0.5133,
+    0.4933,
+    0.5333
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.04,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0016
+   ],
+   "confident_share_of_flips": 0.0,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.0053
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.0033
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.0267,
+      0.0136,
+      0.0517
+     ],
+     "pairwise": 0.0127
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.0033
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.0027
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.0067
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0163,
+      0.0095,
+      0.0276
+     ],
+     "pairwise": 0.0083
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0075,
+      0.0034,
+      0.0163
+     ],
+     "pairwise": 0.0035
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0025,
+      0.0007,
+      0.0091
+     ],
+     "pairwise": 0.001
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.0787,
+      0.0433,
+      0.1389
+     ],
+     "pairwise": 0.0394
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.03,
+      0.0146,
+      0.0607
+     ],
+     "pairwise": 0.0146
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.002,
+      0.0008,
+      0.005
+     ],
+     "pairwise": 0.0009
+    }
+   },
+   "recall_range": [
+    0.8333,
+    0.8478
+   ],
+   "precision_range": [
+    0.8792,
+    0.888
+   ],
+   "majority": {
+    "recall": 0.837,
+    "precision": 0.8851
+   },
+   "doc_flip": [
+    0.0367,
+    0.0206,
+    0.0645
+   ],
+   "doc_pairwise": 0.0173
+  },
+  {
+   "arm": "multi",
+   "setting": "default",
+   "model": "laya@base",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0013,
+    0.0004,
+    0.0037
+   ],
+   "decision_flip_weighted": 0.0012,
+   "pairwise": [
+    0.0007,
+    0.0,
+    0.0015
+   ],
+   "identical_prob": [
+    0.2108,
+    0.195,
+    0.2276
+   ],
+   "prob_spread_median": 0.0014,
+   "prob_spread_p95": 0.0068,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0016
+   ],
+   "confident_share_of_flips": 0.0,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.0053
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0,
+      0,
+      0.0048
+     ],
+     "pairwise": 0.0
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0037,
+      0.0013,
+      0.011
+     ],
+     "pairwise": 0.002
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0,
+      0,
+      0.0048
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.0,
+      0,
+      0.0294
+     ],
+     "pairwise": 0.0
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0,
+      0,
+      0.0162
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0015,
+      0.0005,
+      0.0043
+     ],
+     "pairwise": 0.0008
+    }
+   },
+   "recall_range": [
+    0.9964,
+    0.9964
+   ],
+   "precision_range": [
+    0.1179,
+    0.118
+   ],
+   "majority": {
+    "recall": 0.9964,
+    "precision": 0.118
+   },
+   "doc_flip": [
+    0.0,
+    0,
+    0.0126
+   ],
+   "doc_pairwise": 0.0
+  },
+  {
+   "arm": "multi",
+   "setting": "default",
+   "model": "laya@recipe",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0,
+    0,
+    0.0016
+   ],
+   "decision_flip_weighted": 0.0,
+   "pairwise": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "identical_prob": [
+    0.6658,
+    0.6467,
+    0.6844
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.0047,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0016
+   ],
+   "confident_share_of_flips": null,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0,
+      0,
+      0.0048
+     ],
+     "pairwise": 0.0
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0,
+      0,
+      0.0048
+     ],
+     "pairwise": 0.0
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0,
+      0,
+      0.0048
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.0,
+      0,
+      0.0294
+     ],
+     "pairwise": 0.0
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0,
+      0,
+      0.0162
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0,
+      0,
+      0.0019
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    0.9819,
+    0.9819
+   ],
+   "precision_range": [
+    0.1196,
+    0.1196
+   ],
+   "majority": {
+    "recall": 0.9819,
+    "precision": 0.1196
+   },
+   "doc_flip": [
+    0.0,
+    0,
+    0.0126
+   ],
+   "doc_pairwise": 0.0
+  },
+  {
+   "arm": "multi",
+   "setting": "default",
+   "model": "claude-haiku-4.5",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0379,
+    0.031,
+    0.0463
+   ],
+   "decision_flip_weighted": 0.0426,
+   "pairwise": [
+    0.0182,
+    0.0147,
+    0.0219
+   ],
+   "identical_prob": [
+    0.2562,
+    0.2392,
+    0.2741
+   ],
+   "prob_spread_median": 0.01,
+   "prob_spread_p95": 0.13,
+   "confident_flip": [
+    0.0354,
+    0.0287,
+    0.0436
+   ],
+   "confident_share_of_flips": 0.9341,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.05,
+      0.0305,
+      0.0808
+     ],
+     "pairwise": 0.022
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.006
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.09,
+      0.0626,
+      0.1278
+     ],
+     "pairwise": 0.046
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0167,
+      0.0071,
+      0.0384
+     ],
+     "pairwise": 0.0073
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.04,
+      0.023,
+      0.0686
+     ],
+     "pairwise": 0.018
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.0233,
+      0.0113,
+      0.0474
+     ],
+     "pairwise": 0.0113
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.008
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0567,
+      0.0357,
+      0.0889
+     ],
+     "pairwise": 0.0273
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0725,
+      0.0565,
+      0.0926
+     ],
+     "pairwise": 0.035
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0238,
+      0.0153,
+      0.0368
+     ],
+     "pairwise": 0.011
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0175,
+      0.0105,
+      0.0292
+     ],
+     "pairwise": 0.0088
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.2362,
+      0.1708,
+      0.3172
+     ],
+     "pairwise": 0.1165
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0601,
+      0.0361,
+      0.0983
+     ],
+     "pairwise": 0.0283
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.023,
+      0.0174,
+      0.0305
+     ],
+     "pairwise": 0.011
+    }
+   },
+   "recall_range": [
+    0.9203,
+    0.9312
+   ],
+   "precision_range": [
+    0.6995,
+    0.7293
+   ],
+   "majority": {
+    "recall": 0.9275,
+    "precision": 0.7072
+   },
+   "doc_flip": [
+    0.1033,
+    0.0738,
+    0.1429
+   ],
+   "doc_pairwise": 0.052
+  },
+  {
+   "arm": "multi",
+   "setting": "default",
+   "model": "claude-sonnet-5",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0242,
+    0.0187,
+    0.0311
+   ],
+   "decision_flip_weighted": 0.0272,
+   "pairwise": [
+    0.0116,
+    0.0087,
+    0.0147
+   ],
+   "identical_prob": [
+    0.4171,
+    0.3975,
+    0.4369
+   ],
+   "prob_spread_median": 0.01,
+   "prob_spread_p95": 0.1,
+   "confident_flip": [
+    0.0029,
+    0.0014,
+    0.006
+   ],
+   "confident_share_of_flips": 0.1207,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.05,
+      0.0305,
+      0.0808
+     ],
+     "pairwise": 0.0227
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.0067
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.0367,
+      0.0206,
+      0.0645
+     ],
+     "pairwise": 0.0187
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.0067
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.0167,
+      0.0071,
+      0.0384
+     ],
+     "pairwise": 0.0073
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.0067
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0467,
+      0.028,
+      0.0768
+     ],
+     "pairwise": 0.0227
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.045,
+      0.0327,
+      0.0617
+     ],
+     "pairwise": 0.0215
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0187,
+      0.0114,
+      0.0307
+     ],
+     "pairwise": 0.0088
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0088,
+      0.0042,
+      0.018
+     ],
+     "pairwise": 0.0045
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.1496,
+      0.0979,
+      0.2219
+     ],
+     "pairwise": 0.074
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0215,
+      0.0092,
+      0.0492
+     ],
+     "pairwise": 0.0112
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0167,
+      0.012,
+      0.0232
+     ],
+     "pairwise": 0.0077
+    }
+   },
+   "recall_range": [
+    0.9312,
+    0.942
+   ],
+   "precision_range": [
+    0.7214,
+    0.7429
+   ],
+   "majority": {
+    "recall": 0.9348,
+    "precision": 0.7414
+   },
+   "doc_flip": [
+    0.04,
+    0.023,
+    0.0686
+   ],
+   "doc_pairwise": 0.02
+  },
+  {
+   "arm": "multi",
+   "setting": "default",
+   "model": "gpt-5.6-luna",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0429,
+    0.0355,
+    0.0518
+   ],
+   "decision_flip_weighted": 0.0449,
+   "pairwise": [
+    0.0211,
+    0.0172,
+    0.0251
+   ],
+   "identical_prob": [
+    0.4192,
+    0.3996,
+    0.439
+   ],
+   "prob_spread_median": 0.01,
+   "prob_spread_p95": 0.98,
+   "confident_flip": [
+    0.0408,
+    0.0336,
+    0.0495
+   ],
+   "confident_share_of_flips": 0.9515,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.05,
+      0.0305,
+      0.0808
+     ],
+     "pairwise": 0.0253
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0233,
+      0.0113,
+      0.0474
+     ],
+     "pairwise": 0.012
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.0567,
+      0.0357,
+      0.0889
+     ],
+     "pairwise": 0.0273
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0233,
+      0.0113,
+      0.0474
+     ],
+     "pairwise": 0.0107
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.1,
+      0.0709,
+      0.1392
+     ],
+     "pairwise": 0.048
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.0367,
+      0.0206,
+      0.0645
+     ],
+     "pairwise": 0.018
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0267,
+      0.0136,
+      0.0517
+     ],
+     "pairwise": 0.0133
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0267,
+      0.0136,
+      0.0517
+     ],
+     "pairwise": 0.014
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0575,
+      0.0434,
+      0.0758
+     ],
+     "pairwise": 0.0278
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0362,
+      0.0254,
+      0.0516
+     ],
+     "pairwise": 0.018
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.035,
+      0.0243,
+      0.0501
+     ],
+     "pairwise": 0.0175
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.126,
+      0.0791,
+      0.1949
+     ],
+     "pairwise": 0.0646
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0343,
+      0.0175,
+      0.0663
+     ],
+     "pairwise": 0.0163
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0387,
+      0.0312,
+      0.048
+     ],
+     "pairwise": 0.0189
+    }
+   },
+   "recall_range": [
+    0.971,
+    0.9819
+   ],
+   "precision_range": [
+    0.6159,
+    0.6276
+   ],
+   "majority": {
+    "recall": 0.9819,
+    "precision": 0.623
+   },
+   "doc_flip": [
+    0.0833,
+    0.0571,
+    0.1201
+   ],
+   "doc_pairwise": 0.042
+  },
+  {
+   "arm": "multi",
+   "setting": "default",
+   "model": "gpt-5.6-terra",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0304,
+    0.0243,
+    0.0381
+   ],
+   "decision_flip_weighted": 0.0353,
+   "pairwise": [
+    0.0148,
+    0.0117,
+    0.0179
+   ],
+   "identical_prob": [
+    0.335,
+    0.3164,
+    0.3541
+   ],
+   "prob_spread_median": 0.009,
+   "prob_spread_p95": 0.16,
+   "confident_flip": [
+    0.0246,
+    0.0191,
+    0.0316
+   ],
+   "confident_share_of_flips": 0.8082,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.04,
+      0.023,
+      0.0686
+     ],
+     "pairwise": 0.0213
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.004
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.06,
+      0.0383,
+      0.0928
+     ],
+     "pairwise": 0.026
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.02,
+      0.0092,
+      0.0429
+     ],
+     "pairwise": 0.0087
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.0633,
+      0.0409,
+      0.0968
+     ],
+     "pairwise": 0.0333
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.02,
+      0.0092,
+      0.0429
+     ],
+     "pairwise": 0.01
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.0067
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0167,
+      0.0071,
+      0.0384
+     ],
+     "pairwise": 0.008
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0675,
+      0.0521,
+      0.087
+     ],
+     "pairwise": 0.033
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0125,
+      0.0068,
+      0.0229
+     ],
+     "pairwise": 0.0055
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0112,
+      0.0059,
+      0.0212
+     ],
+     "pairwise": 0.0057
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.252,
+      0.1845,
+      0.334
+     ],
+     "pairwise": 0.1276
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0472,
+      0.0266,
+      0.0825
+     ],
+     "pairwise": 0.0206
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0147,
+      0.0103,
+      0.0209
+     ],
+     "pairwise": 0.0071
+    }
+   },
+   "recall_range": [
+    0.9239,
+    0.9312
+   ],
+   "precision_range": [
+    0.7835,
+    0.7908
+   ],
+   "majority": {
+    "recall": 0.9348,
+    "precision": 0.7988
+   },
+   "doc_flip": [
+    0.0833,
+    0.0571,
+    0.1201
+   ],
+   "doc_pairwise": 0.042
+  },
+  {
+   "arm": "multi",
+   "setting": "default",
+   "model": "gemini-3.5-flash-lite",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0408,
+    0.0336,
+    0.0495
+   ],
+   "decision_flip_weighted": 0.044,
+   "pairwise": [
+    0.0202,
+    0.0164,
+    0.0241
+   ],
+   "identical_prob": [
+    0.3567,
+    0.3377,
+    0.376
+   ],
+   "prob_spread_median": 0.01,
+   "prob_spread_p95": 0.15,
+   "confident_flip": [
+    0.0404,
+    0.0332,
+    0.0491
+   ],
+   "confident_share_of_flips": 0.9898,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.05,
+      0.0305,
+      0.0808
+     ],
+     "pairwise": 0.0247
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0233,
+      0.0113,
+      0.0474
+     ],
+     "pairwise": 0.01
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.07,
+      0.0462,
+      0.1046
+     ],
+     "pairwise": 0.036
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0267,
+      0.0136,
+      0.0517
+     ],
+     "pairwise": 0.0127
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.0467,
+      0.028,
+      0.0768
+     ],
+     "pairwise": 0.0233
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.03,
+      0.0159,
+      0.056
+     ],
+     "pairwise": 0.0127
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0267,
+      0.0136,
+      0.0517
+     ],
+     "pairwise": 0.0127
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0533,
+      0.0331,
+      0.0849
+     ],
+     "pairwise": 0.0293
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0688,
+      0.0532,
+      0.0884
+     ],
+     "pairwise": 0.0338
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0175,
+      0.0105,
+      0.0292
+     ],
+     "pairwise": 0.0083
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0362,
+      0.0254,
+      0.0516
+     ],
+     "pairwise": 0.0185
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.2205,
+      0.1572,
+      0.3002
+     ],
+     "pairwise": 0.1087
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0258,
+      0.0119,
+      0.055
+     ],
+     "pairwise": 0.0129
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0314,
+      0.0246,
+      0.0399
+     ],
+     "pairwise": 0.0155
+    }
+   },
+   "recall_range": [
+    0.9384,
+    0.9565
+   ],
+   "precision_range": [
+    0.7116,
+    0.7225
+   ],
+   "majority": {
+    "recall": 0.9529,
+    "precision": 0.7265
+   },
+   "doc_flip": [
+    0.1,
+    0.0709,
+    0.1392
+   ],
+   "doc_pairwise": 0.0487
+  },
+  {
+   "arm": "multi",
+   "setting": "default",
+   "model": "gemini-3.8-flash",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0175,
+    0.013,
+    0.0236
+   ],
+   "decision_flip_weighted": 0.0202,
+   "pairwise": [
+    0.0088,
+    0.0061,
+    0.0117
+   ],
+   "identical_prob": [
+    0.5933,
+    0.5735,
+    0.6128
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.1,
+   "confident_flip": [
+    0.0138,
+    0.0098,
+    0.0192
+   ],
+   "confident_share_of_flips": 0.7857,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.0167,
+      0.0071,
+      0.0384
+     ],
+     "pairwise": 0.0087
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.0067
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.02,
+      0.0092,
+      0.0429
+     ],
+     "pairwise": 0.01
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0167,
+      0.0071,
+      0.0384
+     ],
+     "pairwise": 0.008
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.04,
+      0.023,
+      0.0686
+     ],
+     "pairwise": 0.02
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.0047
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0167,
+      0.0071,
+      0.0384
+     ],
+     "pairwise": 0.0087
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.004
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0387,
+      0.0274,
+      0.0545
+     ],
+     "pairwise": 0.0198
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.005,
+      0.0019,
+      0.0128
+     ],
+     "pairwise": 0.0022
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0088,
+      0.0042,
+      0.018
+     ],
+     "pairwise": 0.0045
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.2205,
+      0.1572,
+      0.3002
+     ],
+     "pairwise": 0.1134
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0086,
+      0.0024,
+      0.0308
+     ],
+     "pairwise": 0.0052
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0059,
+      0.0034,
+      0.0103
+     ],
+     "pairwise": 0.0027
+    }
+   },
+   "recall_range": [
+    0.9565,
+    0.971
+   ],
+   "precision_range": [
+    0.8758,
+    0.8926
+   ],
+   "majority": {
+    "recall": 0.9638,
+    "precision": 0.8956
+   },
+   "doc_flip": [
+    0.0467,
+    0.028,
+    0.0768
+   ],
+   "doc_pairwise": 0.0253
+  },
+  {
+   "arm": "multi",
+   "setting": "default",
+   "model": "gemma3-12b",
+   "k": 4,
+   "runs": [
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0088,
+    0.0057,
+    0.0133
+   ],
+   "decision_flip_weighted": 0.01,
+   "pairwise": [
+    0.0044,
+    0.0027,
+    0.0063
+   ],
+   "identical_prob": [
+    0.8404,
+    0.8252,
+    0.8545
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.05,
+   "confident_flip": [
+    0.0042,
+    0.0023,
+    0.0077
+   ],
+   "confident_share_of_flips": 0.4762,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.0033
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0017
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.0033
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.005
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.0067
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.0067
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.0033
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.005
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0175,
+      0.0105,
+      0.0292
+     ],
+     "pairwise": 0.0088
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0063,
+      0.0027,
+      0.0145
+     ],
+     "pairwise": 0.0031
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0025,
+      0.0007,
+      0.0091
+     ],
+     "pairwise": 0.0013
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.0315,
+      0.0123,
+      0.0782
+     ],
+     "pairwise": 0.0157
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0086,
+      0.0024,
+      0.0308
+     ],
+     "pairwise": 0.0043
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0074,
+      0.0045,
+      0.0121
+     ],
+     "pairwise": 0.0037
+    }
+   },
+   "recall_range": [
+    0.8841,
+    0.8949
+   ],
+   "precision_range": [
+    0.492,
+    0.4949
+   ],
+   "majority": {
+    "recall": 0.8841,
+    "precision": 0.4949
+   },
+   "doc_flip": [
+    0.0133,
+    0.0052,
+    0.0338
+   ],
+   "doc_pairwise": 0.0067
+  },
+  {
+   "arm": "multi",
+   "setting": "default",
+   "model": "lexical",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0,
+    0,
+    0.0016
+   ],
+   "decision_flip_weighted": 0.0,
+   "pairwise": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "identical_prob": [
+    1.0,
+    0.9984,
+    1
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.0,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0016
+   ],
+   "confident_share_of_flips": null,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0,
+      0,
+      0.0048
+     ],
+     "pairwise": 0.0
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0,
+      0,
+      0.0048
+     ],
+     "pairwise": 0.0
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0,
+      0,
+      0.0048
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.0,
+      0,
+      0.0294
+     ],
+     "pairwise": 0.0
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0,
+      0,
+      0.0162
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0,
+      0,
+      0.0019
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    0.8551,
+    0.8551
+   ],
+   "precision_range": [
+    0.2374,
+    0.2374
+   ],
+   "majority": {
+    "recall": 0.8551,
+    "precision": 0.2374
+   },
+   "doc_flip": [
+    0.0,
+    0,
+    0.0126
+   ],
+   "doc_pairwise": 0.0
+  },
+  {
+   "arm": "multi",
+   "setting": "t0",
+   "model": "claude-haiku-4.5",
+   "k": 5,
+   "runs": [
+    "t0_rep1",
+    "t0_rep2",
+    "t0_rep3",
+    "t0_rep4",
+    "t0_rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0079,
+    0.0051,
+    0.0123
+   ],
+   "decision_flip_weighted": 0.0093,
+   "pairwise": [
+    0.004,
+    0.0023,
+    0.006
+   ],
+   "identical_prob": [
+    0.8767,
+    0.8629,
+    0.8892
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.03,
+   "confident_flip": [
+    0.0075,
+    0.0047,
+    0.0118
+   ],
+   "confident_share_of_flips": 0.9474,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.006
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.0033
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.02,
+      0.0092,
+      0.0429
+     ],
+     "pairwise": 0.0107
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.002
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.002
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.0067
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0175,
+      0.0105,
+      0.0292
+     ],
+     "pairwise": 0.0088
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.005,
+      0.0019,
+      0.0128
+     ],
+     "pairwise": 0.0025
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0013,
+      0.0002,
+      0.007
+     ],
+     "pairwise": 0.0008
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.0551,
+      0.027,
+      0.1094
+     ],
+     "pairwise": 0.0283
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0215,
+      0.0092,
+      0.0492
+     ],
+     "pairwise": 0.0103
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0034,
+      0.0017,
+      0.0071
+     ],
+     "pairwise": 0.0018
+    }
+   },
+   "recall_range": [
+    0.9275,
+    0.9348
+   ],
+   "precision_range": [
+    0.7139,
+    0.7159
+   ],
+   "majority": {
+    "recall": 0.9312,
+    "precision": 0.7119
+   },
+   "doc_flip": [
+    0.03,
+    0.0159,
+    0.056
+   ],
+   "doc_pairwise": 0.0153
+  },
+  {
+   "arm": "multi",
+   "setting": "t0",
+   "model": "gpt-5.6-luna",
+   "k": 5,
+   "runs": [
+    "t0_rep1",
+    "t0_rep2",
+    "t0_rep3",
+    "t0_rep4",
+    "t0_rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0325,
+    0.0261,
+    0.0404
+   ],
+   "decision_flip_weighted": 0.0337,
+   "pairwise": [
+    0.0167,
+    0.0132,
+    0.0204
+   ],
+   "identical_prob": [
+    0.5883,
+    0.5685,
+    0.6079
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.98,
+   "confident_flip": [
+    0.0312,
+    0.025,
+    0.039
+   ],
+   "confident_share_of_flips": 0.9615,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.0333,
+      0.0182,
+      0.0603
+     ],
+     "pairwise": 0.016
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.0033
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.0433,
+      0.0255,
+      0.0727
+     ],
+     "pairwise": 0.0227
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0167,
+      0.0071,
+      0.0384
+     ],
+     "pairwise": 0.0093
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.0933,
+      0.0654,
+      0.1316
+     ],
+     "pairwise": 0.0467
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.0233,
+      0.0113,
+      0.0474
+     ],
+     "pairwise": 0.012
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0167,
+      0.0071,
+      0.0384
+     ],
+     "pairwise": 0.0087
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0267,
+      0.0136,
+      0.0517
+     ],
+     "pairwise": 0.0147
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0437,
+      0.0316,
+      0.0602
+     ],
+     "pairwise": 0.022
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0213,
+      0.0133,
+      0.0338
+     ],
+     "pairwise": 0.0112
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0325,
+      0.0223,
+      0.0472
+     ],
+     "pairwise": 0.0168
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.1181,
+      0.0729,
+      0.1857
+     ],
+     "pairwise": 0.0598
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0215,
+      0.0092,
+      0.0492
+     ],
+     "pairwise": 0.0112
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0284,
+      0.0221,
+      0.0366
+     ],
+     "pairwise": 0.0146
+    }
+   },
+   "recall_range": [
+    0.9674,
+    0.9819
+   ],
+   "precision_range": [
+    0.6181,
+    0.6359
+   ],
+   "majority": {
+    "recall": 0.9746,
+    "precision": 0.6285
+   },
+   "doc_flip": [
+    0.0733,
+    0.0489,
+    0.1085
+   ],
+   "doc_pairwise": 0.0373
+  },
+  {
+   "arm": "multi",
+   "setting": "t0",
+   "model": "gpt-5.6-terra",
+   "k": 5,
+   "runs": [
+    "t0_rep1",
+    "t0_rep2",
+    "t0_rep3",
+    "t0_rep4",
+    "t0_rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.02,
+    0.0151,
+    0.0264
+   ],
+   "decision_flip_weighted": 0.0227,
+   "pairwise": [
+    0.0092,
+    0.0067,
+    0.0119
+   ],
+   "identical_prob": [
+    0.6196,
+    0.6,
+    0.6388
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.06,
+   "confident_flip": [
+    0.0158,
+    0.0116,
+    0.0217
+   ],
+   "confident_share_of_flips": 0.7917,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.0167,
+      0.0071,
+      0.0384
+     ],
+     "pairwise": 0.0073
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.0027
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.0467,
+      0.028,
+      0.0768
+     ],
+     "pairwise": 0.0207
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0167,
+      0.0071,
+      0.0384
+     ],
+     "pairwise": 0.0087
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.04,
+      0.023,
+      0.0686
+     ],
+     "pairwise": 0.02
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.0047
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.0047
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.0053
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0413,
+      0.0295,
+      0.0574
+     ],
+     "pairwise": 0.0185
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0075,
+      0.0034,
+      0.0163
+     ],
+     "pairwise": 0.0038
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0112,
+      0.0059,
+      0.0212
+     ],
+     "pairwise": 0.0055
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.1575,
+      0.1043,
+      0.2308
+     ],
+     "pairwise": 0.074
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0215,
+      0.0092,
+      0.0492
+     ],
+     "pairwise": 0.0094
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0113,
+      0.0075,
+      0.0169
+     ],
+     "pairwise": 0.0052
+    }
+   },
+   "recall_range": [
+    0.9239,
+    0.9384
+   ],
+   "precision_range": [
+    0.7727,
+    0.7872
+   ],
+   "majority": {
+    "recall": 0.9348,
+    "precision": 0.7818
+   },
+   "doc_flip": [
+    0.0567,
+    0.0357,
+    0.0889
+   ],
+   "doc_pairwise": 0.026
+  },
+  {
+   "arm": "multi",
+   "setting": "t0",
+   "model": "gemini-3.5-flash-lite",
+   "k": 5,
+   "runs": [
+    "t0_rep1",
+    "t0_rep2",
+    "t0_rep3",
+    "t0_rep4",
+    "t0_rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0442,
+    0.0366,
+    0.0531
+   ],
+   "decision_flip_weighted": 0.0471,
+   "pairwise": [
+    0.0222,
+    0.0182,
+    0.0267
+   ],
+   "identical_prob": [
+    0.3283,
+    0.3098,
+    0.3474
+   ],
+   "prob_spread_median": 0.01,
+   "prob_spread_p95": 0.15,
+   "confident_flip": [
+    0.0433,
+    0.0359,
+    0.0522
+   ],
+   "confident_share_of_flips": 0.9811,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.06,
+      0.0383,
+      0.0928
+     ],
+     "pairwise": 0.03
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.04,
+      0.023,
+      0.0686
+     ],
+     "pairwise": 0.0213
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.08,
+      0.0543,
+      0.1163
+     ],
+     "pairwise": 0.0413
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.02,
+      0.0092,
+      0.0429
+     ],
+     "pairwise": 0.01
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.0467,
+      0.028,
+      0.0768
+     ],
+     "pairwise": 0.0247
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.03,
+      0.0159,
+      0.056
+     ],
+     "pairwise": 0.014
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0233,
+      0.0113,
+      0.0474
+     ],
+     "pairwise": 0.0113
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0533,
+      0.0331,
+      0.0849
+     ],
+     "pairwise": 0.0253
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.07,
+      0.0543,
+      0.0898
+     ],
+     "pairwise": 0.035
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0225,
+      0.0143,
+      0.0353
+     ],
+     "pairwise": 0.0107
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.04,
+      0.0285,
+      0.0559
+     ],
+     "pairwise": 0.021
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.2362,
+      0.1708,
+      0.3172
+     ],
+     "pairwise": 0.1102
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.03,
+      0.0146,
+      0.0607
+     ],
+     "pairwise": 0.0146
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0338,
+      0.0268,
+      0.0426
+     ],
+     "pairwise": 0.0176
+    }
+   },
+   "recall_range": [
+    0.9384,
+    0.9565
+   ],
+   "precision_range": [
+    0.6915,
+    0.7238
+   ],
+   "majority": {
+    "recall": 0.9493,
+    "precision": 0.7278
+   },
+   "doc_flip": [
+    0.09,
+    0.0626,
+    0.1278
+   ],
+   "doc_pairwise": 0.0467
+  },
+  {
+   "arm": "multi",
+   "setting": "t0",
+   "model": "gemini-3.8-flash",
+   "k": 5,
+   "runs": [
+    "t0_rep1",
+    "t0_rep2",
+    "t0_rep3",
+    "t0_rep4",
+    "t0_rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0142,
+    0.0102,
+    0.0197
+   ],
+   "decision_flip_weighted": 0.017,
+   "pairwise": [
+    0.0068,
+    0.0047,
+    0.0092
+   ],
+   "identical_prob": [
+    0.6017,
+    0.5819,
+    0.6211
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.1,
+   "confident_flip": [
+    0.0125,
+    0.0088,
+    0.0178
+   ],
+   "confident_share_of_flips": 0.8824,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.006
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.0073
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.006
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.006
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.0333,
+      0.0182,
+      0.0603
+     ],
+     "pairwise": 0.016
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.0033
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.0053
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.0047
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.035,
+      0.0243,
+      0.0501
+     ],
+     "pairwise": 0.0173
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.005,
+      0.0019,
+      0.0128
+     ],
+     "pairwise": 0.002
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0025,
+      0.0007,
+      0.0091
+     ],
+     "pairwise": 0.0013
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.1969,
+      0.137,
+      0.2745
+     ],
+     "pairwise": 0.0961
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0086,
+      0.0024,
+      0.0308
+     ],
+     "pairwise": 0.0034
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0034,
+      0.0017,
+      0.0071
+     ],
+     "pairwise": 0.0017
+    }
+   },
+   "recall_range": [
+    0.9601,
+    0.971
+   ],
+   "precision_range": [
+    0.8816,
+    0.899
+   ],
+   "majority": {
+    "recall": 0.9674,
+    "precision": 0.896
+   },
+   "doc_flip": [
+    0.04,
+    0.023,
+    0.0686
+   ],
+   "doc_pairwise": 0.0187
+  },
+  {
+   "arm": "single",
+   "setting": "default",
+   "model": "jev@base",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0033,
+    0.0009,
+    0.0121
+   ],
+   "decision_flip_weighted": 0.0037,
+   "pairwise": [
+    0.0013,
+    0.0,
+    0.0033
+   ],
+   "identical_prob": [
+    0.5617,
+    0.5217,
+    0.6009
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.04,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0064
+   ],
+   "confident_share_of_flips": 0.0,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.002
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.002
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.0312,
+      0.0055,
+      0.1574
+     ],
+     "pairwise": 0.0125
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0208,
+      0.0037,
+      0.109
+     ],
+     "pairwise": 0.0083
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0,
+      0,
+      0.0073
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    0.8793,
+    0.8966
+   ],
+   "precision_range": [
+    0.8644,
+    0.8793
+   ],
+   "majority": {
+    "recall": 0.8793,
+    "precision": 0.8644
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "default",
+   "model": "jev@choice",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0033,
+    0.0009,
+    0.0121
+   ],
+   "decision_flip_weighted": 0.0037,
+   "pairwise": [
+    0.0013,
+    0.0,
+    0.0033
+   ],
+   "identical_prob": [
+    0.8333,
+    0.8014,
+    0.861
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.06,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0064
+   ],
+   "confident_share_of_flips": 0.0,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.002
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.002
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.0312,
+      0.0055,
+      0.1574
+     ],
+     "pairwise": 0.0125
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0208,
+      0.0037,
+      0.109
+     ],
+     "pairwise": 0.0083
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0,
+      0,
+      0.0073
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    0.8793,
+    0.8966
+   ],
+   "precision_range": [
+    0.8644,
+    0.8793
+   ],
+   "majority": {
+    "recall": 0.8793,
+    "precision": 0.8644
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "default",
+   "model": "jev@score",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0033,
+    0.0009,
+    0.0121
+   ],
+   "decision_flip_weighted": 0.0037,
+   "pairwise": [
+    0.0013,
+    0.0,
+    0.0033
+   ],
+   "identical_prob": [
+    0.4683,
+    0.4287,
+    0.5083
+   ],
+   "prob_spread_median": 0.0025,
+   "prob_spread_p95": 0.045,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0064
+   ],
+   "confident_share_of_flips": 0.0,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.002
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.002
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.0312,
+      0.0055,
+      0.1574
+     ],
+     "pairwise": 0.0125
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0208,
+      0.0037,
+      0.109
+     ],
+     "pairwise": 0.0083
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0,
+      0,
+      0.0073
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    0.8621,
+    0.8966
+   ],
+   "precision_range": [
+    0.8621,
+    0.8667
+   ],
+   "majority": {
+    "recall": 0.8793,
+    "precision": 0.8644
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "default",
+   "model": "jev@state_string",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0117,
+    0.0057,
+    0.0239
+   ],
+   "decision_flip_weighted": 0.0142,
+   "pairwise": [
+    0.0057,
+    0.002,
+    0.01
+   ],
+   "identical_prob": [
+    0.605,
+    0.5653,
+    0.6433
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.03,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0064
+   ],
+   "confident_share_of_flips": 0.0,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.006
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.0053
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.03,
+      0.0138,
+      0.0639
+     ],
+     "pairwise": 0.015
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.002
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.1562,
+      0.0686,
+      0.3175
+     ],
+     "pairwise": 0.075
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0208,
+      0.0037,
+      0.109
+     ],
+     "pairwise": 0.0083
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0019,
+      0.0003,
+      0.0108
+     ],
+     "pairwise": 0.0012
+    }
+   },
+   "recall_range": [
+    0.8621,
+    0.8793
+   ],
+   "precision_range": [
+    0.9091,
+    0.9434
+   ],
+   "majority": {
+    "recall": 0.8621,
+    "precision": 0.9434
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "default",
+   "model": "laya@base",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0,
+    0,
+    0.0064
+   ],
+   "decision_flip_weighted": 0.0,
+   "pairwise": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "identical_prob": [
+    0.4083,
+    0.3697,
+    0.4481
+   ],
+   "prob_spread_median": 0.0007,
+   "prob_spread_p95": 0.0058,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0064
+   ],
+   "confident_share_of_flips": null,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.0,
+      0,
+      0.1072
+     ],
+     "pairwise": 0.0
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0,
+      0,
+      0.0741
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0,
+      0,
+      0.0073
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    1.0,
+    1.0
+   ],
+   "precision_range": [
+    0.0968,
+    0.0968
+   ],
+   "majority": {
+    "recall": 1.0,
+    "precision": 0.0968
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "default",
+   "model": "laya@recipe",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.005,
+    0.0017,
+    0.0146
+   ],
+   "decision_flip_weighted": 0.0055,
+   "pairwise": [
+    0.002,
+    0.0,
+    0.0047
+   ],
+   "identical_prob": [
+    0.45,
+    0.4106,
+    0.49
+   ],
+   "prob_spread_median": 0.0005,
+   "prob_spread_p95": 0.0045,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0064
+   ],
+   "confident_share_of_flips": 0.0,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.0027
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.01,
+      0.0027,
+      0.0357
+     ],
+     "pairwise": 0.004
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.002
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.0,
+      0,
+      0.1072
+     ],
+     "pairwise": 0.0
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0,
+      0,
+      0.0741
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0058,
+      0.002,
+      0.0168
+     ],
+     "pairwise": 0.0023
+    }
+   },
+   "recall_range": [
+    1.0,
+    1.0
+   ],
+   "precision_range": [
+    0.1109,
+    0.1111
+   ],
+   "majority": {
+    "recall": 1.0,
+    "precision": 0.1109
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "default",
+   "model": "claude-haiku-4.5",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0233,
+    0.0139,
+    0.0388
+   ],
+   "decision_flip_weighted": 0.0245,
+   "pairwise": [
+    0.0113,
+    0.006,
+    0.0173
+   ],
+   "identical_prob": [
+    0.4783,
+    0.4386,
+    0.5183
+   ],
+   "prob_spread_median": 0.01,
+   "prob_spread_p95": 0.1,
+   "confident_flip": [
+    0.0233,
+    0.0139,
+    0.0388
+   ],
+   "confident_share_of_flips": 1.0,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.004
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.04,
+      0.023,
+      0.0686
+     ],
+     "pairwise": 0.0187
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.025,
+      0.0107,
+      0.0572
+     ],
+     "pairwise": 0.011
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.04,
+      0.0204,
+      0.0769
+     ],
+     "pairwise": 0.02
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.003
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.125,
+      0.0497,
+      0.2807
+     ],
+     "pairwise": 0.0562
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0208,
+      0.0037,
+      0.109
+     ],
+     "pairwise": 0.0125
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0173,
+      0.0091,
+      0.0326
+     ],
+     "pairwise": 0.0085
+    }
+   },
+   "recall_range": [
+    0.9655,
+    0.9828
+   ],
+   "precision_range": [
+    0.6628,
+    0.6951
+   ],
+   "majority": {
+    "recall": 0.9655,
+    "precision": 0.6829
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "default",
+   "model": "claude-sonnet-5",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0117,
+    0.0057,
+    0.0239
+   ],
+   "decision_flip_weighted": 0.0142,
+   "pairwise": [
+    0.0057,
+    0.0017,
+    0.0103
+   ],
+   "identical_prob": [
+    0.675,
+    0.6365,
+    0.7113
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.05,
+   "confident_flip": [
+    0.0067,
+    0.0026,
+    0.017
+   ],
+   "confident_share_of_flips": 0.5714,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0233,
+      0.0113,
+      0.0474
+     ],
+     "pairwise": 0.0113
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.03,
+      0.0138,
+      0.0639
+     ],
+     "pairwise": 0.015
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.002
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.125,
+      0.0497,
+      0.2807
+     ],
+     "pairwise": 0.0688
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0,
+      0,
+      0.0741
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0058,
+      0.002,
+      0.0168
+     ],
+     "pairwise": 0.0023
+    }
+   },
+   "recall_range": [
+    0.9483,
+    0.9483
+   ],
+   "precision_range": [
+    0.7534,
+    0.7857
+   ],
+   "majority": {
+    "recall": 0.9483,
+    "precision": 0.7639
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "default",
+   "model": "gpt-5.6-luna",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.025,
+    0.0152,
+    0.0408
+   ],
+   "decision_flip_weighted": 0.0282,
+   "pairwise": [
+    0.013,
+    0.007,
+    0.0197
+   ],
+   "identical_prob": [
+    0.3883,
+    0.3502,
+    0.4279
+   ],
+   "prob_spread_median": 0.01,
+   "prob_spread_p95": 0.98,
+   "confident_flip": [
+    0.025,
+    0.0152,
+    0.0408
+   ],
+   "confident_share_of_flips": 1.0,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.0053
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.04,
+      0.023,
+      0.0686
+     ],
+     "pairwise": 0.0207
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.045,
+      0.0239,
+      0.0833
+     ],
+     "pairwise": 0.024
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.025,
+      0.0107,
+      0.0572
+     ],
+     "pairwise": 0.012
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.003
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.1875,
+      0.0889,
+      0.3531
+     ],
+     "pairwise": 0.1
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0208,
+      0.0037,
+      0.109
+     ],
+     "pairwise": 0.0125
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0154,
+      0.0078,
+      0.0301
+     ],
+     "pairwise": 0.0077
+    }
+   },
+   "recall_range": [
+    0.9655,
+    0.9828
+   ],
+   "precision_range": [
+    0.6222,
+    0.6706
+   ],
+   "majority": {
+    "recall": 0.9828,
+    "precision": 0.6477
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "default",
+   "model": "gpt-5.6-terra",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0167,
+    0.0091,
+    0.0304
+   ],
+   "decision_flip_weighted": 0.0205,
+   "pairwise": [
+    0.008,
+    0.0037,
+    0.0133
+   ],
+   "identical_prob": [
+    0.4633,
+    0.4238,
+    0.5033
+   ],
+   "prob_spread_median": 0.001,
+   "prob_spread_p95": 0.0805,
+   "confident_flip": [
+    0.0133,
+    0.0068,
+    0.0261
+   ],
+   "confident_share_of_flips": 0.8,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0133,
+      0.0052,
+      0.0338
+     ],
+     "pairwise": 0.0073
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.02,
+      0.0092,
+      0.0429
+     ],
+     "pairwise": 0.0087
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.045,
+      0.0239,
+      0.0833
+     ],
+     "pairwise": 0.021
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.003
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.2188,
+      0.1102,
+      0.3876
+     ],
+     "pairwise": 0.1062
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0417,
+      0.0115,
+      0.1398
+     ],
+     "pairwise": 0.0208
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0019,
+      0.0003,
+      0.0108
+     ],
+     "pairwise": 0.0008
+    }
+   },
+   "recall_range": [
+    0.8966,
+    0.931
+   ],
+   "precision_range": [
+    0.9286,
+    1.0
+   ],
+   "majority": {
+    "recall": 0.8966,
+    "precision": 1.0
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "default",
+   "model": "gemini-3.5-flash-lite",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0033,
+    0.0009,
+    0.0121
+   ],
+   "decision_flip_weighted": 0.0037,
+   "pairwise": [
+    0.0017,
+    0.0,
+    0.0043
+   ],
+   "identical_prob": [
+    0.6933,
+    0.6553,
+    0.7289
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.05,
+   "confident_flip": [
+    0.0033,
+    0.0009,
+    0.0121
+   ],
+   "confident_share_of_flips": 1.0,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.002
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.003
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.002
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.0312,
+      0.0055,
+      0.1574
+     ],
+     "pairwise": 0.0187
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0208,
+      0.0037,
+      0.109
+     ],
+     "pairwise": 0.0083
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0,
+      0,
+      0.0073
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    0.931,
+    0.9483
+   ],
+   "precision_range": [
+    0.8182,
+    0.8333
+   ],
+   "majority": {
+    "recall": 0.9483,
+    "precision": 0.8209
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "default",
+   "model": "gemini-3.8-flash",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0033,
+    0.0009,
+    0.0121
+   ],
+   "decision_flip_weighted": 0.0042,
+   "pairwise": [
+    0.0017,
+    0.0,
+    0.0047
+   ],
+   "identical_prob": [
+    0.76,
+    0.7242,
+    0.7925
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.05,
+   "confident_flip": [
+    0.0017,
+    0.0003,
+    0.0094
+   ],
+   "confident_share_of_flips": 0.5,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.002
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.01,
+      0.0027,
+      0.0357
+     ],
+     "pairwise": 0.005
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.0625,
+      0.0173,
+      0.2015
+     ],
+     "pairwise": 0.0312
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0,
+      0,
+      0.0741
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0,
+      0,
+      0.0073
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    0.9483,
+    0.9655
+   ],
+   "precision_range": [
+    0.8889,
+    0.9032
+   ],
+   "majority": {
+    "recall": 0.9655,
+    "precision": 0.9032
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "default",
+   "model": "gemma3-12b",
+   "k": 4,
+   "runs": [
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.005,
+    0.0017,
+    0.0146
+   ],
+   "decision_flip_weighted": 0.0063,
+   "pairwise": [
+    0.0025,
+    0.0,
+    0.0058
+   ],
+   "identical_prob": [
+    0.9417,
+    0.92,
+    0.9578
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.03,
+   "confident_flip": [
+    0.005,
+    0.0017,
+    0.0146
+   ],
+   "confident_share_of_flips": 1.0,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.005
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.015,
+      0.0051,
+      0.0432
+     ],
+     "pairwise": 0.0075
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.0312,
+      0.0055,
+      0.1574
+     ],
+     "pairwise": 0.0156
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0,
+      0,
+      0.0741
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0038,
+      0.0011,
+      0.0139
+     ],
+     "pairwise": 0.0019
+    }
+   },
+   "recall_range": [
+    0.9138,
+    0.9138
+   ],
+   "precision_range": [
+    0.6235,
+    0.631
+   ],
+   "majority": {
+    "recall": 0.9138,
+    "precision": 0.631
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "default",
+   "model": "lexical",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0,
+    0,
+    0.0064
+   ],
+   "decision_flip_weighted": 0.0,
+   "pairwise": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "identical_prob": [
+    1.0,
+    0.9936,
+    1
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.0,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0064
+   ],
+   "confident_share_of_flips": null,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.0,
+      0,
+      0.1072
+     ],
+     "pairwise": 0.0
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0,
+      0,
+      0.0741
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0,
+      0,
+      0.0073
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    0.9138,
+    0.9138
+   ],
+   "precision_range": [
+    0.2624,
+    0.2624
+   ],
+   "majority": {
+    "recall": 0.9138,
+    "precision": 0.2624
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "t0",
+   "model": "claude-haiku-4.5",
+   "k": 5,
+   "runs": [
+    "t0_rep1",
+    "t0_rep2",
+    "t0_rep3",
+    "t0_rep4",
+    "t0_rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0,
+    0,
+    0.0064
+   ],
+   "decision_flip_weighted": 0.0,
+   "pairwise": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "identical_prob": [
+    0.9733,
+    0.9571,
+    0.9835
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.0,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0064
+   ],
+   "confident_share_of_flips": null,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.0,
+      0,
+      0.1072
+     ],
+     "pairwise": 0.0
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0,
+      0,
+      0.0741
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0,
+      0,
+      0.0073
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    0.9828,
+    0.9828
+   ],
+   "precision_range": [
+    0.6628,
+    0.6628
+   ],
+   "majority": {
+    "recall": 0.9828,
+    "precision": 0.6628
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "t0",
+   "model": "gpt-5.6-luna",
+   "k": 5,
+   "runs": [
+    "t0_rep1",
+    "t0_rep2",
+    "t0_rep3",
+    "t0_rep4",
+    "t0_rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0183,
+    0.0103,
+    0.0325
+   ],
+   "decision_flip_weighted": 0.0218,
+   "pairwise": [
+    0.0087,
+    0.0037,
+    0.0143
+   ],
+   "identical_prob": [
+    0.5917,
+    0.5519,
+    0.6303
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.98,
+   "confident_flip": [
+    0.0183,
+    0.0103,
+    0.0325
+   ],
+   "confident_share_of_flips": 1.0,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.004
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.03,
+      0.0159,
+      0.056
+     ],
+     "pairwise": 0.0133
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.045,
+      0.0239,
+      0.0833
+     ],
+     "pairwise": 0.022
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.002
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.002
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.2188,
+      0.1102,
+      0.3876
+     ],
+     "pairwise": 0.1062
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0,
+      0,
+      0.0741
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0077,
+      0.003,
+      0.0196
+     ],
+     "pairwise": 0.0035
+    }
+   },
+   "recall_range": [
+    0.9483,
+    0.9828
+   ],
+   "precision_range": [
+    0.625,
+    0.6588
+   ],
+   "majority": {
+    "recall": 0.9655,
+    "precision": 0.6512
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "t0",
+   "model": "gpt-5.6-terra",
+   "k": 5,
+   "runs": [
+    "t0_rep1",
+    "t0_rep2",
+    "t0_rep3",
+    "t0_rep4",
+    "t0_rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0117,
+    0.0057,
+    0.0239
+   ],
+   "decision_flip_weighted": 0.0137,
+   "pairwise": [
+    0.0053,
+    0.0017,
+    0.0097
+   ],
+   "identical_prob": [
+    0.7017,
+    0.6639,
+    0.7369
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.05,
+   "confident_flip": [
+    0.0067,
+    0.0026,
+    0.017
+   ],
+   "confident_share_of_flips": 0.5714,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0167,
+      0.0071,
+      0.0384
+     ],
+     "pairwise": 0.0073
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0067,
+      0.0018,
+      0.024
+     ],
+     "pairwise": 0.0033
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.025,
+      0.0107,
+      0.0572
+     ],
+     "pairwise": 0.011
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.01,
+      0.0027,
+      0.0357
+     ],
+     "pairwise": 0.005
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.1562,
+      0.0686,
+      0.3175
+     ],
+     "pairwise": 0.0688
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0417,
+      0.0115,
+      0.1398
+     ],
+     "pairwise": 0.0208
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0,
+      0,
+      0.0073
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    0.8793,
+    0.931
+   ],
+   "precision_range": [
+    0.9623,
+    1.0
+   ],
+   "majority": {
+    "recall": 0.9138,
+    "precision": 0.9815
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "t0",
+   "model": "gemini-3.5-flash-lite",
+   "k": 5,
+   "runs": [
+    "t0_rep1",
+    "t0_rep2",
+    "t0_rep3",
+    "t0_rep4",
+    "t0_rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0017,
+    0.0003,
+    0.0094
+   ],
+   "decision_flip_weighted": 0.0021,
+   "pairwise": [
+    0.0007,
+    0.0,
+    0.002
+   ],
+   "identical_prob": [
+    0.6833,
+    0.645,
+    0.7193
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.05,
+   "confident_flip": [
+    0.0017,
+    0.0003,
+    0.0094
+   ],
+   "confident_share_of_flips": 1.0,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.0013
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.005,
+      0.0009,
+      0.0278
+     ],
+     "pairwise": 0.002
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.0312,
+      0.0055,
+      0.1574
+     ],
+     "pairwise": 0.0125
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0,
+      0,
+      0.0741
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0,
+      0,
+      0.0073
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    0.931,
+    0.931
+   ],
+   "precision_range": [
+    0.8182,
+    0.8308
+   ],
+   "majority": {
+    "recall": 0.931,
+    "precision": 0.8182
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "t0",
+   "model": "gemini-3.8-flash",
+   "k": 5,
+   "runs": [
+    "t0_rep1",
+    "t0_rep2",
+    "t0_rep3",
+    "t0_rep4",
+    "t0_rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0067,
+    0.0026,
+    0.017
+   ],
+   "decision_flip_weighted": 0.0084,
+   "pairwise": [
+    0.004,
+    0.001,
+    0.009
+   ],
+   "identical_prob": [
+    0.77,
+    0.7347,
+    0.8019
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.051,
+   "confident_flip": [
+    0.0067,
+    0.0026,
+    0.017
+   ],
+   "confident_share_of_flips": 1.0,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0033,
+      0.0006,
+      0.0186
+     ],
+     "pairwise": 0.002
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.01,
+      0.0034,
+      0.029
+     ],
+     "pairwise": 0.006
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.02,
+      0.0078,
+      0.0503
+     ],
+     "pairwise": 0.012
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.125,
+      0.0497,
+      0.2807
+     ],
+     "pairwise": 0.075
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0,
+      0,
+      0.0741
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0,
+      0,
+      0.0073
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    0.9483,
+    0.9828
+   ],
+   "precision_range": [
+    0.8769,
+    0.9016
+   ],
+   "majority": {
+    "recall": 0.9483,
+    "precision": 0.9016
+   }
+  }
+ ]
+}
