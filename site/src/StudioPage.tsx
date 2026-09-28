@@ -439,12 +439,23 @@ export default function StudioPage() {
   // the map's Fill applies to the Interval modes with an area (box, ellipse); whiskers, brackets and none have nothing to fill
   const showFill = (plot === "pr" && chart === "map" && intervalArea) || hasBars;
 
-  // Panel size in CSS pixels. The panel is also CSS-resizable by its corner; a ResizeObserver writes the dragged size back into the fields.
-  // In the row-based charts the height follows the rows, so only the width is synced and the chosen height is kept for when a filling chart returns.
-  // The observer's write-back is quiet (setState, not `set`): it fires on mount and after a preset loads, which are not the user's changes.
+  // Panel size in CSS pixels. The panel is also draggable by its bottom-right corner (`studio-grip`, an unmarked hit area with the resize cursor: the
+  // browser's own resize grip drew two lines on the panel, so `resize` is off); the drag writes the size into the fields directly. In the row-based
+  // charts the height follows the rows, so a drag there moves only the width and the chosen height is kept for when a filling chart returns. A
+  // ResizeObserver still syncs the fields with the rendered box (a row chart's own height, a preset's size); its write-back is quiet (setState, not
+  // `set`): it fires on mount and after a preset loads, which are not the user's changes.
   const plotRef = useRef<HTMLDivElement>(null);
   const fillsRef = useRef(fills);
   fillsRef.current = fills;
+  const onGrip = (e: React.PointerEvent<HTMLDivElement>) => {
+    const el = plotRef.current;
+    if (!el || e.button !== 0) return;
+    e.preventDefault();
+    const x0 = e.clientX, y0 = e.clientY, w0 = el.offsetWidth, h0 = el.offsetHeight, withH = fillsRef.current;
+    const move = (ev: PointerEvent) => { touch(); setState((p) => ({ ...p, w: clamp(w0 + ev.clientX - x0, 320, 4000), h: withH ? clamp(h0 + ev.clientY - y0, 240, 4000) : p.h })); };
+    const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up); };
+    window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+  };
   useEffect(() => {
     const el = plotRef.current;
     if (!el) return;
@@ -1032,6 +1043,8 @@ export default function StudioPage() {
                 {plot !== "pr" && sel.some((r) => starOf(r)) && <span>* scored on a stratified subset</span>}
               </div>
             )}
+            {/* the drag corner: no glyph, just the cursor; exportPng.ts drops it from the clone */}
+            <div className="studio-grip" onPointerDown={onGrip} role="separator" aria-label="resize the panel" title="Drag to resize the panel" />
           </div>
         </div>
       </section>

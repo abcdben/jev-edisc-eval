@@ -88,6 +88,7 @@ export async function renderPanelPng(panel: HTMLElement, scale: number, backgrou
   const panelColour = getComputedStyle(panel).backgroundColor;
   const clone = panel.cloneNode(true) as HTMLElement;
   clone.classList.remove("framed");
+  clone.querySelector(".studio-grip")?.remove();
   clone.removeAttribute("id");
   clone.setAttribute("aria-hidden", "true");
   Object.assign(clone.style, {

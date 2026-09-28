@@ -660,10 +660,13 @@ svg text { user-select: none; font-family: var(--sans); }
   position: relative; display: flex; flex-direction: column;
   background: var(--panel); border: 1px solid transparent; border-radius: 8px; padding: 14px 14px 10px;
   min-width: 320px; min-height: 240px; max-width: 4000px;
-  resize: both; overflow: hidden;
+  overflow: hidden;
 }
 .studio-plot.framed { border-color: var(--line); }
-.studio-plot.auto { resize: horizontal; min-height: 0; }
+.studio-plot.auto { min-height: 0; }
+/* The panel's drag corner (StudioPage.tsx onGrip): an unmarked hit area with the resize cursor in place of the browser's two-line grip. In the row charts (.auto) only the width moves. */
+.studio-plot .studio-grip { position: absolute; right: 0; bottom: 0; width: 18px; height: 18px; cursor: nwse-resize; touch-action: none; z-index: 1; }
+.studio-plot.auto .studio-grip { cursor: ew-resize; }
 .studio-canvas { flex: 1; position: relative; min-height: 0; }
 /* Canvas → Title (StudioPage.tsx `studio-title`): a bold line in the panel's ink at its top-left, above the chart (and so above a legend row); nothing is rendered while empty. Sized from the Text control like the legend note. */
 .studio-plot .studio-title { flex: none; font-weight: 600; font-size: calc(var(--fs-legend, 12px) * 1.25); line-height: 1.25; letter-spacing: -0.01em; color: var(--ink); margin: 0 0 10px; }
