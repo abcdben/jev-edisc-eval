@@ -1,6 +1,6 @@
 /**
- * Page theme (styles.css `:root` light palette, `[data-theme="dark"]`, `[data-theme="white"]`), shared by the main site (App.tsx), the Cutoffs page
- * (CutoffsPage.tsx) and the Studio (studioState.ts `theme` field): one localStorage key, `theme`, so a choice on one page carries to the others.
+ * Page theme (styles.css `:root` light palette, `[data-theme="dark"]`, `[data-theme="white"]`), shared by the main site (App.tsx)
+ * and the Studio (studioState.ts `theme` field): one localStorage key, `theme`, so a choice on one page carries to the others.
  * `light` is the warm off-white console look; `white` is the same palette on a pure white page with white panels behind hairline borders.
  */
 export const THEMES = ["dark", "light", "white"] as const;

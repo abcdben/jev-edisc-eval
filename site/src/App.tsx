@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER, rosterOf,
-  corpusKey, costPerDoc, fmtCI, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, issueLabel, paidPerDoc, pick, siteCorpus, starOf, variantColor,
+  corpusKey, costPerDoc, displayMeta, fmtCI, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, issueLabel, paidPerDoc, pick, selectableRowsOf, siteCorpus, starOf, tarRowsOf, variantColor,
   type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
 import { Control, Hint, MethodContext, ROW_PULSE_MS, Seg, usePulseWindow, type HintItem, type TipLine } from "./components/ui";
@@ -10,27 +10,29 @@ import { PRRail } from "./components/PRRail";
 import { PRHeat } from "./components/PRHeat";
 import { OpsBars, type BarItem } from "./components/OpsBars";
 import { Consistency, detFor, detLines } from "./components/Consistency";
+import { TarDepthCharts } from "./components/TarDepthCharts";
 import { HoverProvider, useHover } from "./components/hover";
 import { ExplainModal, type MetricSection, type Metrics } from "./components/Explain";
 import { Picker, type PickGroup } from "./components/Picker";
 import { DisclaimerLink, DisclaimerModal, useDisclaimer } from "./components/Disclaimer";
 import { Logo } from "./logos";
 import { THEME_KEY, THEME_OPTIONS, readTheme, type Theme } from "./theme";
+import { SeriesColorControl, useSeriesColors } from "./seriesColors";
 
 /** The recall/precision card's views. `ranked` is drawn by PRRail on Compare models (rank rail) and by PRHeat on Compare configurations (vs default), chosen by PRCard's `ranked` prop. */
 export type Chart = "map" | "ranked";
 
 /** Short group names for the one-line picker. */
-/** Picker order: decision models first, then the LLMs (API and local share one group via the PRIMARY `kind` override). Kinds with no roster member (`baseline`, `local_llm`) are dropped before rendering. */
-const PICK_ORDER: Kind[] = ["system1", "system1_ft", "baseline", "llm", "local_llm"];
-const KIND_SHORT: Record<Kind, string> = { system1: "Decision models", system1_ft: "Supervised", llm: "LLM", local_llm: "Local LLM", baseline: "Floor" };
+/** Picker order: decision models first, then the LLMs (API and local share one group via the PRIMARY `kind` override), then classical TAR. Kinds with no roster member (`baseline`, `local_llm`) are dropped before rendering. */
+const PICK_ORDER: Kind[] = ["system1", "system1_ft", "baseline", "llm", "local_llm", "tar"];
+const KIND_SHORT: Record<Kind, string> = { system1: "Decision models", system1_ft: "Supervised", llm: "LLM", local_llm: "Local LLM", tar: "Classical TAR", baseline: "Floor" };
 
 
 /** Recall/precision card with a map (scatter with interval boxes) or ranked (rows with whiskers) view. The chart mode is owned by the section so it can switch the dashboard layout. `explain` opens the details modal for a clicked mark or row (item ids are model keys). */
 /** `pulse` (Compare models only: the Configurations page shows one family, so no decider to single out) lets the deciders' interval boxes breathe for a few cycles when the map loads or its points change. */
 /** `ranked` picks the ranked view's component: `rail` (PRRail, Compare models) or `heat` (PRHeat, Compare configurations, differenced against `referenceId`, the family's base configuration). Both draw their own legend line. */
 /** `sig` names what the card is showing (the corpus, and the family on Configurations): the `ranked` option's accent (ui.tsx Seg `accent`) breathes once when the card mounts and again whenever it changes, not on every model toggle. */
-export function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false, ranked, referenceId, sig = "card" }: { items: PRItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean; ranked: "rail" | "heat"; referenceId?: string; sig?: string }) {
+export function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false, ranked, referenceId, sig = "card", seriesKey }: { items: PRItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean; ranked: "rail" | "heat"; referenceId?: string; sig?: string; seriesKey?: ReactNode }) {
   const setChart = onChart;
   const [zoom, setZoom] = useState(defaultZoom);
   const onSelect = explain && ((it: PRItem) => explain(it.id));
@@ -50,9 +52,10 @@ export function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = 
           <Seg value={zoom ? "zoom" : "full"} onChange={(z) => setZoom(z === "zoom")} options={[{ id: "full", label: "0–100%" }, { id: "zoom", label: "fit to data" }]} />
         </span>
       </div>
-      {chart === "map" && <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill onSelect={onSelect} highlight={hover.id} onHover={hover.set} pulse={pulse} /></div>}
+      {chart === "map" && <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill onSelect={onSelect} highlight={hover.id} onHover={hover.set} pulse={pulse} labels={seriesKey ? "none" : "beside"} /></div>}
       {chart === "ranked" && ranked === "rail" && <PRRail {...rowProps} />}
       {chart === "ranked" && ranked === "heat" && <PRHeat {...rowProps} referenceId={referenceId} />}
+      {seriesKey}
       {chart === "map" && (
         <div className="legend-note">
           <span>Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span>
@@ -182,7 +185,7 @@ function metricsFor(key: string, corpus: string, v: View, shown: (rows: Rec[]) =
 
 /** The records the page plots for the view; keys data.ts hides (isHidden) are left out. */
 function useRows(v: View) {
-  return useMemo(() => DATA.records.filter((r) => r.corpus === v.corpus && r.tag === v.tag && r.arm === v.arm && !isHidden(r.model)), [v.corpus, v.tag, v.arm]);
+  return useMemo(() => DATA.records.filter((r) => r.corpus === v.corpus && r.tag === v.tag && r.arm === v.arm && (!isHidden(r.model) || r.model.startsWith("tar@"))), [v.corpus, v.tag, v.arm]);
 }
 
 /** The Speed and Cost hints: machine time and price only. */
@@ -255,7 +258,8 @@ const kindOf = (r: Rec): Kind => PRIMARY_BY_KEY[r.model]?.kind ?? (r.kind as Kin
 /** The model multi-select for Compare models, rendered in the control bar (also used by the screenshot studio, Studio.tsx). */
 export function ModelPicker({ v, on, setOn, explain }: { v: View; on: Set<string>; setOn: (s: Set<string>) => void; explain?: (k: string) => void }) {
   const rows = useRows(v);
-  const primary = rosterOf(rows);
+  const { colorOf, setColor } = useSeriesColors();
+  const primary = rosterOf(rows).filter((r) => !r.model.startsWith("tar@"));
   const byKind = PICK_ORDER.map((k) => ({ kind: k, recs: primary.filter((r) => kindOf(r) === k) })).filter((g) => g.recs.length);
   const avail = primary.filter((r) => on.has(r.model)).length;
   const groups: PickGroup[] = byKind.map((g) => ({
@@ -265,7 +269,145 @@ export function ModelPicker({ v, on, setOn, explain }: { v: View; on: Set<string
       return { id: r.model, label: m.short, title: m.note, mark: <span style={{ color: m.color }}><Logo model={r.model} /></span>, suffix: starOf(r) ? <span className="sub" title={`scored on ${r.subset}`}>*</span> : undefined, detail: explain ? () => explain(r.model) : undefined, accent: isDecider(kindOf(r)) ? m.color : undefined };
     }),
   }));
-  return <Picker label="Models" summary={`${avail} of ${primary.length}`} groups={groups} on={on} onChange={setOn} onReset={() => setOn(new Set(DEFAULT_ON))} />;
+  const reset = () => {
+    const next = new Set([...on].filter((k) => k.startsWith("tar@")));
+    DEFAULT_ON.forEach((k) => { if (!k.startsWith("tar@")) next.add(k); });
+    setOn(next);
+  };
+  const selected = primary.filter((r) => on.has(r.model));
+  return <Picker label="Models" summary={`${avail} of ${primary.length}`} groups={groups} on={on} onChange={setOn} onReset={reset}
+    selected={selected.length ? <><span className="pick-selected-lab">Selected</span><div className="series-selected">
+      {selected.map((r) => {
+        const meta = displayMeta(r.model, r);
+        return <div className="series-selected-row" key={r.model}><SeriesColorControl id={r.model} color={colorOf(r.model, meta.color)} onColor={setColor} label={meta.short} /><span>{meta.short}</span><button type="button" onClick={() => { const next = new Set(on); next.delete(r.model); setOn(next); }} aria-label={`Remove ${meta.short}`}>×</button></div>;
+      })}
+    </div></> : undefined} />;
+}
+
+type TarOption = { row: Rec; n: number | null; sampling: "Random" | "Diversity" | null; reviewer: string; order: number };
+function tarOption(row: Rec): TarOption {
+  const v = row.model.replace(/^tar@/, "");
+  if (v.startsWith("cal")) {
+    const reviewer = v === "cal" ? "80% recall target · 90% relevant-document coding accuracy" : v === "cal_75" ? "75% recall target · 90% relevant-document coding accuracy" : v === "cal_perfect" ? "80% recall target · perfect coding" : v === "cal_knee" ? "Knee stop · 90% relevant-document coding accuracy" : row.name.replace(/^TAR 2\.0\s*·?\s*/, "");
+    return { row, n: null, sampling: null, reviewer, order: { cal: 0, cal_75: 1, cal_perfect: 2, cal_knee: 3 }[v] ?? 9 };
+  }
+  const m = /^t1_(\d+)(.*)$/.exec(v);
+  const n = m ? Number(m[1]) : 0, suffix = m?.[2] ?? "";
+  const sampling = suffix.endsWith("_div") ? "Diversity" : "Random";
+  const acc = /_acc(\d+)/.exec(suffix)?.[1];
+  const reviewer = acc ? `${acc}% relevant-document coding accuracy${acc === "90" ? " · sweep" : ""}` : suffix.includes("_noisy") ? "90% relevant-document coding accuracy · baseline" : suffix.includes("_f1") ? "Perfect coding · F1 cutoff" : "Perfect coding · 80% recall cutoff";
+  return { row, n, sampling, reviewer, order: (sampling === "Random" ? 0 : 10) + (acc ? Number(acc) / 10 : suffix.includes("_noisy") ? 9 : suffix.includes("_f1") ? 8 : 0) };
+}
+
+const tarName = (x: TarOption) => x.n == null
+  ? `TAR 2.0 · CAL · ${x.reviewer}`
+  : `TAR 1.0 · ${fmtInt(x.n)} reviewed · ${x.sampling?.toLowerCase()} · ${x.reviewer}`;
+const compareName = (r: Rec) => r.model.startsWith("tar@") ? tarName(tarOption(r)) : displayMeta(r.model, r).short;
+
+type TarWorkflow = "t1" | "cal";
+type TarSampling = "random" | "diversity";
+type TarAccuracy = "60" | "70" | "80" | "90" | "perfect";
+type CalStop = "target80" | "target75" | "knee";
+const ACCURACY_OPTIONS: { id: TarAccuracy; label: string }[] = [
+  { id: "60", label: "60%" }, { id: "70", label: "70%" }, { id: "80", label: "80%" }, { id: "90", label: "90%" }, { id: "perfect", label: "Perfect" },
+];
+
+/** TAR workflow builder: independent variables resolve to an existing result key; selected combinations remain a multi-select comparison. */
+export function TarPicker({ v, on, setOn }: { v: View; on: Set<string>; setOn: (s: Set<string>) => void }) {
+  const rows = useRows(v);
+  const { colorOf, setColor } = useSeriesColors();
+  const options = tarRowsOf(rows).map(tarOption);
+  if (!options.length) return null;
+  const sizes = [...new Set(options.flatMap((x) => x.n == null ? [] : [x.n]))].sort((a, b) => a - b);
+  const ids = new Set(options.map((x) => x.row.model));
+  const defaults = new Set([...DEFAULT_ON].filter((k) => ids.has(k)));
+  const selectedOptions = options.filter((x) => on.has(x.row.model));
+  const isDefault = selectedOptions.length === defaults.size && selectedOptions.every((x) => defaults.has(x.row.model));
+  const [open, setOpen] = useState(false);
+  const [workflow, setWorkflow] = useState<TarWorkflow>("t1");
+  const [depth, setDepth] = useState(() => sizes.includes(1000) ? 1000 : sizes[0]);
+  const [sampling, setSampling] = useState<TarSampling>(() => ids.has("tar@t1_1000_div") ? "diversity" : "random");
+  const [accuracy, setAccuracy] = useState<TarAccuracy>("perfect");
+  const [calStop, setCalStop] = useState<CalStop>("target80");
+  const [calAccuracy, setCalAccuracy] = useState<"90" | "perfect">("90");
+  const wrapRef = useRef<HTMLSpanElement>(null), buttonRef = useRef<HTMLButtonElement>(null), id = useId();
+
+  useEffect(() => {
+    if (sizes.includes(depth)) return;
+    setDepth(sizes.includes(1000) ? 1000 : sizes[0]);
+  }, [sizes.join(","), depth]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!open) return;
+    const outside = (e: PointerEvent) => { if (!wrapRef.current?.contains(e.target as Node)) setOpen(false); };
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); buttonRef.current?.focus(); } };
+    document.addEventListener("pointerdown", outside); document.addEventListener("keydown", key);
+    return () => { document.removeEventListener("pointerdown", outside); document.removeEventListener("keydown", key); };
+  }, [open]);
+
+  const t1Key = (n: number, sample: TarSampling, acc: TarAccuracy) =>
+    `tar@t1_${n}${acc === "perfect" ? "" : `_acc${acc}`}${sample === "diversity" ? "_div" : ""}`;
+  const calKey = (stop: CalStop, acc: "90" | "perfect") =>
+    stop === "knee" ? "tar@cal_knee" : stop === "target75" ? "tar@cal_75" : acc === "perfect" ? "tar@cal_perfect" : "tar@cal";
+  const candidate = workflow === "t1" ? t1Key(depth, sampling, accuracy) : calKey(calStop, calAccuracy);
+  const candidateExists = ids.has(candidate);
+  const candidateSelected = on.has(candidate);
+  const add = () => { if (!candidateExists || candidateSelected) return; const next = new Set(on); next.add(candidate); setOn(next); };
+  const reset = () => {
+    const next = new Set([...on].filter((k) => !k.startsWith("tar@")));
+    DEFAULT_ON.forEach((k) => { if (ids.has(k)) next.add(k); });
+    setOn(next);
+  };
+  const remove = (id: string) => { const next = new Set(on); next.delete(id); setOn(next); };
+  return (
+    <span ref={wrapRef} className={`pick-wrap tar-build${open ? " open" : ""}`}>
+      <button ref={buttonRef} className="pick-btn" onClick={() => setOpen((x) => !x)} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? id : undefined}>
+        <span className="pick-lab">TAR workflows</span>
+        <span className="pick-sum">{selectedOptions.length ? `${selectedOptions.length} selected${isDefault ? " · defaults" : ""}` : "None selected"}</span>
+        <span className="chev" />
+      </button>
+      {open && (
+        <div id={id} className="pick-pop tar-build-pop" role="dialog" aria-label="Build TAR workflow">
+          <div className="pick-head">
+            <div className="pick-head-copy"><strong>Build a TAR workflow</strong><span>Choose each variable independently, then add the matching completed run to the comparison.</span></div>
+            <button type="button" className="pick-close" onClick={() => { setOpen(false); buttonRef.current?.focus(); }} aria-label="Close TAR workflow builder">×</button>
+            <div className="pick-selected" aria-live="polite">
+              <span className="pick-selected-lab">Selected</span>
+              {selectedOptions.length ? <div className="series-selected">
+                {selectedOptions.map((x) => {
+                  const name = tarName(x), fallback = displayMeta(x.row.model, x.row).color;
+                  return <div className="series-selected-row" key={x.row.model}><SeriesColorControl id={x.row.model} color={colorOf(x.row.model, fallback)} onColor={setColor} label={name} /><span>{name}</span><button type="button" onClick={() => remove(x.row.model)} aria-label={`Remove ${name}`}>×</button></div>;
+                })}
+              </div> : <span className="pick-empty">No TAR workflow is currently shown.</span>}
+            </div>
+          </div>
+          <div className="tar-build-body">
+            <div className="tar-build-field"><span>Workflow</span><Seg value={workflow} onChange={setWorkflow} options={[{ id: "t1", label: "TAR 1.0" }, { id: "cal", label: "CAL / TAR 2.0" }]} /></div>
+            {workflow === "t1" ? (
+              <>
+                <label className="tar-build-field"><span>Review depth</span><span className="select"><select value={depth} onChange={(e) => setDepth(Number(e.target.value))}>{sizes.map((n) => <option value={n} key={n}>{fmtInt(n)} documents</option>)}</select></span></label>
+                <div className="tar-build-field"><span>Sampling</span><Seg value={sampling} onChange={setSampling} options={[{ id: "random", label: "Random" }, { id: "diversity", label: "Diversity" }]} /></div>
+                <div className="tar-build-field wide"><span>Relevant-document coding accuracy</span><Seg value={accuracy} onChange={setAccuracy} options={ACCURACY_OPTIONS} /></div>
+              </>
+            ) : (
+              <>
+                <div className="tar-build-field"><span>Target / stop rule</span><Seg value={calStop} onChange={(x) => { setCalStop(x); if (x !== "target80") setCalAccuracy("90"); }} options={[{ id: "target80", label: "80% target" }, { id: "target75", label: "75% target" }, { id: "knee", label: "Knee stop" }]} /></div>
+                <div className="tar-build-field"><span>Relevant-document coding accuracy</span><Seg value={calAccuracy} onChange={setCalAccuracy} options={calStop === "target80" ? [{ id: "90", label: "90%" }, { id: "perfect", label: "Perfect" }] : [{ id: "90", label: "90%" }]} /></div>
+              </>
+            )}
+            <div className="tar-build-add">
+              <div><b>{candidateExists ? tarName(options.find((x) => x.row.model === candidate)!) : "No completed run"}</b><span>{candidateExists ? "Existing benchmark result" : "This combination was not simulated."}</span></div>
+              <button type="button" onClick={add} disabled={!candidateExists || candidateSelected}>{candidateSelected ? "Selected" : candidateExists ? "Add to comparison" : "Unavailable"}</button>
+            </div>
+          </div>
+          <div className="pick-foot">
+            <button type="button" onClick={reset}>Restore defaults</button>
+            <button type="button" onClick={() => { const next = new Set([...on].filter((k) => !k.startsWith("tar@"))); setOn(next); }}>Clear TAR</button>
+            <span className="pick-foot-r"><span className="pick-note">Percentages are relevant-document coding accuracy, not overall agreement. The non-relevant false-positive rate is one-fifth of the miss rate.</span></span>
+          </div>
+        </div>
+      )}
+    </span>
+  );
 }
 
 // the decider marker (data.ts isDecider: heavier name on rows) on every chart of Compare models, by the roster's kind (Laya's fine-tuned row is grouped with the deciders)
@@ -276,37 +418,61 @@ const emphasis = (r: Rec) => isDecider(kindOf(r));
 /** The Compare models selection on a view: the roster rows that are switched on, and the recall/precision items drawn for them (shared with Studio.tsx). */
 export function useCompareItems(v: View, on: Set<string>): { sel: Rec[]; items: PRItem[] } {
   const rows = useRows(v);
+  const { colors } = useSeriesColors();
   return useMemo(() => {
-    const sel = rosterOf(rows).filter((r) => on.has(r.model));
+    const sel = selectableRowsOf(rows).filter((r) => on.has(r.model));
     const items: PRItem[] = sel.map((r) => {
       const p = pick(r, v.level, v.gray, v.issue);
-      const meta = PRIMARY_BY_KEY[r.model];
-      return { id: r.model, name: meta.short, color: meta.color, recall: p.recall, precision: p.precision, dashed: r.kind === "system1_ft", subset: starOf(r), sub: qualitySub(r, v), decider: decider(r), emphasis: emphasis(r) };
+      const meta = displayMeta(r.model, r);
+      return { id: r.model, name: compareName(r), color: colors[r.model] ?? meta.color, recall: p.recall, precision: p.precision, dashed: r.kind === "system1_ft", subset: starOf(r), sub: qualitySub(r, v), decider: decider(r), emphasis: emphasis(r) };
     });
     return { sel, items };
-  }, [rows, on, v]);
+  }, [rows, on, v, colors]);
+}
+
+function ComparisonKey({ items, on, setOn }: { items: PRItem[]; on: Set<string>; setOn: (s: Set<string>) => void }) {
+  const { setColor } = useSeriesColors();
+  if (!items.length) return null;
+  return <div className="comparison-key" aria-label="Comparison series key"><span className="comparison-key-title">Series key</span>
+    <div>{items.map((item) => <div className="comparison-key-row" key={item.id}>
+      <SeriesColorControl id={item.id} color={item.color} onColor={setColor} label={item.name} />
+      <span title={item.name}>{item.name}</span>
+      <button type="button" onClick={() => { const next = new Set(on); next.delete(item.id); setOn(next); }} aria-label={`Remove ${item.name}`}>×</button>
+    </div>)}</div>
+  </div>;
 }
 
 /** What the page shell hands its Compare models section: the view, the model selection and the details-modal opener. */
-export type CompareProps = { v: View; on: Set<string>; explain: (k: string) => void };
+export type CompareProps = { v: View; on: Set<string>; explain: (k: string) => void; setOn?: (s: Set<string>) => void };
 
-function CompareSection({ v, on, explain }: CompareProps) {
+function CompareSection({ v, on, explain, setOn }: CompareProps) {
+  const rows = useRows(v);
   const { sel, items } = useCompareItems(v, on);
+  const { colorOf } = useSeriesColors();
   const [chart, setChart] = useState<Chart>("map");
+  const manyTar = items.filter((x) => x.id.startsWith("tar@")).length >= 12;
+  const wasManyTar = useRef(manyTar);
+  useEffect(() => {
+    if (manyTar && !wasManyTar.current) setChart("ranked");
+    wasManyTar.current = manyTar;
+  }, [manyTar]);
 
   return (
     <section className="section">
+      {manyTar && <div className="tar-chart-note" role="status"><b>Dense TAR comparison.</b> Ranked view keeps workflow names and confidence intervals readable; you can still switch back to the map.</div>}
       <HoverProvider>
         <div className={`dash${chart !== "map" ? " ranked" : ""}`}>
           <PRCard
-            items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
+            items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={(k) => { if (!k.startsWith("tar@")) explain(k); }}
             pulse ranked="rail" sig={v.corpus}
+            seriesKey={setOn ? <ComparisonKey items={items} on={on} setOn={setOn} /> : undefined}
           />
           <div className="stack">
-            <OpsCards recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} explain={explain} decider={decider} emphasis={emphasis} />
-            <ConsistencyCard recs={sel} colorOf={(r) => PRIMARY_BY_KEY[r.model].color} nameOf={(r) => PRIMARY_BY_KEY[r.model].short} arm={v.arm} onSelect={(r) => explain(r.model)} emphasis={emphasis} />
+            <OpsCards recs={sel} colorOf={(r) => colorOf(r.model, displayMeta(r.model, r).color)} nameOf={compareName} explain={(k) => { if (!k.startsWith("tar@")) explain(k); }} decider={decider} emphasis={emphasis} />
+            <ConsistencyCard recs={sel} colorOf={(r) => colorOf(r.model, displayMeta(r.model, r).color)} nameOf={compareName} arm={v.arm} onSelect={(r) => { if (!r.model.startsWith("tar@")) explain(r.model); }} emphasis={emphasis} />
           </div>
         </div>
+        <TarDepthCharts rows={rows} />
       </HoverProvider>
     </section>
   );
@@ -437,7 +603,7 @@ export function Shell({ Compare = CompareSection, mast, controlsTail, compareHas
           <Hint title={meta.display} text={corpusTitle} />
         </Control>
         {pageId === "compare"
-          ? <ModelPicker v={v} on={on} setOn={setOn} explain={setExplain} />
+          ? <><ModelPicker v={v} on={on} setOn={setOn} explain={setExplain} /><TarPicker v={v} on={on} setOn={setOn} /></>
           : <VariantPicker grp={grp} setGrp={setGrp} />}
         <Control label="Issue">
           <span className="select">
@@ -452,7 +618,7 @@ export function Shell({ Compare = CompareSection, mast, controlsTail, compareHas
         {pageId === "compare" && controlsTail}
       </div>
 
-      {pageId === "compare" ? <Compare v={v} on={on} explain={setExplain} /> : <AblationSection v={v} grp={grp} off={off} explain={setExplain} />}
+      {pageId === "compare" ? <Compare v={v} on={on} setOn={setOn} explain={setExplain} /> : <AblationSection v={v} grp={grp} off={off} explain={setExplain} />}
       {explain && (
         <ExplainModal
           initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)}

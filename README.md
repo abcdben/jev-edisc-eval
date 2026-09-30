@@ -105,7 +105,6 @@ scripts/det_run.sh <api_multi|api_single|t0_multi|t0_single|laya|gemma>   # repe
 bench determinism                                          # results/determinism.json
 bench export-findings                                      # results/findings.json (aggregates + bootstrap CIs)
 bench export-examples                                      # results/examples.json
-python site/tools/build_cutoffs.py                         # site/public/cutoffs.json
 cd site && npm ci && npm run build                         # static bundle in site/dist
 ```
 

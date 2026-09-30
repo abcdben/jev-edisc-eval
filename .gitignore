@@ -15,6 +15,16 @@ Article/.docx-venv/
 site/node_modules/
 site/dist/
 
+# Issue-based rank cutoff explorer. Local only; not part of the published site.
+site/cutoffs.html
+site/public/cutoffs.json
+site/src/CutoffsPage.tsx
+site/src/cutoffs.tsx
+site/src/cutoffs.css
+site/src/cutoffEngine.ts
+site/src/components/CutoffCharts.tsx
+site/tools/build_cutoffs.py
+
 # --- corpora that are not redistributed -------------------------------------
 # TREC 2016 Total Recall (athome4) document collection: NIST usage agreement.
 # Obtain from NIST and place at TREC/Jeb Bush TXT/<docno>.txt, then

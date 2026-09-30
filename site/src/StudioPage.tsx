@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DATA, PRIMARY_BY_KEY, corpusKey, fmtInt, issueLabel, siteCorpus, starOf, CORPORA } from "./data";
-import { ModelPicker, useCompareItems, type View } from "./App";
+import { DATA, PRIMARY_BY_KEY, corpusKey, displayMeta, fmtInt, issueLabel, siteCorpus, starOf, CORPORA } from "./data";
+import { ModelPicker, TarPicker, useCompareItems, type View } from "./App";
 import { INTERVAL_MODES, MARK_SHAPES, PRScatter, intervalHasArea, type PRDomain } from "./components/PRScatter";
 import { FILL_MODES, isOutlined } from "./components/hatch";
 import { PRRail } from "./components/PRRail";
@@ -14,6 +14,7 @@ import { copyPng, downloadBlob, renderPanelPng, slug } from "./exportPng";
 import { PALETTES, siblingHue, toHex, toVars, varOf } from "./palettes";
 import type { LogosMode } from "./logos";
 import { THEME_OPTIONS } from "./theme";
+import { useSeriesColors } from "./seriesColors";
 import { FAMILIES, FAMILY_BASIC_VAR, FAMILY_COMPOSED_VAR, FAMILY_MEMBERS, MAKERS, familyColor, familyOf, makerColor, makerName, makerOf } from "./makers";
 import {
   BUILTIN_PRESETS, BUILTIN_PREFIX, JEV_SCALE, MARK_SCALE, SCHEME_MODELS, SCHEME_SLIDERS, SCHEME_SURFACE, SCHEME_VARS, TEXT_SCALE, builtinState, cleanVars, decodeHash, defaults, encodeHash,
@@ -194,12 +195,21 @@ export default function StudioPage() {
   // Temperature 0 as drawn (opsRows.ts StabT0): paired bars on the dot chart become the lollipop, and the lollipop is a dot chart whatever Chart says
   const stabT0Draw: StabT0 = stabT0 === "paired" && stabChart === "dots" ? "dots" : stabT0;
   const stabDots = stabChart === "dots" || stabT0Draw === "dots";
-  const setMark = setter("mark"), setMarkSize = setter("markSize"), setJevSize = setter("jevSize"), setFillMode = setter("fill"), setIntervalMode = setter("interval"), setLabelsMode = setter("labels"), setLeaders = setter("leaders"), setKey = setter("key");
+  const setMark = setter("mark"), setMarkSize = setter("markSize"), setJevSize = setter("jevSize"), setFillMode = setter("fill"), setIntervalMode = setter("interval"), setKey = setter("key");
   const setW = setter("w"), setH = setter("h"), setTitle = setter("title"), setFrame = setter("frame"), setLegend = setter("legend"), setCaption = setter("caption"), setLogos = setter("logos"), setBg = setter("bg");
   const setText = setter("text"), setContrast = setter("contrast"), setExScale = setter("exScale"), setExBg = setter("exBg"), setTheme = setter("theme");
   const v: View = { corpus, tag: "", arm: "multi", gray: "all", level: "doc", issue };
   const meta = DATA.corpora[corpusKey(v.corpus, v.tag)];
   const { sel, items } = useCompareItems(v, on);
+  const { colors: seriesColors } = useSeriesColors();
+  // A map with a full TAR sweep is not legible. Move to named ranked rows when the selection first becomes dense;
+  // the user can still deliberately switch back to the map while that selection remains.
+  const manyTar = items.filter((x) => x.id.startsWith("tar@")).length >= 12;
+  const wasManyTar = useRef(manyTar);
+  useEffect(() => {
+    if (plot === "pr" && manyTar && !wasManyTar.current) setChart("ranked");
+    wasManyTar.current = manyTar;
+  }, [manyTar, plot]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Axes: the site's two modes, plus `custom`, explicit percent bounds per axis (the ranked view shares one range across both panels).
   const setBound = (k: keyof StudioState["ax"]) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -219,10 +229,11 @@ export default function StudioPage() {
   // grouped modes); in by-model mode it returns them as they came.
   const groupOf = byFamily ? familyOf : byMaker ? makerOf : null;
   const groupColor = byFamily ? familyColor : makerColor;
-  const keyed = <T extends { id: string; name: string; color: string }>(x: T): T => (groupOf ? { ...x, color: groupColor(x.id, x.color), name: makerName(x.id, x.name) } : x);
-  const keyedItems = useMemo(() => items.map(keyed), [items, key]); // eslint-disable-line react-hooks/exhaustive-deps
-  // the legend groups (PRScatter.tsx LegendGroup) the scatters list in the grouped modes with Labels → legend; the point labels stay on
-  const groups = groupOf ? (id: string) => { const g = groupOf(id); return { id: g.id, name: g.label, title: g.title, color: groupColor(id, PRIMARY_BY_KEY[id]?.color ?? "var(--ink-3)") }; } : undefined;
+  const keyed = <T extends { id: string; name: string; color: string }>(x: T): T => {
+    const grouped = groupOf ? { ...x, color: groupColor(x.id, x.color), name: makerName(x.id, x.name) } : x;
+    return { ...grouped, color: seriesColors[x.id] ?? grouped.color };
+  };
+  const keyedItems = useMemo(() => items.map(keyed), [items, key, seriesColors]); // eslint-disable-line react-hooks/exhaustive-deps
   const pointLabels = labelsMode === "beside" || !!groupOf;
   // Marks: the point shape when logos are off (the glyph stands in for it otherwise), and the size of whichever is drawn; the Jev rows' own size (`same` follows Mark size)
   const ms = MARK_SCALE[markSize];
@@ -590,6 +601,7 @@ export default function StudioPage() {
           <Seg value={corpus} onChange={setCorpus} options={CORPORA.map((c) => ({ id: c.id, label: c.label }))} />
         </Control>
         <ModelPicker v={v} on={on} setOn={setOn} />
+        <TarPicker v={v} on={on} setOn={setOn} />
         {showIssue && (
           <Control label="Issue">
             <span className="select">
@@ -802,12 +814,7 @@ export default function StudioPage() {
           )}
           {fills && (
             <Control label="Labels">
-              <Seg value={labelsMode} onChange={setLabelsMode} options={[{ id: "beside", label: "beside", title: "Each model's name next to its mark" }, { id: "legend", label: "legend", title: "A legend row at the top of the panel (square swatches and names); no names on the plot" }]} />
-            </Control>
-          )}
-          {fills && pointLabels && (
-            <Control label="Leaders">
-              <Seg value={leaders ? "on" : "off"} onChange={(x) => setLeaders(x === "on")} options={[{ id: "off", label: "off" }, { id: "on", label: "on", title: "A hairline in the model's colour from a label the layout pushed away from its mark back to the mark; labels beside their mark get none" }]} />
+              <span className="studio-hint">legend · point labels hidden</span>
             </Control>
           )}
           {/* the key (KeyMode): every plot recolours by maker or by question-form family; the scatters' legend (Labels → legend) lists the groups and keeps the point names */}
@@ -887,8 +894,8 @@ export default function StudioPage() {
             {colorMode === "custom" && (
               <>
                 <span className="studio-swatches">
-                  {sel.map((r) => {
-                    const m = PRIMARY_BY_KEY[r.model], hex = custom[r.model] ?? "#888888";
+                  {sel.filter((r) => !r.model.startsWith("tar@")).map((r) => {
+                    const m = displayMeta(r.model, r), hex = custom[r.model] ?? "#888888";
                     return (
                       <label key={r.model} className="studio-swatch" title={`${m.short}: ${hex}`}>
                         <input type="color" value={hex} onChange={(e) => { const c = e.target.value; setCustom((p) => ({ ...p, [r.model]: c })); }} aria-label={`${m.short} colour`} />
@@ -997,13 +1004,13 @@ export default function StudioPage() {
             {title.trim() ? <div className="studio-title">{title.trim()}</div> : null}
             {plot === "pr" && chart === "map" && (
               <div className="studio-canvas">
-                <PRScatter items={keyedItems} zoom={zoom} domain={domain} swap={swap} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} boxes={fillMode} interval={interval} bg={plotBg("dots")} groups={groups} ticks={ticks} />
+                <PRScatter items={keyedItems} zoom={zoom} domain={domain} swap={swap} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={false} labels="legend" mark={mark} markSize={ms} jevMarkSize={jms} boxes={fillMode} interval={interval} bg={plotBg("dots")} ticks={ticks} />
               </div>
             )}
             {plot === "pr" && chart === "ranked" && <PRRail items={keyedItems} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} mark={mark} bg={plotBg("dots")} interval={interval} ticks={ticks} />}
             {plot === "cost" && costChart === "scatter" && (
               <div className="studio-canvas">
-                <StudioScatter pts={costPts(sel, v, costUnit).map(keyed)} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} bg={plotBg("none")} groups={groups} ticks={ticks} />
+                <StudioScatter pts={costPts(sel, v, costUnit).map(keyed)} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={false} labels="legend" mark={mark} markSize={ms} jevMarkSize={jms} bg={plotBg("none")} ticks={ticks} />
               </div>
             )}
             {/* the bar charts: in columns (vertical) inside the filling canvas, as the scatters; as rows they size themselves */}
@@ -1027,7 +1034,7 @@ export default function StudioPage() {
             )}
             {armsMap && (
               <div className="studio-canvas">
-                <StudioArmsMap pts={armsPts(sel, v).map(keyed)} xLabel={armsAxis("recall", v, armsIssue)} yLabel={armsAxis("precision", v, armsIssue)} whiskers={marks.whiskers} keyOn={legend && armsKey} keyNames={ARMS_KEY_NAMES} logos={logos} emptyText={emptyText} textScale={ts} leaders={leaders} labels={labelsMode} mark={mark} markSize={ms} jevMarkSize={jms} bg={plotBg("dots")} groups={groups} ticks={ticks} />
+                <StudioArmsMap pts={armsPts(sel, v).map(keyed)} xLabel={armsAxis("recall", v, armsIssue)} yLabel={armsAxis("precision", v, armsIssue)} whiskers={marks.whiskers} keyOn={legend && armsKey} keyNames={ARMS_KEY_NAMES} logos={logos} emptyText={emptyText} textScale={ts} leaders={false} labels="legend" mark={mark} markSize={ms} jevMarkSize={jms} bg={plotBg("dots")} ticks={ticks} />
               </div>
             )}
             {plot === "arms" && !armsMap && barHost(

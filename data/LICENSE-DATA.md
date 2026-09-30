@@ -8,7 +8,7 @@ A fully synthetic matter. Every company, product and person is fictional (`verid
 
 ## 2. Results and manifests — CC BY 4.0
 
-`results/**` (aggregates in the repository; per-decision records in the GitHub Release, see `../results/README.md`), `site/public/cutoffs.json`, `data/trec/*_ids.jsonl`, `data/trec/{dev,seen}_ids.txt`, the criteria text in `tasks/*.yaml`, and the design notes' data tables are the author's work and are licensed under CC BY 4.0. Results files contain document ids, model labels, probabilities, latencies, token counts and costs; they contain no document text and no model prompts or completions (`raw` is empty in every row).
+`results/**` (aggregates in the repository; per-decision records in the GitHub Release, see `../results/README.md`), `data/trec/*_ids.jsonl`, `data/trec/{dev,seen}_ids.txt`, the criteria text in `tasks/*.yaml`, and the design notes' data tables are the author's work and are licensed under CC BY 4.0. Results files contain document ids, model labels, probabilities, latencies, token counts and costs; they contain no document text and no model prompts or completions (`raw` is empty in every row).
 
 Model outputs were obtained from Anthropic, OpenAI, Google, TypeSafe AI and ConvAI (Laya) APIs/weights under each provider's terms. The Mallinckrodt gold labels are themselves the output of a three-model LLM panel (`meta.panel`); the Veridian gold labels were LLM-planned and LLM-audited. This is disclosed here and on the results site.
 

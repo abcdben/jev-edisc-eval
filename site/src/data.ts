@@ -18,6 +18,11 @@ export type Rec = {
   corpus: string; tag: string; arm: "multi" | "single"; model: string; model_key: string; name: string; family: string; kind: string;
   primary: boolean; group: string | null; variant: string | null; lever: string | null;
   subset: string | null; ops: Ops; all: Score; nogray: Score;
+  tar?: {
+    variant: string; kind: string; docs_reviewed: number; n_corpus: number; review_share: number;
+    sampling: "random" | "diversity" | null;
+    reviewer: { docs_per_hour: number; usd_per_hour: number; miscode_rate: number };
+  };
 };
 export type CorpusMeta = {
   corpus: string; tag: string; display: string; gold: string; n_docs: number; n_issues: number;
@@ -60,15 +65,16 @@ export const DEFAULT_CORPUS = CORPORA[0].id;
 /** Coerce a corpus id (state, hash, storage) to one the site offers, falling back to the first. */
 export const siteCorpus = (id: string | null | undefined) => (id && SITE_CORPORA.includes(id) ? id : DEFAULT_CORPUS);
 
-export type Kind = "system1" | "system1_ft" | "llm" | "local_llm" | "baseline";
+export type Kind = "system1" | "system1_ft" | "llm" | "local_llm" | "tar" | "baseline";
 export const KIND_LABEL: Record<Kind, string> = {
   system1: "Decision models",
   system1_ft: "Decision models, supervised",
   llm: "Large language models (API)",
   local_llm: "Open-weight LLM (local GPU)",
+  tar: "Classical TAR",
   baseline: "Floor",
 };
-export const KIND_ORDER: Kind[] = ["system1", "system1_ft", "llm", "local_llm", "baseline"];
+export const KIND_ORDER: Kind[] = ["system1", "system1_ft", "llm", "local_llm", "tar", "baseline"];
 /** The decision-model kinds (Jev, Laya). The one rule behind every decision-model marker: the outlined name on rows and in the picker, the ringed mark on the map, the DECISION MODEL tag in modals. */
 export const isDecider = (kind: string | null | undefined): boolean => kind === "system1" || kind === "system1_ft";
 /** Rows whose name carries no subset asterisk even though they were scored on a subset (the fact stays in the tooltip and the Method table). */
@@ -77,12 +83,13 @@ export const starOf = (r: { model: string; subset: string | null }): string | nu
 
 /**
  * Model keys the site does not show anywhere (roster, picker, charts, Configurations, details modal), though their results stay in
- * findings.json and examples.json. HIDDEN_FAMILIES hides a whole key family (`<family>@<variant>`): the `tar` family is exported but
- * not shown; remove it from the set to bring it back.
+ * findings.json and examples.json. Classical TAR has many exported ablations (including experimental sweeps), but only the representative
+ * 1,000-document diversity-sampled TAR 1.0 stage and the primary 80%-target CAL workflow belong on the public comparison.
  */
 export const HIDDEN_MODELS: string[] = [];
-export const HIDDEN_FAMILIES = new Set(["tar"]);
-export const isHidden = (key: string): boolean => HIDDEN_MODELS.includes(key) || HIDDEN_FAMILIES.has(key.split("@")[0]);
+export const HIDDEN_FAMILIES = new Set<string>();
+export const HEADLINE_TAR = new Set(["tar@t1_1000_div", "tar@cal"]);
+export const isHidden = (key: string): boolean => HIDDEN_MODELS.includes(key) || HIDDEN_FAMILIES.has(key.split("@")[0]) || (key.startsWith("tar@") && !HEADLINE_TAR.has(key));
 /** The kind of a model key (headline roster or configuration), from the models map or the first record that ran it. */
 export const modelKind = (key: string): string | undefined => DATA.models[key]?.kind ?? DATA.records.find((r) => r.model === key)?.kind;
 
@@ -104,12 +111,48 @@ const ALL_PRIMARY: { key: string; color: string; short: string; shortInMaker?: s
   { key: "gemini-3.5-flash-lite", color: "var(--c-flashlite)", short: "Gemini 3.5 Flash-Lite", shortInMaker: "3.5 Flash-Lite", note: "Google Gemini 3.5 Flash-Lite, structured output." },
   { key: "gemini-3.8-flash", color: "var(--c-flash)", short: "Gemini 3.8 Flash", shortInMaker: "3.8 Flash", note: "Google Gemini 3.8 Flash, structured output." },
   { key: "gemma3-12b", color: "var(--c-gemma)", short: "Gemma 3 12B", kind: "llm", note: "Local, open-weight. Google Gemma 3 12B run via Ollama on a rented A100. Scored on a 400-600 document stratified subsample; latency measured with 4 concurrent requests." },
+  { key: "tar@t1_1000_div", color: "var(--c-tar-3)", short: "TAR 1.0 · 1,000", note: "A simulated reviewer codes 1,000 documents chosen by cluster-stratified diversity sampling; TF-IDF + logistic regression labels the rest with a cutoff targeting 80% recall, chosen by cross-validation on the coded sample. Median of 5 seeds." },
+  { key: "tar@cal", color: "var(--c-cal)", short: "TAR 2.0 · CAL", note: "Continuous active learning with an imperfect reviewer (misses 10% of relevant documents and over-codes 2% of non-relevant documents). It stops after a random control set estimates 80% recall for two consecutive batches; the plotted result is the production set the reviewer coded relevant." },
 ];
 export const PRIMARY = ALL_PRIMARY.filter((p) => !isHidden(p.key));
-export const PRIMARY_BY_KEY = Object.fromEntries(PRIMARY.map((p) => [p.key, p]));
-export const DEFAULT_ON = new Set(["jev@base", "jev@choice", "jev@score", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash"].filter((k) => !isHidden(k)));
+const TAR_SIZE_COLOR: Record<number, string> = {
+  100: "var(--c-tar-1)", 300: "var(--c-tar-2)", 1000: "var(--c-tar-3)",
+  5000: "var(--c-tar-4)", 7500: "var(--v12)", 10000: "var(--v14)",
+};
+const tarDisplay = (key: string, rec?: Rec) => {
+  const n = Number(/^tar@t1_(\d+)/.exec(key)?.[1]);
+  return {
+    key, short: rec?.name ?? DATA.models[key]?.name ?? key,
+    shortInMaker: undefined as string | undefined,
+    color: key.startsWith("tar@cal") ? "var(--c-cal)" : TAR_SIZE_COLOR[n] ?? "var(--c-tar-3)",
+    note: rec?.lever ?? "Classical technology-assisted review workflow.", kind: "tar" as Kind,
+  };
+};
+const TAR_PRIMARY = Object.fromEntries(DATA.records.filter((r) => r.model.startsWith("tar@")).map((r) => [r.model, tarDisplay(r.model, r)]));
+/** Lookup metadata includes TAR experiment rows for charts/presets, while PRIMARY itself remains the curated general-model roster. */
+export const PRIMARY_BY_KEY = { ...Object.fromEntries(PRIMARY.map((p) => [p.key, p])), ...TAR_PRIMARY };
+export const DEFAULT_ON = new Set(["jev@base", "jev@choice", "jev@score", "laya-ft", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash", "tar@t1_1000_div", "tar@cal"].filter((k) => !isHidden(k)));
 /** Compare-models rows for a corpus, in roster order. Membership is the roster, not the export's `primary` flag: Choice, Score and the other listed Jev configurations are on the picker even though the export only flags some of them as primary. */
 export const rosterOf = (rows: Rec[]) => PRIMARY.map((p) => rows.find((r) => r.model === p.key)).filter((r): r is Rec => !!r);
+
+/** TAR rows are deliberately outside the curated model roster: the dedicated TAR control exposes whichever workflows exist on the current corpus. */
+export const tarRowsOf = (rows: Rec[]) => rows.filter((r) => r.model.startsWith("tar@"));
+export const selectableRowsOf = (rows: Rec[]) => [
+  ...rosterOf(rows).filter((r) => !r.model.startsWith("tar@")),
+  ...tarRowsOf(rows),
+];
+
+export type DisplayMeta = { short: string; color: string; note: string; kind?: Kind };
+/** Display metadata for both curated models and dynamically exported TAR sweep rows. */
+export function displayMeta(key: string, row?: Rec): DisplayMeta {
+  const primary = PRIMARY_BY_KEY[key];
+  if (primary) return primary;
+  const rec = row ?? DATA.records.find((r) => r.model === key);
+  if (key.startsWith("tar@")) {
+    return tarDisplay(key, rec);
+  }
+  return { short: rec?.name ?? DATA.models[key]?.name ?? key, color: "var(--ink-3)", note: rec?.lever ?? "", kind: rec?.kind as Kind | undefined };
+}
 
 /**
  * GPU rental for the rows that ran on our own hardware rather than an API (Laya checkpoints, Gemma 3 12B).

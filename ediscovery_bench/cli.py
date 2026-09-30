@@ -570,7 +570,7 @@ def _report(ts, out: Path, corpus: str, arms, keys, tag="", exclude_gray=False, 
 def tar_cmd(
     corpus: str = typer.Argument(..., help="mnk | cuad | trec"),
     out: Path = typer.Option(Path("results"), "--out", "-o"),
-    only: str = typer.Option(None, "--only", help="variant name or prefix, e.g. t1_100 or cal"),
+    only: str = typer.Option(None, "--only", help="variant name or prefix (e.g. t1_100 or cal), 'accuracy' for the reviewer-accuracy sweep, or 'new-depths' for requested 7,500/10,000 TREC variants"),
     seeds: int = typer.Option(5, "--seeds"),
 ):
     """Classical TAR baselines (TF-IDF + logistic regression, simulated reviewer) -> results/<corpus>/multi/tar__*.jsonl."""

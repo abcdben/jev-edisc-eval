@@ -110,6 +110,7 @@ TAR_LEVERS = {
     "t1_f1": "TAR 1.0, {n} reviewed: cutoff maximises F1 on the sample instead of targeting 80% recall",
     "t1_noisy": "TAR 1.0, {n} reviewed: imperfect reviewer (misses 10% of relevant documents, over-codes 2% of non-relevant)",
     "t1_div": "TAR 1.0, {n} reviewed: training sample chosen by cluster-stratified diversity sampling (SVD + k-means, one document per cluster) instead of at random; cutoff chosen the same way, but the coded sample is no longer random so its recall estimate is only a guide",
+    "t1_accuracy": "TAR 1.0, {n} reviewed, {sampling}: reviewer correctly codes {accuracy}% of relevant documents; the false-positive rate on non-relevant documents is {fp}% (one-fifth of the miss rate)",
     "cal": "TAR 2.0: continuous active learning with an imperfect reviewer (misses 10% of relevant, over-codes 2% of non-relevant); stops when a random control set estimates 80% recall for two consecutive batches; plotted as the production set the reviewer coded relevant",
     "cal_75": "TAR 2.0, control-set stop at a 75% recall target instead of 80%",
     "cal_perfect": "TAR 2.0, 80% target, perfect reviewer (codes every document exactly as the gold labels)",
@@ -126,11 +127,23 @@ def _variant_models() -> dict[str, dict]:
         for v, desc in LAYA_LEVERS.items():
             out[f"{ck}@{v}"] = dict(name=f"Laya {ckname.split()[0].lower()} · {v}" if ck != "laya" else f"Laya · {v}",
                                     family="Laya", kind="system1", group=ck, variant=v, lever=f"{ckname}. {desc}")
-    for n in (100, 300, 1000, 5000):
+    # Metadata may name every supported stage, but rows are exported only when a result file exists.
+    # The 7,500/10,000 files are generated for TREC alone; smaller corpora therefore never acquire
+    # nominal deep-review rows that exceed their available documents.
+    for n in (100, 300, 1000, 5000, 7500, 10000):
         out[f"tar@t1_{n}"] = dict(name=f"TAR 1.0 · {n:,} reviewed", family="TAR", kind="tar", group="tar", variant=f"t1_{n}", lever=TAR_LEVERS["t1"].format(n=f"{n:,}"))
         out[f"tar@t1_{n}_f1"] = dict(name=f"TAR 1.0 · {n:,} · F1 cutoff", family="TAR", kind="tar", group="tar", variant=f"t1_{n}_f1", lever=TAR_LEVERS["t1_f1"].format(n=f"{n:,}"))
         out[f"tar@t1_{n}_noisy"] = dict(name=f"TAR 1.0 · {n:,} · 90% reviewer", family="TAR", kind="tar", group="tar", variant=f"t1_{n}_noisy", lever=TAR_LEVERS["t1_noisy"].format(n=f"{n:,}"))
         out[f"tar@t1_{n}_div"] = dict(name=f"TAR 1.0 · {n:,} · diverse", family="TAR", kind="tar", group="tar", variant=f"t1_{n}_div", lever=TAR_LEVERS["t1_div"].format(n=f"{n:,}"))
+        for accuracy in (60, 70, 80, 90):
+            fp = round((100 - accuracy) * 0.2)
+            for suffix, sampling_name, sampling_label in (("", "random sampling", "random"), ("_div", "diversity sampling", "diverse")):
+                variant = f"t1_{n}_acc{accuracy}{suffix}"
+                out[f"tar@{variant}"] = dict(
+                    name=f"TAR 1.0 · {n:,} · {accuracy}% relevant-document coding accuracy · {sampling_label}",
+                    family="TAR", kind="tar", group="tar", variant=variant,
+                    lever=TAR_LEVERS["t1_accuracy"].format(n=f"{n:,}", sampling=sampling_name, accuracy=accuracy, fp=fp),
+                )
     out["tar@cal"] = dict(name="TAR 2.0 · CAL (80% target)", family="TAR", kind="tar", group="tar", variant="cal", lever=TAR_LEVERS["cal"])
     out["tar@cal_75"] = dict(name="TAR 2.0 · CAL · 75% target", family="TAR", kind="tar", group="tar", variant="cal_75", lever=TAR_LEVERS["cal_75"])
     out["tar@cal_perfect"] = dict(name="TAR 2.0 · CAL · perfect reviewer", family="TAR", kind="tar", group="tar", variant="cal_perfect", lever=TAR_LEVERS["cal_perfect"])

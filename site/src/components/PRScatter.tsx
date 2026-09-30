@@ -113,7 +113,7 @@ export function Mark({ shape = "dot", cx = 0, cy = 0, r, color, fixed = false, j
  * no legend); `legend` draws no point labels and instead a legend row at the top of the SVG, one square swatch and name per item, in
  * display order, wrapped when the panel is too narrow, with the plot area moved down under it (legendLayout, Legend).
  */
-export type LabelsMode = "beside" | "legend";
+export type LabelsMode = "beside" | "legend" | "none";
 /**
  * A legend group (the studio's Key → by maker mode, `groups` on PRScatter and StudioScatter): the legend lists one swatch and name per group the
  * drawn items fall into (in order of first appearance; makers.ts), instead of one per item, and the items keep their beside labels, so the

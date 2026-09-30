@@ -44,7 +44,8 @@ Layout mirrors the API runs so export.py can pick the rows up:
 
 Variants: t1_<N> (80%-recall cutoff, perfect reviewer), t1_<N>_f1 (F1 cutoff), t1_<N>_noisy (imperfect
 reviewer: misses 10% of relevant, over-codes 2% of non-relevant), t1_<N>_div (diversity-sampled training
-set, otherwise as t1_<N>), cal (imperfect reviewer, 80% target),
+set, otherwise as t1_<N>), t1_<N>_acc<60|70|80|90> and their `_div` counterparts (reviewer sensitivity
+sweep; false-positive rate is one-fifth of the miss rate), cal (imperfect reviewer, 80% target),
 cal_75 (75% target), cal_perfect (perfect reviewer, 80% target), cal_knee (imperfect reviewer, knee stop).
 """
 
@@ -87,6 +88,7 @@ CAL_RICHNESS_CAP = 0.15  # pools richer than this are downsampled to CAL_TARGET_
 CAL_TARGET_RICHNESS = 0.10
 NOISE_RATE = 0.10  # imperfect reviewer: misses 10% of relevant documents ...
 NOISE_FP_RATIO = 0.2  # ... and over-codes 2% of non-relevant ones
+REVIEWER_ACCURACIES = (60, 70, 80, 90)
 DIV_SVD_DIMS = 100  # diversity sampling: TF-IDF -> truncated SVD with this many dimensions ...
 DIV_SVD_FIT_CAP = 50_000  # ... fit on at most this many candidates (all candidates are projected)
 
@@ -95,7 +97,7 @@ DIV_SVD_FIT_CAP = 50_000  # ... fit on at most this many candidates (all candida
 CORPORA = {
     "mnk": dict(task="tasks/mallinckrodt.yaml", eval="data/mallinckrodt/mnk.jsonl", pool=None, lexical="results/mnk/multi/lexical.jsonl", batch=50, seed_n=50, cal_seeds=SEEDS, stages=[100, 300, 1000], control=None),
     "cuad": dict(task="tasks/cuad.yaml", eval="data/cuad/cuad.jsonl", pool=None, lexical="results/cuad/multi/lexical.jsonl", batch=100, seed_n=100, cal_seeds=SEEDS, stages=[100, 1000, 5000], control=None),
-    "trec": dict(task="tasks/trec.yaml", eval="data/trec/eval.jsonl", pool="data/trec/full.jsonl", lexical="results/trec_full/multi/lexical.jsonl", batch=1000, seed_n=100, cal_seeds=3, stages=[100, 1000, 5000], control=2000),
+    "trec": dict(task="tasks/trec.yaml", eval="data/trec/eval.jsonl", pool="data/trec/full.jsonl", lexical="results/trec_full/multi/lexical.jsonl", batch=1000, seed_n=100, cal_seeds=3, stages=[100, 1000, 5000, 7500, 10000], control=2000),
 }
 
 
@@ -225,6 +227,7 @@ def doc_level(rows_by_doc: dict[str, dict[str, bool]], gold: dict[str, dict[str,
 # ------------------------------------------------------------------------------------------------ TAR 1.0
 
 _DIV_EMBED_CACHE: dict[tuple[int, int], np.ndarray] = {}  # (id(X), seed) -> SVD embedding of the candidates
+_DIV_SAMPLE_CACHE: dict[tuple[int, int, int], tuple[np.ndarray, dict]] = {}  # (id(X), seed, n) -> picks/meta
 
 
 def _div_embedding(X, cand: np.ndarray, seed: int) -> np.ndarray:
@@ -250,6 +253,10 @@ def diversity_sample(X, cand: np.ndarray, n: int, seed: int) -> tuple[np.ndarray
     contribute nothing and the shortfall is filled by a seeded random draw from the rest. Returns the chosen
     pool indices and a meta block."""
     n = min(n, len(cand))
+    key = (id(X), seed, n)
+    if key in _DIV_SAMPLE_CACHE:
+        picks, meta = _DIV_SAMPLE_CACHE[key]
+        return picks.copy(), dict(meta)
     Z = _div_embedding(X, cand, seed)
     km = MiniBatchKMeans(n_clusters=n, random_state=seed, batch_size=4096, n_init=1, max_iter=100, init_size=max(3 * n, 10_000))
     labels = km.fit_predict(Z)
@@ -267,7 +274,9 @@ def diversity_sample(X, cand: np.ndarray, n: int, seed: int) -> tuple[np.ndarray
         picks += [int(i) for i in rng.choice(rest, size=empty, replace=False)]
     meta = {"sampling": "diversity", "svd_dims": int(Z.shape[1]), "svd_fit_rows": int(min(len(cand), DIV_SVD_FIT_CAP)), "k": n,
             "empty_clusters": int(empty), "kmeans": "MiniBatchKMeans, one document nearest each centroid"}
-    return cand[np.array(picks, dtype=int)], meta
+    selected = cand[np.array(picks, dtype=int)]
+    _DIV_SAMPLE_CACHE[key] = (selected.copy(), dict(meta))
+    return selected, meta
 
 
 def run_tar1(ts: TaskSet, pool: list[Document], pool_idx: dict[str, int], X, eval_docs: list[Document],
@@ -530,6 +539,7 @@ def run_corpus(corpus: str, out: Path = Path("results"), only: str | None = None
     t0 = time.time()
     X = featurize([d.text for d in pool])
     _DIV_EMBED_CACHE.clear()
+    _DIV_SAMPLE_CACHE.clear()
     console.print(f"[{corpus}] {X.shape[1]:,} features in {time.time() - t0:.0f}s")
     full_out = out / "trec_full" / "multi" if corpus == "trec" else None
     exclude = {d.id for d in eval_docs} if cfg["pool"] else set()
@@ -540,13 +550,29 @@ def run_corpus(corpus: str, out: Path = Path("results"), only: str | None = None
                      (f"t1_{n}_f1", dict(kind="t1", n=n, rule="f1", noise=0.0, sampling="random")),
                      (f"t1_{n}_noisy", dict(kind="t1", n=n, rule="recall80", noise=NOISE_RATE, sampling="random")),
                      (f"t1_{n}_div", dict(kind="t1", n=n, rule="recall80", noise=0.0, sampling="diversity"))]
+        for accuracy in REVIEWER_ACCURACIES:
+            noise = 1.0 - accuracy / 100.0
+            variants += [
+                (f"t1_{n}_acc{accuracy}", dict(kind="t1", n=n, rule="recall80", noise=noise, sampling="random", reviewer_accuracy=accuracy)),
+                (f"t1_{n}_acc{accuracy}_div", dict(kind="t1", n=n, rule="recall80", noise=noise, sampling="diversity", reviewer_accuracy=accuracy)),
+            ]
     variants += [("cal", dict(kind="cal", noise=NOISE_RATE, stop="target", target=CAL_TARGET)),
                  ("cal_75", dict(kind="cal", noise=NOISE_RATE, stop="target", target=0.75)),
                  ("cal_perfect", dict(kind="cal", noise=0.0, stop="target", target=CAL_TARGET)),
                  ("cal_knee", dict(kind="cal", noise=NOISE_RATE, stop="knee", target=None))]
     if only:
-        # a name or prefix (t1_100, cal), or a suffix starting with "_" (_div, _noisy) for one flavour at every size
-        variants = [v for v in variants if v[0] == only or v[0].startswith(only + "_") or (only.startswith("_") and v[0].endswith(only))]
+        # a name or prefix (t1_100, cal), a suffix starting with "_" (_div, _noisy), the full accuracy
+        # sweep, or just the newly added deep TREC points (perfect + accuracy sweep, random + diversity).
+        if only == "new-depths":
+            variants = [
+                v for v in variants
+                if v[1].get("n") in (7500, 10000)
+                and (v[0].endswith("_div") or "reviewer_accuracy" in v[1] or (v[1]["noise"] == 0 and v[1]["sampling"] == "random" and v[1]["rule"] == "recall80"))
+            ]
+        elif only == "accuracy":
+            variants = [v for v in variants if "reviewer_accuracy" in v[1]]
+        else:
+            variants = [v for v in variants if v[0] == only or v[0].startswith(only + "_") or (only.startswith("_") and v[0].endswith(only))]
     kw = _keyword_scores(Path(cfg["lexical"]), [d.id for d in pool]) if any(v[1]["kind"] == "cal" for v in variants) else None
     gold_eval_any = np.array([any(g.values()) for g in gold_eval.values()])
 
