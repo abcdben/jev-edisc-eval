@@ -15,33 +15,36 @@ export type Palette = { id: PaletteId; label: string; title: string; colors: Rec
 
 const JEV = ["jev@base", "jev@choice", "jev@score", "jev@decompose", "jev@ensemble", "jev@gate"] as const;
 const LLM = ["claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash", "gemma3-12b"] as const;
-const map = (jev: string[], laya: string, llm: string[]): Record<string, string> => {
+/** The OpenAI Decisions rows (predicate, choice): deciders like Jev, so each palette gives them a second warm/saturated pair distinct from both the Jev family and the LLM greys. */
+const OAD = ["openai-decisions@predicate", "openai-decisions@choice"] as const;
+const map = (jev: string[], laya: string, llm: string[], oad: string[]): Record<string, string> => {
   const out: Record<string, string> = { "laya-ft": laya };
   JEV.forEach((k, i) => { out[k] = jev[i]; });
   LLM.forEach((k, i) => { out[k] = llm[i]; });
+  OAD.forEach((k, i) => { out[k] = oad[i]; });
   return out;
 };
 
 export const PALETTES: Palette[] = [
   {
     id: "ember", label: "Ember", title: "Jev in vermilion, orange and gold; the LLMs in cool steel blues and blue-greys",
-    colors: map(["#e4572e", "#f28e2b", "#d4a72c", "#b23a48", "#f4a582", "#8c2d19"], "#8e6bbf", ["#6fa3d8", "#2f6db5", "#4fb3a9", "#1e8a7e", "#9aabbe", "#6b7c90", "#b0b8c2"]),
+    colors: map(["#e4572e", "#f28e2b", "#d4a72c", "#b23a48", "#f4a582", "#8c2d19"], "#8e6bbf", ["#6fa3d8", "#2f6db5", "#4fb3a9", "#1e8a7e", "#9aabbe", "#6b7c90", "#b0b8c2"], ["#5b2a86", "#9b6fc4"]),
   },
   {
     id: "crimson", label: "Crimson", title: "Jev in crimson, rose and wine; the LLMs in slate and warm greys",
-    colors: map(["#c8102e", "#e0457b", "#9b1b5a", "#7a0c1e", "#f07a9a", "#5c0a2a"], "#7f5aa6", ["#6b7a8f", "#3f5470", "#8f9bab", "#55708c", "#b3bcc6", "#7f8a96", "#a2aab3"]),
+    colors: map(["#c8102e", "#e0457b", "#9b1b5a", "#7a0c1e", "#f07a9a", "#5c0a2a"], "#7f5aa6", ["#6b7a8f", "#3f5470", "#8f9bab", "#55708c", "#b3bcc6", "#7f8a96", "#a2aab3"], ["#1d6fa3", "#6fb1dc"]),
   },
   {
     id: "emerald", label: "Emerald", title: "Jev in emerald, jade and forest green; the LLMs in graphite and warm greys",
-    colors: map(["#1b9e77", "#5fc4a1", "#0b6e4f", "#3fa34d", "#a6d96a", "#005f3c"], "#8e6bbf", ["#8d8d8d", "#4f4f4f", "#aaa49e", "#6e6e6e", "#c4bdb5", "#8a847d", "#b1aba4"]),
+    colors: map(["#1b9e77", "#5fc4a1", "#0b6e4f", "#3fa34d", "#a6d96a", "#005f3c"], "#8e6bbf", ["#8d8d8d", "#4f4f4f", "#aaa49e", "#6e6e6e", "#c4bdb5", "#8a847d", "#b1aba4"], ["#1f5fa6", "#6c9bd6"]),
   },
   {
     id: "spectrum", label: "Spectrum", title: "Every model its own hue: Jev in reds, oranges and yellow; the LLMs in blues, greens and teals",
-    colors: map(["#e15759", "#f28e2b", "#e0b93b", "#b07aa1", "#ff9da7", "#9c755f"], "#af7aa1", ["#4e79a7", "#2c5985", "#59a14f", "#2a7f62", "#76b7b2", "#499894", "#bab0ac"]),
+    colors: map(["#e15759", "#f28e2b", "#e0b93b", "#b07aa1", "#ff9da7", "#9c755f"], "#af7aa1", ["#4e79a7", "#2c5985", "#59a14f", "#2a7f62", "#76b7b2", "#499894", "#bab0ac"], ["#6a3d9a", "#a884d0"]),
   },
   {
     id: "plum", label: "Plum", title: "Jev in plum, violet and lilac; the LLMs in sand, olive and khaki",
-    colors: map(["#6a3d9a", "#9e6bd1", "#c497e3", "#4b2a70", "#b58fd6", "#8a56c8"], "#d95f02", ["#c9a66b", "#8b6f3a", "#a3a86b", "#6f7a3c", "#d9c6a5", "#a89b7f", "#bfb3a0"]),
+    colors: map(["#6a3d9a", "#9e6bd1", "#c497e3", "#4b2a70", "#b58fd6", "#8a56c8"], "#d95f02", ["#c9a66b", "#8b6f3a", "#a3a86b", "#6f7a3c", "#d9c6a5", "#a89b7f", "#bfb3a0"], ["#1b9e77", "#7fcbb0"]),
   },
 ];
 export const isPaletteId = (s: string | null): s is PaletteId => PALETTES.some((p) => p.id === s);

@@ -32,7 +32,7 @@ export type ExCorpus = {
 
 export type Examples = {
   corpora: Record<string, ExCorpus>;
-  notes: { jev: Record<string, string>; laya: Record<string, string>; llm: string };
+  notes: { jev: Record<string, string>; laya: Record<string, string>; "openai-decisions"?: Record<string, string>; llm: string };
   score_levels: string[];
 };
 
@@ -52,6 +52,10 @@ export const EX_GROUPS: { id: string; label: string; match: (k: string) => boole
     // the fine-tuned checkpoint (the Laya row on Compare models, key `laya-ft`) and the zero-shot English-checkpoint configurations it was built from
     id: "laya", label: "Laya", match: (k) => k === "laya-ft" || k.startsWith("laya@"),
     intro: "Laya is a local decision model with the same three question types (Noul / Choice / Score). It reads at most **512 tokens**: the question head takes up to 192, the rest is the document, truncated from the right. Two of its configurations (Compact Question, Chunked Document) exist only to work around that limit. The **fine-tuned** configuration is the Laya row on Compare models and the one supervised row in this zero-shot comparison: the Compact + Chunked request sent to a checkpoint fine-tuned (RLCD) on a 30% document-level dev split of the corpus and scored on the held-out 70%; every other configuration here is zero-shot, and the labeled data the fine-tuning needed is not counted in the time and cost panels.",
+  },
+  {
+    id: "openai-decisions", label: "OpenAI Decisions", match: (k) => k.startsWith("openai-decisions@"),
+    intro: "OpenAI's Decisions API (GPT-6 Luna, `POST /v1/decisions`, public beta since 2026-10-06) is a decision model in the same sense as Jev: it does not write text. Each call sends one flat text **input** and a list of typed questions (`predicate`, `choice`, `score`); the answer to each is a probability, an option with probabilities and a confidence, or a weighted level. The two configurations here are the forms that map onto Jev's Noul and Choice, with the same RFP instruction and the same positive/negative descriptions. Billed on input tokens only.",
   },
   { id: "laya-typed", label: "Laya · typed", hidden: true, match: (k) => k.startsWith("laya-typed@"), intro: "The typed Laya checkpoint, zero-shot, same request shapes as Laya." },
   { id: "laya-multilingual", label: "Laya · multilingual", hidden: true, match: (k) => k.startsWith("laya-multilingual@"), intro: "The multilingual Laya checkpoint, zero-shot, same request shapes as Laya." },

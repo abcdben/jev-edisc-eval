@@ -776,6 +776,384 @@
   {
    "arm": "multi",
    "setting": "default",
+   "model": "openai-decisions@predicate",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0,
+    0,
+    0.0016
+   ],
+   "decision_flip_weighted": 0.0,
+   "pairwise": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "identical_prob": [
+    1.0,
+    0.9984,
+    1
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.0,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0016
+   ],
+   "confident_share_of_flips": null,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0,
+      0,
+      0.0048
+     ],
+     "pairwise": 0.0
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0,
+      0,
+      0.0048
+     ],
+     "pairwise": 0.0
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0,
+      0,
+      0.0048
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.0,
+      0,
+      0.0294
+     ],
+     "pairwise": 0.0
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0,
+      0,
+      0.0162
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0,
+      0,
+      0.0019
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    0.9022,
+    0.9022
+   ],
+   "precision_range": [
+    0.7523,
+    0.7523
+   ],
+   "majority": {
+    "recall": 0.9022,
+    "precision": 0.7523
+   },
+   "doc_flip": [
+    0.0,
+    0,
+    0.0126
+   ],
+   "doc_pairwise": 0.0
+  },
+  {
+   "arm": "multi",
+   "setting": "default",
+   "model": "openai-decisions@choice",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 2400,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0,
+    0,
+    0.0016
+   ],
+   "decision_flip_weighted": 0.0,
+   "pairwise": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "identical_prob": [
+    1.0,
+    0.9984,
+    1
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.0,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0016
+   ],
+   "confident_share_of_flips": null,
+   "by_issue": {
+    "data_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "data_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "dea_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "mktg_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "mktg_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_broad": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 800,
+     "flip": [
+      0.0,
+      0,
+      0.0048
+     ],
+     "pairwise": 0.0
+    },
+    "pos": {
+     "n": 800,
+     "flip": [
+      0.0,
+      0,
+      0.0048
+     ],
+     "pairwise": 0.0
+    },
+    "neg": {
+     "n": 800,
+     "flip": [
+      0.0,
+      0,
+      0.0048
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 127,
+     "flip": [
+      0.0,
+      0,
+      0.0294
+     ],
+     "pairwise": 0.0
+    },
+    "positive": {
+     "n": 233,
+     "flip": [
+      0.0,
+      0,
+      0.0162
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 2040,
+     "flip": [
+      0.0,
+      0,
+      0.0019
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    0.8986,
+    0.8986
+   ],
+   "precision_range": [
+    0.6947,
+    0.6947
+   ],
+   "majority": {
+    "recall": 0.8986,
+    "precision": 0.6947
+   },
+   "doc_flip": [
+    0.0,
+    0,
+    0.0126
+   ],
+   "doc_pairwise": 0.0
+  },
+  {
+   "arm": "multi",
+   "setting": "default",
    "model": "laya@base",
    "k": 5,
    "runs": [
@@ -796,7 +1174,7 @@
    "pairwise": [
     0.0007,
     0.0,
-    0.0015
+    0.0016
    ],
    "identical_prob": [
     0.2108,
@@ -1174,7 +1552,7 @@
    "pairwise": [
     0.0182,
     0.0147,
-    0.0219
+    0.0218
    ],
    "identical_prob": [
     0.2562,
@@ -1362,7 +1740,7 @@
    "decision_flip_weighted": 0.0272,
    "pairwise": [
     0.0116,
-    0.0087,
+    0.0088,
     0.0147
    ],
    "identical_prob": [
@@ -1740,8 +2118,8 @@
    "decision_flip_weighted": 0.0353,
    "pairwise": [
     0.0148,
-    0.0117,
-    0.0179
+    0.0114,
+    0.0182
    ],
    "identical_prob": [
     0.335,
@@ -1929,8 +2307,8 @@
    "decision_flip_weighted": 0.044,
    "pairwise": [
     0.0202,
-    0.0164,
-    0.0241
+    0.0162,
+    0.024
    ],
    "identical_prob": [
     0.3567,
@@ -2118,8 +2496,8 @@
    "decision_flip_weighted": 0.0202,
    "pairwise": [
     0.0088,
-    0.0061,
-    0.0117
+    0.0062,
+    0.0116
    ],
    "identical_prob": [
     0.5933,
@@ -2306,7 +2684,7 @@
    "decision_flip_weighted": 0.01,
    "pairwise": [
     0.0044,
-    0.0027,
+    0.0025,
     0.0063
    ],
    "identical_prob": [
@@ -2684,8 +3062,8 @@
    "decision_flip_weighted": 0.0093,
    "pairwise": [
     0.004,
-    0.0023,
-    0.006
+    0.0024,
+    0.0059
    ],
    "identical_prob": [
     0.8767,
@@ -2874,7 +3252,7 @@
    "pairwise": [
     0.0167,
     0.0132,
-    0.0204
+    0.0209
    ],
    "identical_prob": [
     0.5883,
@@ -3062,7 +3440,7 @@
    "decision_flip_weighted": 0.0227,
    "pairwise": [
     0.0092,
-    0.0067,
+    0.0065,
     0.0119
    ],
    "identical_prob": [
@@ -3251,8 +3629,8 @@
    "decision_flip_weighted": 0.0471,
    "pairwise": [
     0.0222,
-    0.0182,
-    0.0267
+    0.0179,
+    0.0265
    ],
    "identical_prob": [
     0.3283,
@@ -4016,8 +4394,8 @@
    "decision_flip_weighted": 0.0142,
    "pairwise": [
     0.0057,
-    0.002,
-    0.01
+    0.0017,
+    0.0103
    ],
    "identical_prob": [
     0.605,
@@ -4121,6 +4499,264 @@
    "majority": {
     "recall": 0.8621,
     "precision": 0.9434
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "default",
+   "model": "openai-decisions@predicate",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0,
+    0,
+    0.0064
+   ],
+   "decision_flip_weighted": 0.0,
+   "pairwise": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "identical_prob": [
+    1.0,
+    0.9936,
+    1
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.0,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0064
+   ],
+   "confident_share_of_flips": null,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.0,
+      0,
+      0.1072
+     ],
+     "pairwise": 0.0
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0,
+      0,
+      0.0741
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0,
+      0,
+      0.0073
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    0.9138,
+    0.9138
+   ],
+   "precision_range": [
+    0.8689,
+    0.8689
+   ],
+   "majority": {
+    "recall": 0.9138,
+    "precision": 0.8689
+   }
+  },
+  {
+   "arm": "single",
+   "setting": "default",
+   "model": "openai-decisions@choice",
+   "k": 5,
+   "runs": [
+    "rep1",
+    "rep2",
+    "rep3",
+    "rep4",
+    "rep5"
+   ],
+   "n_decisions": 600,
+   "n_docs": 300,
+   "decision_flip": [
+    0.0,
+    0,
+    0.0064
+   ],
+   "decision_flip_weighted": 0.0,
+   "pairwise": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "identical_prob": [
+    1.0,
+    0.9936,
+    1
+   ],
+   "prob_spread_median": 0.0,
+   "prob_spread_p95": 0.0,
+   "confident_flip": [
+    0.0,
+    0,
+    0.0064
+   ],
+   "confident_share_of_flips": null,
+   "by_issue": {
+    "dea_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    },
+    "som_narrow": {
+     "n": 300,
+     "flip": [
+      0.0,
+      0,
+      0.0126
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_stratum": {
+    "gray": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    },
+    "pos": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    },
+    "neg": {
+     "n": 200,
+     "flip": [
+      0.0,
+      0,
+      0.0188
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "by_gold": {
+    "gray": {
+     "n": 32,
+     "flip": [
+      0.0,
+      0,
+      0.1072
+     ],
+     "pairwise": 0.0
+    },
+    "positive": {
+     "n": 48,
+     "flip": [
+      0.0,
+      0,
+      0.0741
+     ],
+     "pairwise": 0.0
+    },
+    "negative": {
+     "n": 520,
+     "flip": [
+      0.0,
+      0,
+      0.0073
+     ],
+     "pairwise": 0.0
+    }
+   },
+   "recall_range": [
+    0.8621,
+    0.8621
+   ],
+   "precision_range": [
+    0.8197,
+    0.8197
+   ],
+   "majority": {
+    "recall": 0.8621,
+    "precision": 0.8197
    }
   },
   {
@@ -4403,8 +5039,8 @@
    "decision_flip_weighted": 0.0245,
    "pairwise": [
     0.0113,
-    0.006,
-    0.0173
+    0.0057,
+    0.0177
    ],
    "identical_prob": [
     0.4783,
@@ -4661,8 +5297,8 @@
    "decision_flip_weighted": 0.0282,
    "pairwise": [
     0.013,
-    0.007,
-    0.0197
+    0.0067,
+    0.02
    ],
    "identical_prob": [
     0.3883,
@@ -4790,8 +5426,8 @@
    "decision_flip_weighted": 0.0205,
    "pairwise": [
     0.008,
-    0.0037,
-    0.0133
+    0.0033,
+    0.014
    ],
    "identical_prob": [
     0.4633,
@@ -5049,7 +5685,7 @@
    "pairwise": [
     0.0017,
     0.0,
-    0.0047
+    0.0043
    ],
    "identical_prob": [
     0.76,
@@ -5563,7 +6199,7 @@
    "decision_flip_weighted": 0.0218,
    "pairwise": [
     0.0087,
-    0.0037,
+    0.004,
     0.0143
    ],
    "identical_prob": [
@@ -5951,7 +6587,7 @@
    "pairwise": [
     0.004,
     0.001,
-    0.009
+    0.008
    ],
    "identical_prob": [
     0.77,

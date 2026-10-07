@@ -23,7 +23,7 @@ const makerId = (key: string): string => {
   if (fam === "jev") return "typesafe";
   if (fam.startsWith("laya")) return "convai";
   if (fam.startsWith("claude")) return "anthropic";
-  if (fam.startsWith("gpt")) return "openai";
+  if (fam.startsWith("gpt") || fam === "openai-decisions") return "openai";
   if (fam.startsWith("gemini") || fam.startsWith("gemma")) return "google";
   if (fam === "tar") return "tar";
   return "other";

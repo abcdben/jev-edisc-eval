@@ -1,0 +1,262 @@
+# Big Thorium — Relativity's synthetic "aiR for Review Demo" e-mail collection (fictional company, fictional matter).
+# Eight requests. The matter, people and relevance rules are taken from the aiR for Review prompt criteria that ship inside the
+# workspace archive (data/bigthorium/air_criteria.json, version of 2026-09-08): requests 1–6 partition the aiR relevance
+# criteria (1)–(10); requests 7–8 are off-matter topics present in the collection (a nuclear-plant compliance thread, HR
+# remote-work policy) so the arm has requests about which case knowledge could not help even in principle.
+# `literal`, `structured`, and `subparts` are the alternative phrasings used only by the Jev ablation levers.
+
+name: bigthorium
+kind: binary
+positive_label: responsive
+negative_label: not_responsive
+
+context: |
+  Matter: internal and outside-counsel investigation of alleged bribery by BigThorium, Inc., a sustainable-energy company,
+  in connection with a Request for Proposal issued by the City of Atlantis for a municipal energy project (improving the
+  city's energy efficiency and reducing its carbon footprint). BigThorium won the contract. It is alleged that BigThorium
+  employees offered or provided payments, gifts or luxury goods to City of Atlantis officials to secure the award, that the
+  bidding process was manipulated or unfairly influenced, and that third-party intermediaries or consultants may have been
+  used to channel improper benefits. The investigation is directed by BigThorium's General Counsel with outside counsel
+  (Law Firm X) and is at the fact-development stage; no lawsuit has been filed. BigThorium also pursues an unrelated
+  nuclear power plant project and ordinary corporate business, which are not the subject of the investigation. The
+  relevant period is January 1, 2017 through September 30, 2024. Custodians are current and former BigThorium employees.
+  "Document" includes e-mails, chats, texts, memoranda, reports, presentations, spreadsheets, invoices and letters.
+
+# Used only by the Jev "relevance gate" lever: p(final) = p(rfp) * p(gate).
+gate_question: |
+  Is this document substantive business correspondence of BigThorium (about the City of Atlantis project, the bribery
+  allegations, the nuclear power plant project, company policy or operations), rather than vendor marketing, a newsletter,
+  a travel or training promotion, a security alert or a social message? Answer no for promotional and automated mail.
+
+questions:
+
+  rfp01_atlantis_rfp:
+    title: City of Atlantis RFP, bid and award
+    breadth: broad
+    richness: rich
+    rfp_text: |
+      All documents concerning the City of Atlantis Request for Proposal for the municipal energy project, including the
+      preparation and submission of BigThorium's proposal, the evaluation and scoring of bids, the award of the contract to
+      BigThorium, and BigThorium's internal discussion of its chances of winning or of how to win the award.
+    literal: |
+      Is this document about the City of Atlantis RFP or the municipal energy project bid — preparing or submitting
+      BigThorium's proposal, how bids were evaluated, the contract award, or how BigThorium could win it? Answer no for
+      BigThorium's nuclear power plant project and for unrelated company business.
+    positive_desc: |
+      The document discusses the City of Atlantis RFP or the municipal energy project bid: the proposal, the bidding
+      process, bid evaluation or scoring, the award to BigThorium, or BigThorium's strategy and prospects for winning it.
+    negative_desc: |
+      The document does not concern the Atlantis RFP or bid. BigThorium's nuclear power plant project, other clients and
+      cities, general marketing, HR and social messages are not responsive, even if a City of Atlantis address is copied.
+    structured:
+      responsive:
+        what: The City of Atlantis municipal energy project RFP — proposal, evaluation, award, win strategy
+        includes: [proposal drafting and submission, bid pricing, evaluation criteria and scoring, award notice, discussion of chances or tactics to win]
+        examples: ["our response to the Atlantis RFP is due Friday", "we have been awarded the municipal energy contract"]
+      not_responsive:
+        what: Anything else, including the nuclear plant project
+        includes: [nuclear plant licensing, supplier contracts for other projects, newsletters, HR matters]
+
+  rfp02_gifts:
+    title: Gifts, incentives and payments to City officials
+    breadth: narrow
+    richness: rich
+    rfp_text: |
+      All documents concerning gifts, incentives, luxury goods, entertainment, travel, favours or payments offered, given,
+      promised, purchased, reimbursed or delivered to any City of Atlantis official or employee, or discussed among
+      BigThorium employees as a way to influence the RFP, the contract award or the City's officials, including any
+      expression of intent or plan to influence the award.
+    literal: |
+      Does this document discuss giving, offering, planning, buying, shipping, expensing or reimbursing a gift, luxury item,
+      trip, entertainment, favour or payment for a City of Atlantis official, or otherwise influencing City officials or the
+      award? Answer no for marketing e-mails that offer products or rewards to BigThorium employees, and for ordinary
+      employee gifts, parties or perks that have nothing to do with the City.
+    positive_desc: |
+      The document discusses a gift, luxury good, trip, entertainment, favour or payment for a City of Atlantis official or
+      employee, or a plan or intent to influence City officials or the award by such means, including purchase,
+      reimbursement or delivery of such items.
+    negative_desc: |
+      The document does not discuss benefits to City officials or influencing the award. Vendor promotions offering rewards
+      or luxury products to BigThorium staff, internal team celebrations, employee recognition and ordinary business
+      hospitality unconnected with the City are not responsive.
+    structured:
+      responsive:
+        what: Gifts, incentives, luxury goods, entertainment or payments for City of Atlantis officials; plans to influence the award
+        includes: [buying or shipping a luxury item for an official, expensing or reimbursing it, offering a trip or dinner, discussing how to sway an official, intent to influence the award]
+        examples: ["the watch for the Treasurer has shipped", "a small token might help our standing with the city"]
+      not_responsive:
+        what: Benefits that do not involve City officials
+        includes: [vendor marketing offering gifts to staff, employee birthday gifts, team outings, loyalty-programme spam]
+
+  rfp03_officials:
+    title: Communications with City of Atlantis officials
+    breadth: broad
+    richness: rich
+    rfp_text: |
+      All communications between BigThorium representatives and officials or employees of the City of Atlantis concerning
+      the municipal energy project, the RFP, the contract, City business, or the relationship between BigThorium and the
+      City, whether sent to, received from or exchanged with such officials.
+    literal: |
+      Is this a communication between BigThorium and a City of Atlantis official or employee about the project, the RFP, the
+      contract, City business or the BigThorium–City relationship (including messages the official wrote or that are
+      addressed to the official)? Answer no if a City address is merely copied on an internal or social message that has
+      nothing to do with the City.
+    positive_desc: |
+      The document is an exchange between BigThorium and a City of Atlantis official or employee about the project, RFP,
+      contract, City business or the relationship, or a message written by or addressed to such an official on those
+      subjects.
+    negative_desc: |
+      The document is not a substantive exchange with a City official: internal BigThorium messages, social or HR messages
+      with a City address copied, vendor marketing, and correspondence with other governments or cities are not responsive.
+    structured:
+      responsive:
+        what: Substantive BigThorium–City of Atlantis correspondence
+        includes: [messages from or to atlantis.gov officials about the project, the RFP, the contract, meetings with the City, requests from the City]
+        examples: ["Dear Mr Williams, attached is our revised proposal", "the City Treasurer asked for the timeline"]
+      not_responsive:
+        what: City addresses merely copied, or other governments
+        includes: [internal brainstorms with an official CC'd, social invitations, eldorado.gov correspondence, vendor mail]
+
+  rfp04_contract:
+    title: Municipal energy project contract — negotiation, execution, performance
+    breadth: broad
+    richness: thin
+    rfp_text: |
+      All documents concerning the negotiation, terms, execution, financing, performance, amendment or payment of the
+      contract between BigThorium and the City of Atlantis for the municipal energy project after the award, including
+      subcontracts and supplier arrangements entered into for that project.
+    literal: |
+      Is this document about the contract for the City of Atlantis municipal energy project after BigThorium won it — its
+      negotiation, terms, signing, financing, delivery, amendments, payments, or subcontracts and suppliers for that
+      project? Answer no for contracts and suppliers of the nuclear power plant project or other matters.
+    positive_desc: |
+      The document discusses the City of Atlantis municipal energy project contract: negotiation, terms, execution,
+      financing, performance, payments, amendments, or subcontracts and suppliers for that project.
+    negative_desc: |
+      The document does not concern that contract. Supplier and technology contracts for the nuclear power plant project,
+      intellectual-property or licensing agreements unrelated to the City, and generic contract-management marketing are
+      not responsive.
+    structured:
+      responsive:
+        what: The post-award City of Atlantis contract and its performance
+        includes: [contract terms and signing, milestones and deliverables for the City project, invoices to the City, amendments, project subcontractors]
+        examples: ["the City has countersigned the energy project contract", "milestone 2 payment from Atlantis is late"]
+      not_responsive:
+        what: Other contracts
+        includes: [nuclear reactor procurement, IP and technology-transfer agreements, generic project-management tool promotions]
+
+  rfp05_third_party:
+    title: Intermediaries, consultants and agents
+    breadth: narrow
+    richness: thin
+    rfp_text: |
+      All documents concerning the engagement, role, compensation or activities of any third-party intermediary,
+      consultant, agent, lobbyist or other outside party used or considered by BigThorium in connection with the City of
+      Atlantis RFP, the contract award or BigThorium's dealings with City officials, including any payment or benefit
+      routed through such a party.
+    literal: |
+      Does this document discuss an outside consultant, intermediary, agent, lobbyist or similar third party in connection
+      with the Atlantis RFP, the award or BigThorium's dealings with City officials — hiring them, what they did, what they
+      were paid, or benefits passed through them? Answer no for outside counsel acting as lawyers, for vendors selling
+      services to BigThorium, and for consultants on unrelated projects.
+    positive_desc: |
+      The document discusses a third-party intermediary, consultant, agent or lobbyist used or considered in connection
+      with the Atlantis RFP, the award or City officials, including their engagement, compensation, activities or benefits
+      routed through them.
+    negative_desc: |
+      The document does not discuss such an intermediary. Law Firm X acting as counsel, vendors marketing services to
+      BigThorium, and consultants engaged for the nuclear plant or other matters are not responsive.
+    structured:
+      responsive:
+        what: Third parties used to reach or reward City officials or to help win the award
+        includes: [engaging a consultant or agent for the bid, success fees, payments routed through an intermediary, a lobbyist's contacts with the City]
+        examples: ["the consultant's fee will cover the Treasurer's dinner", "engage GNS Partners to approach the City"]
+      not_responsive:
+        what: Lawyers and ordinary vendors
+        includes: [Law Firm X legal advice, legal-services marketing, engineering consultants on the nuclear plant]
+
+  rfp06_investigation:
+    title: Investigation, legal advice and media inquiries about the allegations
+    breadth: broad
+    richness: rich
+    rfp_text: |
+      All documents concerning the bribery or bid-rigging allegations against BigThorium, including the internal
+      investigation, requests for or provision of legal advice about the allegations, preservation or collection of
+      documents for the investigation, communications with outside counsel about the allegations, and inquiries from or
+      responses to journalists or the media about the allegations.
+    literal: |
+      Is this document about the bribery or bid-manipulation allegations themselves — investigating them, getting or giving
+      legal advice about them, preserving or gathering documents for the investigation, talking to outside counsel about
+      them, or dealing with a journalist's or newspaper's questions about them? Answer no for legal advice on unrelated
+      topics (IP, licensing, HR) and for legal-services marketing.
+    positive_desc: |
+      The document discusses the allegations against BigThorium: the internal or outside-counsel investigation, legal
+      advice about the allegations, document preservation or collection for it, or media inquiries and responses about
+      the allegations.
+    negative_desc: |
+      The document does not concern the allegations or their investigation. Legal advice about intellectual property,
+      licensing, employment or the nuclear plant, legal-services promotions, and press releases unrelated to the
+      allegations are not responsive.
+    structured:
+      responsive:
+        what: The bribery allegations — investigation, legal advice, preservation, press
+        includes: [launching or scoping the investigation, interviews, legal hold, advice from Law Firm X on the allegations, Atlantis Times inquiries, response strategy]
+        examples: ["urgent: legal guidance needed on recent contract award and allegations", "a reporter is asking about gifts to City officials"]
+      not_responsive:
+        what: Other legal and PR matters
+        includes: [IP and technology-transfer advice, nuclear licensing advice, PR strategy for the nuclear plant, law-firm marketing]
+
+  rfp07_nuclear_compliance:
+    title: Nuclear power plant — regulatory compliance, licensing and safety
+    breadth: broad
+    richness: thin
+    rfp_text: |
+      All documents concerning regulatory and licensing requirements, compliance with national or international nuclear
+      standards (including IAEA guidelines), nuclear safety and security measures, emergency preparedness and response
+      plans, and the transport and handling of nuclear materials for BigThorium's nuclear power plant project.
+    literal: |
+      Is this document about the nuclear power plant project's regulatory or licensing requirements, compliance with
+      nuclear standards or IAEA guidelines, safety and security measures, emergency preparedness, or transporting and
+      handling nuclear materials? Answer no for the plant's financing, public relations, site selection or supplier
+      procurement unless they discuss compliance, licensing or safety, and no for anything about the City of Atlantis.
+    positive_desc: |
+      The document discusses regulatory or licensing requirements, nuclear standards or IAEA compliance, safety and
+      security measures, emergency preparedness or nuclear-material transport and handling for the nuclear power plant.
+    negative_desc: |
+      The document does not discuss those compliance, licensing or safety topics. Plant financing, public relations,
+      stakeholder engagement, site selection, procurement and grid integration without a compliance or safety element,
+      and all City of Atlantis matters, are not responsive.
+    structured:
+      responsive:
+        what: Nuclear plant compliance, licensing, safety, emergency planning, materials handling
+        includes: [licensing applications, IAEA or national standards, safety and security enhancements, emergency response plans, transport protocols for nuclear materials]
+        examples: ["compliance with IAEA guidelines", "transportation and handling protocols for nuclear materials"]
+      not_responsive:
+        what: Other nuclear-plant topics and the Atlantis matter
+        includes: [financing and funding, PR strategy, site selection, reactor procurement, cybersecurity marketing]
+
+  rfp08_remote_work:
+    title: Remote and flexible work arrangements
+    breadth: narrow
+    richness: thin
+    rfp_text: |
+      All documents concerning BigThorium's policies, proposals or arrangements for remote work, work from home, flexible
+      or hybrid working hours, and their effect on productivity, morale or work-life balance.
+    literal: |
+      Is this document about remote work, working from home, flexible or hybrid hours at BigThorium — a policy, a proposal,
+      an arrangement, or their effect on productivity, morale or work-life balance? Answer no for other HR topics
+      (training, performance reviews, job postings, wellness tips) and for external promotions.
+    positive_desc: |
+      The document discusses remote, home, flexible or hybrid working at BigThorium: policies, proposals, arrangements, or
+      their effects on productivity, morale or work-life balance.
+    negative_desc: |
+      The document does not discuss remote or flexible working. Other HR matters (training enrolment, performance reviews,
+      job postings, wellness and fitness tips, team-building events) and external promotions are not responsive.
+    structured:
+      responsive:
+        what: Remote / flexible / hybrid working at BigThorium
+        includes: [remote-work policy drafts, flexible-hours proposals, hybrid schedules, productivity or morale effects, work-life balance in the context of remote work]
+        examples: ["proposal for flexible remote work arrangements", "how has working from home affected the team's morale?"]
+      not_responsive:
+        what: Other HR and social topics
+        includes: [mandatory training, performance review reminders, job postings, fitness apps, community BBQ]

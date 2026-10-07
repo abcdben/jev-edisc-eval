@@ -64,6 +64,11 @@ LAYA_NOTES: dict[str, str] = {
     "recipe_choice": "compact + chunk with the Choice form.",
 }
 
+OPENAI_DECISIONS_NOTES: dict[str, str] = {
+    "predicate": "One POST /v1/decisions call (GPT-6 Luna) with a `predicate` question per issue: the RFP text is the instruction with the positive and negative descriptions appended, and the answer is p(true), scored as p(responsive). The Decisions API takes a flat text `input`, so the matter background and document are sent as Jev's flat-text state. The Noul analogue.",
+    "choice": "The same call with a `choice` question: the two labels are the options and the descriptions their `description`. The answer is a probability per option plus a separate `confidence`; p(responsive) is the responsive option's probability. The Choice analogue.",
+}
+
 LLM_NOTE = (
     "One chat completion with a system prompt, a user message (matter background, the request block with "
     "responsive / not-responsive criteria, the document), and a JSON schema the vendor enforces on the output. "
@@ -163,6 +168,16 @@ def _aggregate_note(cfg: JevConfig, keys: list[tuple[str, str]]) -> str:
     return s + "; label = responsive if p ≥ 0.5"
 
 
+def _decisions_request(ts: TaskSet, qid: str, doc: Document, form: str) -> dict:
+    from .providers.openai_decisions import OpenAIDecisionsProvider
+
+    prov = OpenAIDecisionsProvider.__new__(OpenAIDecisionsProvider)
+    prov.spec = MODELS["openai-decisions"]; prov.form = form
+    body = prov._body(ts, [qid], doc)
+    agg = "p = answers[0].probability" if form == "predicate" else "p = probabilities[value='responsive'].probability; label = choice"
+    return {**body, "aggregate": agg + "; label = responsive if p ≥ 0.5"}
+
+
 def _llm_request(ts: TaskSet, qid: str, doc: Document) -> dict:
     schema = build_decision_model(ts, [qid]).model_json_schema()
     return {
@@ -246,7 +261,7 @@ def _template(obj, doc_text: str, context: str):
 
 
 def export(out: Path = Path("results"), dest: Path = Path("results/examples.json")) -> dict:
-    payload: dict = {"corpora": {}, "notes": {"jev": JEV_NOTES, "laya": LAYA_NOTES, "llm": LLM_NOTE}, "score_levels": SCORE_LEVELS}
+    payload: dict = {"corpora": {}, "notes": {"jev": JEV_NOTES, "laya": LAYA_NOTES, "openai-decisions": OPENAI_DECISIONS_NOTES, "llm": LLM_NOTE}, "score_levels": SCORE_LEVELS}
     for corpus, task_path, data_path in CORPORA:
         ts = TaskSet.load(task_path)
         docs = in_scope(corpus, load_corpus(data_path))  # same document scope as export.py (TREC drops the 404 stratum)
@@ -270,6 +285,16 @@ def export(out: Path = Path("results"), dest: Path = Path("results/examples.json
                     for d in ex_docs
                 ],
             }
+        # OpenAI Decisions API, both question forms
+        for name in ("predicate", "choice"):
+            exs = [{"request": _decisions_request(ts, qid, d, name), "output": _output(out, corpus, f"openai-decisions__{name}", d.id, qid)} for d in ex_docs]
+            if any(e["output"] is not None for e in exs):
+                spec = MODELS["openai-decisions"]
+                c["configs"][f"openai-decisions@{name}"] = {
+                    "group": "openai-decisions", "variant": name,
+                    "settings": {"model_id": spec.model_id, "provider": spec.provider, "endpoint": "POST /v1/decisions", "question_type": name, "input": "flat text (matter background + document)"},
+                    "examples": exs,
+                }
         # Laya variants for each checkpoint present
         for ck in ("laya", "laya-typed", "laya-multilingual"):
             for name, cfg in LAYA_VARIANTS.items():

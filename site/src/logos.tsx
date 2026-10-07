@@ -25,7 +25,7 @@ export function logoFor(key: string): { kind: "img"; src: string; alt: string } 
   // Laya's mark likewise ships as an alpha mask so it sits in the text colour like every other vendor glyph
   if (k.startsWith("laya")) return { kind: "mask", src: laya, alt: "ConvAI Laya" };
   if (k.startsWith("claude")) return { kind: "path", d: CLAUDE_PATH, alt: "Anthropic", fr: "nonzero" };
-  if (k.startsWith("gpt")) return { kind: "path", d: OPENAI_PATH, alt: "OpenAI", fr: "evenodd" };
+  if (k.startsWith("gpt") || k === "openai-decisions") return { kind: "path", d: OPENAI_PATH, alt: "OpenAI", fr: "evenodd" };
   if (k.startsWith("gemini")) return { kind: "path", d: GEMINI_PATH, alt: "Google Gemini", fr: "nonzero" };
   if (k.startsWith("gemma")) return { kind: "path", d: GEMMA_PATH, alt: "Google Gemma", fr: "evenodd" };
   if (k === "lexical") return { kind: "lexical" };

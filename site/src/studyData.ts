@@ -70,7 +70,7 @@ export const reviewerArms = (ds: string, arms: Arm[]) => arms.filter((a) => a.ki
 /** Every arm with at least one value for the dataset × experiment. */
 export const armsWithData = (ds: string, ex: string): string[] => Object.keys(STUDY.values[ds]?.[ex] ?? {});
 
-export const DEFAULT_ARMS = ["jev@base", "openai-decisions", "claude-sonnet-5", "gpt-5.6-luna", "gemini-3.8-flash", "tar@cal", "human@firstpass", "human@literature"];
+export const DEFAULT_ARMS = ["jev@base", "openai-decisions@predicate", "claude-sonnet-5", "gpt-5.6-luna", "gemini-3.8-flash", "tar@cal", "human@firstpass", "human@literature"];
 export const DEFAULT_DATASETS = ["trec", "legal09", "legal10"];
 
 /** A value in its unit; `ci` adds the interval when present. */

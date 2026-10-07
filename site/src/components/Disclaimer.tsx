@@ -36,7 +36,7 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
       <div className="disc-body">
         <h4>What was tested</h4>
         <p>
-          <b>A zero‑shot comparison</b> of <b>two new decision models</b>, Jev (TypeSafe AI) and Laya (ConvAI), against <b>seven commercially available
+          <b>A zero‑shot comparison</b> of <b>three decision models</b>, Jev (TypeSafe AI), OpenAI's Decisions API (GPT‑6 Luna, public beta October 2026) and Laya (ConvAI), against <b>seven commercially available
           language models</b>: Haiku 4.5, Sonnet 5, GPT‑5.6 Luna and Terra, Gemini 3.5 Flash‑Lite and 3.8 Flash, and a locally run Gemma 3 12B. No model
           was trained on examples or given a prompt of its own. The task is relevance review, the one review teams do in discovery: <mark>is this document
           responsive, and to which issues.</mark>
@@ -56,7 +56,7 @@ export function DisclaimerModal({ onClose }: { onClose: () => void }) {
         </p>
         <ul>
           <li><b>Recall and precision</b>, with 95% confidence intervals.</li>
-          <li><b>Speed</b>: median wall-clock per request to score one document. On TREC (all issues per call) the Jev, Claude and GPT figures come from a dedicated single-request sample of 200 emails; every other figure is the per-request timing recorded during the benchmark run, with 8–12 requests in flight. GPT-5.6 Luna is timed on OpenAI's standard tier, 2.2× faster than the flex tier the run used; cost is at list price either way.</li>
+          <li><b>Speed</b>: median wall-clock per request to score one document. On TREC (all issues per call) the Jev, OpenAI Decisions, Claude and GPT figures come from a dedicated single-request sample of 200 emails; every other figure is the per-request timing recorded during the benchmark run, with 8–12 requests in flight. GPT-5.6 Luna is timed on OpenAI's standard tier, 2.2× faster than the flex tier the run used; cost is at list price either way.</li>
           <li><b>Cost</b> per 100,000 documents at each corpus's average document length: standard list price for every API model (no flex, batch or caching discounts); GPU rows as A100 rental for the measured time.</li>
           <li><b>Stability</b>: how often a model changes its answer on the same document across repeated identical runs (lower is more stable).</li>
         </ul>

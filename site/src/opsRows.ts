@@ -133,7 +133,7 @@ export function costCaption(chart: CostChart, unit: CostUnit, scale: CostScale, 
 }
 
 /** Where the Speed figures come from, for the caption's second line. */
-export const SPEED_SOURCE = "TREC all-issues Jev, Claude and GPT rows: a dedicated single-request sample of 200 emails (GPT-5.6 Luna on OpenAI's standard tier, Terra on flex); every other cell: per-request timings recorded during the benchmark run, 8–12 requests in flight.";
+export const SPEED_SOURCE = "TREC all-issues Jev, OpenAI Decisions, Claude and GPT rows: a dedicated single-request sample of 200 emails (GPT-5.6 Luna on OpenAI's standard tier, Terra on flex); every other cell: per-request timings recorded during the benchmark run, 8–12 requests in flight.";
 
 export function speedCaption(chart: SpeedChart, whiskers = true): string[] {
   if (chart === "throughput") return ["Sequential documents per hour: 3,600,000 ÷ median wall-clock milliseconds per request to score one document. Every service accepts parallel requests, so compare ratios, not absolutes.", SPEED_SOURCE];

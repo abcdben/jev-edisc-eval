@@ -108,9 +108,11 @@ const NOTE_KEY_TERM: Record<string, Record<string, string>> = {
     base: "512", choice: "Choice", score: "Score", literal: "literal phrasing", gate: "gates", ensemble: "averaged", decompose: "OR'd",
     compact: "192-token head", chunk: "max over windows", recipe: "compact + chunk", recipe_choice: "Choice form",
   },
+  "openai-decisions": { predicate: "p(true)", choice: "probability per option" },
   llm: { "": "JSON schema" },
 };
 const noteFamily = (group: string) => (group === "jev" ? "jev" : group.startsWith("laya") ? "laya" : group);
+const groupNotes = (group: string): Record<string, string> | undefined => (group === "openai-decisions" ? EX.notes["openai-decisions"] : undefined);
 
 /**
  * The opening sentence of the modal: what this configuration is, in plain words, with the definition
@@ -137,6 +139,10 @@ function leadFor(group: string, key: string, corpus: string, groupLabel: string)
   if (group === "llm") {
     const p = PRIMARY_BY_KEY[key];
     return { pre: `**${p?.short ?? DATA.models[key]?.name ?? key}** is a generative model asked with `, def, post: `.${p?.note ? ` ${p.note}` : ""}` };
+  }
+  if (group === "openai-decisions") {
+    const analogue = v === "predicate" ? "Jev's Noul Question" : "Jev's Choice Question";
+    return { pre: `${name} is the OpenAI Decisions API (GPT-6 Luna) configuration in which `, def, post: `. It is the analogue of ${analogue}: the same instruction and the same criteria, sent to OpenAI's decision endpoint instead of TypeSafe's.` };
   }
   return null;
 }
@@ -374,7 +380,7 @@ export function ExplainModal({ initialKey, initialCorpus, onClose, metrics }: { 
   const d = diff(ex?.request, base ? base.examples[docIdx]?.request : ex?.request);
   const doc = C.documents[docIdx];
   const variant = cfg?.variant ?? "";
-  const note = group === "jev" ? EX.notes.jev[variant] : group.startsWith("laya") && active !== "laya-ft" ? EX.notes.laya[variant] : group === "llm" ? EX.notes.llm : G.intro;
+  const note = group === "jev" ? EX.notes.jev[variant] : group.startsWith("laya") && active !== "laya-ft" ? EX.notes.laya[variant] : group === "llm" ? EX.notes.llm : groupNotes(group)?.[variant] ?? G.intro;
   const m = metrics && active ? metrics(active, corpus) : null;
   const lead = active ? leadFor(group, active, corpus, G.label) : null;
   const recipe = ABLATION_GROUPS.find((g) => g.id === group)?.recipe;

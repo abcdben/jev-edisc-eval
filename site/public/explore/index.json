@@ -92,14 +92,14 @@
      "coverage": null
     },
     {
-     "id": "openai-decisions",
-     "name": "OpenAI Decisions (GPT-6 Luna)",
-     "short": "OpenAI Decisions",
+     "id": "openai-decisions@predicate",
+     "name": "OpenAI Decisions \u00b7 Predicate",
+     "short": "Decisions \u00b7 Predicate",
      "kind": "system1",
-     "color": "var(--v7)",
+     "color": "var(--c-oad)",
      "planned": true,
-     "note": "Decisions API, limited preview. Not yet run.",
-     "file": "openai-decisions.json",
+     "note": "OpenAI Decisions API (GPT-6 Luna, public beta 2026-10-06), predicate question: the Noul analogue.",
+     "file": "openai-decisions__predicate.json",
      "coverage": null
     },
     {
@@ -289,14 +289,14 @@
      "coverage": null
     },
     {
-     "id": "openai-decisions",
-     "name": "OpenAI Decisions (GPT-6 Luna)",
-     "short": "OpenAI Decisions",
+     "id": "openai-decisions@predicate",
+     "name": "OpenAI Decisions \u00b7 Predicate",
+     "short": "Decisions \u00b7 Predicate",
      "kind": "system1",
-     "color": "var(--v7)",
+     "color": "var(--c-oad)",
      "planned": true,
-     "note": "Decisions API, limited preview. Not yet run.",
-     "file": "openai-decisions.json",
+     "note": "OpenAI Decisions API (GPT-6 Luna, public beta 2026-10-06), predicate question: the Noul analogue.",
+     "file": "openai-decisions__predicate.json",
      "coverage": null
     },
     {
@@ -481,14 +481,14 @@
      "coverage": null
     },
     {
-     "id": "openai-decisions",
-     "name": "OpenAI Decisions (GPT-6 Luna)",
-     "short": "OpenAI Decisions",
+     "id": "openai-decisions@predicate",
+     "name": "OpenAI Decisions \u00b7 Predicate",
+     "short": "Decisions \u00b7 Predicate",
      "kind": "system1",
-     "color": "var(--v7)",
+     "color": "var(--c-oad)",
      "planned": true,
-     "note": "Decisions API, limited preview. Not yet run.",
-     "file": "openai-decisions.json",
+     "note": "OpenAI Decisions API (GPT-6 Luna, public beta 2026-10-06), predicate question: the Noul analogue.",
+     "file": "openai-decisions__predicate.json",
      "coverage": null
     },
     {
@@ -714,6 +714,39 @@
      "coverage": 1.0
     },
     {
+     "id": "jev@choice",
+     "name": "Jev 1.13 \u00b7 Choice",
+     "short": "Jev \u00b7 Choice",
+     "kind": "system1",
+     "color": "var(--v3)",
+     "planned": false,
+     "note": null,
+     "file": "jev__choice.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "openai-decisions@predicate",
+     "name": "OpenAI Decisions \u00b7 Predicate",
+     "short": "Decisions \u00b7 Predicate",
+     "kind": "system1",
+     "color": "var(--c-oad)",
+     "planned": false,
+     "note": null,
+     "file": "openai-decisions__predicate.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "openai-decisions@choice",
+     "name": "OpenAI Decisions \u00b7 Choice",
+     "short": "Decisions \u00b7 Choice",
+     "kind": "system1",
+     "color": "var(--c-oad-2)",
+     "planned": false,
+     "note": null,
+     "file": "openai-decisions__choice.json",
+     "coverage": 1.0
+    },
+    {
      "id": "claude-sonnet-5",
      "name": "Claude Sonnet 5",
      "short": "Sonnet 5",
@@ -766,7 +799,8 @@
      "planned": false,
      "note": null,
      "file": "tar__cal.json",
-     "coverage": 1.0
+     "coverage": 1.0,
+     "meta": "tar__cal.meta.json"
     }
    ],
    "default": {
@@ -976,7 +1010,8 @@
      "planned": false,
      "note": null,
      "file": "tar__cal.json",
-     "coverage": 0.289
+     "coverage": 0.298,
+     "meta": "tar__cal.meta.json"
     }
    ],
    "default": {
@@ -1128,6 +1163,39 @@
      "planned": false,
      "note": null,
      "file": "jev__base.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "jev@choice",
+     "name": "Jev 1.13 \u00b7 Choice",
+     "short": "Jev \u00b7 Choice",
+     "kind": "system1",
+     "color": "var(--v3)",
+     "planned": false,
+     "note": null,
+     "file": "jev__choice.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "openai-decisions@predicate",
+     "name": "OpenAI Decisions \u00b7 Predicate",
+     "short": "Decisions \u00b7 Predicate",
+     "kind": "system1",
+     "color": "var(--c-oad)",
+     "planned": false,
+     "note": null,
+     "file": "openai-decisions__predicate.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "openai-decisions@choice",
+     "name": "OpenAI Decisions \u00b7 Choice",
+     "short": "Decisions \u00b7 Choice",
+     "kind": "system1",
+     "color": "var(--c-oad-2)",
+     "planned": false,
+     "note": null,
+     "file": "openai-decisions__choice.json",
      "coverage": 1.0
     },
     {
@@ -1329,6 +1397,28 @@
      "coverage": 1.0
     },
     {
+     "id": "openai-decisions@predicate",
+     "name": "OpenAI Decisions \u00b7 Predicate",
+     "short": "Decisions \u00b7 Predicate",
+     "kind": "system1",
+     "color": "var(--c-oad)",
+     "planned": false,
+     "note": null,
+     "file": "openai-decisions__predicate.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "openai-decisions@choice",
+     "name": "OpenAI Decisions \u00b7 Choice",
+     "short": "Decisions \u00b7 Choice",
+     "kind": "system1",
+     "color": "var(--c-oad-2)",
+     "planned": false,
+     "note": null,
+     "file": "openai-decisions__choice.json",
+     "coverage": 1.0
+    },
+    {
      "id": "gpt-5.6-luna",
      "name": "GPT-5.6 Luna",
      "short": "GPT-5.6 Luna",
@@ -1514,6 +1604,39 @@
      "planned": false,
      "note": null,
      "file": "jev__base.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "jev@choice",
+     "name": "Jev 1.13 \u00b7 Choice",
+     "short": "Jev \u00b7 Choice",
+     "kind": "system1",
+     "color": "var(--v3)",
+     "planned": false,
+     "note": null,
+     "file": "jev__choice.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "openai-decisions@predicate",
+     "name": "OpenAI Decisions \u00b7 Predicate",
+     "short": "Decisions \u00b7 Predicate",
+     "kind": "system1",
+     "color": "var(--c-oad)",
+     "planned": false,
+     "note": null,
+     "file": "openai-decisions__predicate.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "openai-decisions@choice",
+     "name": "OpenAI Decisions \u00b7 Choice",
+     "short": "Decisions \u00b7 Choice",
+     "kind": "system1",
+     "color": "var(--c-oad-2)",
+     "planned": false,
+     "note": null,
+     "file": "openai-decisions__choice.json",
      "coverage": 1.0
     },
     {
@@ -1748,6 +1871,39 @@
      "planned": false,
      "note": null,
      "file": "jev__base.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "jev@choice",
+     "name": "Jev 1.13 \u00b7 Choice",
+     "short": "Jev \u00b7 Choice",
+     "kind": "system1",
+     "color": "var(--v3)",
+     "planned": false,
+     "note": null,
+     "file": "jev__choice.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "openai-decisions@predicate",
+     "name": "OpenAI Decisions \u00b7 Predicate",
+     "short": "Decisions \u00b7 Predicate",
+     "kind": "system1",
+     "color": "var(--c-oad)",
+     "planned": false,
+     "note": null,
+     "file": "openai-decisions__predicate.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "openai-decisions@choice",
+     "name": "OpenAI Decisions \u00b7 Choice",
+     "short": "Decisions \u00b7 Choice",
+     "kind": "system1",
+     "color": "var(--c-oad-2)",
+     "planned": false,
+     "note": null,
+     "file": "openai-decisions__choice.json",
      "coverage": 1.0
     },
     {

@@ -15,7 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
-Provider = Literal["typesafe", "laya", "ollama", "lexical", "anthropic", "openai", "gemini", "mock"]
+Provider = Literal["typesafe", "laya", "ollama", "lexical", "anthropic", "openai", "openai_decisions", "gemini", "mock"]
 
 
 @dataclass(frozen=True)
@@ -54,6 +54,15 @@ MODELS: dict[str, ModelSpec] = {
         input_per_mtok=0.042,
         output_per_mtok=0.0,
         notes="Alias; moves when TypeSafe ships a new release. Response `model` field is logged.",
+    ),
+    # ---- OpenAI Decisions API (GPT-6 Luna; public beta 2026-10-06) ----
+    "openai-decisions": ModelSpec(
+        key="openai-decisions",
+        provider="openai_decisions",
+        model_id="gpt-6-luna",
+        input_per_mtok=0.10,  # /v1/decisions pricing page 2026-10-07: input only, no output/cache charges
+        output_per_mtok=0.0,
+        notes="Decisions API (public beta 2026-10-06). System One-style: predicate/choice/score over fixed options with probabilities. $0.10/M input, output free. Variants: @choice (default), @predicate.",
     ),
     # ---- ConvAI Laya (local System 1; same Noul/Choice/Score surface as Jev) ----
     "laya": ModelSpec(
@@ -279,6 +288,7 @@ ENV_KEYS: dict[Provider, str] = {
     "lexical": "",
     "anthropic": "ANTHROPIC_API_KEY",
     "openai": "OPENAI_API_KEY",
+    "openai_decisions": "OPENAI_API_KEY",
     "gemini": "GEMINI_API_KEY",
     "mock": "",
 }

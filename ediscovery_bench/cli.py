@@ -50,6 +50,8 @@ def _expand_models(keys: list[str] | None) -> list[str]:
                 out += [f"laya@{v}" for v in LAYA_VARIANTS]
             elif part == "floors":
                 out += ["lexical", "laya@base", "laya-typed@base", "gemma3-12b"]
+            elif part == "openai-decisions":
+                out += ["openai-decisions@choice", "openai-decisions@predicate"]
             elif part:
                 parse_model_key(part)  # validates
                 out.append(part)
@@ -286,6 +288,97 @@ def trec_build(
     build_eval(out_dir / "eval.jsonl", exclude=dev | seen)
     if full:
         build_full(out_dir / "full.jsonl", exclude=dev | seen)
+
+
+@app.command("legal-build")
+def legal_build(
+    which: str = typer.Option("all", "--which", "-w", help="legal10 | learn | legal09 | all"),
+    msg: bool = typer.Option(False, "--msg", help="Also build the message-unit files (default is the document unit)"),
+):
+    """Build the TREC Legal 2009/2010 corpora from the NIST qrels and the EDRM v2 text rendering (EDRM/)."""
+    from .legal.build import EDRM_TAR, build_legal09_ids, build_legal10, build_legal10_learn
+
+    log = console.print
+    if which in ("legal09", "all"):
+        build_legal09_ids(unit="doc", log=log)
+        if msg:
+            build_legal09_ids(unit="msg", log=log)
+    if which in ("legal10", "learn", "all") and not EDRM_TAR.exists():
+        raise typer.BadParameter(f"{EDRM_TAR} not found; download edrmv2txt-v2.tar.bz2 from trec-legal.umiacs.umd.edu/corpora/trec/legal10/")
+    if which in ("legal10", "all"):
+        build_legal10(unit="doc", log=log)
+        if msg:
+            build_legal10(unit="msg", log=log)
+    if which in ("learn", "all"):
+        build_legal10_learn(log=log)
+
+
+# ---- training-data contamination probe (design/06_contamination_probe.md) ----------------------
+
+CONTAM_ROSTER = ["claude-haiku-4.5", "gpt-5.6-luna", "gemini-3.5-flash-lite", "claude-sonnet-5", "gpt-5.6-terra", "gemini-3.8-flash"]
+
+
+@app.command("contam-build")
+def contam_build(
+    n_verbatim: int = typer.Option(60, "--n-verbatim", help="Documents per corpus for the verbatim-continuation probe"),
+    seed: int = typer.Option(7, "--seed"),
+):
+    """Build data/contam/probes.jsonl: verbatim, entity, benchmark-knowledge and label-recall items for every corpus."""
+    from .contam.build import build
+
+    build(n_verbatim=n_verbatim, seed=seed, log=console.print)
+
+
+@app.command("contam-run")
+def contam_run(
+    model: Optional[list[str]] = typer.Option(None, "--model", "-m", help="Model keys (default: the six small/mid roster LLMs)"),
+    probe: Optional[list[str]] = typer.Option(None, "--probe", "-p", help="verbatim | entity_recall | entity_recog | bench_knowledge | label_recall"),
+    corpus: Optional[list[str]] = typer.Option(None, "--corpus", "-c", help="enron | jebbush | mnk | veridian | cuad"),
+    limit: Optional[int] = typer.Option(None, "--limit", "-n", help="Pilot: at most N items per (probe, corpus)"),
+    concurrency: int = typer.Option(8, "--concurrency"),
+    yes: bool = typer.Option(False, "--yes", "-y"),
+):
+    """Run the contamination probe items against the LLMs (resumable; results/contam/<model>.jsonl)."""
+    from .contam.run import load_items, run_models
+
+    keys = _expand_models(model) if model else list(CONTAM_ROSTER)
+    items = load_items(probes=probe, corpora=corpus, limit=limit)
+    in_tok = sum(len(i["system"]) + len(i["user"]) for i in items) / 4
+    console.print(f"{len(items)} items x {len(keys)} models; ~{in_tok/1e3:.0f}k input tokens per model")
+    for k in keys:
+        s = MODELS[k]
+        if not os.environ.get(ENV_KEYS[s.provider]):
+            raise typer.BadParameter(f"{k}: {ENV_KEYS[s.provider]} not set")
+        console.print(f"  {k:24s} ~${s.cost_usd(int(in_tok), int(len(items) * 60)):.2f}")
+    if not yes and not typer.confirm("Proceed?"):
+        raise typer.Abort()
+    res = asyncio.run(run_models(keys, items, concurrency=concurrency, log=console.print))
+    for r in res:
+        console.print(r)
+
+
+@app.command("contam-report")
+def contam_report(
+    model: Optional[list[str]] = typer.Option(None, "--model", "-m"),
+):
+    """Score results/contam/*.jsonl -> results/contam/summary.json and REPORT.md."""
+    from .contam.run import RESULTS_DIR
+    from .contam.score import score_all
+
+    keys = _expand_models(model) if model else [p.stem for p in sorted(RESULTS_DIR.glob("*.jsonl")) if p.stem in MODELS]
+    score_all(keys, log=console.print)
+    console.print((RESULTS_DIR / "REPORT.md").read_text())
+
+
+@app.command("contam-html")
+def contam_html():
+    """Render results/contam/summary.json as a self-contained HTML report (methodology, charts, tables)."""
+    from .contam.html import build_html
+    from .contam.run import RESULTS_DIR
+
+    summary = json.loads((RESULTS_DIR / "summary.json").read_text())
+    out = build_html(summary)
+    console.print(f"wrote {out}")
 
 
 @app.command()
@@ -658,3 +751,345 @@ def export_tar_grid_cmd(
 
 if __name__ == "__main__":
     app()
+
+
+@app.command("contam-paper")
+def contam_paper():
+    """Render results/contam/summary.json as an arXiv-style paper (paper.html) and a short plain-language explainer (explainer.html)."""
+    from .contam.brief import build_lawyer_guide, build_short_report
+    from .contam.paper import build_explainer, build_paper
+    from .contam.run import RESULTS_DIR
+    from .contam.split import build_case_report, build_documents_report
+    from .contam.story import build_story
+
+    summary = json.loads((RESULTS_DIR / "summary.json").read_text())
+    for fn in (build_paper, build_explainer, build_short_report, build_lawyer_guide, build_documents_report, build_case_report, build_story):
+        console.print(f"wrote {fn(summary)}")
+
+
+@app.command("contam-review")
+def contam_review():
+    """Side-by-side review page for the finish-the-document probe (results/contam/verbatim_review.html)."""
+    from .contam.review import build_verbatim_review
+
+    console.print(f"wrote {build_verbatim_review()}")
+
+
+# ------------------------------------------------------------------------------------------------ pseudonymisation ablation
+
+
+@app.command("ablation-build")
+def ablation_build(veridian_only: bool = typer.Option(False, "--veridian-only", help="regenerate only veridian__renamed.jsonl from the existing sample (renamer fix)")):
+    """Sample the ablation arms and write their pseudonymised twins to data/ablation/ (no API calls)."""
+    from .ablation.build import build, rebuild_veridian_renamed
+
+    if veridian_only:
+        rebuild_veridian_renamed(log=console.print)
+    else:
+        build(log=console.print)
+
+
+@app.command("ablation-leak")
+def ablation_leak(
+    model: list[str] = typer.Option(None, "--model", "-m", help="default: gpt-5.6-luna, gpt-5.6-terra, gpt-5.6-sol"),
+    n: int = typer.Option(200, "--n"),
+):
+    """Residual-leakage check: show renamed Enron documents to each model and ask which real company they come from."""
+    from .ablation.run import LLM_MODELS, leak_check
+
+    asyncio.run(leak_check(model or LLM_MODELS, n=n, log=console.print))
+
+
+@app.command("ablation-run")
+def ablation_run(
+    model: list[str] = typer.Option(None, "--model", "-m", help="default: gpt-5.6-luna, gpt-5.6-terra, gpt-5.6-sol, jev@base"),
+    arm: list[str] = typer.Option(None, "--arm", help="enron_j | enron_k | veridian | mnk (default all)"),
+    condition: list[str] = typer.Option(None, "--condition", help="named | renamed (default both)"),
+    pilot: bool = typer.Option(False, "--pilot", help="50 docs on one topic per Enron arm / first 50 docs elsewhere"),
+    topic: list[str] = typer.Option(None, "--topic", help="restrict Enron arms to these topic keys"),
+    concurrency: int = typer.Option(None, "--concurrency"),
+    project: bool = typer.Option(False, "--project", help="after running, print the projected full-run list cost"),
+):
+    """Run the paired named/renamed conditions through the benchmark runner (resumable). Models whose API key is not
+    set (e.g. jev@base without TYPESAFE_API_KEY) are skipped and reported as pending."""
+    from .ablation.build import ARMS
+    from .ablation.run import ALL_MODELS, CONDITIONS, projection, run
+
+    res = asyncio.run(run(model or ALL_MODELS, arm or list(ARMS), condition or CONDITIONS, pilot=pilot, topics=topic or None,
+                          concurrency=concurrency, log=console.print))
+    console.print(json.dumps(res, indent=1))
+    if project:
+        projection(log=console.print)
+
+
+@app.command("ablation-report")
+def ablation_report():
+    """Score the ablation (results/ablation/summary.json, REPORT.md) and render results/ablation/ablation_report.html."""
+    from .ablation.report import build_report
+    from .ablation.score import score_all
+
+    summary = score_all(log=console.print)
+    console.print(f"wrote {build_report(summary)}")
+
+
+# ------------------------------------------------------------------------------------------------ pseudonymisation ablation, round 2 (CUAD, Jeb Bush)
+
+
+@app.command("ablation2-build")
+def ablation2_build(cost: bool = typer.Option(True, "--cost/--no-cost", help="print the exact cost table after building")):
+    """Round 2: sample CUAD (1,200 excerpts) and the Jeb Bush e-mails, write renamed twins, mappings and task yaml to data/ablation/ (no API calls)."""
+    from .ablation.round2 import build, cost_table
+
+    build(log=console.print)
+    if cost:
+        console.print(json.dumps(cost_table(log=console.print), indent=1))
+
+
+@app.command("ablation2-paraphrase")
+def ablation2_paraphrase(
+    arm: list[str] = typer.Option(None, "--arm", help="cuad | veridian (default both)"),
+    limit: int = typer.Option(None, "--limit", help="pilot: only the first N documents (arm file not written)"),
+    judge: bool = typer.Option(True, "--judge/--no-judge", help="after paraphrasing, run the Terra fidelity judge on a sample"),
+):
+    """Paraphrase the CUAD excerpts and the Veridian control with GPT-5.6 Luna (resumable; deterministic checks; Terra fidelity judge)."""
+    from .ablation.round2 import fidelity, paraphrase
+
+    console.print(json.dumps(asyncio.run(paraphrase(tuple(arm) if arm else ("cuad", "veridian"), limit=limit, log=console.print)), indent=1))
+    if judge and not limit:
+        console.print(json.dumps(asyncio.run(fidelity(log=console.print)), indent=1))
+
+
+@app.command("ablation2-memo")
+def ablation2_memo(
+    per_contract: int = typer.Option(2, "--per-contract"),
+    limit_contracts: int = typer.Option(None, "--limit-contracts", help="pilot: first N contracts"),
+):
+    """Finish-the-document probe on every CUAD contract × {original, renamed, paraphrased} × Luna/Terra/Sol → per-contract memorisation dose."""
+    from .ablation.round2 import memo
+
+    console.print(json.dumps(asyncio.run(memo(per_contract=per_contract, limit_contracts=limit_contracts, log=console.print))["by_model_variant"], indent=1))
+
+
+@app.command("ablation2-run")
+def ablation2_run(
+    model: list[str] = typer.Option(None, "--model", "-m", help="default: gpt-5.6-luna, gpt-5.6-terra, gpt-5.6-sol, jev@base"),
+    arm: list[str] = typer.Option(None, "--arm", help="cuad | veridian | jeb (default all)"),
+    condition: list[str] = typer.Option(None, "--condition", help="named | renamed | paraphrased (default: the arm's conditions)"),
+    limit: int = typer.Option(None, "--limit", help="smoke test: first N documents, written under a __pilotN tag"),
+    concurrency: int = typer.Option(None, "--concurrency"),
+):
+    """Run the round-2 conditions through the benchmark runner (resumable; stops if realised cost tracks > 25 % over the estimate)."""
+    from .ablation.round2 import ARMS2, run
+    from .ablation.run import ALL_MODELS
+
+    res = asyncio.run(run(model or ALL_MODELS, arm or list(ARMS2), condition or None, limit=limit, concurrency=concurrency, log=console.print))
+    console.print(json.dumps(res, indent=1))
+
+
+@app.command("ablation2-leak")
+def ablation2_leak(
+    model: list[str] = typer.Option(None, "--model", "-m", help="default: gpt-5.6-luna, gpt-5.6-terra, gpt-5.6-sol"),
+    n_jeb: int = typer.Option(150, "--n-jeb"),
+):
+    """Identification check on renamed documents: whose e-mail collection (Jeb) / which real parties (CUAD, one excerpt per contract)."""
+    from .ablation.round2 import leak
+    from .ablation.run import LLM_MODELS
+
+    console.print(json.dumps(asyncio.run(leak(model or LLM_MODELS, n_jeb=n_jeb, log=console.print)), indent=1))
+
+
+@app.command("ablation2-report")
+def ablation2_report(figures: bool = typer.Option(True, "--figures/--no-figures", help="render the two PNG dot plots via headless Chrome")):
+    """Score round 2 (results/ablation/round2/summary.json, REPORT.md) and render the knowledge-effect figures."""
+    from .ablation.round2_score import score_all, write_report
+
+    summary = score_all(log=console.print)
+    for p in write_report(summary, figures=figures, log=console.print):
+        console.print(f"wrote {p}")
+
+
+# ------------------------------------------------------------------------------------------------ classifier-native contamination tests (Jev)
+
+jev_probe_app = typer.Typer(no_args_is_help=True, help="Classifier-native contamination tests on Jev (design/06_contamination_probe.md): T1 code-name swap, "
+                                                        "T2 minimal-edit label flip, T3 paraphrase sensitivity, T4 published vs unpublished labels, bare-token check.")
+app.add_typer(jev_probe_app, name="jev-probe")
+
+
+@jev_probe_app.command("build")
+def jev_probe_build(
+    no_llm: bool = typer.Option(False, "--no-llm", help="Skip the Luna edit / paraphrase generation (deterministic data only)"),
+    scan_edrm: bool = typer.Option(True, "--scan-edrm/--no-scan-edrm", help="Stream EDRM/edrmv2txt-v2.tar.bz2 once for unjudged Enron documents (T4; slow)"),
+):
+    """Build data/jev_probe/: T1 templated documents, bare-token documents, T2/T3/T4 samples; then Luna edits and paraphrases (resumable, ledgered)."""
+    from .jevprobe.build import build, build_t4
+    from .jevprobe.edit import make_edits, make_paraphrases
+    from .jevprobe.pool import POOL, scan
+
+    build(log=console.print, skip_t4=True)
+    if scan_edrm and not POOL.exists():
+        scan(log=console.print)
+    build_t4(log=console.print)
+    if not no_llm:
+        async def gen():
+            for c in ("enron", "jebbush", "veridian"):
+                console.print(await make_edits(c, log=console.print))
+            for c in ("enron", "endo", "veridian"):
+                console.print(await make_paraphrases(c, log=console.print))
+        asyncio.run(gen())
+
+
+@jev_probe_app.command("run")
+def jev_probe_run(
+    test: list[str] = typer.Option(["t1", "bt", "t2", "t3", "t4"], "--test", "-t", help="t1 | bt | t2 | t3 | t4"),
+    model: Optional[list[str]] = typer.Option(None, "--model", "-m", help="default: jev@base, gpt-5.6-luna, gpt-5.6-terra, gpt-5.6-sol"),
+    cap: float = typer.Option(5.0, "--cap", help="OpenAI spend cap for T1 + T2 (predictions + edit generation), USD"),
+    cap_other: float = typer.Option(3.0, "--cap-other", help="OpenAI spend cap for T3 paraphrases + T4 panel, USD"),
+    concurrency: Optional[int] = typer.Option(None, "--concurrency", "-c"),
+):
+    """Run the tests on Jev and (under the cap, in priority order) the GPT-5.6 models. Resumable."""
+    from .jevprobe.run import run
+
+    console.print(json.dumps(asyncio.run(run(test, model, cap_t12=cap, cap_other=cap_other, concurrency=concurrency, log=console.print))["spend"], indent=1))
+
+
+@jev_probe_app.command("report")
+def jev_probe_report():
+    """Score results/jev_probe/ -> summary.json and REPORT.md."""
+    from .jevprobe.report import build_report
+    from .jevprobe.score import score_all
+
+    build_report(score_all(log=console.print))
+    console.print(f"wrote {Path('results/jev_probe/REPORT.md')}")
+
+
+@app.command("contam-jev")
+def contam_jev(
+    limit: Optional[int] = typer.Option(None, "--limit", "-n", help="run only the first N pending items (smoke test)"),
+    concurrency: int = typer.Option(8, "--concurrency"),
+):
+    """Run the M3 header-only relevance probe on Jev -> results/contam/jev.jsonl (resumable)."""
+    import asyncio
+
+    from .contam.jev_m3 import run_jev_m3
+
+    console.print(asyncio.run(run_jev_m3(limit=limit, concurrency=concurrency, log=console.print)))
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Generalisation checks for the contamination study (ediscovery_bench/verify): A knowledge-dependence tags, B ranking
+# stability, C counterfactual conflict documents, D knowledge injection on Veridian. Results under results/verify/.
+verify_app = typer.Typer(no_args_is_help=True, help="Generalisation checks for the contamination claim (results/verify/): A knowledge-dependence error analysis, "
+                                                   "B ranking stability, C counterfactual conflict documents, D knowledge injection on Veridian.")
+app.add_typer(verify_app, name="verify")
+
+
+@verify_app.command("build")
+def verify_build():
+    """Write the Check C conflict documents (data/verify/c_<matter>.jsonl), the Check D Veridian subset and brief."""
+    from .verify import conflict, inject
+
+    console.print(json.dumps(conflict.build(log=console.print), indent=1))
+    console.print(json.dumps(inject.build_subset(log=console.print), indent=1))
+    console.print(f"brief -> {inject.write_brief()}")
+
+
+@verify_app.command("run")
+def verify_run(
+    check: list[str] = typer.Option(["a", "c", "d"], "--check", "-k", help="a | c | d (B needs no calls)"),
+    model: Optional[list[str]] = typer.Option(None, "--model", "-m", help="default: gpt-5.6-luna, gpt-5.6-terra, gpt-5.6-sol, jev@base"),
+    cap: float = typer.Option(15.0, "--cap", help="total NEW OpenAI spend cap across A + C + D (paid/flex USD)"),
+    limit_a: Optional[int] = typer.Option(None, "--limit-a", help="tag only the first N untagged Enron J documents (smoke test)"),
+    concurrency: Optional[int] = typer.Option(None, "--concurrency", "-c"),
+):
+    """Run the checks that call APIs: Jev first, then the GPT-5.6 models under the cap. Resumable."""
+    from .verify.run import run
+
+    console.print(json.dumps(asyncio.run(run(check, model, cap=cap, concurrency=concurrency, limit_a=limit_a, log=console.print))["spend"], indent=1))
+
+
+@verify_app.command("report")
+def verify_report():
+    """Score A–D -> results/verify/summary.json, REPORT.md and one figure per check."""
+    from .verify.report import build_report
+
+    s = build_report(log=console.print)
+    console.print(json.dumps({k: v["verdict"] for k, v in s["readings"].items()}, indent=1))
+
+
+# ------------------------------------------------------------------------------------------------ Big Thorium (sixth collection)
+
+bt_app = typer.Typer(no_args_is_help=True, help="Big Thorium — Relativity's synthetic aiR demo set as a second floor: extract, sample, rename, run, score, probe.")
+app.add_typer(bt_app, name="bigthorium")
+
+
+@bt_app.command("extract")
+def bigthorium_extract():
+    """Unpacked ARM archive -> data/bigthorium/bigthorium_all.jsonl, air_criteria.json, human_coding.json."""
+    from .bigthorium.extract import build
+
+    console.print(json.dumps(build(log=console.print), indent=1))
+
+
+@bt_app.command("build")
+def bigthorium_build():
+    """Stratified 1,000-document sample, renamer mapping, renamed file and residual audit (data/ablation/bigthorium*.jsonl)."""
+    from .ablation.bigthorium import build_renamed, build_sample, estimate
+
+    build_sample(log=console.print)
+    rep = build_renamed(log=console.print)
+    if any(rep["residuals"][k] for k in ("phrase", "rare_surname", "email_local")):
+        console.print("[red]residual audit is not zero — fix the mapping before any renamed run[/red]")
+    estimate(log=console.print)
+
+
+@bt_app.command("run")
+def bigthorium_run(
+    condition: list[str] = typer.Option(["named"], "--condition", "-k", help="named | renamed | brief (goldify after named, before brief)"),
+    model: Optional[list[str]] = typer.Option(None, "--model", "-m"),
+    limit: Optional[int] = typer.Option(None, "--limit", "-n", help="smoke test on the first N documents"),
+    concurrency: Optional[int] = typer.Option(None, "--concurrency", "-c"),
+):
+    """Classification runs through the ordinary runner (resumable; spend recorded in data/ablation/round2_spend.json)."""
+    from .ablation.bigthorium import run
+
+    console.print(json.dumps(asyncio.run(run(condition, _expand_models(model) if model else None, limit=limit, concurrency=concurrency, log=console.print)), indent=1))
+
+
+@bt_app.command("goldify")
+def bigthorium_goldify():
+    """Panel gold from the three named runs into the sample files; picks the brief subset."""
+    from .ablation.bigthorium import goldify
+
+    goldify(log=console.print)
+
+
+@bt_app.command("score")
+def bigthorium_score():
+    """results/ablation/bigthorium/{summary.json, REPORT.md} and the pr_options figures."""
+    from .ablation.bigthorium import score
+
+    score(log=console.print)
+
+
+@bt_app.command("probe-build")
+def bigthorium_probe_build():
+    """Contamination probe items for Big Thorium -> data/contam/bigthorium_probes.jsonl."""
+    from .contam.bigthorium import build_items
+
+    build_items(log=console.print)
+
+
+@bt_app.command("probe-run")
+def bigthorium_probe_run(model: Optional[list[str]] = typer.Option(None, "--model", "-m"), concurrency: int = typer.Option(8, "--concurrency")):
+    """Run the Big Thorium probe items (resumable; results/contam/<model>.jsonl)."""
+    from .contam.bigthorium import MODELS as BT_MODELS, run
+
+    console.print(json.dumps(asyncio.run(run(_expand_models(model) if model else BT_MODELS, concurrency=concurrency, log=console.print)), indent=1))
+
+
+@bt_app.command("probe-score")
+def bigthorium_probe_score():
+    """Score the Big Thorium probes -> results/contam/bigthorium_summary.json (read by contam-html / contam-paper)."""
+    from .contam.bigthorium import score
+
+    score(log=console.print)

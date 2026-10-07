@@ -108,6 +108,8 @@ const ALL_PRIMARY: { key: string; color: string; short: string; shortInMaker?: s
   { key: "jev@decompose", color: "var(--v1)", short: "Jev · Facets", note: "TypeSafe Jev 1.13, Facets: each issue is asked as the facets (sub-questions) the task file defines for it; each facet is its own Noul and the issue probability is the maximum (logical OR). Strongest Jev row on TREC 2016." },
   { key: "jev@ensemble", color: "var(--v9)", short: "Jev · Three-Phrasing Ensemble", note: "TypeSafe Jev 1.13, Three-Phrasing Ensemble: the same issue is asked three ways (RFP text, literal, title + positive description) and the probabilities are averaged." },
   { key: "jev@gate", color: "var(--v14)", short: "Jev · Relevance Gate", note: "TypeSafe Jev 1.13, Relevance Gate: an extra Noul first asks whether the document has anything to do with the matter; each issue probability is multiplied by that gate. Trades recall for precision." },
+  { key: "openai-decisions@predicate", color: "var(--c-oad)", short: "Decisions · Predicate", shortInMaker: "Decisions · Predicate", note: "OpenAI Decisions API (GPT-6 Luna, POST /v1/decisions, public beta 2026-10-06), predicate question: the Noul analogue. One yes/no predicate per issue whose answer is p(true); the RFP text is the instruction with the positive and negative descriptions appended; the matter background and document go in as one flat text input. Priced on input tokens only. On by default." },
+  { key: "openai-decisions@choice", color: "var(--c-oad-2)", short: "Decisions · Choice", shortInMaker: "Decisions · Choice", note: "OpenAI Decisions API (GPT-6 Luna), choice question: the Choice analogue. The two labels are the options and the descriptions their `description`; the model returns a probability per option and a separate confidence. p(responsive) is the responsive option's probability. On by default." },
   { key: "laya-ft", color: "var(--c-laya-ft)", short: "Laya", kind: "system1", note: "ConvAI Laya, fine-tuned: the one supervised row in this zero-shot comparison. Fine-tuned (RLCD) on a 30% document-level dev split of the same corpus and scored on the held-out 70%; every other row is zero-shot. The labeled data it needed is not counted in the time and cost panels. Zero-shot Laya configurations are on the Configurations page." },
   { key: "claude-haiku-4.5", color: "var(--c-haiku)", short: "Haiku 4.5", note: "Anthropic Claude Haiku 4.5, structured JSON output, default effort." },
   { key: "claude-sonnet-5", color: "var(--c-sonnet)", short: "Sonnet 5", note: "Anthropic Claude Sonnet 5, structured JSON output, default effort. The run used prompt caching on the all-issues arm; cost is reported at standard list price." },
@@ -136,7 +138,7 @@ const tarDisplay = (key: string, rec?: Rec) => {
 const TAR_PRIMARY = Object.fromEntries(DATA.records.filter((r) => r.model.startsWith("tar@")).map((r) => [r.model, tarDisplay(r.model, r)]));
 /** Lookup metadata includes TAR experiment rows for charts/presets, while PRIMARY itself remains the curated general-model roster. */
 export const PRIMARY_BY_KEY = { ...Object.fromEntries(PRIMARY.map((p) => [p.key, p])), ...TAR_PRIMARY };
-export const DEFAULT_ON = new Set(["jev@base", "jev@choice", "jev@score", "laya-ft", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash", "tar@t1_1000_div", "tar@cal"].filter((k) => !isHidden(k)));
+export const DEFAULT_ON = new Set(["jev@base", "jev@choice", "jev@score", "openai-decisions@predicate", "openai-decisions@choice", "laya-ft", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash", "tar@t1_1000_div", "tar@cal"].filter((k) => !isHidden(k)));
 /** Compare-models rows for a corpus, in roster order. Membership is the roster, not the export's `primary` flag: Choice, Score and the other listed Jev configurations are on the picker even though the export only flags some of them as primary. */
 export const rosterOf = (rows: Rec[]) => PRIMARY.map((p) => rows.find((r) => r.model === p.key)).filter((r): r is Rec => !!r);
 
@@ -187,11 +189,13 @@ export const paidPerDoc = (r: Rec): { usd: number; mode: string } | null => {
 export const ABLATION_GROUPS: { id: string; label: string; recipe: string; note: string }[] = [
   { id: "jev", label: "Jev 1.13", recipe: "state_string", note: "Twelve configurations of TypeSafe Jev. Each variant changes a single lever from the default. ★ marks the configuration selected on the Veridian dev split." },
   { id: "laya", label: "Laya", recipe: "recipe", note: "ConvAI Laya, English checkpoint, zero-shot. Two levers (Compact Question, Chunked Document) exist only to fit its 512-token context; ★ marks the configuration that combines them (Compact + Chunked), selected on the Veridian dev split." },
+  // No ★: the API offers two question forms and neither was selected on a dev split; both are Compare models rows.
+  { id: "openai-decisions", label: "OpenAI Decisions", recipe: "", note: "OpenAI's Decisions API (GPT-6 Luna, public beta October 2026), zero-shot. Its two question forms map onto Jev's Noul and Choice; the request text is otherwise identical." },
   // The typed and multilingual Laya checkpoints (groups laya-typed, laya-multilingual) stay in findings.json but are not offered: only the English family, whose request the charted fine-tune uses, is shown.
 ];
-export const VARIANT_ORDER = ["base", "choice", "score", "crit_none", "crit_struct", "literal", "no_context", "state_string", "gate", "ensemble", "decompose", "preview", "compact", "chunk", "recipe", "recipe_choice"];
+export const VARIANT_ORDER = ["base", "choice", "score", "crit_none", "crit_struct", "literal", "no_context", "state_string", "gate", "ensemble", "decompose", "preview", "compact", "chunk", "recipe", "recipe_choice", "predicate"];
 export const VARIANT_LABEL: Record<string, string> = {
-  base: "Noul Question", choice: "Choice Question", score: "Five-Point Score", crit_none: "No Criteria", crit_struct: "Structured Criteria", literal: "Plain-Language Phrasing",
+  base: "Noul Question", predicate: "Predicate Question", choice: "Choice Question", score: "Five-Point Score", crit_none: "No Criteria", crit_struct: "Structured Criteria", literal: "Plain-Language Phrasing",
   no_context: "No Matter Context", state_string: "Flat-Text State", gate: "Relevance Gate", ensemble: "Three-Phrasing Ensemble", decompose: "Facets",
   preview: "Jev Preview Model", compact: "Compact Question", chunk: "Chunked Document", recipe: "Compact + Chunked", recipe_choice: "Compact + Chunked, Choice",
 };
@@ -215,6 +219,9 @@ export const VARIANT_DEFINITION: Record<string, string> = {
   "jev@ensemble": "three phrasings of the same question (RFP text, literal, title + positive description) are asked as three Nouls and their probabilities averaged",
   "jev@decompose": "each issue is asked as the facets (sub-questions) the task file defines for it; each facet is its own Noul and the issue probability is the maximum across them (logical OR)",
   "jev@preview": "the request is identical to the Noul Question configuration but is sent to the jev-preview model instead of jev-1.13.0",
+  // OpenAI Decisions API (GPT-6 Luna): the two question forms that map onto Jev's Noul and Choice
+  "openai-decisions@predicate": "one `predicate` question per issue is sent to POST /v1/decisions; the RFP text is the instruction with the positive and negative descriptions appended, the matter background and document are one flat text input, and the answer's p(true) is scored as p(responsive)",
+  "openai-decisions@choice": "the same request is asked as a `choice` between the two labels, each with its description as the option's description; the model returns a probability per option and a separate confidence, and p(responsive) is the responsive option's probability",
   // Laya, zero-shot (also the typed and multilingual checkpoints)
   "laya@base": "the same request as Jev's default, run through the local Laya encoder, which packs the question head into at most 192 tokens and the whole input into 512, so the instruction and criteria are truncated and most documents are cut from the right",
   "laya@choice": "the question is asked as a Choice over the two labels instead of a Noul",

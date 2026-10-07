@@ -53,6 +53,8 @@ CORPORA = [
 MODELS: dict[str, dict] = {
     "jev@base":             dict(name="Jev 1.13", family="Jev", kind="system1"),
     "jev@state_string":     dict(name="Jev 1.13 (recipe)", family="Jev", kind="system1"),
+    "openai-decisions@predicate": dict(name="OpenAI Decisions · Predicate", family="OpenAI Decisions", kind="system1"),
+    "openai-decisions@choice":    dict(name="OpenAI Decisions · Choice", family="OpenAI Decisions", kind="system1"),
     "laya@base":            dict(name="Laya", family="Laya", kind="system1"),
     "laya@recipe":          dict(name="Laya (recipe)", family="Laya", kind="system1"),
     "laya-ft":              dict(name="Laya fine-tuned", family="Laya", kind="system1_ft"),
@@ -118,12 +120,20 @@ TAR_LEVERS = {
     "cal_knee": "TAR 2.0, imperfect reviewer, knee-method stop (Cormack & Grossman 2016) instead of the control-set recall target; no control set",
 }
 LAYA_CHECKPOINTS = {"laya": "English checkpoint", "laya-typed": "Typed checkpoint", "laya-multilingual": "Multilingual checkpoint"}
+# OpenAI Decisions API (GPT-6 Luna, POST /v1/decisions): the two question forms that map onto Jev's Noul and Choice. The
+# API takes a flat text `input`, so matter context + document are sent as Jev's flat-text state; the RFP text is the instruction.
+OPENAI_DECISIONS_LEVERS = {
+    "predicate": "Question form: `predicate` (Jev Noul analogue): p(true) is scored as p(responsive); the positive/negative descriptions are appended to the instruction",
+    "choice": "Question form: `choice` over the two labels (Jev Choice analogue): the labels are the options, the descriptions their `description`; p(responsive) is the option's probability",
+}
 
 
 def _variant_models() -> dict[str, dict]:
     out: dict[str, dict] = {}
     for v, desc in JEV_LEVERS.items():
         out[f"jev@{v}"] = dict(name=f"Jev · {v}", family="Jev", kind="system1", group="jev", variant=v, lever=desc)
+    for v, desc in OPENAI_DECISIONS_LEVERS.items():
+        out[f"openai-decisions@{v}"] = dict(name=f"OpenAI Decisions · {v}", family="OpenAI Decisions", kind="system1", group="openai-decisions", variant=v, lever=desc)
     for ck, ckname in LAYA_CHECKPOINTS.items():
         for v, desc in LAYA_LEVERS.items():
             out[f"{ck}@{v}"] = dict(name=f"Laya {ckname.split()[0].lower()} · {v}" if ck != "laya" else f"Laya · {v}",

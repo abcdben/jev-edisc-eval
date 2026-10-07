@@ -73,8 +73,8 @@ TREC_NO = {"bottled_water": "403", "eminent_domain": "404", "faith_based": "407"
 # A run counts as covering a dataset when it scores at least this share of the rows; the rest show as unscored (the TAR
 # simulations score only the documents the simulated reviewer did not read).
 MIN_COVERAGE = 0.2
-MEASURED_ARMS = ["jev@base", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.8-flash", "tar@cal"]
-PLACEHOLDER_ARMS = ["jev@base", "openai-decisions", "claude-sonnet-5", "gpt-5.6-luna", "gemini-3.8-flash", "tar@cal"]
+MEASURED_ARMS = ["jev@base", "jev@choice", "openai-decisions@predicate", "openai-decisions@choice", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.8-flash", "tar@cal"]
+PLACEHOLDER_ARMS = ["jev@base", "openai-decisions@predicate", "claude-sonnet-5", "gpt-5.6-luna", "gemini-3.8-flash", "tar@cal"]
 
 DATASETS: list[dict[str, Any]] = [
     dict(id="legal10", kind="judgments", label="TREC Legal 2010 · Interactive", short="Enron emails (EDRM v2) · first-pass review + Topic Authority appeals",
@@ -113,7 +113,7 @@ DATASETS: list[dict[str, Any]] = [
 ARM_BY_ID = {a["id"]: a for a in ARMS}
 # Placeholder shape: (exponent on responsive rows, exponent on not-responsive rows). With p = 1 - 0.98 u^k on responsive rows and
 # p = 0.98 u^k on the rest, the miss rate is 1 - 0.51^(1/k): the pairs below give roughly 15–30% misses and 4–13% false alarms.
-PLACEHOLDER_K = {"jev@base": (4.0, 18.0), "openai-decisions": (3.5, 15.0), "claude-sonnet-5": (3.0, 12.0), "gpt-5.6-luna": (2.8, 11.0), "gemini-3.8-flash": (2.2, 8.0), "tar@cal": (1.8, 5.0)}
+PLACEHOLDER_K = {"jev@base": (4.0, 18.0), "openai-decisions@predicate": (3.5, 15.0), "claude-sonnet-5": (3.0, 12.0), "gpt-5.6-luna": (2.8, 11.0), "gemini-3.8-flash": (2.2, 8.0), "tar@cal": (1.8, 5.0)}
 
 
 def _iter_jsonl(path: Path) -> Iterator[dict[str, Any]]:

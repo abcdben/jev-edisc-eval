@@ -44,6 +44,8 @@
   --c-flashlite: #d3ae2e;
   --c-flash: #9d7c10;
   --c-gemma: #7d9240;
+  --c-oad: #0b7fa6;
+  --c-oad-2: #4fb0d2;
   --c-lexical: #9a9b95;
   --c-tar-1: #c4a7d6; --c-tar-2: #a583bf; --c-tar-3: #7f5aa3; --c-tar-4: #5a3a7e; --c-cal: #3d5a80;
   --c-base: #1b1c1a;
@@ -88,6 +90,8 @@
   --c-flashlite: #ead45c;
   --c-flash: #c9ab2a;
   --c-gemma: #a9c060;
+  --c-oad: #3fb8df;
+  --c-oad-2: #8dd3ee;
   --c-lexical: #8f938e;
   --c-tar-1: #d7c4e6; --c-tar-2: #bfa1d8; --c-tar-3: #a380c8; --c-tar-4: #8560b0; --c-cal: #7fa2cc;
   --c-base: #e9eae6;
@@ -819,7 +823,7 @@ label.studio-btn { display: inline-block; }
 
 /* Studio plot style presets (StudioPage.tsx STYLES → data-style on .studio-plot). Each preset redefines, inside the panel only, the surface
    and ink variables, the grid, the box fill/outline alphas, the face (svg text and .legend-note read --sans) and the model palette
-   (data.ts ALL_PRIMARY colours: --c-jev, --v3, --v5 the three default Jev rows; --v1/--v9/--v14 the other Jev rows; --c-laya-ft; the LLM --c-*).
+   (data.ts ALL_PRIMARY colours: --c-jev, --v3, --v5 the three default Jev rows; --v1/--v9/--v14 the other Jev rows; --c-oad/--c-oad-2 the OpenAI Decisions rows; --c-laya-ft; the LLM --c-*).
    Every preset but `site` sets all of them, so the page's Dark/Light theme never leaks into the panel. */
 .studio-plot { font-family: var(--sans); color: var(--ink); }
 /* Key → by family (StudioPage.tsx, makers.ts familyOf): the Jev basic forms draw in --fam-basic, the composed variants in --fam-composed. Their defaults
@@ -835,7 +839,7 @@ label.studio-btn { display: inline-block; }
   --line: #d0d0d0; --line-2: #9a9a9a; --grid: transparent; --dots: transparent; --axis: #000000;
   --box-alpha: 0.07; --box-stroke: 0.9; --hl: #f4f4f4;
   --c-jev: #0072b2; --v3: #56b4e9; --v5: #cc79a7; --v1: #8c510a; --v9: #762a83; --v14: #1b7837; --c-laya-ft: #5e3c99;
-  --c-haiku: #e69f00; --c-sonnet: #d55e00; --c-luna: #009e73; --c-terra: #000000; --c-flashlite: #c8b400; --c-flash: #999999; --c-gemma: #4d4d4d;
+  --c-haiku: #e69f00; --c-sonnet: #d55e00; --c-luna: #009e73; --c-terra: #000000; --c-flashlite: #c8b400; --c-flash: #999999; --c-gemma: #4d4d4d; --c-oad: #004c7f; --c-oad-2: #7fc4e8;
   border-radius: 0;
 }
 .studio-plot[data-style="journal"].framed { border-color: #000000; }
@@ -853,7 +857,7 @@ label.studio-btn { display: inline-block; }
   --line: #d9d9d9; --line-2: #9a9a9a; --grid: #e6e6e6; --grid-x: #e6e6e6; --dots: transparent; --axis: #000000; --axis-y: #000000;
   --box-alpha: 0; --box-stroke: 0.9; --box-stroke-w: 0.75; --bar-alpha: 0.85; --op-whisker: 1; --hl: #f2f2f2;
   --c-jev: #000000; --v3: #000000; --v5: #000000; --v1: #000000; --v9: #000000; --v14: #000000; --c-laya-ft: #333333;
-  --c-haiku: #444444; --c-sonnet: #444444; --c-luna: #000000; --c-terra: #000000; --c-flashlite: #555555; --c-flash: #555555; --c-gemma: #777777;
+  --c-haiku: #444444; --c-sonnet: #444444; --c-luna: #000000; --c-terra: #000000; --c-flashlite: #555555; --c-flash: #555555; --c-gemma: #777777; --c-oad: #000000; --c-oad-2: #222222;
   --c-tar-1: #666666; --c-tar-2: #666666; --c-tar-3: #666666; --c-tar-4: #666666; --c-cal: #666666;
   --fam-basic: #000000; --fam-composed: #333333; /* Key → by family: the composed variants an open diamond in dark grey beside the basic forms' filled black circle */
   border-radius: 0;
@@ -876,7 +880,7 @@ label.studio-btn { display: inline-block; }
   --line: #e2e2e2; --line-2: #cccccc; --grid: #b8b8b8; --dots: transparent; --axis: #121212;
   --box-alpha: 0.13; --box-stroke: 0; --hl: #f7f7f5;
   --c-jev: #c8553d; --v3: #3d6b9a; --v5: #8b3a62; --v1: #d99a6c; --v9: #7a9a5a; --v14: #305f72; --c-laya-ft: #8f8f8f;
-  --c-haiku: #e3b655; --c-sonnet: #9c6b2e; --c-luna: #5fa8a0; --c-terra: #2e7d74; --c-flashlite: #8a7bb5; --c-flash: #4b7b3f; --c-gemma: #6b6b6b;
+  --c-haiku: #e3b655; --c-sonnet: #9c6b2e; --c-luna: #5fa8a0; --c-terra: #2e7d74; --c-flashlite: #8a7bb5; --c-flash: #4b7b3f; --c-gemma: #6b6b6b; --c-oad: #1d4e89; --c-oad-2: #5a8ac6;
   border-radius: 2px;
 }
 .studio-plot[data-style="newsroom"].framed { border-color: #e2e2e2; }
@@ -889,7 +893,7 @@ label.studio-btn { display: inline-block; }
   --line: #e0dfdc; --line-2: #c9c8c5; --grid: #ebebe9; --dots: #dcdbd8; --axis: #c9c8c5;
   --box-alpha: 0.14; --box-stroke: 0; --hl: #f3f2ef;
   --c-jev: #0a66c2; --v3: #004182; --v5: #70b5f9; --v1: #378fe9; --v9: #915907; --v14: #44712e; --c-laya-ft: #666666;
-  --c-haiku: #e7a33e; --c-sonnet: #b24020; --c-luna: #5f9b41; --c-terra: #057642; --c-flashlite: #f5987e; --c-flash: #8c4a6f; --c-gemma: #8f5849;
+  --c-haiku: #e7a33e; --c-sonnet: #b24020; --c-luna: #5f9b41; --c-terra: #057642; --c-flashlite: #f5987e; --c-flash: #8c4a6f; --c-gemma: #8f5849; --c-oad: #0d7a9c; --c-oad-2: #56b7d1;
   border-radius: 10px;
 }
 .studio-plot[data-style="linkedin"].framed { border-color: #e0dfdc; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.04); }
@@ -901,7 +905,7 @@ label.studio-btn { display: inline-block; }
   --line: #334155; --line-2: #475569; --grid: #2b3849; --dots: #3b4a5f; --axis: #475569;
   --box-alpha: 0.18; --box-stroke: 0; --hl: rgba(56, 189, 248, 0.12);
   --c-jev: #38bdf8; --v3: #0ea5e9; --v5: #7dd3fc; --v1: #0284c7; --v9: #bae6fd; --v14: #22d3ee; --c-laya-ft: #a5b4fc;
-  --c-haiku: #e2e8f0; --c-sonnet: #94a3b8; --c-luna: #cbd5e1; --c-terra: #64748b; --c-flashlite: #b6c2d1; --c-flash: #7c8a9c; --c-gemma: #526270;
+  --c-haiku: #e2e8f0; --c-sonnet: #94a3b8; --c-luna: #cbd5e1; --c-terra: #64748b; --c-flashlite: #b6c2d1; --c-flash: #7c8a9c; --c-gemma: #526270; --c-oad: #fbbf24; --c-oad-2: #fde68a;
   border-radius: 8px;
 }
 .studio-plot[data-style="slate"].framed { border-color: #334155; }
@@ -913,7 +917,7 @@ label.studio-btn { display: inline-block; }
   --line: #d9d9d9; --line-2: #b7b7b7; --grid: #d9d9d9; --dots: transparent; --axis: #0c0c0c;
   --box-alpha: 0.12; --box-stroke: 0; --hl: #f2f5f7;
   --c-jev: #e3120b; --v3: #006ba2; --v5: #9a607f; --v1: #00588d; --v9: #a81829; --v14: #1dc9a4; --c-laya-ft: #6f4e7c;
-  --c-haiku: #ebb434; --c-sonnet: #b4ba39; --c-luna: #3ebcd2; --c-terra: #379a8b; --c-flashlite: #758d99; --c-flash: #d1b07c; --c-gemma: #8e9b3c;
+  --c-haiku: #ebb434; --c-sonnet: #b4ba39; --c-luna: #3ebcd2; --c-terra: #379a8b; --c-flashlite: #758d99; --c-flash: #d1b07c; --c-gemma: #8e9b3c; --c-oad: #f97a1f; --c-oad-2: #ffb37a;
   border-radius: 0;
   padding-top: 20px;
 }
@@ -930,7 +934,7 @@ label.studio-btn { display: inline-block; }
   --line: #e6e6e6; --line-2: #d0d0d0; --grid: #e6e6e6; --grid-x: transparent; --dots: transparent; --axis: #cfcfcf; --axis-y: transparent;
   --box-alpha: 0; --box-stroke: 0; --op-whisker: 0.35; --r-add: 1px; --hl: #f4f4f4;
   --c-jev: #1aa79c; --c-laya-ft: #d63c8a; --v3: #f26b21; --v5: #1f4fd8; --v1: #7b3fe4; --v9: #2e9e44; --v14: #e0a600;
-  --c-haiku: #d62828; --c-sonnet: #4a5568; --c-luna: #3aa0e8; --c-terra: #8c5a2b; --c-flashlite: #ef6f9a; --c-flash: #7f9c1f; --c-gemma: #8a8a8a;
+  --c-haiku: #d62828; --c-sonnet: #4a5568; --c-luna: #3aa0e8; --c-terra: #8c5a2b; --c-flashlite: #ef6f9a; --c-flash: #7f9c1f; --c-gemma: #8a8a8a; --c-oad: #5b2a86; --c-oad-2: #9b6fc4;
   border-radius: 4px;
 }
 .studio-plot[data-style="epoch"].framed { border-color: #e6e6e6; }
@@ -948,7 +952,7 @@ label.studio-btn { display: inline-block; }
   --line: #3a3a3a; --line-2: #4e504f; --grid: #3a3a3a; --dots: transparent; --axis: #4e504f;
   --box-alpha: 0.08; --box-stroke: 0; --bar-alpha: 0.7; --op-whisker: 0.45; --hl: rgba(230, 80, 185, 0.14);
   --c-jev: #e84fb9; --v3: #f48ad4; --v5: #b93b93; --v1: #ffb3e3; --v9: #a33383; --v14: #ee6fc6; --c-laya-ft: #a897dd;
-  --c-haiku: #f5b25a; --c-sonnet: #ec9330; --c-luna: #5fd1c5; --c-terra: #0aad9f; --c-flashlite: #8ab6ff; --c-flash: #4c8dff; --c-gemma: #abbab9;
+  --c-haiku: #f5b25a; --c-sonnet: #ec9330; --c-luna: #5fd1c5; --c-terra: #0aad9f; --c-flashlite: #8ab6ff; --c-flash: #4c8dff; --c-gemma: #abbab9; --c-oad: #19d3c0; --c-oad-2: #a3ece3;
   --fam-composed: #b48cf2; /* Key → by family: the composed Jev variants a lighter, cooler magenta-violet beside the basic forms' magenta */
   border-radius: 8px;
 }

@@ -21,6 +21,9 @@ cp .env.example .env   # fill in keys
 - `ediscovery_bench/providers/` — one adapter per vendor. Every adapter returns
   a label, a probability per label, latency, tokens, and cost.
   - Jev: `Noul` (yes/no probability) or `Choice` per task setting.
+  - OpenAI Decisions API (`openai-decisions@predicate` / `@choice`, GPT-6 Luna on
+    `POST /v1/decisions`): the `predicate` and `choice` question forms, the analogues of
+    Jev's Noul and Choice. Added 2026-10-07 when the API went to public beta.
   - LLMs: structured output constrained to `{label, probabilities}`, the same
     shape TypeSafe's own "System One LLM wrapper" uses in their benchmarks.
 - `ediscovery_bench/metrics.py` — P/R/F1, elusion, κ, ROC/PR AUC, Brier, ECE,
@@ -63,7 +66,7 @@ the same snapshot (that is what the determinism study measures).
   |---|---|
   | `TYPESAFE_API_KEY` | Jev (`ediscovery_bench/providers/typesafe.py`) |
   | `ANTHROPIC_API_KEY` | Claude models |
-  | `OPENAI_API_KEY` | GPT models |
+  | `OPENAI_API_KEY` | GPT models; the Decisions API (`openai-decisions@…`) |
   | `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) | Gemini models; also the Veridian generator |
   | `LAYA_MAX_BATCH` | Laya batch size (default 64 on CUDA, 16 otherwise) |
   | `OLLAMA_HOST` | Ollama endpoint for Gemma (default `http://127.0.0.1:11434`) |

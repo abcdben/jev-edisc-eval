@@ -1,0 +1,272 @@
+# Endo opioid litigation — eight requests arranged as four broad/narrow pairs on the same
+# underlying issue, mirroring tasks/mallinckrodt.yaml so request breadth can be isolated.
+# Issues are drawn from the public complaints against Endo: the Ohio Attorney General's
+# complaint (May 2017, data/endo/raw/Ohio_AG_complaint_2017.pdf, paras 106-107, 123) and the
+# New York Attorney General's complaint (March 2019, data/endo/raw/NYAG_opioid_complaint_2019.pdf,
+# paras 543-559), plus the 2016 New York Assurance of Discontinuance they describe.
+# Wording is deliberately neutral: no outcomes, no characterisation of the conduct.
+# Corpus: emails from the UCSF/JHU Opioid Industry Documents Archive, "Endo Documents" collection
+# (Endo International's bankruptcy-settlement production, published 2024-2026).
+
+name: endo
+kind: binary
+positive_label: responsive
+negative_label: not_responsive
+source: Ohio AG v. Purdue et al. (2017) and People of the State of New York v. Purdue et al. (2019), Endo sections
+
+context: |
+  Matter: opioid litigation against Endo International plc, Endo Health Solutions Inc. and Endo Pharmaceuticals Inc.
+  (MDL 2804, In re National Prescription Opiate Litigation, state attorney-general actions, and Endo's 2022 chapter 11
+  case). Endo sold the branded extended-release opioid Opana ER (oxymorphone), reformulated in 2012 with a
+  crush-resistant design, and also sold generic opioids through its subsidiaries Par Pharmaceutical and Qualitest.
+  Plaintiffs allege that Endo marketed Opana ER with claims about abuse deterrence and addiction risk that were not
+  supported; that its sales representatives, speaker programmes and training materials minimised the risk of
+  addiction; that it funded and worked with third-party pain advocacy organisations, key opinion leaders and
+  continuing medical education on pain messaging; that it did not adequately identify or report suspicious orders
+  of controlled substances or suspicious prescribing; and that it continued to detail prescribers who showed signs
+  of inappropriate prescribing. Endo also sold non-opioid products (Lidoderm, Voltaren Gel, Aveed, Supprelin,
+  Fortesta, men's-health and urology products) that are not at issue. The relevant period is 2006 through 2017.
+  The documents are emails, reproduced with their headers as a reviewer would see them; quoted earlier messages in
+  a thread are part of the document. Newsletters and mass mailings received by an employee are documents in that
+  employee's files.
+
+gate_question: |
+  Does this email substantively concern Endo's opioid business (Opana or generic opioid marketing or sales,
+  controlled-substance compliance, dealings with DEA/FDA/regulators about opioids, or pain-advocacy and medical
+  education relating to opioids)? Answer no for emails about non-opioid products, general corporate or personal
+  matters, or IT/HR/admin traffic.
+
+questions:
+
+  opana_broad:
+    title: Opana ER promotion (broad)
+    breadth: broad
+    pair: opana
+    rfp_text: |
+      All documents concerning the marketing, promotion, or sale of Opana or Opana ER, including promotional
+      materials and advertisements, detailing and call plans, sales training, promotional messaging, market research,
+      launch and relaunch planning, managed-care and formulary positioning, and sales or prescription performance of
+      the product.
+    literal: |
+      Does this email discuss the marketing, promotion, or sales of Opana or Opana ER in any way: an advertisement
+      or sales aid, detailing or a call plan, sales training or messaging, market research, launch or relaunch
+      plans, formulary or managed-care positioning, or sales and prescription numbers for the product? Answer no if
+      the email does not touch Opana or Opana ER commercially.
+    positive_desc: |
+      The email concerns the marketing, promotion, or sale of Opana or Opana ER: promotional materials, detailing,
+      training, messaging, market research, launch planning, formulary positioning, or sales performance.
+    negative_desc: |
+      The email does not concern the marketing, promotion, or sale of Opana or Opana ER. Manufacturing, supply,
+      regulatory filings with no promotional content, other products, and general corporate traffic are not
+      responsive.
+    structured:
+      responsive:
+        what: Anything about marketing, promoting, or selling Opana / Opana ER
+        includes: [advertisements and sales aids, detailing and call plans, sales training and messaging, market research, launch and relaunch plans, formulary and managed care, sales and prescription data for Opana]
+      not_responsive:
+        what: No Opana commercial content
+        includes: [manufacturing and supply only, non-promotional regulatory filings, other products, general corporate or personal traffic]
+
+  opana_narrow:
+    title: Abuse-deterrence and crush-resistance claims for reformulated Opana ER (narrow)
+    breadth: narrow
+    pair: opana
+    rfp_text: |
+      All documents concerning claims, statements, or evidence about the abuse-deterrent, tamper-resistant, or
+      crush-resistant properties of reformulated Opana ER, including studies or data on crushing, grinding, chewing,
+      dissolving, snorting, or injecting the reformulated tablet; FDA correspondence about abuse-deterrence labeling
+      or claims; and the use of "crush resistant" or similar language in promotional materials or communications
+      with prescribers, payers, or the public.
+    literal: |
+      Does this email discuss whether reformulated Opana ER is abuse-deterrent, tamper-resistant, or crush-resistant,
+      including any study or data about crushing, grinding, chewing, dissolving, snorting, or injecting it, FDA
+      correspondence about abuse-deterrence labeling, or the use of "crush resistant" or similar language in
+      promotion? Answer no for general Opana promotion or sales that does not address abuse deterrence or the
+      tablet's physical properties.
+    positive_desc: |
+      The email concerns the abuse-deterrent, tamper-resistant, or crush-resistant properties of reformulated Opana
+      ER: studies or data on defeating the formulation, FDA correspondence on abuse-deterrence claims, or
+      "crush resistant" language in promotion.
+    negative_desc: |
+      The email does not address abuse deterrence or the physical properties of the reformulated tablet. General
+      Opana promotion, pricing, and sales performance without abuse-deterrence content are not responsive.
+    structured:
+      responsive:
+        what: Abuse-deterrence / crush-resistance claims or evidence for reformulated Opana ER
+        includes: [crush grind chew dissolve snort or inject studies, abuse-deterrence labeling and FDA correspondence, crush-resistant promotional language, comparisons with other abuse-deterrent formulations, post-market abuse data for the reformulation]
+      not_responsive:
+        what: Opana content with no abuse-deterrence angle
+        includes: [general promotion and detailing, pricing and contracts, sales numbers, other products]
+
+  som_broad:
+    title: Controlled-substance order monitoring and DEA compliance (broad)
+    breadth: broad
+    pair: som
+    rfp_text: |
+      All documents concerning Endo's, Par's, or Qualitest's controlled-substance compliance for opioid products,
+      including suspicious order monitoring policies, procedures, and thresholds; the review, holding, release,
+      reporting, or blocking of customer orders; DEA registrations, inspections, audits, quota, and ARCOS or
+      suspicious-order reporting; customer due diligence and know-your-customer reviews; and systems, vendors,
+      training, and audits supporting these functions.
+    literal: |
+      Does this email discuss controlled-substance compliance for Endo, Par, or Qualitest opioid products in any way:
+      suspicious order monitoring policy or thresholds, an order being reviewed, held, released, blocked, or reported,
+      DEA registration, inspection, audit, quota, or reporting, customer due diligence, or the systems, vendors,
+      training, or audits that support these? Answer no if the email does not touch controlled-substance compliance
+      or the handling of controlled-substance orders.
+    positive_desc: |
+      The email concerns controlled-substance compliance for opioid products: suspicious order monitoring, order
+      review or reporting, DEA registration, inspection, quota or reporting, customer due diligence, or the
+      supporting systems, training, and audits.
+    negative_desc: |
+      The email does not concern controlled-substance compliance or the handling of controlled-substance orders.
+      Ordinary order processing and pricing, non-controlled products, and general compliance topics are not
+      responsive.
+    structured:
+      responsive:
+        what: Anything about controlled-substance compliance for opioids
+        includes: [suspicious order monitoring policy and thresholds, orders held released blocked or reported, DEA registration inspection audit or quota, ARCOS and suspicious-order reports, customer due diligence and KYC, compliance systems vendors training and audits]
+      not_responsive:
+        what: No controlled-substance compliance content
+        includes: [routine order entry and shipping, pricing and contracts, non-controlled products, general compliance not about controlled substances]
+
+  som_narrow:
+    title: Decisions on specific flagged orders or customers (narrow)
+    breadth: narrow
+    pair: som
+    rfp_text: |
+      All documents concerning the decision to release, ship, continue supplying, or not report to DEA a specific
+      customer order, customer, or prescriber that had been flagged, pended, held, or identified as suspicious or of
+      concern, including the justification for the decision and any due diligence, site visit, or data relied upon.
+    literal: |
+      Does this email discuss a specific customer order, customer, or prescriber that was flagged, pended, held, or
+      identified as suspicious or of concern AND the decision to release the order, continue supplying, or not report
+      it to DEA, including the reasons or due diligence relied on? Answer no for policy or threshold discussions, or
+      flagged orders where no release, supply, or reporting decision is discussed.
+    positive_desc: |
+      The email concerns a specific flagged order, customer, or prescriber and the decision to release, continue
+      supplying, or not report it, including the justification or due diligence relied on.
+    negative_desc: |
+      The email does not concern a decision about a specific flagged order, customer, or prescriber. Policy,
+      thresholds, system design, and flagged orders without a decision are not responsive.
+    structured:
+      responsive:
+        what: A decision on a specific flagged order, customer, or prescriber
+        includes: [release or shipment of a held order, continuing to supply a customer of concern, decision not to report to DEA, due diligence site visits or data relied upon, justification memos]
+      not_responsive:
+        what: No specific release / supply / reporting decision
+        includes: [SOM policy and thresholds, system design, DEA inspections and quota, orders flagged with no decision discussed]
+
+  promo_broad:
+    title: Sales-force messaging, training and speaker programmes on opioid risk (broad)
+    breadth: broad
+    pair: promo
+    rfp_text: |
+      All documents concerning the content of Endo's opioid sales training, sales-force messaging, speaker
+      programmes, or promotional materials as they relate to addiction, abuse, dependence, tolerance,
+      "pseudoaddiction," dosing, or long-term use of opioids, including the development, review, and approval of
+      such content and the selection, training, and payment of speakers.
+    literal: |
+      Does this email discuss what Endo's sales training, sales messaging, speaker programmes, or promotional
+      materials say about opioid addiction, abuse, dependence, tolerance, pseudoaddiction, dosing, or long-term use,
+      including developing, reviewing, or approving that content, or selecting, training, or paying speakers?
+      Answer no if the email does not address opioid risk messaging, training content, or speaker programmes.
+    positive_desc: |
+      The email concerns the content of opioid sales training, messaging, speaker programmes, or promotional
+      materials on addiction, abuse, dependence, tolerance, pseudoaddiction, dosing, or long-term use, or the
+      selection, training, or payment of speakers.
+    negative_desc: |
+      The email does not address opioid risk messaging, training content, or speaker programmes. Logistics with
+      no content, non-opioid products, and general sales administration are not responsive.
+    structured:
+      responsive:
+        what: Opioid risk messaging in training, promotion, or speaker programmes
+        includes: [sales training on addiction or abuse risk, pseudoaddiction, fair balance and risk language, speaker selection training and honoraria, promotional review committee decisions on risk content, scripts and talking points]
+      not_responsive:
+        what: No opioid risk messaging content
+        includes: [meeting logistics only, non-opioid products, sales administration, compensation unrelated to messaging]
+
+  promo_narrow:
+    title: Detailing of prescribers showing signs of abuse or diversion (narrow)
+    breadth: narrow
+    pair: promo
+    rfp_text: |
+      All documents concerning sales representatives' observation, reporting, or non-reporting of signs of abuse,
+      diversion, or inappropriate prescribing by a prescriber, and decisions about whether to continue detailing,
+      targeting, or paying incentives on such a prescriber, including any policy or procedure for representatives
+      to report such signs.
+    literal: |
+      Does this email discuss a sales representative noticing or reporting (or not reporting) signs of abuse,
+      diversion, or inappropriate prescribing by a prescriber, or a decision about whether to keep detailing,
+      targeting, or paying incentives on such a prescriber, or a policy for representatives to report such signs?
+      Answer no for general training content, speaker programmes, or detailing with no abuse or diversion concern.
+    positive_desc: |
+      The email concerns signs of abuse, diversion, or inappropriate prescribing observed by or reported to the
+      sales force, decisions about continuing to detail or incentivise such a prescriber, or the policy for
+      representatives to report such signs.
+    negative_desc: |
+      The email does not concern prescriber abuse or diversion signs or decisions about detailing such a prescriber.
+      General training, messaging, and speaker programme content are not responsive.
+    structured:
+      responsive:
+        what: Prescriber abuse / diversion signs and the detailing decision
+        includes: [rep reports of suspicious prescribing or pill-mill signs, prescriber removed from or kept on call plan, incentive compensation on flagged prescribers, policy for reporting signs of abuse or diversion, prescriber arrest or licence action discussed with sales]
+      not_responsive:
+        what: No prescriber abuse or diversion concern
+        includes: [general training and messaging, speaker programmes, ordinary call planning, product questions]
+
+  thirdparty_broad:
+    title: Pain advocacy organisations, key opinion leaders and medical education (broad)
+    breadth: broad
+    pair: thirdparty
+    rfp_text: |
+      All documents concerning Endo's funding of, grants or payments to, or work with third-party pain advocacy or
+      professional organisations, key opinion leaders, or continuing medical education providers in relation to
+      opioids or pain management, including the American Pain Foundation, the National Initiative on Pain Control,
+      painknowledge.com, the American Academy of Pain Medicine, consultants and advisory boards, and sponsored
+      publications, guidelines, or patient-education materials.
+    literal: |
+      Does this email discuss Endo funding, paying, or working with a pain advocacy or professional organisation,
+      a key opinion leader, consultant, or advisory board, or a continuing medical education provider in relation
+      to opioids or pain, including sponsored publications, guidelines, websites, or patient materials? Answer no
+      if the email does not involve a third-party organisation, KOL, or education programme on opioids or pain.
+    positive_desc: |
+      The email concerns funding, payments to, or work with third-party pain organisations, key opinion leaders,
+      consultants, advisory boards, or medical education providers on opioids or pain, including sponsored content.
+    negative_desc: |
+      The email does not involve a third-party organisation, key opinion leader, or education programme on opioids
+      or pain. Internal marketing, sales, compliance, and non-opioid therapeutic areas are not responsive.
+    structured:
+      responsive:
+        what: Third-party advocacy, KOL, or CME involvement on opioids / pain
+        includes: [grants and sponsorships to pain organisations, American Pain Foundation and NIPC, painknowledge.com, AAPM and other societies, KOL consulting and advisory boards, sponsored CME publications guidelines and patient materials]
+      not_responsive:
+        what: No third-party pain organisation, KOL, or CME involvement
+        includes: [internal marketing and sales, compliance and DEA matters, non-opioid therapeutic areas, trade-show logistics without sponsorship content]
+
+  thirdparty_narrow:
+    title: Editorial control over or undisclosed involvement in third-party pain content (narrow)
+    breadth: narrow
+    pair: thirdparty
+    rfp_text: |
+      All documents concerning Endo's review, editing, approval, or direction of content published or presented by a
+      third-party pain advocacy organisation, key opinion leader, or education provider, or concerning whether and
+      how Endo's role in funding or shaping such content would be disclosed or attributed.
+    literal: |
+      Does this email discuss Endo reviewing, editing, approving, or directing the content of a third-party pain
+      organisation, key opinion leader, or education provider, or whether Endo's funding or role in that content
+      would be disclosed or attributed? Answer no for funding, sponsorship, or working relationships where Endo's
+      control over the content or the disclosure of its role is not discussed.
+    positive_desc: |
+      The email concerns Endo's editorial control over, or the disclosure or attribution of its involvement in,
+      content published or presented by a third party on opioids or pain.
+    negative_desc: |
+      The email does not concern control over third-party content or the disclosure of Endo's role. Funding,
+      grants, and relationships without editorial control or attribution discussion are not responsive.
+    structured:
+      responsive:
+        what: Control over or disclosure of Endo's role in third-party pain content
+        includes: [Endo edits or approves third-party materials, direction of messaging to an advocacy group, decisions about acknowledging Endo sponsorship, unbranded or ghost-written content, disclosure language in CME or websites]
+      not_responsive:
+        what: Third-party involvement without control or disclosure discussion
+        includes: [grant payments and budgets, meeting logistics, general KOL relationships, CME attendance]

@@ -24,7 +24,7 @@ from .tasks import Document, TaskSet, iter_jsonl
 
 console = Console(width=220)
 
-DEFAULT_CONCURRENCY = {"typesafe": 12, "laya": 64, "ollama": 2, "lexical": 64, "anthropic": 8, "openai": 8, "gemini": 8, "mock": 64}
+DEFAULT_CONCURRENCY = {"typesafe": 12, "laya": 64, "ollama": 2, "lexical": 64, "anthropic": 8, "openai": 8, "openai_decisions": 12, "gemini": 8, "mock": 64}
 
 
 def job_path(out: Path, corpus: str, arm: str, model_key: str, tag: str = "") -> Path:
@@ -32,7 +32,7 @@ def job_path(out: Path, corpus: str, arm: str, model_key: str, tag: str = "") ->
     return out / corpus / arm / f"{name}.jsonl"
 
 
-VARIANT_FAMILIES = ("jev", "laya", "tar")
+VARIANT_FAMILIES = ("jev", "laya", "tar", "openai-decisions")
 
 
 def parse_job_stem(stem: str) -> tuple[str, str]:

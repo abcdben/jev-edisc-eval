@@ -200,7 +200,7 @@ function useRows(v: View) {
 /** The Speed and Cost hints: machine time and price only. */
 export const LATENCY_ITEMS: HintItem[] = [
   { k: "Measures", v: <><b>Median wall-clock per request to score one document</b>: one call in the all-issues arm, the sum over issues in the one-issue arm.</> },
-  { k: "Source", v: <><b>TREC, all issues per call, Jev / Claude / GPT rows</b>: a dedicated single-request sample of 200 emails. Every other cell: per-request timings recorded during the benchmark run, <b>8–12 requests in flight</b>. Each row's details say which.</> },
+  { k: "Source", v: <><b>TREC, all issues per call, Jev / OpenAI Decisions / Claude / GPT rows</b>: a dedicated single-request sample of 200 emails. Every other cell: per-request timings recorded during the benchmark run, <b>8–12 requests in flight</b>. Each row's details say which.</> },
   { k: "Hosted", v: <>Includes network. <b>Rate limits and parallel throughput not measured.</b> GPT-5.6 Luna is timed on OpenAI's standard tier (2.2× faster than the flex tier the run used, same sample); Terra on flex (standard was no faster). Cost is at list either way.</> },
   { k: "Local", v: <>Laya and Gemma on <b>one A100</b>; no network.</> },
 ];
@@ -539,8 +539,9 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
   const name = (r: Rec) => VARIANT_LABEL[r.variant!] ?? r.variant!;
   const [chart, setChart] = useState<Chart>("ranked");
   // The family's reference configuration, for the `heat` view's "vs default" column: the `@base` variant. Taken from the whole family, so
-  // it is stable while configurations are toggled; PRHeat omits the comparison while that row is not shown.
-  const referenceId = variants.map((r) => r.model).find((k) => k.endsWith("@base"));
+  // it is stable while configurations are toggled; PRHeat omits the comparison while that row is not shown. OpenAI Decisions has no `@base`:
+  // its `predicate` form (the Noul analogue) is the reference.
+  const referenceId = variants.map((r) => r.model).find((k) => k.endsWith("@base") || k.endsWith("@predicate"));
 
   const items: PRItem[] = sel.map((r) => {
     const p = pick(r, v.level, v.gray, v.issue);

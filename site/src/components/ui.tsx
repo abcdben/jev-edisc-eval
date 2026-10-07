@@ -237,7 +237,7 @@ export const fadeStyle = (state: Presence<unknown>["state"]): React.CSSPropertie
 
 /** The small muted "DECISION MODEL" tag after a decision model's name in the modals (data.ts isDecider). */
 export function DeciderTag() {
-  return <span className="decider-tag" title="A decision model (Jev, Laya): answers typed questions with probabilities, writes no text">decision model</span>;
+  return <span className="decider-tag" title="A decision model (Jev, OpenAI Decisions, Laya): answers typed questions with probabilities, writes no text">decision model</span>;
 }
 
 // Text measurement for SVG labels, on a canvas in the page's font. Cached per string; the cache is dropped and subscribers re-render when a

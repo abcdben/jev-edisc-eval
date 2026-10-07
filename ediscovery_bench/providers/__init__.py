@@ -56,6 +56,10 @@ def make_provider(
         from .openai_ import OpenAIProvider
 
         return OpenAIProvider(spec, phrasing=phrasing, flex=flex)
+    if spec.provider == "openai_decisions":
+        from .openai_decisions import OpenAIDecisionsProvider
+
+        return OpenAIDecisionsProvider(spec, variant=variant)
     if spec.provider == "gemini":
         from .gemini import GeminiProvider
 
