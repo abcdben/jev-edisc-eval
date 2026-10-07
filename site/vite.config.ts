@@ -10,6 +10,8 @@ const input: Record<string, string> = {
   main: path.resolve(root, "index.html"),
   b: path.resolve(root, "b.html"),
   studio: path.resolve(root, "studio.html"),
+  study: path.resolve(root, "study.html"),
+  explore: path.resolve(root, "explore.html"),
 };
 // Optional local page: included only when its HTML entry is on disk. A clone without that file still builds the published site.
 const localPage = path.resolve(root, "cutoffs.html");

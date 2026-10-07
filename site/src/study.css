@@ -1,0 +1,75 @@
+/* Study page (study.html → study.tsx → StudyPage.tsx). Shares styles.css: the palette, .card, .seg, .pick-* rows and .legend-note. */
+
+.study-page { max-width: 1480px; }
+.study-hdr { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 18px; }
+.study-hdr h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+.study-hdr .sub { margin: 0; color: var(--ink-3); font-size: 13px; max-width: 760px; line-height: 1.45; }
+.study-hdr-r { display: flex; gap: 10px; align-items: center; flex: none; padding-top: 2px; }
+
+.study-body { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 900px) { .study-body { grid-template-columns: 1fr; } }
+
+/* left rail */
+.study-rail { display: flex; flex-direction: column; gap: 12px; }
+.study-rail section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 6px 8px; }
+.study-rail .pick-main { padding: 2.5px 8px; font-size: 12px; }
+.study-rail .pick-gh { padding: 5px 8px 2px; }
+.study-rail h4 { margin: 0 0 4px; padding: 0 8px; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; display: flex; justify-content: space-between; align-items: baseline; }
+.study-rail h4 .n { font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--ink-4); }
+.study-rail .pick-main { white-space: normal; }
+.study-rail .pick-main .box.radio { border-radius: 50%; }
+.study-rail .pick-main .box.radio.on::after { left: 3px; top: 3px; width: 4px; height: 4px; border: 0; border-radius: 50%; background: var(--bg); transform: none; }
+.study-rail .pick-row.dis .pick-main { color: var(--ink-4); cursor: not-allowed; }
+.study-rail .pick-row.dim .pick-main .nm { color: var(--ink-4); }
+.study-rail .pick-row.dim .mark { opacity: 0.35; }
+.study-rail .tag { font-size: 9.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-4); border: 1px solid var(--line-2); border-radius: 3px; padding: 0 4px; line-height: 14px; }
+.study-rail .tag.na { border-style: dashed; }
+.study-ds-note { margin: 6px 8px 0; font-size: 11.5px; color: var(--ink-4); line-height: 1.4; }
+
+/* centre card */
+.study-card { padding-bottom: 14px; }
+.study-q { margin: 0 0 12px; color: var(--ink-2); font-size: 13px; }
+.study-svg { display: block; max-width: 100%; }
+.study-svg text { font-family: inherit; }
+.study-empty { padding: 72px 16px; text-align: center; color: var(--ink-4); font-size: 13px; }
+.study-legend { gap: 14px; }
+.study-legend .sw { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+.chart-fill { position: relative; }
+
+/* numbers under the chart */
+.study-tbl { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 12px; font-variant-numeric: tabular-nums; }
+.study-tbl th, .study-tbl td { padding: 5px 8px; text-align: right; border-top: 1px solid var(--line); white-space: nowrap; }
+.study-tbl th:first-child, .study-tbl td:first-child { text-align: left; }
+.study-tbl th { font-weight: 500; color: var(--ink-3); border-top: 0; font-size: 11px; }
+.study-tbl td { color: var(--ink-2); }
+.study-tbl td svg { vertical-align: -1px; margin-right: 4px; }
+.study-tbl tr.human td { color: var(--ink); }
+.study-tbl td.planned { color: var(--ink-4); font-style: italic; }
+/* a cell the TAR reviewer setting re-pointed (studyData.ts reviewerCell): a small star after the value, the rates in its title */
+.study-tbl td.rev .rev-mark, .study-matrix .v.rev .num::after { color: var(--ink-3); font-size: 0.85em; margin-left: 2px; }
+.study-matrix .v.rev .num::after { content: "*"; }
+
+/* table mode: measures × datasets, stacked arms per cell */
+.study-matrix-card { overflow: hidden; }
+.study-matrix-wrap { overflow: auto; margin: 0 -14px -10px; padding: 0 14px 10px; }
+.study-matrix { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 12px; }
+.study-matrix thead th { position: sticky; top: 0; z-index: 2; background: var(--panel); text-align: left; vertical-align: bottom; padding: 8px 10px; border-bottom: 1px solid var(--line-2); font-weight: 500; color: var(--ink); font-size: 12.5px; }
+.study-matrix thead th .sub { display: block; color: var(--ink-4); font-weight: 400; font-size: 11px; margin-top: 2px; }
+.study-matrix thead th .tag { margin-left: 6px; font-size: 9.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-4); border: 1px solid var(--line-2); border-radius: 3px; padding: 0 4px; vertical-align: 1px; }
+.study-matrix th.corner { min-width: 180px; }
+.study-matrix tbody th { text-align: left; font-weight: 400; color: var(--ink-2); padding: 6px 10px; vertical-align: top; white-space: nowrap; border-bottom: 1px solid var(--line); position: sticky; left: 0; background: var(--panel); z-index: 1; }
+.study-matrix tbody th .dir { color: var(--ink-4); margin-left: 5px; font-size: 10px; }
+.study-matrix tbody td { padding: 6px 10px; vertical-align: top; border-bottom: 1px solid var(--line); min-width: 170px; }
+.study-matrix tr.grp td { padding: 14px 10px 5px; border-bottom: 1px solid var(--line-2); color: var(--ink); font-weight: 500; font-size: 12.5px; background: var(--bg-2); }
+.study-matrix tr.grp .g { color: var(--ink-4); font-weight: 500; font-size: 10px; letter-spacing: 0.07em; text-transform: uppercase; margin-right: 8px; }
+.study-matrix tr.grp .q { display: block; color: var(--ink-3); font-weight: 400; font-size: 11.5px; margin-top: 2px; }
+.study-matrix td.na { color: var(--ink-4); font-size: 11px; }
+.study-matrix td.vals { cursor: pointer; }
+.study-matrix td.vals:hover { background: var(--bg-2); }
+.study-matrix td.vals.planned { background-image: repeating-linear-gradient(45deg, transparent 0 7px, color-mix(in srgb, var(--ink-4) 14%, transparent) 7px 8px); }
+.study-matrix td.vals.planned:hover { background-color: var(--bg-2); }
+.study-matrix .v { display: grid; grid-template-columns: 10px 1fr auto; gap: 0 6px; align-items: center; line-height: 1.6; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.study-matrix .v .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; }
+.study-matrix .v .num { font-weight: 500; color: var(--ink); }
+.study-matrix .v.human .nm { color: var(--ink); font-weight: 500; }
+.study-matrix .v.p .num { font-weight: 400; color: var(--ink-3); font-style: italic; }
