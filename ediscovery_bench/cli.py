@@ -434,6 +434,51 @@ def export_findings(
     console.print(f"wrote {export(out, dest)}")
 
 
+@app.command("export-sweep")
+def export_sweep_cmd(
+    out: Path = typer.Option(Path("results"), "--out", "-o"),
+    dest: Path = typer.Option(Path("results/sweep.json"), "--dest"),
+    check: bool = typer.Option(True, "--check/--no-check", help="Score each cell at its own label and compare with findings.json"),
+    arms: list[str] = typer.Option(["multi"], "--arm", help="Arms to export (default: multi, the arm the site's recall/precision charts draw)"),
+):
+    """Recall/precision confusion counts at p(responsive) >= t, t = 0.05..0.95, per corpus/arm/model -> sweep.json (the Studio's threshold slider)."""
+    from .sweep import export_sweep
+
+    console.print(f"wrote {export_sweep(out, dest, check, tuple(arms))}")
+
+
+@app.command("export-study")
+def export_study_cmd(
+    findings: Path = typer.Option(Path("results/findings.json"), "--findings"),
+    dest: Path = typer.Option(Path("results/study.json"), "--dest"),
+):
+    """Human-anchored study: datasets x experiments x arms -> study.json (site/study.html). Unrun cells are flagged placeholders."""
+    from .study import export_study
+
+    console.print(f"wrote {export_study(findings, dest)}")
+
+
+@app.command("export-explore")
+def export_explore_cmd(
+    dest: Path = typer.Option(Path("site/public/explore"), "--dest"),
+    results: Path = typer.Option(Path("results"), "--results"),
+    only: list[str] = typer.Option([], "--only", help="Dataset ids to export (default: all with data on disk)"),
+):
+    """Population explorer: per-judgment rows and per-arm scores -> site/public/explore/ (site/explore.html). Unrun arms are flagged placeholders."""
+    from .explore import export_explore
+
+    for p in export_explore(dest, results, set(only) or None):
+        console.print(f"wrote {p}")
+
+
+@app.command("serve")
+def serve_cmd(port: int = typer.Option(8766, "--port", "-p"), no_warm: bool = typer.Option(False, "--no-warm", help="Index datasets on first request instead of at start")):
+    """Serve document text to the population explorer from data/ on 127.0.0.1 (text is never exported to the site)."""
+    from .serve import serve
+
+    serve(port, warm=not no_warm)
+
+
 @app.command("export-examples")
 def export_examples(
     out: Path = typer.Option(Path("results"), "--out", "-o"),
@@ -577,6 +622,37 @@ def tar_cmd(
     from .tar import run_corpus
 
     run_corpus(corpus, out, only, seeds)
+
+
+@app.command("tar-grid")
+def tar_grid_cmd(
+    corpus: str = typer.Argument(..., help="mnk | cuad | trec"),
+    variant: list[str] = typer.Option(["t1_1000_div", "cal"], "--variant", help="TAR variants to sweep (default: the two headline workflows)"),
+    fn: list[float] = typer.Option([], "--fn", help="Reviewer miss rates (default 0 .05 .10 .20 .30 .40 .50)"),
+    fp: list[float] = typer.Option([], "--fp", help="Reviewer over-code rates (default 0 .01 .02 .05 .10 .15 .20)"),
+    seeds: int = typer.Option(5, "--seeds"),
+    out: Path = typer.Option(Path("results/tar_grid"), "--out", "-o"),
+    results: Path = typer.Option(Path("results"), "--results", help="Where the corpus runs live (keyword-floor scores for CAL)"),
+    fp_max: Optional[float] = typer.Option(None, "--fp-max", help="Leave over-code rates above this out of the cells and record them as `unavailable` (TREC CAL: 0.02; above it the control-set stop rule does not converge on the 286k pool)"),
+):
+    """Reviewer miss-rate x over-code-rate grid for the TAR workflows -> results/tar_grid/<corpus>__<variant>.json, then results/tar_grid.json.
+    The default cell is checked against findings.json (same rows, same scoring)."""
+    from .tar import FN_GRID, FP_GRID, export_grid, run_grid
+
+    for p in run_grid(corpus, tuple(variant), tuple(fn) or FN_GRID, tuple(fp) or FP_GRID, seeds, out, results, fp_max=fp_max):
+        console.print(f"wrote {p}")
+    console.print(f"wrote {export_grid(out)}")
+
+
+@app.command("export-tar-grid")
+def export_tar_grid_cmd(
+    src: Path = typer.Option(Path("results/tar_grid"), "--src"),
+    dest: Path = typer.Option(Path("results/tar_grid.json"), "--dest"),
+):
+    """Fold results/tar_grid/<corpus>__<variant>.json into results/tar_grid.json (corpus -> variant), imported by the site next to findings.json."""
+    from .tar import export_grid
+
+    console.print(f"wrote {export_grid(src, dest)}")
 
 
 if __name__ == "__main__":

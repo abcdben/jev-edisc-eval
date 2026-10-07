@@ -35,12 +35,21 @@ gold labels, optionally with a miscoding rate):
            Mallinckrodt's benchmark sample is 61% rich by design; CAL there runs on a 10%-rich pool (all
            gold-negative emails plus a per-seed random draw of positives).
 
-Reviewer economics: 50 documents/hour, $65/hour. Compute is negligible and not charged.
+Reviewer economics: 50 documents/hour, $65/hour. Compute is negligible and not charged. The reviewer's two
+error rates (miss rate `fn`, over-code rate `fp`; the variant table fixes fp = fn / 5) are recorded in the
+sidecar's `reviewer` block (`miscode_rate`, `fp_rate`), and every row the reviewer coded carries the draw
+behind its miscode decision in `raw` (Reviewer.provenance), so the explorer can re-code it under other rates.
 
 Layout mirrors the API runs so export.py can pick the rows up:
   results/<corpus>/multi/tar__<variant>.jsonl        Prediction rows for the median seed (by doc-level F1)
   results/<corpus>/multi/tar__<variant>.tar.json     sidecar: review effort, cutoffs, spread across seeds
   results/trec_full/multi/tar__<variant>.jsonl       TREC: positive rows only over the 286k collection
+  results/tar_grid/<corpus>__<variant>.json          `bench tar-grid`: the headline workflows re-run over a grid of
+                                                     reviewer miss x over-code rates (run_grid); folded into
+                                                     results/tar_grid.json (export_grid) for the site. TREC CAL
+                                                     is run with --fp-max 0.02: above it the over-coded control
+                                                     set keeps the stop rule from converging on the 286k pool,
+                                                     and the payload's `unavailable` block says so.
 
 Variants: t1_<N> (80%-recall cutoff, perfect reviewer), t1_<N>_f1 (F1 cutoff), t1_<N>_noisy (imperfect
 reviewer: misses 10% of relevant, over-codes 2% of non-relevant), t1_<N>_div (diversity-sampled training
@@ -104,15 +113,23 @@ CORPORA = {
 # ------------------------------------------------------------------------------------------------ reviewer
 
 class Reviewer:
-    """Codes a document from its gold labels. The imperfect reviewer misses a share of relevant documents
-    (coded not relevant on every issue) and over-codes a smaller share of non-relevant ones (coded relevant
-    on one issue chosen at random); `noise` is the miss rate and the over-code rate is NOISE_FP_RATIO of
-    it. The miscode is fixed per document so training and output agree."""
+    """Codes a document from its gold labels. The imperfect reviewer misses a share `fn` of relevant documents
+    (coded not relevant on every issue) and over-codes a share `fp` of non-relevant ones (coded relevant on
+    one issue chosen at random). The legacy `noise` argument is the miss rate with fp = noise * NOISE_FP_RATIO;
+    `fn` / `fp` set the two rates independently. The miscode is fixed per document so training and output
+    agree: one uniform `u` is drawn the first time a document is coded (only when either rate is non-zero)
+    and kept in `draws` with the gold flag and the over-coded issue index, so a row can be re-coded under
+    other rates without re-running the simulation."""
 
-    def __init__(self, ts: TaskSet, docs: dict[str, Document], noise: float, seed: int):
-        self.ts, self.docs, self.noise = ts, docs, noise
+    def __init__(self, ts: TaskSet, docs: dict[str, Document], noise: float | None = None, seed: int = 0, *,
+                 fn: float | None = None, fp: float | None = None):
+        self.ts, self.docs = ts, docs
+        self.fn = float(noise or 0.0) if fn is None else float(fn)
+        self.fp = self.fn * NOISE_FP_RATIO if fp is None else float(fp)
+        self.noise = self.fn  # legacy name: the miss rate
         self.rng = np.random.default_rng(seed * 7919 + 17)
         self.codes: dict[str, dict[str, bool]] = {}
+        self.draws: dict[str, dict] = {}  # doc id -> {"u": uniform or None, "g": gold any (0/1), "fpq": over-coded issue index or -1}
         self.n_reviewed = 0
 
     def gold(self, doc_id: str) -> dict[str, bool]:
@@ -123,16 +140,32 @@ class Reviewer:
         if doc_id in self.codes:
             return self.codes[doc_id]
         g = self.gold(doc_id)
-        if self.noise:
+        gold_any = any(g.values())
+        u: float | None = None
+        fpq = -1
+        if self.fn or self.fp:
             u = self.rng.random()
-            if any(g.values()) and u < self.noise:
+            if gold_any and u < self.fn:
                 g = {q: False for q in g}
-            elif not any(g.values()) and u < self.noise * NOISE_FP_RATIO:
-                q = self.ts.qids[int(self.rng.integers(len(self.ts.qids)))]
+            elif not gold_any and u < self.fp:
+                fpq = int(self.rng.integers(len(self.ts.qids)))
+                q = self.ts.qids[fpq]
                 g = {k: k == q for k in g}
         self.codes[doc_id] = g
+        self.draws[doc_id] = {"u": u, "g": int(gold_any), "fpq": fpq}
         self.n_reviewed += 1
         return g
+
+    def provenance(self, doc_id: str, q: str) -> dict:
+        """The `raw` block of an output row the reviewer coded: who coded it, the uniform behind the miscode
+        decision, the document's gold flag, this issue's gold flag and the over-coded issue index (-1: none)."""
+        d = self.draws[doc_id]
+        return {"src": "reviewer", "u": None if d["u"] is None else round(d["u"], 4), "g": d["g"],
+                "gq": int(self.docs[doc_id].labels.get(q) == self.ts.positive_label), "fpq": d["fpq"]}
+
+    @property
+    def rates(self) -> dict:
+        return {"fn": round(self.fn, 6), "fp": round(self.fp, 6)}
 
     @property
     def hours(self) -> float:
@@ -281,9 +314,10 @@ def diversity_sample(X, cand: np.ndarray, n: int, seed: int) -> tuple[np.ndarray
 
 def run_tar1(ts: TaskSet, pool: list[Document], pool_idx: dict[str, int], X, eval_docs: list[Document],
              eval_idx: np.ndarray, n_train: int, rule: str, noise: float, seed: int, exclude: set[str],
-             sampling: str = "random") -> tuple[dict[str, dict[str, bool]], dict[str, np.ndarray], dict]:
-    """Returns (decisions on eval docs keyed by id, per-issue probabilities on eval docs, run meta).
-    `sampling` is "random" (simple random sample of the candidates) or "diversity" (see diversity_sample)."""
+             sampling: str = "random", fp: float | None = None) -> tuple[dict[str, dict[str, bool]], dict[str, np.ndarray], dict, Reviewer]:
+    """Returns (decisions on eval docs keyed by id, per-issue probabilities on eval docs, run meta, the reviewer).
+    `sampling` is "random" (simple random sample of the candidates) or "diversity" (see diversity_sample).
+    `noise` is the reviewer's miss rate; `fp` its over-code rate (default noise * NOISE_FP_RATIO)."""
     rng = np.random.default_rng(seed)
     cand = np.array([i for i, d in enumerate(pool) if d.id not in exclude])
     if sampling == "diversity":
@@ -293,7 +327,7 @@ def run_tar1(ts: TaskSet, pool: list[Document], pool_idx: dict[str, int], X, eva
     else:
         train = rng.choice(cand, size=min(n_train, len(cand)), replace=False)
         sample_meta = {"sampling": "random"}
-    rev = Reviewer(ts, {d.id: d for d in pool}, noise, seed)
+    rev = Reviewer(ts, {d.id: d for d in pool}, noise, seed, fp=fp)
     codes = [rev.code(pool[i].id) for i in train]
     Xtr = X[train]
     y_any = np.array([any(c.values()) for c in codes], dtype=int)
@@ -338,10 +372,10 @@ def run_tar1(ts: TaskSet, pool: list[Document], pool_idx: dict[str, int], X, eva
                 best = fallback_issue
             dec[best] = True
         decisions[d.id] = dec
-    meta = {"n_train": int(len(train)), "rule": rule, "noise": noise, "seed": seed, "cutoff_any": round(t_any, 4),
+    meta = {"n_train": int(len(train)), "rule": rule, "noise": noise, **rev.rates, "seed": seed, "cutoff_any": round(t_any, 4),
             "issue_models": sorted(issue_models), "train_positives_any": int(y_any.sum()), "train_positives_by_issue": pos_counts,
             "hours": rev.hours, "cost_usd": rev.cost, "docs_reviewed": rev.n_reviewed, **sample_meta}
-    return decisions, probs, meta
+    return decisions, probs, meta, rev
 
 
 # ------------------------------------------------------------------------------------------------ TAR 2.0 / CAL
@@ -394,9 +428,11 @@ def _prf(flag: np.ndarray, gold: np.ndarray) -> dict:
 
 
 def run_cal(ts: TaskSet, pool: list[Document], X, kw_score: np.ndarray, batch: int, seed_n: int, noise: float, seed: int,
-            stop: str, target: float | None, control_n: int | None, X_eval, gold_eval: np.ndarray, eval_ids: list[str]) -> tuple[Reviewer, np.ndarray, dict]:
+            stop: str, target: float | None, control_n: int | None, X_eval, gold_eval: np.ndarray, eval_ids: list[str],
+            fp: float | None = None) -> tuple[Reviewer, np.ndarray, dict]:
     """Continuous active learning over the pool. Returns the reviewer (its codes are the production set),
-    the final relevance scores over the pool, and run meta.
+    the final relevance scores over the pool, and run meta. `noise` is the reviewer's miss rate; `fp` its
+    over-code rate (default noise * NOISE_FP_RATIO).
 
     stop = "target": a random control set of `control_n` documents is coded first (effort counted, never
     queued, never trained on). The control documents ride along in the queue virtually: whenever the model
@@ -415,7 +451,7 @@ def run_cal(ts: TaskSet, pool: list[Document], X, kw_score: np.ndarray, batch: i
     rng = np.random.default_rng(seed)
     n = len(pool)
     gold_any = np.array([any(d.labels.get(q) == ts.positive_label for q in ts.qids) for d in pool])
-    rev = Reviewer(ts, {d.id: d for d in pool}, noise, seed)
+    rev = Reviewer(ts, {d.id: d for d in pool}, noise, seed, fp=fp)
     coded = np.zeros(n, dtype=bool)  # queued and coded: the training set
     ctrl = np.zeros(n, dtype=bool)
     ctrl_rel_idx = np.zeros(0, dtype=int)
@@ -489,7 +525,7 @@ def run_cal(ts: TaskSet, pool: list[Document], X, kw_score: np.ndarray, batch: i
         classifier = {"cutoff": round(tau_star, 4), "target": target,
                       "pool": _prf(s_raw >= tau_star, gold_any),
                       "eval": {**_prf(s_eval >= tau_star, gold_eval), "n_reviewed_in_eval": n_eval_reviewed}}
-    meta = {"noise": noise, "seed": seed, "batch": batch, "seed_docs": len(seed_idx), "docs_reviewed": rev.n_reviewed,
+    meta = {"noise": noise, **rev.rates, "seed": seed, "batch": batch, "seed_docs": len(seed_idx), "docs_reviewed": rev.n_reviewed,
             "docs_queued": int(coded.sum()), "hours": rev.hours, "cost_usd": rev.cost, "batches": len(curve) - 1,
             "stop_rule": stop, "target": target, "stop": why,
             "recall_estimator": "control set: a held-out document counts as reached once it would have been queued (its score under the model that picked a batch is at or above the batch's lowest queued score)" if ctrl.any() else None,
@@ -527,23 +563,9 @@ def _write(rows: list[Prediction], path: Path):
             f.write(json.dumps(asdict(r), separators=(",", ":")) + "\n")
 
 
-def run_corpus(corpus: str, out: Path = Path("results"), only: str | None = None, seeds: int = SEEDS):
-    cfg = CORPORA[corpus]
-    ts = TaskSet.load(cfg["task"])
-    eval_docs = load_corpus(cfg["eval"])
-    pool = load_corpus(cfg["pool"]) if cfg["pool"] else eval_docs
-    pool_idx = {d.id: i for i, d in enumerate(pool)}
-    eval_idx = np.array([pool_idx[d.id] for d in eval_docs])
-    gold_eval = {d.id: {q: d.labels.get(q) == ts.positive_label for q in ts.qids} for d in eval_docs}
-    console.print(f"[{corpus}] pool {len(pool):,} docs, eval {len(eval_docs):,}; fitting TF-IDF…")
-    t0 = time.time()
-    X = featurize([d.text for d in pool])
-    _DIV_EMBED_CACHE.clear()
-    _DIV_SAMPLE_CACHE.clear()
-    console.print(f"[{corpus}] {X.shape[1]:,} features in {time.time() - t0:.0f}s")
-    full_out = out / "trec_full" / "multi" if corpus == "trec" else None
-    exclude = {d.id for d in eval_docs} if cfg["pool"] else set()
-
+def _variants(cfg: dict) -> list[tuple[str, dict]]:
+    """The variant table of a corpus: (name, spec). `noise` is the reviewer's miss rate; the over-code rate is
+    NOISE_FP_RATIO of it unless the spec carries `fp`."""
     variants: list[tuple[str, dict]] = []
     for n in cfg["stages"]:
         variants += [(f"t1_{n}", dict(kind="t1", n=n, rule="recall80", noise=0.0, sampling="random")),
@@ -560,60 +582,99 @@ def run_corpus(corpus: str, out: Path = Path("results"), only: str | None = None
                  ("cal_75", dict(kind="cal", noise=NOISE_RATE, stop="target", target=0.75)),
                  ("cal_perfect", dict(kind="cal", noise=0.0, stop="target", target=CAL_TARGET)),
                  ("cal_knee", dict(kind="cal", noise=NOISE_RATE, stop="knee", target=None))]
-    if only:
-        # a name or prefix (t1_100, cal), a suffix starting with "_" (_div, _noisy), the full accuracy
-        # sweep, or just the newly added deep TREC points (perfect + accuracy sweep, random + diversity).
-        if only == "new-depths":
-            variants = [
-                v for v in variants
-                if v[1].get("n") in (7500, 10000)
-                and (v[0].endswith("_div") or "reviewer_accuracy" in v[1] or (v[1]["noise"] == 0 and v[1]["sampling"] == "random" and v[1]["rule"] == "recall80"))
-            ]
-        elif only == "accuracy":
-            variants = [v for v in variants if "reviewer_accuracy" in v[1]]
-        else:
-            variants = [v for v in variants if v[0] == only or v[0].startswith(only + "_") or (only.startswith("_") and v[0].endswith(only))]
-    kw = _keyword_scores(Path(cfg["lexical"]), [d.id for d in pool]) if any(v[1]["kind"] == "cal" for v in variants) else None
-    gold_eval_any = np.array([any(g.values()) for g in gold_eval.values()])
+    return variants
 
-    for name, spec in variants:
-        key = f"tar@{name}"
-        runs = []
-        n_seeds = seeds if spec["kind"] == "t1" else min(seeds, cfg["cal_seeds"])
-        for seed in range(n_seeds):
-            t1 = time.time()
-            if spec["kind"] == "t1":
-                sampling = spec.get("sampling", "random")
-                if full_out is None:
-                    dec, probs, meta = run_tar1(ts, pool, pool_idx, X, eval_docs, eval_idx, spec["n"], spec["rule"], spec["noise"], seed, exclude, sampling)
-                    full_pos = None
-                else:
-                    # TREC: score the whole 286k collection once; the eval rows are a subset, the trec_full block gets the positives
-                    full_dec, full_probs, meta = run_tar1(ts, pool, pool_idx, X, pool, np.arange(len(pool)), spec["n"], spec["rule"], spec["noise"], seed, exclude, sampling)
-                    dec = {d.id: full_dec[d.id] for d in eval_docs}
-                    probs = {q: full_probs[q][eval_idx] for q in ts.qids}
-                    full_pos = [(d, q) for d, c in full_dec.items() for q, v in c.items() if v]
+
+def _select(variants: list[tuple[str, dict]], only: str | None) -> list[tuple[str, dict]]:
+    """`only`: a name or prefix (t1_100, cal), a suffix starting with "_" (_div, _noisy), the full accuracy sweep,
+    or just the newly added deep TREC points (perfect + accuracy sweep, random + diversity)."""
+    if not only:
+        return variants
+    if only == "new-depths":
+        return [
+            v for v in variants
+            if v[1].get("n") in (7500, 10000)
+            and (v[0].endswith("_div") or "reviewer_accuracy" in v[1] or (v[1]["noise"] == 0 and v[1]["sampling"] == "random" and v[1]["rule"] == "recall80"))
+        ]
+    if only == "accuracy":
+        return [v for v in variants if "reviewer_accuracy" in v[1]]
+    return [v for v in variants if v[0] == only or v[0].startswith(only + "_") or (only.startswith("_") and v[0].endswith(only))]
+
+
+class _Prepared:
+    """One corpus loaded and featurised once; the variants (and the grid cells) share it. The diversity-sample
+    cache is keyed on this matrix, so every run with the same (seed, n) codes the same training sample."""
+
+    def __init__(self, corpus: str, out: Path):
+        self.corpus = corpus
+        self.cfg = cfg = CORPORA[corpus]
+        self.ts = TaskSet.load(cfg["task"])
+        self.eval_docs = load_corpus(cfg["eval"])
+        self.pool = load_corpus(cfg["pool"]) if cfg["pool"] else self.eval_docs
+        self.pool_idx = {d.id: i for i, d in enumerate(self.pool)}
+        self.eval_idx = np.array([self.pool_idx[d.id] for d in self.eval_docs])
+        self.gold_eval = {d.id: {q: d.labels.get(q) == self.ts.positive_label for q in self.ts.qids} for d in self.eval_docs}
+        self.gold_eval_any = np.array([any(g.values()) for g in self.gold_eval.values()])
+        console.print(f"[{corpus}] pool {len(self.pool):,} docs, eval {len(self.eval_docs):,}; fitting TF-IDF…")
+        t0 = time.time()
+        self.X = featurize([d.text for d in self.pool])
+        _DIV_EMBED_CACHE.clear()
+        _DIV_SAMPLE_CACHE.clear()
+        console.print(f"[{corpus}] {self.X.shape[1]:,} features in {time.time() - t0:.0f}s")
+        self.full_out = out / "trec_full" / "multi" if corpus == "trec" else None
+        self.exclude = {d.id for d in self.eval_docs} if cfg["pool"] else set()
+        self._kw: np.ndarray | None = None
+
+    @property
+    def kw(self) -> np.ndarray:
+        if self._kw is None:
+            self._kw = _keyword_scores(Path(self.cfg["lexical"]), [d.id for d in self.pool])
+        return self._kw
+
+
+def _run_variant(P: _Prepared, name: str, spec: dict, seeds: int, log: bool = True) -> list[dict]:
+    """Every seed of one variant, sorted by doc-level F1 (the median run is runs[len(runs) // 2]). A spec may
+    carry `fp` (over-code rate) next to `noise` (miss rate); without it the reviewer uses noise * NOISE_FP_RATIO."""
+    ts, pool, eval_docs, X = P.ts, P.pool, P.eval_docs, P.X
+    key = f"tar@{name}"
+    runs = []
+    n_seeds = seeds if spec["kind"] == "t1" else min(seeds, P.cfg["cal_seeds"])
+    fp = spec.get("fp")
+    for seed in range(n_seeds):
+        t1 = time.time()
+        if spec["kind"] == "t1":
+            sampling = spec.get("sampling", "random")
+            if P.full_out is None:
+                dec, probs, meta, rev = run_tar1(ts, pool, P.pool_idx, X, eval_docs, P.eval_idx, spec["n"], spec["rule"], spec["noise"], seed, P.exclude, sampling, fp=fp)
+                full_pos = None
             else:
-                keep = cal_pool(ts, pool, seed)
-                sub = [pool[i] for i in keep]
-                richness = sum(1 for d in sub if any(d.labels.get(q) == ts.positive_label for q in ts.qids)) / len(sub)
-                n_ctrl = control_size(len(sub), richness, cfg["control"]) if spec["stop"] == "target" else None
-                rev, s, meta = run_cal(ts, sub, X[keep], kw[keep], cfg["batch"], cfg["seed_n"], spec["noise"], seed, spec["stop"], spec["target"],
-                                       n_ctrl, X[eval_idx], gold_eval_any, [d.id for d in eval_docs])
-                sub_idx = {d.id: i for i, d in enumerate(sub)}
-                ev = [d for d in eval_docs if d.id in sub_idx]  # on a downsampled pool the CAL rows cover the pool only
-                dec = {}
-                probs = {q: np.zeros(len(ev), dtype=np.float32) for q in ts.qids}
-                p_all = sigmoid(s)
-                for j, d in enumerate(ev):
-                    c = rev.codes.get(d.id)
-                    dec[d.id] = dict(c) if c else {q: False for q in ts.qids}
-                    for q in ts.qids:
-                        probs[q][j] = (1.0 if c[q] else 0.0) if c else p_all[sub_idx[d.id]] * 0.5
-                meta["pool_ids"] = [d.id for d in sub] if len(sub) < len(pool) else None
-                full_pos = [(d, q) for d, c in rev.codes.items() for q, v in c.items() if v] if full_out is not None else None
-            m = doc_level(dec, {d: g for d, g in gold_eval.items() if d in dec})
-            runs.append(dict(seed=seed, dec=dec, probs=probs, meta=meta, doc=m, full_pos=full_pos, docs=[d for d in eval_docs if d.id in dec]))
+                # TREC: score the whole 286k collection once; the eval rows are a subset, the trec_full block gets the positives
+                full_dec, full_probs, meta, rev = run_tar1(ts, pool, P.pool_idx, X, pool, np.arange(len(pool)), spec["n"], spec["rule"], spec["noise"], seed, P.exclude, sampling, fp=fp)
+                dec = {d.id: full_dec[d.id] for d in eval_docs}
+                probs = {q: full_probs[q][P.eval_idx] for q in ts.qids}
+                full_pos = [(d, q) for d, c in full_dec.items() for q, v in c.items() if v]
+        else:
+            keep = cal_pool(ts, pool, seed)
+            sub = [pool[i] for i in keep]
+            richness = sum(1 for d in sub if any(d.labels.get(q) == ts.positive_label for q in ts.qids)) / len(sub)
+            n_ctrl = control_size(len(sub), richness, P.cfg["control"]) if spec["stop"] == "target" else None
+            rev, s, meta = run_cal(ts, sub, X[keep], P.kw[keep], P.cfg["batch"], P.cfg["seed_n"], spec["noise"], seed, spec["stop"], spec["target"],
+                                   n_ctrl, X[P.eval_idx], P.gold_eval_any, [d.id for d in eval_docs], fp=fp)
+            sub_idx = {d.id: i for i, d in enumerate(sub)}
+            ev = [d for d in eval_docs if d.id in sub_idx]  # on a downsampled pool the CAL rows cover the pool only
+            dec = {}
+            probs = {q: np.zeros(len(ev), dtype=np.float32) for q in ts.qids}
+            p_all = sigmoid(s)
+            for j, d in enumerate(ev):
+                c = rev.codes.get(d.id)
+                dec[d.id] = dict(c) if c else {q: False for q in ts.qids}
+                for q in ts.qids:
+                    probs[q][j] = (1.0 if c[q] else 0.0) if c else p_all[sub_idx[d.id]] * 0.5
+            meta["pool_ids"] = [d.id for d in sub] if len(sub) < len(pool) else None
+            full_pos = [(d, q) for d, c in rev.codes.items() for q, v in c.items() if v] if P.full_out is not None else None
+        m = doc_level(dec, {d: g for d, g in P.gold_eval.items() if d in dec})
+        runs.append(dict(seed=seed, dec=dec, probs=probs, meta=meta, doc=m, full_pos=full_pos, docs=[d for d in eval_docs if d.id in dec], rev=rev))
+        if log:
             extra = ""
             if spec["kind"] == "cal":
                 cl = meta.get("classifier") or {}
@@ -622,27 +683,180 @@ def run_corpus(corpus: str, out: Path = Path("results"), only: str | None = None
                          f" clf-eval r/p {ev_cl.get('recall')}/{ev_cl.get('precision')} ctrl {(meta.get('control_set') or {}).get('n')} | {meta['stop']}")
             console.print(f"  {key} seed {seed}: recall {m['recall'] if m['recall'] is None else round(m['recall'], 3)} precision {m['precision'] if m['precision'] is None else round(m['precision'], 3)} "
                           f"reviewed {meta['docs_reviewed']:,} ({meta['hours']:.1f} h, ${meta['cost_usd']:,.0f}) [{time.time() - t1:.0f}s]{extra}")
-        runs.sort(key=lambda r: r["doc"]["f1"] or 0.0)
+    runs.sort(key=lambda r: r["doc"]["f1"] or 0.0)
+    return runs
+
+
+def _rows(P: _Prepared, key: str, med: dict) -> list[Prediction]:
+    """Output rows of the median run. `raw` says who made the call: the reviewer (with the draw behind the
+    miscode decision, see Reviewer.provenance) or the classifier."""
+    rev: Reviewer = med["rev"]
+    rows = []
+    for j, d in enumerate(med["docs"]):
+        coded = d.id in rev.codes
+        for q in P.ts.qids:
+            raw = rev.provenance(d.id, q) if coded else {"src": "clf"}
+            rows.append(_row(d.id, q, key, med["dec"][d.id][q], float(med["probs"][q][j]), "tfidf-logreg", raw))
+    return rows
+
+
+def _sidecar(P: _Prepared, name: str, spec: dict, runs: list[dict]) -> dict:
+    med = runs[len(runs) // 2]
+    side = {
+        "corpus": P.corpus, "variant": name, "spec": spec, "n_eval": len(med["docs"]),
+        "n_corpus": len(med["meta"]["pool_ids"]) if med["meta"].get("pool_ids") else len(P.pool),
+        "reviewer": {"docs_per_hour": DOCS_PER_HOUR, "usd_per_hour": USD_PER_HOUR, "miscode_rate": spec["noise"], "fp_rate": med["meta"]["fp"]},
+        "median_seed": med["seed"], "median": med["meta"],
+        "seeds": [{"seed": r["seed"], "recall": r["doc"]["recall"], "precision": r["doc"]["precision"], "f1": r["doc"]["f1"],
+                   "docs_reviewed": r["meta"]["docs_reviewed"], "hours": r["meta"]["hours"], "cost_usd": r["meta"]["cost_usd"],
+                   **({"est_recall_at_stop": r["meta"].get("est_recall_at_stop"), "reached_recall": r["meta"].get("reached_recall"),
+                       "review_set_precision": r["meta"].get("review_set_precision")} if spec["kind"] == "cal" else {})} for r in runs],
+    }
+    if spec["kind"] == "cal":
+        side["plotted"] = "production set on pool"
+        side["control_set"] = med["meta"].get("control_set")
+    return side
+
+
+def run_corpus(corpus: str, out: Path = Path("results"), only: str | None = None, seeds: int = SEEDS):
+    P = _Prepared(corpus, out)
+    for name, spec in _select(_variants(P.cfg), only):
+        key = f"tar@{name}"
+        runs = _run_variant(P, name, spec, seeds)
         med = runs[len(runs) // 2]
-        rows = []
-        for j, d in enumerate(med["docs"]):
-            for q in ts.qids:
-                rows.append(_row(d.id, q, key, med["dec"][d.id][q], float(med["probs"][q][j]), "tfidf-logreg"))
-        _write(rows, out / corpus / "multi" / f"tar__{name}.jsonl")
-        if full_out is not None and med["full_pos"] is not None:
-            _write([_row(d, q, key, True, 1.0, "tfidf-logreg") for d, q in med["full_pos"]], full_out / f"tar__{name}.jsonl")
-        side = {
-            "corpus": corpus, "variant": name, "spec": spec, "n_eval": len(med["docs"]),
-            "n_corpus": len(med["meta"]["pool_ids"]) if med["meta"].get("pool_ids") else len(pool),
-            "reviewer": {"docs_per_hour": DOCS_PER_HOUR, "usd_per_hour": USD_PER_HOUR, "miscode_rate": spec["noise"]},
-            "median_seed": med["seed"], "median": med["meta"],
-            "seeds": [{"seed": r["seed"], "recall": r["doc"]["recall"], "precision": r["doc"]["precision"], "f1": r["doc"]["f1"],
-                       "docs_reviewed": r["meta"]["docs_reviewed"], "hours": r["meta"]["hours"], "cost_usd": r["meta"]["cost_usd"],
-                       **({"est_recall_at_stop": r["meta"].get("est_recall_at_stop"), "reached_recall": r["meta"].get("reached_recall"),
-                           "review_set_precision": r["meta"].get("review_set_precision")} if spec["kind"] == "cal" else {})} for r in runs],
-        }
-        if spec["kind"] == "cal":
-            side["plotted"] = "production set on pool"
-            side["control_set"] = med["meta"].get("control_set")
-        (out / corpus / "multi" / f"tar__{name}.tar.json").write_text(json.dumps(side, indent=1))
+        _write(_rows(P, key, med), out / corpus / "multi" / f"tar__{name}.jsonl")
+        if P.full_out is not None and med["full_pos"] is not None:
+            _write([_row(d, q, key, True, 1.0, "tfidf-logreg") for d, q in med["full_pos"]], P.full_out / f"tar__{name}.jsonl")
+        (out / corpus / "multi" / f"tar__{name}.tar.json").write_text(json.dumps(_sidecar(P, name, spec, runs), indent=1))
         console.print(f"[{corpus}] wrote {key} (median seed {med['seed']})")
+
+
+# ------------------------------------------------------------------------------------------------ reviewer-rate grid
+
+FN_GRID = (0.0, 0.05, 0.10, 0.20, 0.30, 0.40, 0.50)  # reviewer miss rates
+FP_GRID = (0.0, 0.01, 0.02, 0.05, 0.10, 0.15, 0.20)  # reviewer over-code rates
+GRID_VARIANTS = ("t1_1000_div", "cal")
+
+
+def _cell_key(fn: float, fp: float) -> str:
+    return f"{fn:g},{fp:g}"
+
+
+def _score_cell(P: _Prepared, name: str, spec: dict, runs: list[dict], docs_by_id: dict) -> dict:
+    """One grid cell, scored exactly as export.py scores the published run: the median run's rows are re-bound to
+    the corpus gold and scored with _score (Wilson CIs); effort and spread come from _tar_block on the sidecar."""
+    from .export import _rebind, _score, _tar_block
+
+    med = runs[len(runs) // 2]
+    preds = _rebind(_rows(P, f"tar@{name}", med), docs_by_id, P.ts)
+    s = _score(preds, P.ts, docs_by_id, False)
+    t = _tar_block(_sidecar(P, name, spec, runs))
+    return {
+        "doc": {"recall": s["doc"]["recall"], "precision": s["doc"]["precision"], "f1": s["doc"]["f1"]},
+        "per_issue": {q: {"recall": v["recall"], "precision": v["precision"]} for q, v in s["per_issue"].items()},
+        "docs_reviewed": t["docs_reviewed"], "hours": round(t["hours"], 4), "cost_usd": round(t["cost_usd"], 2),
+        "n_corpus": t["n_corpus"], "review_share": round(t["review_share"], 6),
+        "seeds": [{"recall": None if r["doc"]["recall"] is None else round(r["doc"]["recall"], 4),
+                   "precision": None if r["doc"]["precision"] is None else round(r["doc"]["precision"], 4),
+                   "docs_reviewed": r["meta"]["docs_reviewed"]} for r in runs],
+        "recall_range": None if t["recall_range"] is None else [round(x, 4) for x in t["recall_range"]],
+        "precision_range": None if t["precision_range"] is None else [round(x, 4) for x in t["precision_range"]],
+    }
+
+
+def _check_default_cell(corpus: str, variant: str, cell: dict, findings: Path) -> str:
+    """The default cell must reproduce the findings.json record of the published run (same rows, same scoring)."""
+    if not findings.exists():
+        return f"{findings} missing: default cell not checked"
+    recs = json.loads(findings.read_text())["records"]
+    rec = next((r for r in recs if r["corpus"] == corpus and r["tag"] == "" and r["arm"] == "multi" and r["model_key"] == f"tar@{variant}"), None)
+    if rec is None:
+        return f"no findings.json record for {corpus} tar@{variant}: default cell not checked"
+    want = {"doc": {k: rec["all"]["doc"][k] for k in ("recall", "precision", "f1")},
+            "per_issue": {q: {"recall": v["recall"], "precision": v["precision"]} for q, v in rec["all"]["per_issue"].items()},
+            "docs_reviewed": rec["tar"]["docs_reviewed"], "n_corpus": rec["tar"]["n_corpus"],
+            "recall_range": None if rec["tar"]["recall_range"] is None else [round(x, 4) for x in rec["tar"]["recall_range"]],
+            "precision_range": None if rec["tar"]["precision_range"] is None else [round(x, 4) for x in rec["tar"]["precision_range"]]}
+    got = {k: cell[k] for k in want}
+    bad = {k: (want[k], got[k]) for k in want if want[k] != got[k]}
+    if abs(cell["hours"] - rec["tar"]["hours"]) > 1e-3 or abs(cell["cost_usd"] - rec["tar"]["cost_usd"]) > 0.01:
+        bad["effort"] = ((rec["tar"]["hours"], rec["tar"]["cost_usd"]), (cell["hours"], cell["cost_usd"]))
+    if bad:
+        raise RuntimeError(f"tar-grid {corpus} {variant}: the default cell does not reproduce findings.json "
+                           f"(re-run `bench tar {corpus} --only {variant}` and `bench export-findings`?). Mismatches (findings, grid): {bad}")
+    return "default cell reproduces findings.json"
+
+
+CAL_FP_UNAVAILABLE_REASON = ("CAL does not converge on this pool at over-code rates >= {fp_min:.0%}: with low prevalence the reviewer's "
+                             "false positives swamp the {control:,}-document control set, so the 80% control-set stop rule is only "
+                             "reachable by reviewing most of the {n_pool:,}-document pool (runs exceeded 2 h per seed without stopping).")
+
+
+def grid_unavailable(fps: tuple[float, ...], fp_max: float | None, control: int | None, n_pool: int) -> dict | None:
+    """The `unavailable` block of a grid whose over-code rates above `fp_max` were not run: the first rate left out
+    and why (CAL_FP_UNAVAILABLE_REASON). None when every rate of `fps` was run."""
+    left_out = [fp for fp in fps if fp_max is not None and fp > fp_max + 1e-9]
+    if not left_out:
+        return None
+    return {"fp_min": float(min(left_out)), "reason": CAL_FP_UNAVAILABLE_REASON.format(fp_min=min(left_out), control=control or 0, n_pool=n_pool)}
+
+
+def run_grid(corpus: str, variants: tuple[str, ...] = GRID_VARIANTS, fns: tuple[float, ...] = FN_GRID, fps: tuple[float, ...] = FP_GRID,
+             seeds: int = SEEDS, out: Path = Path("results/tar_grid"), results: Path = Path("results"), findings: Path = Path("results/findings.json"),
+             fp_max: float | None = None) -> list[Path]:
+    """Reviewer-rate grid: every (miss rate, over-code rate) cell of `variants`, same seeds and median rule as
+    run_corpus, scored with export.py's helpers -> out/<corpus>__<variant>.json. The matrix is featurised once
+    and the diversity-sample cache is shared, so every cell of a seed codes the same training sample; what
+    changes between cells is only what the reviewer does with it. `fp_max` leaves the over-code rates above it
+    out of `cells` (the `fp` array keeps every rate, so the site's slider ticks stay aligned across corpora) and
+    records them in the payload's `unavailable` block (grid_unavailable): TREC CAL at fp >= 0.05."""
+    from .scope import in_scope
+
+    P = _Prepared(corpus, results)
+    docs_by_id = {d.id: d for d in in_scope(corpus, P.eval_docs)}
+    table = dict(_variants(P.cfg))
+    written = []
+    for name in variants:
+        if name not in table:
+            raise ValueError(f"unknown variant {name!r}; choose from {sorted(table)}")
+        spec = table[name]
+        default = {"fn": round(spec["noise"], 6), "fp": round(spec.get("fp", spec["noise"] * NOISE_FP_RATIO), 6)}
+        cells: dict[str, dict] = {}
+        t0 = time.time()
+        for fn in fns:
+            for fp in fps:
+                if fp_max is not None and fp > fp_max + 1e-9:
+                    continue
+                t1 = time.time()
+                # A cell on the published 1:5 ratio goes through the legacy `noise` path (fp derived inside the
+                # Reviewer) so that it is bit-for-bit the run run_corpus writes; elsewhere fp is passed explicitly.
+                cell_spec = {**spec, "noise": float(fn), **({} if abs(fp - fn * NOISE_FP_RATIO) < 1e-9 else {"fp": float(fp)})}
+                runs = _run_variant(P, name, cell_spec, seeds, log=False)
+                cells[_cell_key(fn, fp)] = c = _score_cell(P, name, cell_spec, runs, docs_by_id)
+                console.print(f"  [{corpus}] {name} fn {fn:g} fp {fp:g}: recall {c['doc']['recall'][0] if c['doc']['recall'] else None} "
+                              f"precision {c['doc']['precision'][0] if c['doc']['precision'] else None} reviewed {c['docs_reviewed']:,} [{time.time() - t1:.1f}s]")
+        dk = _cell_key(default["fn"], default["fp"])
+        note = _check_default_cell(corpus, name, cells[dk], findings) if dk in cells else "default cell not on the grid: not checked"
+        console.print(f"[{corpus}] {name}: {len(cells)} cells in {time.time() - t0:.0f}s; {note}")
+        payload = {"corpus": corpus, "variant": name, "kind": spec["kind"], "default": default, "fn": [float(x) for x in fns], "fp": [float(x) for x in fps],
+                   "seeds": seeds if spec["kind"] == "t1" else min(seeds, P.cfg["cal_seeds"]), "median_rule": "run with the median doc-level F1 across seeds",
+                   "reviewer": {"docs_per_hour": DOCS_PER_HOUR, "usd_per_hour": USD_PER_HOUR}, "default_check": note, "cells": cells}
+        unavailable = grid_unavailable(fps, fp_max, P.cfg["control"], len(P.pool))
+        if unavailable:
+            payload["unavailable"] = unavailable
+        out.mkdir(parents=True, exist_ok=True)
+        path = out / f"{corpus}__{name}.json"
+        path.write_text(json.dumps(payload, separators=(",", ":")))
+        written.append(path)
+        console.print(f"[{corpus}] wrote {path} ({path.stat().st_size / 1024:.0f} KB)")
+    return written
+
+
+def export_grid(src: Path = Path("results/tar_grid"), dest: Path = Path("results/tar_grid.json")) -> Path:
+    """Fold results/tar_grid/<corpus>__<variant>.json into one file keyed corpus -> variant (imported by the site next to findings.json)."""
+    out: dict[str, dict[str, dict]] = {}
+    for p in sorted(src.glob("*__*.json")):
+        g = json.loads(p.read_text())
+        out.setdefault(g["corpus"], {})[g["variant"]] = g
+    dest.write_text(json.dumps(out, separators=(",", ":")))
+    return dest

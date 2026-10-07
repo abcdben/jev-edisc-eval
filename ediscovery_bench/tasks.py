@@ -133,7 +133,8 @@ class Document:
 def load_corpus(path: str | Path, limit: int | None = None, labeled: bool = True) -> list[Document]:
     """Load a corpus JSONL. If `labeled` is False, documents carry no gold."""
     docs: list[Document] = []
-    for i, line in enumerate(Path(path).read_text().splitlines()):
+    # one JSON object per "\n"-terminated line; str.splitlines would also break on U+2028 and other separators inside a document's text
+    for i, line in enumerate(Path(path).read_text().split("\n")):
         line = line.strip()
         if not line:
             continue
