@@ -30,6 +30,7 @@ Definitions
 from __future__ import annotations
 
 import json
+import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -363,10 +364,16 @@ def _rebind(preds, docs_by_id, ts, calls: list | None = None):
     return out
 
 
-def export(out: Path = Path("results"), dest: Path = Path("results/findings.json")) -> Path:
+def export(out: Path = Path("results"), dest: Path = Path("results/findings.json"), carry: bool = True) -> Path:
+    """`carry`: results/*/* is gitignored, so a machine (or a partial re-run) may lack the result file behind a record
+    `dest` already has. Such records, and trec_full entries, are carried over from `dest` unchanged rather than silently
+    dropped; the carried keys are listed on stderr. `--no-carry` rebuilds from the files on disk alone."""
     root = Path(".")
     records = []
     corpora_meta = {}
+    prior = json.loads(dest.read_text()) if carry and dest.exists() else {}
+    prior_recs = {(r["corpus"], r["tag"], r["arm"], r["model_key"]): r for r in prior.get("records", [])}
+    carried: list[tuple] = []
     for corpus, task, data, tag, display, gold_kind in CORPORA:
         ts = TaskSet.load(root / task)
         docs = in_scope(corpus, load_corpus(root / data))  # TREC: minus the 100 `pos:eminent_domain` emails (scope.py)
@@ -382,19 +389,19 @@ def export(out: Path = Path("results"), dest: Path = Path("results/findings.json
         }
         for arm in ("multi", "single"):
             d = out / corpus / arm
-            if not d.exists():
-                continue
-            files = {parse_job_stem(f.stem): f for f in d.glob("*.jsonl")}
+            files = {parse_job_stem(f.stem): f for f in d.glob("*.jsonl")} if d.exists() else {}
             todo: list[tuple[str, str, dict, bool]] = []  # (record key, model key, meta, primary)
             for key, meta in MODELS.items():
                 todo.append((key, FT_KEYS.get(corpus) if key == "laya-ft" else key, meta, True))
             primary_mks = {mk for _, mk, _, _ in todo}
             for mk, meta in _variant_models().items():
-                if mk not in primary_mks and (mk, tag) in files:
+                if mk not in primary_mks and ((mk, tag) in files or (corpus, tag, arm, mk) in prior_recs):
                     todo.append((mk, mk, meta, False))
             for key, mk, meta, primary in todo:
                 f = files.get((mk, tag))
                 if f is None:
+                    if (corpus, tag, arm, mk) in prior_recs:  # no result file here: keep the record dest already has
+                        records.append(prior_recs[corpus, tag, arm, mk]); carried.append((corpus, tag, arm, mk))
                     continue
                 calls: list = []
                 preds = _rebind(load_predictions(f), docs_by_id, ts, calls)
@@ -511,8 +518,18 @@ def export(out: Path = Path("results"), dest: Path = Path("results/findings.json
                 "doc": {"flagged": len(any_doc), "relevant": len(rel_any), "recall": _ci(tp_any, len(rel_any)),
                         "precision_lb": _ci(tp_any, len(any_doc)), "review_share": len(any_doc) / n_full},
             }
+    carried_full = [mk for mk in prior.get("trec_full") or {} if mk not in full]
+    for mk in carried_full:
+        full[mk] = prior["trec_full"][mk]
     det_path = out / "determinism.json"
-    determinism = json.loads(det_path.read_text()) if det_path.exists() else None
+    determinism = json.loads(det_path.read_text()) if det_path.exists() else prior.get("determinism")
+    if carried or carried_full:
+        print(f"warning: {len(carried)} records and {len(carried_full)} trec_full entries have no result file under {out}; "
+              f"carried over unchanged from {dest} (--no-carry drops them):", file=sys.stderr)
+        for k in carried:
+            print(f"  {k[0]}{'#' + k[1] if k[1] else ''} {k[2]} {k[3]}", file=sys.stderr)
+        for mk in carried_full:
+            print(f"  trec_full {mk}", file=sys.stderr)
     payload = {"corpora": corpora_meta, "models": MODELS, "records": records, "trec_full": full, "determinism": determinism}
     dest.write_text(json.dumps(payload, separators=(",", ":")))
     return dest

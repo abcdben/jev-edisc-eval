@@ -427,11 +427,12 @@ def jev_recipe(
 def export_findings(
     out: Path = typer.Option(Path("results"), "--out", "-o"),
     dest: Path = typer.Option(Path("results/findings.json"), "--dest"),
+    carry: bool = typer.Option(True, "--carry/--no-carry", help="Keep records of --dest whose result file is absent under --out (warns); --no-carry rebuilds from the files alone"),
 ):
     """Speed, cost, recall/precision (Wilson CIs) per corpus/arm/model -> findings.json."""
     from .export import export
 
-    console.print(f"wrote {export(out, dest)}")
+    console.print(f"wrote {export(out, dest, carry)}")
 
 
 @app.command("export-sweep")
