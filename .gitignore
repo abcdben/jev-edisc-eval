@@ -50,5 +50,7 @@ results/*/*
 !results/*/summary*.json
 !results/*/REPORT.md
 !results/trec_lat/sample_ids.json
+# the TAR reviewer-rate grids (`bench tar-grid`; aggregates, folded into results/tar_grid.json)
+!results/tar_grid/*.json
 results/**/*.jsonl
 results_gpu*/

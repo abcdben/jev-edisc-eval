@@ -1,0 +1,1820 @@
+{
+ "datasets": [
+  {
+   "id": "legal10",
+   "kind": "judgments",
+   "label": "TREC Legal 2010 \u00b7 Interactive",
+   "short": "Enron emails (EDRM v2) \u00b7 first-pass review + Topic Authority appeals",
+   "text": true,
+   "text_note": null,
+   "n": 46331,
+   "n_docs": 44704,
+   "n_families": 24834,
+   "has_attachments": true,
+   "inherit_default": true,
+   "placeholders": true,
+   "topics": [
+    {
+     "id": "301",
+     "key": "oil_gas_drilling",
+     "title": "Oil and gas drilling",
+     "kind": "responsiveness",
+     "n": 11166,
+     "n_pos": 1714,
+     "n_gray": 580,
+     "n_contested": 375,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to onshore or offshore oil and gas drilling or extraction activities, whether past, present or future, actual, anticipated, possible or potential, including, but not limited to, all business and other plans relating thereto, all anticipated revenues therefrom, and all risk calculations or risk management analyses in connection therewith.",
+     "note": null
+    },
+    {
+     "id": "302",
+     "key": "spill_response",
+     "title": "Spill and blowout response",
+     "kind": "responsiveness",
+     "n": 12280,
+     "n_pos": 326,
+     "n_gray": 290,
+     "n_contested": 208,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to actual, anticipated, possible or potential responses to oil and gas spills, blowouts or releases, or pipeline eruptions, whether past, present or future, including, but not limited to, any assessment, evaluation, remediation or repair activities, contingency plans and/or environmental disaster, recovery or clean-up efforts.",
+     "note": null
+    },
+    {
+     "id": "303",
+     "key": "lobbying",
+     "title": "Lobbying",
+     "kind": "responsiveness",
+     "n": 11376,
+     "n_pos": 1809,
+     "n_gray": 594,
+     "n_contested": 522,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to activities, plans or efforts (whether past, present or future) aimed, intended or directed at lobbying public or other officials regarding any actual, pending, anticipated, possible or potential legislation, including but not limited to, activities aimed, intended or directed at influencing or affecting any actual, pending, anticipated, possible or potential rule, regulation, standard, policy, law or amendment thereto.",
+     "note": null
+    },
+    {
+     "id": "304",
+     "key": "privilege",
+     "title": "Privilege review",
+     "kind": "privilege",
+     "n": 11509,
+     "n_pos": 1220,
+     "n_gray": 1144,
+     "n_contested": 276,
+     "rfp_text": "Should Defendants choose to withhold from production any documents or communications in the TREC Legal Track Enron Collection on the basis of a claim of privilege, attorney work-product, or any other applicable protection, they should identify all such documents or communications.",
+     "note": "A privilege review, not a responsiveness review: 'relevant' means the document would be withheld as privileged or work product. Detailed guidance in AssessmentGuidelines_leg_int_2010.pdf."
+    }
+   ],
+   "humans": [
+    {
+     "id": "human@firstpass",
+     "name": "First-pass reviewer",
+     "short": "First-pass reviewer",
+     "color": "var(--ink-3)",
+     "note": "The TREC Legal contract reviewers' and volunteers' first-pass judgment, before appeals."
+    },
+    {
+     "id": "human@authority",
+     "name": "Topic Authority (adjudicated)",
+     "short": "Topic Authority",
+     "color": "var(--ink)",
+     "note": "The first-pass judgment after the Topic Authority ruled on appeals; the track's reference standard."
+    }
+   ],
+   "arms": [
+    {
+     "id": "jev@base",
+     "name": "Jev 1.13 \u00b7 Noul",
+     "short": "Jev \u00b7 Noul",
+     "kind": "system1",
+     "color": "var(--c-jev)",
+     "planned": true,
+     "note": null,
+     "file": "jev__base.json",
+     "coverage": null
+    },
+    {
+     "id": "openai-decisions",
+     "name": "OpenAI Decisions (GPT-6 Luna)",
+     "short": "OpenAI Decisions",
+     "kind": "system1",
+     "color": "var(--v7)",
+     "planned": true,
+     "note": "Decisions API, limited preview. Not yet run.",
+     "file": "openai-decisions.json",
+     "coverage": null
+    },
+    {
+     "id": "claude-sonnet-5",
+     "name": "Claude Sonnet 5",
+     "short": "Sonnet 5",
+     "kind": "llm",
+     "color": "var(--c-sonnet)",
+     "planned": true,
+     "note": null,
+     "file": "claude-sonnet-5.json",
+     "coverage": null
+    },
+    {
+     "id": "gpt-5.6-luna",
+     "name": "GPT-5.6 Luna",
+     "short": "GPT-5.6 Luna",
+     "kind": "llm",
+     "color": "var(--c-luna)",
+     "planned": true,
+     "note": null,
+     "file": "gpt-5.6-luna.json",
+     "coverage": null
+    },
+    {
+     "id": "gemini-3.8-flash",
+     "name": "Gemini 3.8 Flash",
+     "short": "Gemini 3.8 Flash",
+     "kind": "llm",
+     "color": "var(--c-flash)",
+     "planned": true,
+     "note": null,
+     "file": "gemini-3.8-flash.json",
+     "coverage": null
+    },
+    {
+     "id": "tar@cal",
+     "name": "TAR 2.0 \u00b7 CAL (80% target)",
+     "short": "TAR 2.0 \u00b7 CAL",
+     "kind": "tar",
+     "color": "var(--c-cal)",
+     "planned": true,
+     "note": null,
+     "file": "tar__cal.json",
+     "coverage": null
+    }
+   ],
+   "default": {
+    "standard": "human@authority",
+    "a": "human@firstpass",
+    "b": "jev@base",
+    "topics": [
+     "301"
+    ]
+   }
+  },
+  {
+   "id": "legal10-learn",
+   "kind": "judgments",
+   "label": "TREC Legal 2010 \u00b7 Learning",
+   "short": "Enron emails (EDRM v2) \u00b7 one assessment per document, 2009 requests",
+   "text": true,
+   "text_note": null,
+   "n": 21760,
+   "n_docs": 21066,
+   "n_families": 18531,
+   "has_attachments": true,
+   "inherit_default": false,
+   "placeholders": true,
+   "topics": [
+    {
+     "id": "200",
+     "key": "topic_200",
+     "title": "Topic 200 (text not recovered)",
+     "kind": "responsiveness",
+     "n": 2720,
+     "n_pos": 261,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": null,
+     "note": null
+    },
+    {
+     "id": "201",
+     "key": "prepay_transactions",
+     "title": "Prepay transactions",
+     "kind": "responsiveness",
+     "n": 2720,
+     "n_pos": 384,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to the Company's engagement in structured commodity transactions known as \"prepay transactions.\"",
+     "note": null
+    },
+    {
+     "id": "202",
+     "key": "fas140",
+     "title": "FAS 140 transactions",
+     "kind": "responsiveness",
+     "n": 2720,
+     "n_pos": 996,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to the Company's engagement in transactions that the Company characterized as compliant with FAS 140 (or its predecessor FAS 125).",
+     "note": null
+    },
+    {
+     "id": "203",
+     "key": "financial_forecasts",
+     "title": "Meeting financial forecasts",
+     "kind": "responsiveness",
+     "n": 2720,
+     "n_pos": 481,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to whether the Company had met, or could, would, or might meet its financial forecasts, models, projections, or plans at any time after January 1, 1999.",
+     "note": null
+    },
+    {
+     "id": "204",
+     "key": "document_destruction",
+     "title": "Document retention and destruction",
+     "kind": "responsiveness",
+     "n": 2720,
+     "n_pos": 475,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to any intentions, plans, efforts, or activities involving the alteration, destruction, retention, lack of retention, deletion, or shredding of documents or other evidence, whether in hard-copy or electronic form.",
+     "note": null
+    },
+    {
+     "id": "205",
+     "key": "energy_schedules",
+     "title": "Energy schedules and bids",
+     "kind": "responsiveness",
+     "n": 2720,
+     "n_pos": 1366,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to energy schedules and bids, including but not limited to, estimates, forecasts, descriptions, characterizations, analyses, evaluations, projections, plans, and reports on the volume(s) or geographic location(s) of energy loads.",
+     "note": null
+    },
+    {
+     "id": "206",
+     "key": "financial_analysts",
+     "title": "Contacts with financial analysts",
+     "kind": "responsiveness",
+     "n": 2720,
+     "n_pos": 135,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to any discussion(s), communication(s), or contact(s) with financial analyst(s), or with the firm(s) that employ them, regarding (i) the Company's financial condition, (ii) analysts' coverage of the Company and/or its financial condition, (iii) analysts' rating of the Company's stock, or (iv) the impact of an analyst's coverage of the Company on the business relationship between the Company and the firm that employs the analyst.",
+     "note": null
+    },
+    {
+     "id": "207",
+     "key": "fantasy_football",
+     "title": "Fantasy football",
+     "kind": "responsiveness",
+     "n": 2720,
+     "n_pos": 1294,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to fantasy football, gambling on football, and related activities, including but not limited to, football teams, football players, football games, football statistics, and football performance.",
+     "note": null
+    }
+   ],
+   "humans": [
+    {
+     "id": "human@assessor",
+     "name": "Assessor",
+     "short": "Assessor",
+     "color": "var(--ink)",
+     "note": "A single assessment per document, with no appeal process."
+    }
+   ],
+   "arms": [
+    {
+     "id": "jev@base",
+     "name": "Jev 1.13 \u00b7 Noul",
+     "short": "Jev \u00b7 Noul",
+     "kind": "system1",
+     "color": "var(--c-jev)",
+     "planned": true,
+     "note": null,
+     "file": "jev__base.json",
+     "coverage": null
+    },
+    {
+     "id": "openai-decisions",
+     "name": "OpenAI Decisions (GPT-6 Luna)",
+     "short": "OpenAI Decisions",
+     "kind": "system1",
+     "color": "var(--v7)",
+     "planned": true,
+     "note": "Decisions API, limited preview. Not yet run.",
+     "file": "openai-decisions.json",
+     "coverage": null
+    },
+    {
+     "id": "claude-sonnet-5",
+     "name": "Claude Sonnet 5",
+     "short": "Sonnet 5",
+     "kind": "llm",
+     "color": "var(--c-sonnet)",
+     "planned": true,
+     "note": null,
+     "file": "claude-sonnet-5.json",
+     "coverage": null
+    },
+    {
+     "id": "gpt-5.6-luna",
+     "name": "GPT-5.6 Luna",
+     "short": "GPT-5.6 Luna",
+     "kind": "llm",
+     "color": "var(--c-luna)",
+     "planned": true,
+     "note": null,
+     "file": "gpt-5.6-luna.json",
+     "coverage": null
+    },
+    {
+     "id": "gemini-3.8-flash",
+     "name": "Gemini 3.8 Flash",
+     "short": "Gemini 3.8 Flash",
+     "kind": "llm",
+     "color": "var(--c-flash)",
+     "planned": true,
+     "note": null,
+     "file": "gemini-3.8-flash.json",
+     "coverage": null
+    },
+    {
+     "id": "tar@cal",
+     "name": "TAR 2.0 \u00b7 CAL (80% target)",
+     "short": "TAR 2.0 \u00b7 CAL",
+     "kind": "tar",
+     "color": "var(--c-cal)",
+     "planned": true,
+     "note": null,
+     "file": "tar__cal.json",
+     "coverage": null
+    }
+   ],
+   "default": {
+    "standard": "human@assessor",
+    "a": null,
+    "b": null,
+    "topics": [
+     "201"
+    ]
+   }
+  },
+  {
+   "id": "legal09",
+   "kind": "judgments",
+   "label": "TREC Legal 2009 \u00b7 Interactive",
+   "short": "Enron emails (2009 build, text not public) \u00b7 first-pass review + Topic Authority appeals",
+   "text": false,
+   "text_note": "The 2009 track used a document build that was never released (available from the track coordinators); its ids do not resolve against the EDRM v2 rendering in EDRM/, so only the judgments are here.",
+   "n": 49285,
+   "n_docs": 47784,
+   "n_families": 47784,
+   "has_attachments": false,
+   "inherit_default": false,
+   "placeholders": true,
+   "topics": [
+    {
+     "id": "201",
+     "key": "prepay_transactions",
+     "title": "Prepay transactions",
+     "kind": "responsiveness",
+     "n": 6455,
+     "n_pos": 341,
+     "n_gray": 247,
+     "n_contested": 464,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to the Company's engagement in structured commodity transactions known as \"prepay transactions.\"",
+     "note": null
+    },
+    {
+     "id": "202",
+     "key": "fas140",
+     "title": "FAS 140 transactions",
+     "kind": "responsiveness",
+     "n": 7435,
+     "n_pos": 2097,
+     "n_gray": 230,
+     "n_contested": 584,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to the Company's engagement in transactions that the Company characterized as compliant with FAS 140 (or its predecessor FAS 125).",
+     "note": null
+    },
+    {
+     "id": "203",
+     "key": "financial_forecasts",
+     "title": "Meeting financial forecasts",
+     "kind": "responsiveness",
+     "n": 5710,
+     "n_pos": 248,
+     "n_gray": 283,
+     "n_contested": 255,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to whether the Company had met, or could, would, or might meet its financial forecasts, models, projections, or plans at any time after January 1, 1999.",
+     "note": null
+    },
+    {
+     "id": "204",
+     "key": "document_destruction",
+     "title": "Document retention and destruction",
+     "kind": "responsiveness",
+     "n": 7289,
+     "n_pos": 224,
+     "n_gray": 160,
+     "n_contested": 219,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to any intentions, plans, efforts, or activities involving the alteration, destruction, retention, lack of retention, deletion, or shredding of documents or other evidence, whether in hard-copy or electronic form.",
+     "note": null
+    },
+    {
+     "id": "205",
+     "key": "energy_schedules",
+     "title": "Energy schedules and bids",
+     "kind": "responsiveness",
+     "n": 6367,
+     "n_pos": 799,
+     "n_gray": 447,
+     "n_contested": 932,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to energy schedules and bids, including but not limited to, estimates, forecasts, descriptions, characterizations, analyses, evaluations, projections, plans, and reports on the volume(s) or geographic location(s) of energy loads.",
+     "note": null
+    },
+    {
+     "id": "206",
+     "key": "financial_analysts",
+     "title": "Contacts with financial analysts",
+     "kind": "responsiveness",
+     "n": 7371,
+     "n_pos": 185,
+     "n_gray": 276,
+     "n_contested": 50,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to any discussion(s), communication(s), or contact(s) with financial analyst(s), or with the firm(s) that employ them, regarding (i) the Company's financial condition, (ii) analysts' coverage of the Company and/or its financial condition, (iii) analysts' rating of the Company's stock, or (iv) the impact of an analyst's coverage of the Company on the business relationship between the Company and the firm that employs the analyst.",
+     "note": null
+    },
+    {
+     "id": "207",
+     "key": "fantasy_football",
+     "title": "Fantasy football",
+     "kind": "responsiveness",
+     "n": 8658,
+     "n_pos": 1040,
+     "n_gray": 343,
+     "n_contested": 148,
+     "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to fantasy football, gambling on football, and related activities, including but not limited to, football teams, football players, football games, football statistics, and football performance.",
+     "note": null
+    }
+   ],
+   "humans": [
+    {
+     "id": "human@firstpass",
+     "name": "First-pass reviewer",
+     "short": "First-pass reviewer",
+     "color": "var(--ink-3)",
+     "note": "The TREC Legal contract reviewers' and volunteers' first-pass judgment, before appeals."
+    },
+    {
+     "id": "human@authority",
+     "name": "Topic Authority (adjudicated)",
+     "short": "Topic Authority",
+     "color": "var(--ink)",
+     "note": "The first-pass judgment after the Topic Authority ruled on appeals; the track's reference standard."
+    }
+   ],
+   "arms": [
+    {
+     "id": "jev@base",
+     "name": "Jev 1.13 \u00b7 Noul",
+     "short": "Jev \u00b7 Noul",
+     "kind": "system1",
+     "color": "var(--c-jev)",
+     "planned": true,
+     "note": null,
+     "file": "jev__base.json",
+     "coverage": null
+    },
+    {
+     "id": "openai-decisions",
+     "name": "OpenAI Decisions (GPT-6 Luna)",
+     "short": "OpenAI Decisions",
+     "kind": "system1",
+     "color": "var(--v7)",
+     "planned": true,
+     "note": "Decisions API, limited preview. Not yet run.",
+     "file": "openai-decisions.json",
+     "coverage": null
+    },
+    {
+     "id": "claude-sonnet-5",
+     "name": "Claude Sonnet 5",
+     "short": "Sonnet 5",
+     "kind": "llm",
+     "color": "var(--c-sonnet)",
+     "planned": true,
+     "note": null,
+     "file": "claude-sonnet-5.json",
+     "coverage": null
+    },
+    {
+     "id": "gpt-5.6-luna",
+     "name": "GPT-5.6 Luna",
+     "short": "GPT-5.6 Luna",
+     "kind": "llm",
+     "color": "var(--c-luna)",
+     "planned": true,
+     "note": null,
+     "file": "gpt-5.6-luna.json",
+     "coverage": null
+    },
+    {
+     "id": "gemini-3.8-flash",
+     "name": "Gemini 3.8 Flash",
+     "short": "Gemini 3.8 Flash",
+     "kind": "llm",
+     "color": "var(--c-flash)",
+     "planned": true,
+     "note": null,
+     "file": "gemini-3.8-flash.json",
+     "coverage": null
+    },
+    {
+     "id": "tar@cal",
+     "name": "TAR 2.0 \u00b7 CAL (80% target)",
+     "short": "TAR 2.0 \u00b7 CAL",
+     "kind": "tar",
+     "color": "var(--c-cal)",
+     "planned": true,
+     "note": null,
+     "file": "tar__cal.json",
+     "coverage": null
+    }
+   ],
+   "default": {
+    "standard": "human@authority",
+    "a": "human@firstpass",
+    "b": "jev@base",
+    "topics": [
+     "201"
+    ]
+   }
+  },
+  {
+   "id": "trec",
+   "kind": "corpus",
+   "label": "TREC 2016 Total Recall \u00b7 eval sample",
+   "short": "Jeb Bush emails \u00b7 3,116-email stratified sample (positives, hard negatives, random) \u00b7 NIST judgments \u00b7 measured runs",
+   "text": false,
+   "text_note": "The Jeb Bush collection is distributed by NIST under the Total Recall usage agreement (see data/trec/README.md); place it at TREC/Jeb Bush TXT/ and rebuild to read the emails.",
+   "n": 34276,
+   "n_docs": 3116,
+   "n_families": 3116,
+   "has_attachments": false,
+   "inherit_default": false,
+   "placeholders": false,
+   "topics": [
+    {
+     "id": "403",
+     "key": "bottled_water",
+     "title": "Bottled water",
+     "kind": "responsiveness",
+     "n": 3116,
+     "n_pos": 102,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning the extraction of water in Florida for bottling by commercial enterprises.",
+     "note": null
+    },
+    {
+     "id": "407",
+     "key": "faith_based",
+     "title": "Faith-based initiatives",
+     "kind": "responsiveness",
+     "n": 3116,
+     "n_pos": 109,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning grants or other initiatives in Florida to offload social services to so-called\nfaith-based agencies. Services include but are not limited to education, prisons, and emergency relief.",
+     "note": null
+    },
+    {
+     "id": "410",
+     "key": "condominiums",
+     "title": "Condominiums",
+     "kind": "responsiveness",
+     "n": 3116,
+     "n_pos": 107,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning the rules and organizations governing Florida condominium associations and\nconflicts between owners and managers in Florida. Relevant documents include those concerning the\nestablishment of the Florida office of ombudsman, and issues relating to hiring and firing the ombudsman.",
+     "note": null
+    },
+    {
+     "id": "412",
+     "key": "recount_2000",
+     "title": "2000 recount",
+     "kind": "responsiveness",
+     "n": 3116,
+     "n_pos": 102,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning the contested result of the 2000 presidential election.",
+     "note": null
+    },
+    {
+     "id": "414",
+     "key": "medicaid_reform",
+     "title": "Medicaid reform",
+     "kind": "responsiveness",
+     "n": 3116,
+     "n_pos": 104,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning efforts to reform Medicaid.",
+     "note": null
+    },
+    {
+     "id": "415",
+     "key": "gw_bush",
+     "title": "George W. Bush",
+     "kind": "responsiveness",
+     "n": 3116,
+     "n_pos": 182,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning George W. Bush, whether by explicit reference or by his relationship to Governor Bush.",
+     "note": null
+    },
+    {
+     "id": "416",
+     "key": "marketing",
+     "title": "Marketing",
+     "kind": "responsiveness",
+     "n": 3116,
+     "n_pos": 109,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning advertising or marketing efforts undertaken by the Florida Governor's office or any\nother institution of the State of Florida.",
+     "note": null
+    },
+    {
+     "id": "417",
+     "key": "movie_gallery",
+     "title": "Movie Gallery",
+     "kind": "responsiveness",
+     "n": 3116,
+     "n_pos": 119,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning investments or divestments by the State of Florida in Movie Gallery.",
+     "note": null
+    },
+    {
+     "id": "419",
+     "key": "rilya_wilson",
+     "title": "Lost foster child Rilya Wilson",
+     "kind": "responsiveness",
+     "n": 3116,
+     "n_pos": 102,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning the disappearance of lost foster child, Rilya Wilson, and the impact or aftermath\nin Florida resulting from the loss.",
+     "note": null
+    },
+    {
+     "id": "422",
+     "key": "nra_aliens",
+     "title": "Non-resident aliens (NRA)",
+     "kind": "responsiveness",
+     "n": 3116,
+     "n_pos": 18,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All documents involving discussions of the non-resident alien issue. Documents concerning the National\nRifle Association are not relevant.",
+     "note": "pair nra"
+    },
+    {
+     "id": "423",
+     "key": "nra_rifle",
+     "title": "National Rifle Association (NRA)",
+     "kind": "responsiveness",
+     "n": 3116,
+     "n_pos": 88,
+     "n_gray": 13,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning the National Rifle Association, its members, and its influences. Documents\nconcerning the non-resident alien issue are not relevant.",
+     "note": "pair nra"
+    }
+   ],
+   "humans": [
+    {
+     "id": "human@nist",
+     "name": "NIST assessor",
+     "short": "NIST assessor",
+     "color": "var(--ink)",
+     "note": "The TREC 2016 Total Recall relevance judgments (athome4 qrels); rel 1 or 2 is responsive, judged non-relevant and unjudged are not."
+    }
+   ],
+   "arms": [
+    {
+     "id": "jev@base",
+     "name": "Jev 1.13 \u00b7 Noul",
+     "short": "Jev \u00b7 Noul",
+     "kind": "system1",
+     "color": "var(--c-jev)",
+     "planned": false,
+     "note": null,
+     "file": "jev__base.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "claude-sonnet-5",
+     "name": "Claude Sonnet 5",
+     "short": "Sonnet 5",
+     "kind": "llm",
+     "color": "var(--c-sonnet)",
+     "planned": false,
+     "note": null,
+     "file": "claude-sonnet-5.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "gpt-5.6-luna",
+     "name": "GPT-5.6 Luna",
+     "short": "GPT-5.6 Luna",
+     "kind": "llm",
+     "color": "var(--c-luna)",
+     "planned": false,
+     "note": null,
+     "file": "gpt-5.6-luna.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "gpt-5.6-terra",
+     "name": "GPT-5.6 Terra",
+     "short": "GPT-5.6 Terra",
+     "kind": "llm",
+     "color": "var(--c-terra)",
+     "planned": false,
+     "note": null,
+     "file": "gpt-5.6-terra.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "gemini-3.8-flash",
+     "name": "Gemini 3.8 Flash",
+     "short": "Gemini 3.8 Flash",
+     "kind": "llm",
+     "color": "var(--c-flash)",
+     "planned": false,
+     "note": null,
+     "file": "gemini-3.8-flash.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "tar@cal",
+     "name": "TAR 2.0 \u00b7 CAL (80% target)",
+     "short": "TAR 2.0 \u00b7 CAL",
+     "kind": "tar",
+     "color": "var(--c-cal)",
+     "planned": false,
+     "note": null,
+     "file": "tar__cal.json",
+     "coverage": 1.0
+    }
+   ],
+   "default": {
+    "standard": "human@nist",
+    "a": "jev@base",
+    "b": "gpt-5.6-luna",
+    "topics": [
+     "415"
+    ]
+   }
+  },
+  {
+   "id": "trec-alt",
+   "kind": "trec-alt",
+   "label": "TREC 2016 Total Recall \u00b7 alternate assessors",
+   "short": "Jeb Bush emails \u00b7 50 documents per topic re-judged by three alternate assessors \u00b7 Jev and TAR scores from the full-collection runs",
+   "text": false,
+   "text_note": "The Jeb Bush collection is distributed by NIST under the Total Recall usage agreement (see data/trec/README.md); place it at TREC/Jeb Bush TXT/ and rebuild to read the emails.",
+   "n": 550,
+   "n_docs": 549,
+   "n_families": 549,
+   "has_attachments": false,
+   "inherit_default": false,
+   "placeholders": false,
+   "topics": [
+    {
+     "id": "403",
+     "key": "bottled_water",
+     "title": "Bottled water",
+     "kind": "responsiveness",
+     "n": 50,
+     "n_pos": 22,
+     "n_gray": 0,
+     "n_contested": 25,
+     "rfp_text": "All documents concerning the extraction of water in Florida for bottling by commercial enterprises.",
+     "note": null
+    },
+    {
+     "id": "407",
+     "key": "faith_based",
+     "title": "Faith-based initiatives",
+     "kind": "responsiveness",
+     "n": 50,
+     "n_pos": 18,
+     "n_gray": 0,
+     "n_contested": 21,
+     "rfp_text": "All documents concerning grants or other initiatives in Florida to offload social services to so-called\nfaith-based agencies. Services include but are not limited to education, prisons, and emergency relief.",
+     "note": null
+    },
+    {
+     "id": "410",
+     "key": "condominiums",
+     "title": "Condominiums",
+     "kind": "responsiveness",
+     "n": 50,
+     "n_pos": 25,
+     "n_gray": 0,
+     "n_contested": 18,
+     "rfp_text": "All documents concerning the rules and organizations governing Florida condominium associations and\nconflicts between owners and managers in Florida. Relevant documents include those concerning the\nestablishment of the Florida office of ombudsman, and issues relating to hiring and firing the ombudsman.",
+     "note": null
+    },
+    {
+     "id": "412",
+     "key": "recount_2000",
+     "title": "2000 recount",
+     "kind": "responsiveness",
+     "n": 50,
+     "n_pos": 17,
+     "n_gray": 0,
+     "n_contested": 13,
+     "rfp_text": "All documents concerning the contested result of the 2000 presidential election.",
+     "note": null
+    },
+    {
+     "id": "414",
+     "key": "medicaid_reform",
+     "title": "Medicaid reform",
+     "kind": "responsiveness",
+     "n": 50,
+     "n_pos": 18,
+     "n_gray": 0,
+     "n_contested": 15,
+     "rfp_text": "All documents concerning efforts to reform Medicaid.",
+     "note": null
+    },
+    {
+     "id": "415",
+     "key": "gw_bush",
+     "title": "George W. Bush",
+     "kind": "responsiveness",
+     "n": 50,
+     "n_pos": 29,
+     "n_gray": 0,
+     "n_contested": 35,
+     "rfp_text": "All documents concerning George W. Bush, whether by explicit reference or by his relationship to Governor Bush.",
+     "note": null
+    },
+    {
+     "id": "416",
+     "key": "marketing",
+     "title": "Marketing",
+     "kind": "responsiveness",
+     "n": 50,
+     "n_pos": 25,
+     "n_gray": 0,
+     "n_contested": 18,
+     "rfp_text": "All documents concerning advertising or marketing efforts undertaken by the Florida Governor's office or any\nother institution of the State of Florida.",
+     "note": null
+    },
+    {
+     "id": "417",
+     "key": "movie_gallery",
+     "title": "Movie Gallery",
+     "kind": "responsiveness",
+     "n": 50,
+     "n_pos": 8,
+     "n_gray": 0,
+     "n_contested": 1,
+     "rfp_text": "All documents concerning investments or divestments by the State of Florida in Movie Gallery.",
+     "note": null
+    },
+    {
+     "id": "419",
+     "key": "rilya_wilson",
+     "title": "Lost foster child Rilya Wilson",
+     "kind": "responsiveness",
+     "n": 50,
+     "n_pos": 15,
+     "n_gray": 0,
+     "n_contested": 11,
+     "rfp_text": "All documents concerning the disappearance of lost foster child, Rilya Wilson, and the impact or aftermath\nin Florida resulting from the loss.",
+     "note": null
+    },
+    {
+     "id": "422",
+     "key": "nra_aliens",
+     "title": "Non-resident aliens (NRA)",
+     "kind": "responsiveness",
+     "n": 50,
+     "n_pos": 7,
+     "n_gray": 0,
+     "n_contested": 10,
+     "rfp_text": "All documents involving discussions of the non-resident alien issue. Documents concerning the National\nRifle Association are not relevant.",
+     "note": "pair nra"
+    },
+    {
+     "id": "423",
+     "key": "nra_rifle",
+     "title": "National Rifle Association (NRA)",
+     "kind": "responsiveness",
+     "n": 50,
+     "n_pos": 19,
+     "n_gray": 0,
+     "n_contested": 18,
+     "rfp_text": "All documents concerning the National Rifle Association, its members, and its influences. Documents\nconcerning the non-resident alien issue are not relevant.",
+     "note": "pair nra"
+    }
+   ],
+   "humans": [
+    {
+     "id": "human@nist",
+     "name": "NIST assessor",
+     "short": "NIST assessor",
+     "color": "var(--ink)",
+     "note": "The TREC 2016 Total Recall relevance judgments (athome4 qrels); rel 1 or 2 is responsive, judged non-relevant and unjudged are not."
+    },
+    {
+     "id": "human@alt1",
+     "name": "Alternate assessor 1",
+     "short": "Alt assessor 1",
+     "color": "var(--ink-2)",
+     "note": "One of three alternate assessors who re-judged a 50-document sample per topic (prels.tr2016.alt1)."
+    },
+    {
+     "id": "human@alt2",
+     "name": "Alternate assessor 2",
+     "short": "Alt assessor 2",
+     "color": "var(--ink-3)",
+     "note": "One of three alternate assessors who re-judged a 50-document sample per topic (prels.tr2016.alt2)."
+    },
+    {
+     "id": "human@alt3",
+     "name": "Alternate assessor 3",
+     "short": "Alt assessor 3",
+     "color": "var(--ink-4)",
+     "note": "One of three alternate assessors who re-judged a 50-document sample per topic (prels.tr2016.alt3)."
+    }
+   ],
+   "arms": [
+    {
+     "id": "jev@base",
+     "name": "Jev 1.13 \u00b7 Noul",
+     "short": "Jev \u00b7 Noul",
+     "kind": "system1",
+     "color": "var(--c-jev)",
+     "planned": false,
+     "note": null,
+     "file": "jev__base.json",
+     "coverage": 0.96
+    },
+    {
+     "id": "tar@cal",
+     "name": "TAR 2.0 \u00b7 CAL (80% target)",
+     "short": "TAR 2.0 \u00b7 CAL",
+     "kind": "tar",
+     "color": "var(--c-cal)",
+     "planned": false,
+     "note": null,
+     "file": "tar__cal.json",
+     "coverage": 0.289
+    }
+   ],
+   "default": {
+    "standard": "human@nist",
+    "a": "human@alt1",
+    "b": "jev@base",
+    "topics": [
+     "403",
+     "407",
+     "410",
+     "412",
+     "414",
+     "415",
+     "416",
+     "417",
+     "419",
+     "422",
+     "423"
+    ]
+   }
+  },
+  {
+   "id": "mnk",
+   "kind": "corpus",
+   "label": "Mallinckrodt opioid emails",
+   "short": "Opioid Industry Documents Archive emails \u00b7 eight requests (four broad/narrow pairs) \u00b7 model-panel gold \u00b7 measured runs",
+   "text": true,
+   "text_note": null,
+   "n": 14720,
+   "n_docs": 1840,
+   "n_families": 1840,
+   "has_attachments": false,
+   "inherit_default": false,
+   "placeholders": false,
+   "topics": [
+    {
+     "id": "data_broad",
+     "key": "data_broad",
+     "title": "Downstream distribution data (broad)",
+     "kind": "responsiveness",
+     "n": 1840,
+     "n_pos": 82,
+     "n_gray": 142,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning chargeback data, IMS or other prescription or pharmacy-level sales data, 867 or\nother wholesaler sales-out data, or any other information showing or analyzing the downstream distribution\nof Mallinckrodt opioid products from wholesalers or distributors to pharmacies, prescribers, or geographic\nareas, including the use of such data for compliance, due diligence, sales, or marketing purposes.",
+     "note": "broad \u00b7 pair data"
+    },
+    {
+     "id": "data_narrow",
+     "key": "data_narrow",
+     "title": "Florida oxycodone distribution and pill mills (narrow)",
+     "kind": "responsiveness",
+     "n": 1840,
+     "n_pos": 34,
+     "n_gray": 21,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning the distribution of Mallinckrodt oxycodone products to, or the volume of oxycodone\npurchased by, pharmacies, prescribers, or distributors located in Florida, including any reference to\nFlorida \"pill mills,\" pain clinics, or the Florida oxycodone market.",
+     "note": "narrow \u00b7 pair data"
+    },
+    {
+     "id": "dea_broad",
+     "key": "dea_broad",
+     "title": "Dealings with DEA and regulators on controlled substances (broad)",
+     "kind": "responsiveness",
+     "n": 1840,
+     "n_pos": 347,
+     "n_gray": 210,
+     "n_contested": 0,
+     "rfp_text": "All communications with, and all documents concerning communications with or actions by, the U.S. Drug\nEnforcement Administration, the Food and Drug Administration, or any state regulator regarding Mallinckrodt's\ncontrolled-substance obligations, including production quota, registrations, inspections, audits,\ninvestigations, subpoenas, administrative actions, settlements, and meetings, and including internal\ndiscussion of any of the foregoing.",
+     "note": "broad \u00b7 pair dea"
+    },
+    {
+     "id": "dea_narrow",
+     "key": "dea_narrow",
+     "title": "DEA production quota for oxycodone and hydrocodone (narrow)",
+     "kind": "responsiveness",
+     "n": 1840,
+     "n_pos": 60,
+     "n_gray": 53,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning DEA aggregate production quota, individual manufacturing quota, or procurement\nquota for oxycodone or hydrocodone, including quota applications, requests for increases, DEA allocations or\ndenials, quota forecasting and planning, and communications with DEA concerning quota.",
+     "note": "narrow \u00b7 pair dea"
+    },
+    {
+     "id": "mktg_broad",
+     "key": "mktg_broad",
+     "title": "Opioid marketing and promotion (broad)",
+     "kind": "responsiveness",
+     "n": 1840,
+     "n_pos": 403,
+     "n_gray": 302,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning the marketing, promotion, or sale of any Mallinckrodt opioid product (including\nExalgo, Roxicodone, Methadose, Xartemis, and generic oxycodone, hydrocodone, and methadone), including\npromotional materials, messaging and positioning, sales training and call plans, speaker programs and\nkey opinion leader engagement, advocacy and patient-group activities, market research, and sales incentive\nplans relating to opioids.",
+     "note": "broad \u00b7 pair mktg"
+    },
+    {
+     "id": "mktg_narrow",
+     "key": "mktg_narrow",
+     "title": "Abuse and addiction risk in Exalgo promotion (narrow)",
+     "kind": "responsiveness",
+     "n": 1840,
+     "n_pos": 30,
+     "n_gray": 85,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning how the risks of abuse, addiction, dependence, misuse, or diversion of Exalgo were\ncharacterized, addressed, minimized, or omitted in Exalgo promotional materials, sales messaging, sales\ntraining, or speaker program content, including any internal or regulatory review of such content.",
+     "note": "narrow \u00b7 pair mktg"
+    },
+    {
+     "id": "som_broad",
+     "key": "som_broad",
+     "title": "Suspicious order monitoring (broad)",
+     "kind": "responsiveness",
+     "n": 1840,
+     "n_pos": 328,
+     "n_gray": 84,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning Mallinckrodt's suspicious order monitoring program for controlled substances,\nincluding its policies, procedures, and thresholds; the review, holding, release, reporting, or blocking of\norders; reports to or communications with DEA about suspicious orders; systems and vendors supporting the\nprogram; training; audits; and communications with customers about orders held or reviewed under the program.",
+     "note": "broad \u00b7 pair som"
+    },
+    {
+     "id": "som_narrow",
+     "key": "som_narrow",
+     "title": "Release or non-reporting of flagged orders (narrow)",
+     "kind": "responsiveness",
+     "n": 1840,
+     "n_pos": 41,
+     "n_gray": 93,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning the decision to release, ship, or not report to DEA a specific customer order that\nhad been flagged, pended, or held under Mallinckrodt's suspicious order monitoring program, including the\njustification for the decision and any customer due diligence relied upon.",
+     "note": "narrow \u00b7 pair som"
+    }
+   ],
+   "humans": [
+    {
+     "id": "panel@gold",
+     "name": "Model-panel gold (3 LLMs)",
+     "short": "Panel gold",
+     "color": "var(--ink)",
+     "note": "Not a human signal: the corpus gold is a three-LLM panel (bench goldify); unanimous calls are the label, split panels are gray."
+    }
+   ],
+   "arms": [
+    {
+     "id": "jev@base",
+     "name": "Jev 1.13 \u00b7 Noul",
+     "short": "Jev \u00b7 Noul",
+     "kind": "system1",
+     "color": "var(--c-jev)",
+     "planned": false,
+     "note": null,
+     "file": "jev__base.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "claude-sonnet-5",
+     "name": "Claude Sonnet 5",
+     "short": "Sonnet 5",
+     "kind": "llm",
+     "color": "var(--c-sonnet)",
+     "planned": false,
+     "note": null,
+     "file": "claude-sonnet-5.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "gpt-5.6-luna",
+     "name": "GPT-5.6 Luna",
+     "short": "GPT-5.6 Luna",
+     "kind": "llm",
+     "color": "var(--c-luna)",
+     "planned": false,
+     "note": null,
+     "file": "gpt-5.6-luna.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "gpt-5.6-terra",
+     "name": "GPT-5.6 Terra",
+     "short": "GPT-5.6 Terra",
+     "kind": "llm",
+     "color": "var(--c-terra)",
+     "planned": false,
+     "note": null,
+     "file": "gpt-5.6-terra.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "gemini-3.8-flash",
+     "name": "Gemini 3.8 Flash",
+     "short": "Gemini 3.8 Flash",
+     "kind": "llm",
+     "color": "var(--c-flash)",
+     "planned": false,
+     "note": null,
+     "file": "gemini-3.8-flash.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "tar@cal",
+     "name": "TAR 2.0 \u00b7 CAL (80% target)",
+     "short": "TAR 2.0 \u00b7 CAL",
+     "kind": "tar",
+     "color": "var(--c-cal)",
+     "planned": false,
+     "note": null,
+     "file": "tar__cal.json",
+     "coverage": 0.435,
+     "meta": "tar__cal.meta.json"
+    }
+   ],
+   "default": {
+    "standard": "panel@gold",
+    "a": "jev@base",
+    "b": "gpt-5.6-luna",
+    "topics": [
+     "som_broad"
+    ]
+   }
+  },
+  {
+   "id": "endo",
+   "kind": "corpus",
+   "label": "Endo opioid emails (held-out)",
+   "short": "Opioid Industry Documents Archive emails, Endo production (published 2024-26) \u00b7 eight requests (four broad/narrow pairs) \u00b7 OpenAI-only model-panel gold \u00b7 measured runs",
+   "text": true,
+   "text_note": null,
+   "n": 16000,
+   "n_docs": 2000,
+   "n_families": 2000,
+   "has_attachments": false,
+   "inherit_default": false,
+   "placeholders": false,
+   "topics": [
+    {
+     "id": "opana_broad",
+     "key": "opana_broad",
+     "title": "Opana ER promotion (broad)",
+     "kind": "responsiveness",
+     "n": 2000,
+     "n_pos": 838,
+     "n_gray": 192,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning the marketing, promotion, or sale of Opana or Opana ER, including promotional\nmaterials and advertisements, detailing and call plans, sales training, promotional messaging, market research,\nlaunch and relaunch planning, managed-care and formulary positioning, and sales or prescription performance of\nthe product.",
+     "note": "broad \u00b7 pair opana"
+    },
+    {
+     "id": "opana_narrow",
+     "key": "opana_narrow",
+     "title": "Abuse-deterrence and crush-resistance claims for reformulated Opana ER (narrow)",
+     "kind": "responsiveness",
+     "n": 2000,
+     "n_pos": 138,
+     "n_gray": 71,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning claims, statements, or evidence about the abuse-deterrent, tamper-resistant, or\ncrush-resistant properties of reformulated Opana ER, including studies or data on crushing, grinding, chewing,\ndissolving, snorting, or injecting the reformulated tablet; FDA correspondence about abuse-deterrence labeling\nor claims; and the use of \"crush resistant\" or similar language in promotional materials or communications\nwith prescribers, payers, or the public.",
+     "note": "narrow \u00b7 pair opana"
+    },
+    {
+     "id": "promo_broad",
+     "key": "promo_broad",
+     "title": "Sales-force messaging, training and speaker programmes on opioid risk (broad)",
+     "kind": "responsiveness",
+     "n": 2000,
+     "n_pos": 246,
+     "n_gray": 360,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning the content of Endo's opioid sales training, sales-force messaging, speaker\nprogrammes, or promotional materials as they relate to addiction, abuse, dependence, tolerance,\n\"pseudoaddiction,\" dosing, or long-term use of opioids, including the development, review, and approval of\nsuch content and the selection, training, and payment of speakers.",
+     "note": "broad \u00b7 pair promo"
+    },
+    {
+     "id": "promo_narrow",
+     "key": "promo_narrow",
+     "title": "Detailing of prescribers showing signs of abuse or diversion (narrow)",
+     "kind": "responsiveness",
+     "n": 2000,
+     "n_pos": 57,
+     "n_gray": 42,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning sales representatives' observation, reporting, or non-reporting of signs of abuse,\ndiversion, or inappropriate prescribing by a prescriber, and decisions about whether to continue detailing,\ntargeting, or paying incentives on such a prescriber, including any policy or procedure for representatives\nto report such signs.",
+     "note": "narrow \u00b7 pair promo"
+    },
+    {
+     "id": "som_broad",
+     "key": "som_broad",
+     "title": "Controlled-substance order monitoring and DEA compliance (broad)",
+     "kind": "responsiveness",
+     "n": 2000,
+     "n_pos": 344,
+     "n_gray": 184,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning Endo's, Par's, or Qualitest's controlled-substance compliance for opioid products,\nincluding suspicious order monitoring policies, procedures, and thresholds; the review, holding, release,\nreporting, or blocking of customer orders; DEA registrations, inspections, audits, quota, and ARCOS or\nsuspicious-order reporting; customer due diligence and know-your-customer reviews; and systems, vendors,\ntraining, and audits supporting these functions.",
+     "note": "broad \u00b7 pair som"
+    },
+    {
+     "id": "som_narrow",
+     "key": "som_narrow",
+     "title": "Decisions on specific flagged orders or customers (narrow)",
+     "kind": "responsiveness",
+     "n": 2000,
+     "n_pos": 29,
+     "n_gray": 72,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning the decision to release, ship, continue supplying, or not report to DEA a specific\ncustomer order, customer, or prescriber that had been flagged, pended, held, or identified as suspicious or of\nconcern, including the justification for the decision and any due diligence, site visit, or data relied upon.",
+     "note": "narrow \u00b7 pair som"
+    },
+    {
+     "id": "thirdparty_broad",
+     "key": "thirdparty_broad",
+     "title": "Pain advocacy organisations, key opinion leaders and medical education (broad)",
+     "kind": "responsiveness",
+     "n": 2000,
+     "n_pos": 286,
+     "n_gray": 254,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning Endo's funding of, grants or payments to, or work with third-party pain advocacy or\nprofessional organisations, key opinion leaders, or continuing medical education providers in relation to\nopioids or pain management, including the American Pain Foundation, the National Initiative on Pain Control,\npainknowledge.com, the American Academy of Pain Medicine, consultants and advisory boards, and sponsored\npublications, guidelines, or patient-education materials.",
+     "note": "broad \u00b7 pair thirdparty"
+    },
+    {
+     "id": "thirdparty_narrow",
+     "key": "thirdparty_narrow",
+     "title": "Editorial control over or undisclosed involvement in third-party pain content (narrow)",
+     "kind": "responsiveness",
+     "n": 2000,
+     "n_pos": 21,
+     "n_gray": 105,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning Endo's review, editing, approval, or direction of content published or presented by a\nthird-party pain advocacy organisation, key opinion leader, or education provider, or concerning whether and\nhow Endo's role in funding or shaping such content would be disclosed or attributed.",
+     "note": "narrow \u00b7 pair thirdparty"
+    }
+   ],
+   "humans": [
+    {
+     "id": "panel@gold",
+     "name": "Model-panel gold (3 LLMs)",
+     "short": "Panel gold",
+     "color": "var(--ink)",
+     "note": "Not a human signal: the corpus gold is a three-LLM panel (bench goldify); unanimous calls are the label, split panels are gray."
+    }
+   ],
+   "arms": [
+    {
+     "id": "jev@base",
+     "name": "Jev 1.13 \u00b7 Noul",
+     "short": "Jev \u00b7 Noul",
+     "kind": "system1",
+     "color": "var(--c-jev)",
+     "planned": false,
+     "note": null,
+     "file": "jev__base.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "gpt-5.6-luna",
+     "name": "GPT-5.6 Luna",
+     "short": "GPT-5.6 Luna",
+     "kind": "llm",
+     "color": "var(--c-luna)",
+     "planned": false,
+     "note": null,
+     "file": "gpt-5.6-luna.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "gpt-5.6-terra",
+     "name": "GPT-5.6 Terra",
+     "short": "GPT-5.6 Terra",
+     "kind": "llm",
+     "color": "var(--c-terra)",
+     "planned": false,
+     "note": null,
+     "file": "gpt-5.6-terra.json",
+     "coverage": 1.0
+    }
+   ],
+   "default": {
+    "standard": "panel@gold",
+    "a": "jev@base",
+    "b": "gpt-5.6-luna",
+    "topics": [
+     "som_broad"
+    ]
+   }
+  },
+  {
+   "id": "veridian",
+   "kind": "corpus",
+   "label": "Veridian synthetic matter",
+   "short": "Synthetic medical-device matter \u00b7 ten requests \u00b7 planner gold \u00b7 measured runs",
+   "text": true,
+   "text_note": null,
+   "n": 19540,
+   "n_docs": 1954,
+   "n_families": 1954,
+   "has_attachments": false,
+   "inherit_default": false,
+   "placeholders": false,
+   "topics": [
+    {
+     "id": "rfp01_recall",
+     "key": "rfp01_recall",
+     "title": "Recall of acetabular cup lots V-2200 to V-2299",
+     "kind": "responsiveness",
+     "n": 1954,
+     "n_pos": 140,
+     "n_gray": 62,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning the June 2022 recall of ApexHip acetabular cup lots V-2200 through V-2299.",
+     "note": "narrow \u00b7 thin"
+    },
+    {
+     "id": "rfp02_design_history",
+     "key": "rfp02_design_history",
+     "title": "ApexHip design history",
+     "kind": "responsiveness",
+     "n": 1954,
+     "n_pos": 119,
+     "n_gray": 94,
+     "n_contested": 0,
+     "rfp_text": "All documents constituting, reflecting, or relating to the design and development of the ApexHip system,\nincluding without limitation: (a) design inputs, user needs, and design requirements; (b) risk analyses,\nincluding any FMEA, hazard analysis, or risk management file; (c) design reviews and design review\nmeeting materials; (d) verification and validation testing, including wear testing, tribology testing,\nmetal ion testing, fatigue testing, and any test protocols, reports, or raw data, whether performed by\nVeridian or by any third-party laboratory; (e) design changes, engineering change orders, or proposed\ndesign changes, whether or not implemented; and (f) the design history file and any index thereto.\n\"ApexHip system\" includes the femoral stem, femoral head, acetabular cup, and KinetiCoat coating.",
+     "note": "broad \u00b7 rich"
+    },
+    {
+     "id": "rfp03_complaints",
+     "key": "rfp03_complaints",
+     "title": "Complaints, adverse events, and MDRs",
+     "kind": "responsiveness",
+     "n": 1954,
+     "n_pos": 296,
+     "n_gray": 228,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning complaints, adverse events, or reports of injury, revision surgery, elevated\nmetal ion levels, or adverse reaction to metal debris associated with the ApexHip system, including\ncomplaint files, Medical Device Reports submitted or considered for submission to FDA, complaint\ntrending or trend analyses, CAPAs, and internal communications discussing any of the foregoing.",
+     "note": "medium \u00b7 medium"
+    },
+    {
+     "id": "rfp04_fda",
+     "key": "rfp04_fda",
+     "title": "Communications with FDA",
+     "kind": "responsiveness",
+     "n": 1954,
+     "n_pos": 198,
+     "n_gray": 174,
+     "n_contested": 0,
+     "rfp_text": "All communications between Veridian and the U.S. Food and Drug Administration concerning the ApexHip\nsystem, and all internal documents discussing, preparing for, or responding to such communications,\nincluding the 510(k) submission and any additional information requests, Medical Device Reports,\ninspection observations (Form 483) and responses, recall filings, and any correspondence regarding\nlabeling or Dear Doctor letters.",
+     "note": "medium \u00b7 medium"
+    },
+    {
+     "id": "rfp06_marketing",
+     "key": "rfp06_marketing",
+     "title": "Marketing and promotional claims",
+     "kind": "responsiveness",
+     "n": 1954,
+     "n_pos": 136,
+     "n_gray": 202,
+     "n_contested": 0,
+     "rfp_text": "All promotional, marketing, advertising, educational, or training materials for the ApexHip system,\nin draft or final form, in any medium, including brochures, sell sheets, websites, social media,\nslide presentations, videos, trade show materials, press releases, surgeon-facing and patient-facing\nmaterials, and materials prepared by or with any advertising or marketing agency; and all documents\nconcerning the review, approval, substantiation, or modification of any claim made in such materials,\nincluding claims regarding longevity, wear, revision rates, metal ion levels, suitability for active\nor younger patients, or comparisons to other hip systems. \"Promotional\" includes sales aids and\ntalking points provided to sales representatives.",
+     "note": "broad \u00b7 rich"
+    },
+    {
+     "id": "rfp07_surgeon_payments",
+     "key": "rfp07_surgeon_payments",
+     "title": "Payments and things of value to surgeons",
+     "kind": "responsiveness",
+     "n": 1954,
+     "n_pos": 110,
+     "n_gray": 35,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning any payment or transfer of anything of value by or on behalf of Veridian to\nany orthopedic surgeon in connection with the ApexHip system, including consulting agreements,\nroyalty agreements and statements, speaker or honoraria arrangements, advisory board participation,\ntravel, meals, and entertainment, and Open Payments (Sunshine Act) reporting, including without\nlimitation Dr. Marcus Feld and Dr. Anita Rao.",
+     "note": "medium \u00b7 medium"
+    },
+    {
+     "id": "rfp08_sales_scripts",
+     "key": "rfp08_sales_scripts",
+     "title": "Sales training and scripts on revision rates and metal ions",
+     "kind": "responsiveness",
+     "n": 1954,
+     "n_pos": 106,
+     "n_gray": 93,
+     "n_contested": 0,
+     "rfp_text": "All sales training materials, scripts, talking points, FAQs, or guidance provided to sales personnel\nregarding how to respond to questions or concerns from surgeons or hospitals about ApexHip revision\nrates, metal ion levels, adverse reaction to metal debris, or registry data.",
+     "note": "narrow \u00b7 thin"
+    },
+    {
+     "id": "rfp09_registry_decision",
+     "key": "rfp09_registry_decision",
+     "title": "Decision to continue selling after the registry signal",
+     "kind": "responsiveness",
+     "n": 1954,
+     "n_pos": 222,
+     "n_gray": 332,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning Veridian's analysis of, response to, or decisions made in light of registry\ndata indicating elevated revision rates for the ApexHip system, including the March 2021 National\nJoint Registry report and subsequent American Joint Replacement Registry data, including any\nevaluation of whether to modify, suspend, withdraw, or continue marketing the ApexHip system, any\nlabeling changes, and any communications to surgeons regarding such data.",
+     "note": "medium \u00b7 medium"
+    },
+    {
+     "id": "rfp13_financials",
+     "key": "rfp13_financials",
+     "title": "Financial forecasts, reserves, and insurance for ApexHip",
+     "kind": "responsiveness",
+     "n": 1954,
+     "n_pos": 123,
+     "n_gray": 68,
+     "n_contested": 0,
+     "rfp_text": "All documents concerning the financial performance of, or financial exposure arising from, the ApexHip\nsystem, including: (a) sales forecasts, budgets, and revenue or margin analyses specific to ApexHip;\n(b) any reserve, accrual, or contingency recorded or considered for ApexHip-related claims, recalls,\nrevisions, or litigation, including supporting analyses and communications with auditors;\n(c) notices to, and communications with, any insurer or reinsurer regarding ApexHip, including\nnotices of circumstance, reservation-of-rights letters, and coverage analyses; and (d) analyses of\nthe financial impact of any recall, labeling change, market withdrawal, or litigation involving\nApexHip. \"Reserve\" means any amount set aside, accrued, or estimated for a probable or possible loss.",
+     "note": "medium \u00b7 rich"
+    },
+    {
+     "id": "rfp17_personnel",
+     "key": "rfp17_personnel",
+     "title": "Personnel records for ApexHip, Quality, and Regulatory leadership",
+     "kind": "responsiveness",
+     "n": 1954,
+     "n_pos": 54,
+     "n_gray": 59,
+     "n_contested": 0,
+     "rfp_text": "For each of the following individuals, and for any other person who served as a member of the ApexHip\ndesign team, as Director or above in Quality, or as Director or above in Regulatory Affairs at any\ntime during the relevant period: all organizational charts reflecting the person's reporting\nrelationships; all performance evaluations, reviews, and performance improvement plans; all\ncompensation, bonus, and incentive documentation; all documents concerning the person's hiring,\npromotion, demotion, transfer, discipline, resignation, or termination; and all documents concerning\nany complaint, grievance, or ethics hotline report made by or about the person. Individuals: Tom\nHalvorsen, Priya Raman, Dana Okonkwo, Greg Novak, Devon Mitchell, Carlos Mendes. \"Performance\nevaluation\" includes self-assessments, manager assessments, calibration notes, and rating summaries.",
+     "note": "broad \u00b7 rich"
+    }
+   ],
+   "humans": [
+    {
+     "id": "human@planner",
+     "name": "Planner gold (synthetic)",
+     "short": "Planner gold",
+     "color": "var(--ink)",
+     "note": "The synthetic matter's intended labels, audited by a model spec-relabel pass; not a human review."
+    }
+   ],
+   "arms": [
+    {
+     "id": "jev@base",
+     "name": "Jev 1.13 \u00b7 Noul",
+     "short": "Jev \u00b7 Noul",
+     "kind": "system1",
+     "color": "var(--c-jev)",
+     "planned": false,
+     "note": null,
+     "file": "jev__base.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "claude-sonnet-5",
+     "name": "Claude Sonnet 5",
+     "short": "Sonnet 5",
+     "kind": "llm",
+     "color": "var(--c-sonnet)",
+     "planned": false,
+     "note": null,
+     "file": "claude-sonnet-5.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "gpt-5.6-luna",
+     "name": "GPT-5.6 Luna",
+     "short": "GPT-5.6 Luna",
+     "kind": "llm",
+     "color": "var(--c-luna)",
+     "planned": false,
+     "note": null,
+     "file": "gpt-5.6-luna.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "gpt-5.6-terra",
+     "name": "GPT-5.6 Terra",
+     "short": "GPT-5.6 Terra",
+     "kind": "llm",
+     "color": "var(--c-terra)",
+     "planned": false,
+     "note": null,
+     "file": "gpt-5.6-terra.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "gemini-3.8-flash",
+     "name": "Gemini 3.8 Flash",
+     "short": "Gemini 3.8 Flash",
+     "kind": "llm",
+     "color": "var(--c-flash)",
+     "planned": false,
+     "note": null,
+     "file": "gemini-3.8-flash.json",
+     "coverage": 1.0
+    }
+   ],
+   "default": {
+    "standard": "human@planner",
+    "a": "jev@base",
+    "b": "gpt-5.6-luna",
+    "topics": [
+     "rfp01_recall"
+    ]
+   }
+  },
+  {
+   "id": "cuad",
+   "kind": "corpus",
+   "label": "CUAD contract clauses",
+   "short": "Contract paragraphs \u00b7 twelve clause requests (six broad/narrow pairs) \u00b7 expert annotations \u00b7 measured runs",
+   "text": true,
+   "text_note": null,
+   "n": 77928,
+   "n_docs": 6494,
+   "n_families": 6494,
+   "has_attachments": false,
+   "inherit_default": false,
+   "placeholders": false,
+   "topics": [
+    {
+     "id": "anti_assignment",
+     "key": "anti_assignment",
+     "title": "Anti-assignment",
+     "kind": "responsiveness",
+     "n": 6494,
+     "n_pos": 110,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All provisions restricting either party's ability to assign or transfer the agreement, or its rights\nor obligations under it, to a third party, including requirements for the counterparty's consent or\nnotice and any exceptions (affiliates, successors, change of control).",
+     "note": null
+    },
+    {
+     "id": "audit_rights",
+     "key": "audit_rights",
+     "title": "Audit rights",
+     "kind": "responsiveness",
+     "n": 6494,
+     "n_pos": 70,
+     "n_gray": 1,
+     "n_contested": 0,
+     "rfp_text": "All provisions giving a party the right to audit, inspect, or examine the other party's books, records,\naccounts, facilities, or systems to verify compliance with the agreement, including the frequency,\nnotice, cost allocation, and consequences of an audit.",
+     "note": null
+    },
+    {
+     "id": "cap_on_liability",
+     "key": "cap_on_liability",
+     "title": "Cap on liability",
+     "kind": "responsiveness",
+     "n": 6494,
+     "n_pos": 96,
+     "n_gray": 2,
+     "n_contested": 0,
+     "rfp_text": "All provisions limiting a party's liability for breach or other claims under the agreement, including\nmonetary caps (a fixed amount or amounts paid under the agreement), exclusions of consequential,\nindirect, or punitive damages, and time limits for bringing claims.",
+     "note": null
+    },
+    {
+     "id": "change_of_control",
+     "key": "change_of_control",
+     "title": "Change of control",
+     "kind": "responsiveness",
+     "n": 6494,
+     "n_pos": 53,
+     "n_gray": 2,
+     "n_contested": 0,
+     "rfp_text": "All provisions addressing a change of control of a party (merger, acquisition, sale of all or\nsubstantially all assets, change in majority ownership, assignment by operation of law), including\nrights to terminate, consent or notice requirements, or other consequences triggered by such an event.",
+     "note": null
+    },
+    {
+     "id": "exclusivity",
+     "key": "exclusivity",
+     "title": "Exclusivity",
+     "kind": "responsiveness",
+     "n": 6494,
+     "n_pos": 69,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All provisions creating an exclusive dealing arrangement between the parties, including exclusive\nappointments (sole distributor, exclusive supplier, exclusive license in a territory), requirements\ncontracts, and prohibitions on licensing, selling, or providing the covered goods, services, or\ntechnology to third parties.",
+     "note": null
+    },
+    {
+     "id": "insurance",
+     "key": "insurance",
+     "title": "Insurance",
+     "kind": "responsiveness",
+     "n": 6494,
+     "n_pos": 60,
+     "n_gray": 0,
+     "n_contested": 0,
+     "rfp_text": "All provisions requiring a party to obtain or maintain insurance coverage (general liability, product\nliability, professional, workers' compensation, or other), including coverage amounts, named insureds\nor additional insureds, and certificates of insurance.",
+     "note": null
+    },
+    {
+     "id": "ip_ownership_assignment",
+     "key": "ip_ownership_assignment",
+     "title": "IP ownership assignment",
+     "kind": "responsiveness",
+     "n": 6494,
+     "n_pos": 51,
+     "n_gray": 1,
+     "n_contested": 0,
+     "rfp_text": "All provisions under which intellectual property created, developed, or delivered by one party becomes\nthe property of the other party, including present assignments of rights, work-for-hire designations,\nand obligations to assign improvements, inventions, or deliverables.",
+     "note": null
+    },
+    {
+     "id": "license_grant",
+     "key": "license_grant",
+     "title": "License grant (broad)",
+     "kind": "responsiveness",
+     "n": 6494,
+     "n_pos": 119,
+     "n_gray": 3,
+     "n_contested": 0,
+     "rfp_text": "All provisions by which one party grants the other a license to intellectual property, technology,\nsoftware, content, data, trademarks, or other rights, including the scope of the grant (exclusive or\nnon-exclusive, territory, field of use, term) and any sublicensing rights.",
+     "note": "broad \u00b7 pair license"
+    },
+    {
+     "id": "minimum_commitment",
+     "key": "minimum_commitment",
+     "title": "Minimum commitment",
+     "kind": "responsiveness",
+     "n": 6494,
+     "n_pos": 81,
+     "n_gray": 2,
+     "n_contested": 0,
+     "rfp_text": "All provisions requiring a party to purchase, order, or pay for a minimum quantity, volume, or dollar\namount of goods or services (per period or in total), including minimum royalties, minimum sales\ntargets, and consequences of failing to meet a minimum.",
+     "note": null
+    },
+    {
+     "id": "non_compete",
+     "key": "non_compete",
+     "title": "Non-compete",
+     "kind": "responsiveness",
+     "n": 6494,
+     "n_pos": 48,
+     "n_gray": 3,
+     "n_contested": 0,
+     "rfp_text": "All provisions restricting a party from competing with the other party or from operating, marketing,\nor selling in a specified business, technology, product category, or geography, during or after the\nterm of the agreement, including the scope and duration of the restriction and any exceptions.",
+     "note": null
+    },
+    {
+     "id": "nontransferable_license",
+     "key": "nontransferable_license",
+     "title": "Non-transferable license (narrow)",
+     "kind": "responsiveness",
+     "n": 6494,
+     "n_pos": 36,
+     "n_gray": 2,
+     "n_contested": 0,
+     "rfp_text": "All provisions restricting a licensee's ability to transfer, assign, or sublicense the license granted\nunder the agreement to a third party, including language making a license non-transferable,\nnon-assignable, or non-sublicensable.",
+     "note": "narrow \u00b7 pair license"
+    },
+    {
+     "id": "revenue_profit_sharing",
+     "key": "revenue_profit_sharing",
+     "title": "Revenue / profit sharing",
+     "kind": "responsiveness",
+     "n": 6494,
+     "n_pos": 74,
+     "n_gray": 5,
+     "n_contested": 0,
+     "rfp_text": "All provisions requiring one party to share revenue, profits, royalties, or commissions with the other\nparty in respect of products, services, technology, or content, including the percentage or formula\nand the basis on which it is calculated.",
+     "note": null
+    }
+   ],
+   "humans": [
+    {
+     "id": "human@cuad",
+     "name": "CUAD annotators",
+     "short": "CUAD annotators",
+     "color": "var(--ink)",
+     "note": "Expert clause annotations from the CUAD contract dataset, mapped to the study's twelve requests."
+    }
+   ],
+   "arms": [
+    {
+     "id": "jev@base",
+     "name": "Jev 1.13 \u00b7 Noul",
+     "short": "Jev \u00b7 Noul",
+     "kind": "system1",
+     "color": "var(--c-jev)",
+     "planned": false,
+     "note": null,
+     "file": "jev__base.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "claude-sonnet-5",
+     "name": "Claude Sonnet 5",
+     "short": "Sonnet 5",
+     "kind": "llm",
+     "color": "var(--c-sonnet)",
+     "planned": false,
+     "note": null,
+     "file": "claude-sonnet-5.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "gpt-5.6-luna",
+     "name": "GPT-5.6 Luna",
+     "short": "GPT-5.6 Luna",
+     "kind": "llm",
+     "color": "var(--c-luna)",
+     "planned": false,
+     "note": null,
+     "file": "gpt-5.6-luna.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "gpt-5.6-terra",
+     "name": "GPT-5.6 Terra",
+     "short": "GPT-5.6 Terra",
+     "kind": "llm",
+     "color": "var(--c-terra)",
+     "planned": false,
+     "note": null,
+     "file": "gpt-5.6-terra.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "gemini-3.8-flash",
+     "name": "Gemini 3.8 Flash",
+     "short": "Gemini 3.8 Flash",
+     "kind": "llm",
+     "color": "var(--c-flash)",
+     "planned": false,
+     "note": null,
+     "file": "gemini-3.8-flash.json",
+     "coverage": 1.0
+    },
+    {
+     "id": "tar@cal",
+     "name": "TAR 2.0 \u00b7 CAL (80% target)",
+     "short": "TAR 2.0 \u00b7 CAL",
+     "kind": "tar",
+     "color": "var(--c-cal)",
+     "planned": false,
+     "note": null,
+     "file": "tar__cal.json",
+     "coverage": 1.0,
+     "meta": "tar__cal.meta.json"
+    }
+   ],
+   "default": {
+    "standard": "human@cuad",
+    "a": "jev@base",
+    "b": "gpt-5.6-luna",
+    "topics": [
+     "license_grant"
+    ]
+   }
+  }
+ ]
+}
