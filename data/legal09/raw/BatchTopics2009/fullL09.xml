@@ -1,0 +1,1065 @@
+<?xml version="1.0" encoding="ISO-8859-1"?> 
+<TrecLegalProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>7</RequestNumber>
+<RequestText>All documents discussing, referencing, or relating to company guidelines, strategies, or internal approval for placement of tobacco products in movies that are mentioned as G-rated.</RequestText>
+<BooleanQuery>
+<FinalQuery>((guide! OR strateg! OR approv!) AND (place! or promot!)) AND (("G-rated" OR "G rated" OR family) W/5 (movie! OR film! OR picture!))</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>(guidelines OR strategies OR "internal approval") AND placement AND "G-rated movie"</ProposalByDefendant>
+<RejoinderByPlaintiff>((guide! OR strateg! OR approv!) AND (place! or promot!)) AND (("G-rated" OR "G rated" OR family) W/5 (movie! OR film! OR picture!))</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>648</FinalB>
+<RequestSource>2006-A-2</RequestSource>
+<Instruction>
+<P>These Requests are for the production of responsive documents within the sole or joint possession, custody or control of Echinoderm Cigarettes, its departments, attorneys, officers, employees, or other persons within its control.</P>
+<P>All Requests should be interpreted to include documents that respond, in whole or in part, to any portion of these requests.  Responsive documents should be produced in their entirety, including all attachments and enclosures.</P>
+</Instruction>
+<Definition>
+<P>The words "and," "or," "each," "any," "all," "refer," and "discuss," should be construed in their broadest form and the singular shall include the plural and the plural shall include the singular whenever necessary so as to bring within the scope of these Requests all documents (defined below) that might otherwise be construed to be outside their scope.</P>
+<P>Solely for the purpose of the TREC 2006 legal track, the term "respondents" includes the named company above as well as all other companies whose records are found in the IIT CDIP v. 1.0/TREC Legal Track collection database ("TREC legal database").</P>
+<P>Solely for the purpose of the TREC 2006 legal track, "document" means all data, information or writings stored in the TREC legal database , including without limitation: any written, electronic or computerized files, data or software; memoranda; emails; correspondence; OCR scanned images; communications; reports; summaries; studies; analyses; evaluations; notes or notebooks; indices; spreadsheets; logs; books; pamphlets; binders; calendar or diary entries; ledger entries; press clippings; graphs; tables; charts; printouts; drawings; maps; meeting minutes; transcripts.  The term "document" encompasses all metadata associated with the document.  The term also includes all drafts associated with any particular document.</P>
+<P>"Person" or "individual" means natural persons, corporations, firms, partnerships, unincorporated associations, trusts, and any other legal entity.</P>
+<P>The term "relating to" means in whole or in part constituting, containing, concerning, discussing, describing, analyzing, identifying or stating.</P>
+</Definition>
+<Complaint>
+<ComplaintNumber>No. 2006-3</ComplaintNumber>
+<Date>July 1, 2006</Date>
+<Court>THE DISTRICT COURT OF THE COMMONWEALTH OF NEW SEARCHLAND</Court>
+<Plaintiff>John Doe, et al.</Plaintiff>
+<Defendant>Echinoderm Cigarettes, et al.</Defendant>
+<Introduction>
+<P>John Doe, on behalf of the Organization of Concerned Parents, brings this action to force the defendant tobacco companies to cease all placement of tobacco products, brands, and logos in television, film, live theater and rock concerts (collectively referred to as the "public media").  The historical placement of tobacco products and branding in the public media has forced an increase in product awareness, particularly among young adults and children, by providing consistent and recurring exposure to on-screen situations that generally glamorize smoking and other tobacco use.</P>
+</Introduction>
+<Party>
+<PlaintiffParty>Plaintiff John Doe brings this action on behalf of a nationwide class of individuals injured in childhood and adulthood by defendants' actions.   Mr. Doe resides at 1004 Public Avenue, Commonwealth of New Searchland.</PlaintiffParty>
+<DefendantParty>Defendants are Echinoderm Cigarettes and other unnamed tobacco companies, with principal places of business in the Commonwealth of New Searchland.</DefendantParty>
+<Coconspirator></Coconspirator>
+</Party>
+<Jurisdiction>
+<P>This Court has jurisdiction pursuant to 1 Comm. New Searchland, Sec. 1956.</P>
+</Jurisdiction>
+<Background>
+<P>According to information and belief, Echinoderm Cigarettes and other companies have a long history of placement of tobacco products and brand images in the public media.  These media, including television (network and cable), film, a live theater, and rock concerts, are regularly viewed by children, teen-agers, and young adults.  Such individuals are at the most impressionable time of their lives, and are unknowingly exposed to de facto advertising for tobacco and tobacco-related products simply by watching such media.</P>
+<P>In particular, the glamorous manner in which smoking and other tobacco use are portrayed on the screen adds a cachet to the habit that encourages young people to try smoking for the first time.  Thus is exposed the true motivation for product placement - inducing non-smokers to become smokers with blatant disregard for the long term effects and public health risks associated with tobacco use.</P>
+</Background>
+<CauseOfAction>
+<P>Echinoderm Cigarettes and other unnamed companies have represented that they do not pay for product placement in the public media.  This representation is patently false.  Tobacco concerns regularly pay for placement of their products via direct monetary compensation, exchange of goods and services, and other considerations.</P>
+<P>COUNT I Defendants have engaged in a pattern of misleading practices in violation of state and federal statutes by providing compensation to television networks, production companies, film production companies, providers of live theater and rock concerts in exchange for placement of products and brand images.</P>
+<P>COUNT II By exposing children and young adults to tobacco products in the public media, and by glamorizing the use of products known to cause health issues, defendants' actions are in violation of applicable law.</P>  
+</CauseOfAction>
+<RequestedRelief>
+<P>Declare that Echinoderm Cigarettes and other unnamed defendants are in violation of law by providing compensation for placement of products and brand images, and by exposing children and young adults to tobacco products in the media.</P>
+<P>Enter an order requiring defendants to disgorge all monies, reimbursement, and payments received as a result of product placement in the public media.</P>
+<P>Defendants to pay costs and expenses, including attorneys' fees, in connection with the investigation and litigation of this matter.</P>
+</RequestedRelief>      
+</Complaint>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>51</RequestNumber>
+<RequestText>All documents referencing or regarding lawsuits involving claims related to memory loss.</RequestText>
+<BooleanQuery>
+<FinalQuery>((memory w/2 loss) OR amnesia OR Alzheimer! OR dementia) AND (lawsuit! OR litig! OR case OR (tort w/2 claim!) OR complaint OR allegation!)</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>(lawsuits OR "tort claims") AND "memory loss"</ProposalByDefendant>
+<RejoinderByPlaintiff>((memory w/2 loss) OR amnesia OR Alzheimer! OR dementia) AND (lawsuit! OR litig! OR case OR (tort w/2 claim!) OR complaint OR allegation!)</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>7216</FinalB>
+<RequestSource>2006-E-10</RequestSource>
+<Instruction>
+<P>These requests require the production of all responsive documents within the sole or joint possession, custody or control of the Defendants, including their agents, departments, attorneys, directors, officers, employees, consultants, investigators, insurance companies, or other persons subject to Defendants' custody or control.</P>
+<P>All documents that respond, in whole or in part, to any portion of these Requests must be produced in their entirety, including all attachments and enclosures.</P>
+<P>For purposes of these requests, the words used are considered to have, and should be understood to have, their ordinary, everyday meanings.  Plaintiffs refer Defendants to any dictionary in the event Defendants asserts that the wording of a request is vague, ambiguous, unintelligible, or confusing.</P>
+</Instruction>
+<Definition>
+<P>The words "and," "or," "each," "any," "all," "refer," and "discuss," shall be construed in their broadest form and the singular shall include the plural and the plural shall include the singular whenever necessary so as to bring within the scope of these Requests all documents (defined below) that might otherwise be construed to be outside their scope.</P>
+<P>The phrase "advertising, marketing or promotion" of cigarettes includes public relations activities involving smoking and health.</P>
+<P>Solely for the purpose of the TREC 2006 legal track, the term "defendants" includes Echinoderm Cigarettes Inc. as well as those companies whose records are found in the IIT CDIP v. 1.0/TREC Legal Track collection database ("TREC legal database").</P>
+<P>Solely for the purpose of the TREC 2006 legal track, "document" means all data, information or writings stored in the TREC legal database, including without limitation: any written, electronic or computerized files, data or software; memoranda; emails; correspondence; OCR scanned images; communications; reports; summaries; studies; analyses; evaluations; notes or notebooks; indices; spreadsheets; logs; books; pamphlets; binders; calendar or diary entries; ledger entries; press clippings; graphs; tables; charts; printouts; drawings; maps; meeting minutes; transcripts.  The term "document" encompasses all metadata associated with the document.  The term also includes all drafts associated with any particular document.</P>
+<P>"Person" or "individual" means natural persons, corporations, firms, partnerships, unincorporated associations, trusts, and any other legal entity.</P>
+<P>The term "plans" means tentative and preliminary proposals, recommendations, or considerations, whether or not finalized or authorized, as well as those that have been adopted.</P>
+<P>The term "relating to" means in whole or in part constituting, containing, concerning, discussing, describing, analyzing, identifying or stating.</P>
+</Definition>
+<Complaint>
+<ComplaintNumber></ComplaintNumber>
+<Date>July 1, 2006</Date>
+<Court>United States District Court District of  New Searchland</Court>
+<Plaintiff>Sammy Beethoven</Plaintiff>
+<Defendant>Omnibus Surgical Device Corp.</Defendant>
+<Introduction>
+<P>Plaintiff, is a resident and citizen of New Searchland</P>
+<P>Defendant, at all times relevant was and is a corporation organized and existing under the laws of the State of New Searchland and engaged in the business of designing, formulating, producing, manufacturing and/or worldwide marketing of surgical products incorporating its proprietary coating on the devices. At all times material hereto, Defendant acted by and through its agents, servants, workers, employees, officers and directors, actual or apparent, any and all of which were acting through the course and scope of their agency, authority, duties or employment, active or apparent.</P>
+<P>Defendant supplied and/or distributed and/or sold and/or otherwise placed into the stream of worldwide trade or commerce, surgical devices with a proprietary anti-slip coating.</P>
+<P>From 1962 to the present, Defendant placed surgical products with anti-slip coating into the stream of worldwide commerce and interstate commerce within the United States.  These products were defective.  They were designed, manufactured and distributed without adequate testing and with no warning that the products with coating were defective, inherently dangerous and unfit for their intended use as described herein.</P>
+<P>On information and belief, Defendant's surgical devices were sold to third party Echinoderm Cigarettes and other tobacco companies, for use in scientific settings and in furtherance of tobacco research.</P>
+<P>On or about February 19, 1999, Plaintiff underwent surgery to correct an aortic aneurysm condition during which defendant's products were used.</P>
+<P>During Plaintiff's surgery, the surgical device slipped out of the surgeons hands and dropped into Plaintiff's body.  The device could not be recovered and remains implanted.</P>
+<P>The anti-slip coating on the device is releasing ammonia fumes in Plaintiff's body.</P>
+<P>Plaintiff now suffers from memory loss and neurologic symptoms and a bad odor.</P>
+<P>As a direct and proximate result of the defective products placed into the stream of commerce by Defendant, Plaintiff suffered or may suffer a severe latent injury and disability from the defect in the Defendant's coated surgical products.</P>
+</Introduction>
+<Party>
+<PlaintiffParty>Sammy Beethoven</PlaintiffParty>
+<DefendantParty>Omnibus Surgical Device Corp.</DefendantParty>
+<Coconspirator></Coconspirator>
+</Party>
+<Jurisdiction>
+<P>Plaintiff alleges an amount in controversy in excess of $75,000 each, exclusive of interest and costs.</P>
+<P>This Court has jurisdiction over this action pursuant to 28 U.S.C. §1332 because the amount in controversy exceeds $75,000 for each Plaintiff and because there is complete diversity of citizenship between the Plaintiff and Defendant.  Venue is proper here as Defendant transacts business within this District.</P>
+</Jurisdiction>
+<Background>
+<P>Anti-slip coating was first introduced in 1962 with the potential to reduce the incidence of surgeons dropping surgical instruments during surgery.</P>
+<P>The Food and Pharmaceutical Administration ("FPA") approved Defendant to sell its coated products and associated products but animal and clinical trials were ongoing at the time of approval.</P>
+<P>Even after FPA approval, Defendant continued to pursue animal studies.  During animal operations, tiny little instruments continued to slip and land inside the animals.  The rate of pigeon death was especially high.</P>
+</Background>
+<CauseOfAction>
+<P>STRICT LIABILITY UNDER COMMON LAW AND ACTS SIMILAR TO THE NEW SEARCHLAND PRODUCTS LIABILITY ACT</P>
+<P>Plaintiff incorporates the allegations set forth above the paragraphs 1 through 38 of their complaint as is fully set forth herein.</P>
+<P>The coated surgical products manufactured and/or supplied by Defendant were defective in design and/or formulation in that when they left the hands of the said Defendant, the foreseeable risks exceeded the benefits associated with the design and/or formulation.</P>
+<P>Alternatively the products supplied by the Defendant were defective in design and/or formulation in that they were more dangerous than an ordinary consumer would expect when used in their intended or reasonably foreseeable manner.</P>
+<P>The products manufactured and/or supplied by the Defendant were defective due to inadequate warning or instruction in that, when they left the hands of said Defendant, Defendant knew or should have known that the product was such as to create a risk of harm to consumers and Defendant failed to exercise reasonable care to warn of said risk.</P>
+<P>The products manufactured and/or supplied by the Defendant were defective due to inadequate post-marketing warning and/or instructions in that when they left the hands of the Defendant, it knew or should have known the risk involved with the use of said product and failed to exercise reasonable care to provide an adequate warning to the users of the product.</P>
+<P>The products manufactured and/or supplied by the Defendant were defective in that they failed to conform to the representations of Defendant when they left its hands in that they were not safe for use by consumers.</P>
+<P>The products manufactured and/or supplied by the said Defendant were defective in that the Defendant failed to adequately test the products before placing them into the stream of commerce.</P>
+<P>As a direct and proximate results of the defective condition of the coated products, as manufactured by the said Defendant, Plaintiff suffered and will continue to suffer the risk of possible injury, disability, death, expense and economic loss as previously described.</P>
+<P>BREACH OF IMPLIED WARRANTY</P>
+<P>Plaintiff incorporates the allegations set forth above in paragraphs 1 through 46 of their Complaint as if fully set forth herein.</P>
+<P>Defendant is in the business of manufacturing and/or supplying and/or placing into the stream of commerce surgical products for consumers.</P>
+<P>By placing products into the stream of commerce, said Defendant implicitly warranted that the products were fit and safe for their intended use.</P>
+<P>The products placed into the stream of commerce by said Defendant were defective in that they were not fit and safe for their intended use.</P>
+<P>The defect in the products manufactured and/or supplied by said defendant were present at the time the product left the hands of said Defendant.</P>
+<P>Said Defendant breach the implied warranty for the products because said products were defective, unmerchantable and not fit for their intended purpose.  Defendant is on notice of the defect, and due to the nature of the defect and how it was discovered further notice of breach of warranty is not necessary.</P>
+<P>Plaintiff was a foreseeable user of the coated products.</P>
+<P>As a direct and proximate result of the Defendant's breach of implied warranty, Plaintiff suffered and will continue to suffer the risk of possible injury, disability, death, expense and economic loss as previously described.</P>
+<P>NEGLIGENCE/MEDICAL MONITORING</P>
+<P>Plaintiff incorporates by reference all preceding paragraphs as if fully set forth here and further allege as follows:</P>
+<P>Defendant had a duty to exercise reasonable care in the manufacture, sale and/or distribution of the subject surgical medical products it placed into the stream of commerce, including duty to assure that the products did not cause users to suffer unreasonable or unnecessary injury, infection or unreasonable, dangerous side effects.</P>
+<P>Defendant failed to exercise ordinary care in the warning about, design, manufacture, sale, testing, marketing, advertising, promoting and/or distribution into the stream of commerce of subject medical products in that Defendant knew or should have known that the subject medical products created a high risk of unreasonable, dangerous or offensive odor, memory loss, and neurological damage, and other side-effects, some of which, e.g., can only be alleviated by open heart surgery or other invasive procedures and some of which can be fatal.</P>
+<P>Defendant was negligent in the warning about, design, manufacture, sale, testing, marketing, advertising, promoting and/or distribution of the subject medical products in that it: (a) Failed to use due care in designing, developing and manufacturing the medical products so as to avoid the aforementioned risks to individuals when they were being implanted or used; (b) Failed to accompany their products with proper warnings regarding all possible adverse risks, effects or injuries associated with the use of the subject medical products; (c) Failed to conduct adequate pre-clinical and clinical testing and post-marketing surveillance to determine the safety of the subject medical products; (d) Failed to provide adequate training to medical care providers for appropriate use of or monitoring of the subject medical products; (e) Failed to warn Plaintiff about the following: (1) the need for comprehensive, regular medical monitoring to ensure early discovery of serious or potentially fatal odor, memory loss, or neurological effects. (f) Failed to test and/or warn adequately about the reaction of interaction of one or more of the component parts in the subject medical products when implanted in the human body; and/or (g) Placed an unsafe product into the stream of commerce.</P>
+<P>Defendant knew or should have known that consumers such as Plaintiff could foreseeably suffer injury as a result of Defendant's failure to exercise ordinary care as described above.</P>
+<P>Defendant's negligence was a proximate cause of Plaintiff's and other class members suffering a significantly increased risk of serious injury and disease, which they will continue to suffer as previously described.</P>
+<P>As a further result, Plaintiff may and probably will be required to pay sums to ascertain the existence, nature and extent of their injuries in the future.</P>
+</CauseOfAction>
+<RequestedRelief>
+<P>a judgment and/or decree in favor of Plaintiff against Defendant creating a trust fund paid for by Defendants which, under Court supervision, will design, pay for and manage the delivery of medical monitoring services, including, but not limited to, testing and preventative screening care of the adverse and latent conditions resulting from, or potentially resulting from, the accidental implantation and use of defective surgical products at issue in this suit;</P>
+<P>judgment and/or decree in favor of Plaintiff creating a trust fund, paid for by Defendants, under Court supervision, to finance medical research on monitoring services, including, but not limited to, testing and preventative screening care of conditions resulting from, or potentially resulting from the defective medical surgical products at issue in this suit;</P>
+<P>judgment and/or order requiring defendants to bear the cost of publication to members of the Class and the medical community of advising and educating them of the need for appropriate medical screening and monitoring concerning the medical conditions that are at issue in this suit, the content, form and manner of such publication to be approved by the Court; and</P>
+<P>such further relief as this Court deems necessary, just, and proper.</P>
+</RequestedRelief>
+</Complaint>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>80</RequestNumber>
+<RequestText>All documents making a connection between folk songs and music and the sale of cigarettes.</RequestText>
+<BooleanQuery>
+<FinalQuery>("folk songs" OR "folk music" OR "folk artists") AND (sale! OR sell! OR promot! OR advertis! OR market!)</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>"folk songs" AND (sale! OR sell! OR promot! OR advertis! OR market!)</ProposalByDefendant>
+<RejoinderByPlaintiff>folk AND (sale OR sell! OR promot! OR advertis! OR market!)</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>331</FinalB>
+<RequestSource>2007-C-2</RequestSource>
+<Instruction>
+<P>1. These requests require the production of all responsive documents within the sole or joint possession, custody or control of the Defendants, including their agents, departments, attorneys, directors, officers, employees, consultants, investigators, insurance companies, or other persons subject to Defendants' custody or control.</P>
+<P>2. All documents that respond, in whole or in part, to any portion of these Requests must be produced in their entirety, including all attachments and enclosures.</P>
+<P>3. For purposes of these requests, the words used are considered to have, and should be understood to have, their ordinary, everyday meanings.  Plaintiffs refer Defendants to any dictionary in the event Defendants asserts that the wording of a request is vague, ambiguous, unintelligible, or confusing.</P>
+</Instruction>
+<Definition>
+<P>4. The words "and," "or," "each," "any," "all," "refer," and "discuss," shall be construed in their broadest form and the singular shall include the plural and the plural shall include the singular whenever necessary so as to bring within the scope of these Requests all documents (defined below) that might otherwise be construed to be outside their scope.</P>
+<P>5. The phrase "advertising, marketing or promotion" of cigarettes includes public relations activities involving smoking and health.</P>
+<P>6. For present purposes, the term "defendants" includes Magic Dragon Cigarettes Inc. as well as those companies whose records are found in the Tobacco Master Settlement Agreement database.</P>
+<P>7. Solely for the purpose of the TREC 2007 legal track, "document"  means all text-searchable data, information or writings stored in the Tobacco Master Settlement Agreement database, including without limitation: any written, electronic or computerized files, data or software; memoranda; emails; correspondence; OCR scanned images; communications; reports; summaries; studies; analyses; evaluations; notes or notebooks; indices; spreadsheets; logs; books; pamphlets; binders; calendar or diary entries; ledger entries; press clippings; graphs; tables; charts; printouts; drawings; maps; meeting minutes; transcripts.  The term "document" encompasses all metadata associated with the document.  The term also includes all drafts associated with any particular document.   The term encompasses the term "electronically stored information" as used under the Federal Rules of Civil Procedure.</P>
+<P>8. "Person" or "individual" means natural persons, corporations, firms, partnerships, unincorporated associations, trusts, and any other legal entity.</P>
+<P>9. The term "plans" means tentative and preliminary proposals, recommendations, or considerations, whether or not finalized or authorized, as well as those that have been adopted.</P>
+<P>10. The term "relating to" means in whole or in part constituting, containing, concerning, discussing, describing, analyzing, identifying or stating.</P>
+</Definition>
+<Complaint>
+<ComplaintNumber>2007-C</ComplaintNumber>
+<Date>July 1, 2007</Date>
+<Court>UNITED STATES DISTRICT COURT DISTRICT OF NEW SEARCHLAND</Court>
+<Plaintiff>JENNY PAPER, On Behalf of Herself and All Others Similarly Situated</Plaintiff>
+<Defendant>MAGIC DRAGON CIGARETTES, INC., and MICHAEL "PUFF" SMAUG</Defendant>
+<Introduction>
+<P>Plaintiff, Jenny Paper, individually and on behalf of all other persons and entities similarly situated, by her undersigned attorneys, for her complaint against the above-captioned defendants, alleges upon personal knowledge as to herself and her own acts, and upon information and belief as to all other matters, based upon, inter alia, the investigation made by and through her attorneys, which investigation included, among other things, a review of the public documents, Securities and Exchange Commission ("SEC") filings, analyst reports, news releases and media reports concerning Magic Dragon Cigarettes, Inc. ("Magic Dragon" or the "Company"), as follows:</P>
+<P>NATURE OF THE ACTION</P>
+<P>1. This is a federal securities class action on behalf of all persons and entities, other than defendants, who purchased or otherwise acquired the securities of Magic Dragon between January 1, 2002 and June 27, 2003, inclusive, seeking to pursue remedies under the Securities Exchange Act of 1934 (the "Exchange Act").</P>
+</Introduction>
+<Party>
+<PlaintiffParty>6. Plaintiff, Jenny Paper, purchased Magic Dragon common stock during the Class Period, as set forth in the certification attached hereto and incorporated herein by reference, and was damaged thereby.  Plaintiff is a citizen of New Searchland.</PlaintiffParty>
+<DefendantParty>7. Defendant Magic Dragon is a New Searchland corporation and maintains its principal executive offices in New Searchland.  Magic Dragon is a major manufacturer of tobacco products, including cigarettes.</DefendantParty>
+<Coconspirator></Coconspirator>
+</Party>
+<Jurisdiction>
+<P>2. The claims alleged herein arise under Sections 10(b) and 20(a) of the Exchange Act, 15 U.S.C. §§ 78j(b) and 78t, and Rule 10b-5, 17 C.F.R. § 240.10b-5 promulgated thereunder.</P>
+<P>3. The jurisdiction of this Court is based on Section 27 of the Exchange Act, 15 U.S.C. § 78aa and 28 U.S.C. § 1331 (federal question jurisdiction).</P>
+<P>4. Venue is proper in this judicial district pursuant to Section 27 of the Exchange Act.  Many of the acts and transactions giving rise to the violations of law complained of herein, including the preparation and dissemination to the investing public of materially false and misleading information, occurred in this judicial district.  The Company is incorporated and maintains its principal place of business in New Searchland.</P>
+<P>5. In connection with the acts, conduct and other wrongs alleged in this complaint, defendants, directly or indirectly, used the means and instrumentalities of interstate commerce, including but not limited to, the United States mails, interstate telephone communications and the facilities of the national securities exchange.</P>
+</Jurisdiction>
+<Background>
+<P>8. Defendant Michael "Puff" Smaug ("Smaug") was Chairman and Chief Executive Officer ("CEO") of the Company at all relevant times.   Smaug participated in making the false and misleading statements referred to herein.</P>
+<P>9. During the Class Period, Defendant Smaug was privy to non-public information concerning the Company's finances, markets and present and future business prospects via access to internal corporate documents, conversations and connections with other corporate officers and employees, and information provided to him in connection therewith.  Because of his possession of such information, Defendant Smaug knew or recklessly disregarded the fact that adverse facts specified herein had not been disclosed to, and were being concealed from, the investing public.  Defendant Smaug, by virtue of his high-level position with the Company, directly participated in the management of the Company, was directly involved in the day-to-day operations of the Company at the highest levels, and was privy to confidential proprietary information concerning the Company and its business, operations, growth, financial statements, and financial condition, as alleged herein.  Defendant Smaug was involved in drafting, producing, reviewing and disseminating the false and misleading statements and information alleged herein.  Defendant Smaug was aware, or recklessly disregarded, that the statements made concerning the Company during the Class Period were false and misleading, in violation of the federal securities laws.</P>
+<P>10. As an officer and controlling person of a publicly held Company whose securities were and are registered with the SEC pursuant to the Exchange Act, and are traded on the New Smokeland Stock Exchange ("NSSE") and governed by the provisions of the federal securities laws, Defendant Smaug had a duty to disseminate accurate and truthful information promptly with respect to the Company's financial condition and performance, growth, operations, financial statements, business, markets, management, earnings and present and future business prospects, and to correct any previously issued statements that had become materially misleading or untrue, so that the market price of the Company's publicly traded securities would be based upon truthful and accurate information.  Defendant Smaug's misrepresentations and omissions during the Class Period violated these specific requirements and obligations.</P>
+<P>11. Both of the defendants are liable as participants in a fraudulent scheme and course of business that operated as a fraud or deceit on purchasers of Magic Dragon securities by disseminating materially false and misleading statements and/or concealing material adverse facts.  The scheme (i) deceived the investing public regarding Magic Dragon's business, operations, management and the intrinsic value of Magic Dragon securities; and (ii) caused Plaintiff and other members of the Class to purchase Magic Dragon securities at artificially inflated prices.</P>
+</Background>
+<CauseOfAction>
+<P>SUBSTANTIVE ALLEGATIONS</P>
+<P>12. On April 15, 2002, the Company announced record sales for the quarter ended March 31, 2002 ("1Q02"), attributing the results to strong demand in growth for its products.  In the press release issued that day, Defendant Smaug credited the Company's "Smoke Longer, Feel Younger" advertising campaign for driving demand.  The multi-media campaign, featuring "hip" movies from the 1960s, like Bonnie and Clyde, James Bond films, and the films of Stanley Kubrick, as well as music from 1960s folk artists Peter, Paul and Mary, Simon and Garfunkel, Bob Dylan, and Joan Baez, all had been particularly effective both with aging baby boomers who fondly remember these cultural icons from their youth, as well as with younger adult consumers.  Defendant Smaug noted that the marketing campaign to attract both these demographic age groups is essential to our continued success.    The ‘Smoke Longer, Feel Younger' campaign is breathing new life into the company."</P>
+<P>13. Similar press releases, announcing continuing strong growth were issued on July 14, 2002, October 16, 2002, and January 13, 2003, for the quarters ended June 30, 2002 ("2Q02"), September 30, 2002 ("3Q02"), and December 31, 2002 ("4Q02"), respectively.  The January 13, 2003 press release also announced preliminary results for the year ended December 31, 2002 ("FY02").  All of the press releases attributed the strong sales to increasing demand for the Company's products.</P>
+<P>14. On April 16, 2003, the Company issued a press release reporting strong sales and increased demand for its products, resulting in record sales for the quarter ended March 31, 2003.  Indeed, the Company noted that sales had increased 23% from the same quarter a year ago.  Defendant Smaug again credited the "Smoke Longer, Feel Younger" campaign for the record quarterly revenue results, also noting that "[o]ur sponsorship of Spelling Bees" is really paying dividends."</P>
+<P>15. On July 14, 2003, the Company again announced record quarterly revenue results, which increased 27% from the same quarter a year ago.  Defendant Smaug attributed the record results to the impressive, continuing demand growth, and noted that "using psychedelic themes and changing the color of the cigarette paper have both really helped push the demographics of our market."</P>
+<P>16. Unbeknownst to shareholders at the time of the above announcements, defendants had failed to disclose the following facts which they knew at the time, or should have known:</P>
+<P>a. The record results reported by the Company were based in material part on products recorded as sales but which were shipped to distributors on a sale-or-return basis;</P>
+<P>b. The Company knew that recording these shipments as sales was not in accordance with Generally Accepted Accounting Principles ("GAAP");</P>
+<P>c. The Company knew that recording these shipments as sales, in violation of GAAP, rendered its financial statements false and misleading;</P>
+<P>d. The Company's marketing firm, Over the Rainbow Sales, had informed the Company as early as August 3, 2002, that the marketing campaign had been unsuccessful and was unlikely to increase demand for the Company's products.</P>
+<P>THE TRUTH REVEALED</P>
+<P>17. On June 2, 2003, a disgruntled, former employee of  Over the Rainbow Sales, Iva Sole, revealed the dismal results of the "Smoke Longer, Feel Younger" campaign and that these results had been communicated to Company as early as August 3, 2002.</P>
+<P>18. That same day, the Company issued a press release denying Iva Sole's assertions.</P>
+<P>19. On June 3, 2003, the Wall Street Journal revealed that the FSC had commenced an informal investigation into the Company.</P>
+<P>20. On June 27, 2003, the Company issued a press release announcing that it would likely be forced to restate quarterly and annual results for 2002, and for the first six months of 2003.  The Company admitted that the restatement was necessitated by improperly recorded sales and that such sales were likely to have materially increased the Company's reported revenues for 2002 and the first six months of 2003.</P>
+<P>21. Following this announcement, the price of the Company's stock dropped dramatically on exceptionally heavy trading volume, closing at $73, down $23 from the June 26, 2003 closing pricing of $96.</P>
+<P>22. As a result of defendants' false and misleading statements as detailed above, the financial results of Magic Dragon were artificially and materially inflated during the Class Period.  Defendants' illegal activities had the intended effect of boosting Magic Dragon's financial results for the year 2002, and the first six months of 2003, and maintaining Magic Dragon stock at artificially inflated levels during the Class Period.  As the truth was revealed, the artificial inflation came out of Magic Dragon's stock price and the stock price plummeted.  As a result of their purchases of Magic Dragon securities during the Class Period, plaintiff and other members of the Class suffered damages.</P>
+<P>PLAINTIFF'S CLASS ACTION ALLEGATIONS</P>
+<P>23. Plaintiff brings this action as a class action pursuant to Federal Rules of Civil Procedure 23(a) and 23(b)(3) on behalf of herself and all persons and entities other than defendants who purchased or otherwise acquired the securities of Magic Dragon between January 1, 2002, and June 27, 2003, inclusive (the "Class").  Excluded from the Class are defendants herein, members of the immediate family of each of the defendants, any person, firm, trust, corporation, officer, director or other individual or entity in which any defendant has a controlling interest or which is related to or affiliated with any of the defendants, and the legal representatives, agents, affiliates, heirs, successors-in-interest or assigns of any such excluded party.</P>
+<P>24. The members of the Class are so numerous that joinder of all members is impracticable.  As of June 27, 2003, Magic Dragon had more than 500 million shares outstanding.  The precise number of Class members is unknown to plaintiff at this time but is believed to be in the thousands.  In addition, the names and addresses of the Class members can be ascertained from the books and records of Magic Dragon.  Notice can be provided to such record owners by a combination of published notice and first-class mail, using techniques and a form of notice similar to those customarily used in class actions arising under the federal securities laws.</P>
+<P>25. The members of the Class are located in geographically diverse areas and are so numerous that joinder of all members is impractical.  While the exact number of Class members is unknown to the plaintiff at this time, and can only be ascertained through appropriate discovery, plaintiff believes there are, thousands of members of the Class, at a minimum.</P>
+<P>26. Common questions of law and fact exist as to all members of the Class and predominate over any questions affecting solely individual members of the Class.  Among the questions of law and fact common to the Class are:</P>
+<P>(a) Whether defendants engaged in acts or conduct in violation of the securities laws as alleged herein;</P>
+<P>(b) Whether defendants had a duty to disclose certain information;</P>
+<P>(c) Whether defendants knowingly or recklessly made materially false and misleading statements or failed to correct such statements upon learning that they were materially false and misleading during the Class Period;</P>
+<P>(d) Whether the market price of the Company's securities during the Class Period was artificially inflated because of defendants' conduct complained of herein; and</P>
+<P>(e) Whether members of the Class have sustained damages and, if so, the proper measure of damages.</P>
+<P>27. Plaintiff's claims are typical of the claims of the members of the Class because plaintiff and members of the Class sustained damages arising out of defendants' wrongful conduct in violation of federal law as complained of herein.</P>
+<P>28. Plaintiff will fairly and adequately protect the interests of the members of the Class and has retained counsel competent and experienced in class and securities litigation.  Plaintiff has no interests antagonistic to or in conflict with those of the Class.</P>
+<P>29. A class action is superior to other available methods for the fair and efficient adjudication of this controversy since joinder of all members of the Class is impractical.  Furthermore, because the damages suffered by individual Class members may be relatively small, the expense and burden of individual litigation make it impossible for the Class members individually to redress the wrongs done to them.  There will be no difficulty in the management of this action as a class action.</P>
+<P>Fraud on the Market Presumption</P>
+<P>30. Plaintiff will rely, in part, upon the presumption of reliance established by the fraud-on-the-market doctrine in that:</P>
+<P>(a) Defendants made public misrepresentations or failed to disclose material facts regarding Magic Dragon's financial situation during the Class Period;</P>
+<P>(b) the omissions and misrepresentations were material;</P>
+<P>(c) the securities of the Company were actively traded at all relevant times on the NSSE, an efficient and open market;</P>
+<P>(d) the misrepresentations and omissions alleged would tend to induce a reasonable investor to misjudge the value of the Company's securities; and</P>
+<P>(e) Plaintiff and the members of the Class, without knowledge of the misrepresented facts, purchased their Magic Dragon securities between the time defendants failed to disclose and/or misrepresented material facts and the time the truth was disclosed.</P>
+<P>31. Magic Dragon trades on the NSSE.  The price of Magic Dragon's stock reflects the effect of news disseminated in the market.</P>
+<P>32. Based upon the foregoing, plaintiff and the members of the Class are entitled to a presumption of reliance upon the integrity of the market</P>
+<P>The Safe Harbor Provision is Inapplicable</P>
+<P>33. The statutory safe harbor provided for forward-looking statements under certain circumstances does not apply to any of the allegedly false statements pleaded in this complaint.  The statements alleged to be false and misleading herein all relate to then-existing facts and conditions.  In addition, to the extent certain of the statements alleged to be false may be characterized as forward-looking, they were not adequately identified as "forward-looking statements" when made, and there were no meaningful cautionary statements identifying important factors that could cause actual results to differ materially from those in the purportedly forward-looking statements.  Alternatively, to the extent that the statutory safe harbor is intended to apply to any forward-looking statements pleaded herein, defendants are liable for those false forward-looking statements because at the time each of those forward-looking statements was made, the defendants had actual knowledge that the particular forward-looking statement was materially false or misleading.</P>
+</CauseOfAction>
+<RequestedRelief>
+<P>FIRST CLAIM FOR RELIEF</P>
+<P>For Violations of Sections 10(b) and Rule 10b-5 Thereunder</P>
+<P>34. Plaintiff incorporates by reference and realleges each of the foregoing paragraphs.</P>
+<P>35. Plaintiff repeats and realleges each and every allegation contained above as if fully set forth herein.</P>
+<P>36. During the Class Period, defendants carried out a plan, scheme and course of conduct which was intended to and, throughout the Class Period, did:  (i) deceive the investing public, including Plaintiff and other Class members, as alleged herein; and (ii) cause Plaintiff and other members of the Class to purchase Magic Dragon securities at artificially inflated prices.  In furtherance of this unlawful scheme, plan and course of conduct, defendants, and each of them, took the actions set forth herein.</P>
+<P>37. Defendants (a) employed devices, schemes, and artifices to defraud; (b) made untrue statements of material fact and/or omitted to state material facts necessary to make the statements not misleading; and (c) engaged in acts, practices, and a course of business which operated as a fraud and deceit upon the purchasers of the Company's securities in an effort to maintain artificially high market prices for Magic Dragon securities in violation of Section 10(b) of the Exchange Act and Rule 10b-5.  Defendants are sued either as primary participants in the wrongful and illegal conduct charged herein or as controlling persons as alleged below.</P>
+<P>38. Defendants directly and indirectly, by the use, means or instrumentalities of interstate commerce and/or of the mails, engaged and participated in a course of conduct to conceal adverse material information about the business, operations and future prospects of Magic Dragon as specified herein.</P>
+<P>39. Defendants employed devices, schemes, and artifices to defraud, while in possession of material adverse non-public information and engaged in acts, practices, and a course of conduct as alleged herein in an effort to assure investors of Magic Dragon's value and performance and continued substantial growth, which included the making of, or the participation in the making of, untrue statements of material facts and omitting to state material facts necessary in order to make the statements made about Magic Dragon and its business operations and future prospects in the light of the circumstances under which they were made, not misleading, as set forth more particularly herein, and engaged in transactions, practices and a course of business which operated as a fraud and deceit upon the purchasers of Magic Dragon securities during the Class Period.</P>
+<P>40. Defendant Smaug's primary liability, and controlling person liability, arises from the following facts: (i) Defendant Smaug was a high-level executive at the Company during the Class Period and a member of the Company's management team; (ii) by virtue of his responsibilities and activities as a senior officer of the Company, he was privy to and participated in the creation, development and reporting of the Company's internal budgets, plans, projections and/or reports; (iii) he enjoyed significant personal contact and familiarity with other members of the Company's management team, internal reports and other data and information about the Company's finances, operations, and sales at all relevant times; and (iv) he was aware of the Company's dissemination of information to the investing public which he knew or recklessly disregarded was materially false and misleading.</P>
+<P>41. The defendants had actual knowledge of the misrepresentations and omissions of material facts set forth herein, or acted with reckless disregard for the truth in that they failed to ascertain and to disclose such facts, even though such facts were available to them.  Such defendants' material misrepresentations and/or omissions were done knowingly or recklessly and for the purpose and effect of concealing Magic Dragon's operating condition and future business prospects from the investing public and supporting the artificially inflated price of its securities.  As demonstrated by defendants' misstatements of the Company's business, operations and earnings throughout the Class Period, defendants, if they did not have actual knowledge of the misrepresentations and omissions alleged, were reckless in failing to obtain such knowledge by deliberately refraining from taking those steps necessary to discover whether those statements were false or misleading.</P>
+<P>42. As a result of the dissemination of the materially false and misleading information and failure to disclose material facts, as set forth above, the market price of Magic Dragon securities was artificially inflated during the Class Period.  In ignorance of the fact that market prices of Magic Dragon's publicly traded securities were artificially inflated, and relying directly or indirectly on the false and misleading statements made by defendants, or upon the integrity of the market in which the securities trades, and/or on the absence of material adverse information that was known to or recklessly disregarded by defendants but not disclosed in public statements by defendants during the Class Period, Plaintiff and the other members of the Class acquired Magic Dragon securities during the Class Period at artificially high prices and were damaged thereby.</P>
+<P>43. At the time of said misrepresentations and omissions, Plaintiff and other members of the Class were ignorant of their falsity, and believed them to be true.  Had Plaintiff and the other members of the Class and the marketplace known the truth regarding Magic Dragon's activities, which was not disclosed by defendants, Plaintiff and other members of the Class would not have purchased or otherwise acquired their Magic Dragon securities, or, if they had acquired such securities during the Class Period, they would not have done so at the artificially inflated prices which they paid.</P>
+<P>44. By virtue of the foregoing, defendants have violated Section 10(b) of the Exchange Act, and Rule l0b-5 promulgated thereunder.</P>
+<P>45. As a direct and proximate result of defendants' wrongful conduct, Plaintiff and the other members of the Class suffered damages in connection with their respective purchases and sales of the Company's securities during the Class Period.</P>
+<P>SECOND CLAIM FOR RELIEF</P>
+<P>Violation Of Section 20(a) Of</P>
+<P>The Exchange Act Against Defendant Jones</P>
+<P>46. Plaintiff repeats and realleges each and every allegation contained above as if fully set forth herein.</P>
+<P>47. Defendant Smaug acted as a controlling person of Magic Dragon within the meaning of Section 20(a) of the Exchange Act as alleged herein.  By virtue of his high-level position, and his participation in and/or awareness of the Company's operations and/or intimate knowledge of the financial condition of the Company, Defendant Smaug had the power to influence and control and did influence and control, directly or indirectly, the decision-making of the Company, including the content and dissemination of the various statements which Plaintiff contends are false and misleading.</P>
+<P>48. As set forth above, Magic Dragon violated Section 10(b) and Rule 10b-5 by its acts and omissions as alleged in this Complaint.  By virtue of his positions as controlling person, Defendant Smaug is similarly liable pursuant to Section 20(a) of the Exchange Act.  As a direct and proximate result of defendants' wrongful conduct, Plaintiff and other members of the Class suffered damages in connection with their purchases of the Company's securities during the Class Period.</P>
+<P>WHEREFORE, Plaintiff prays for relief and judgment, as follows:</P>
+<P>A. Determining that this action is a proper class action, designating Plaintiff as Lead Plaintiff and certifying Plaintiff as a class representative under Rule 23 of the Federal Rules of Civil Procedure and Plaintiffs counsel as Lead Counsel;</P>
+<P>B. Awarding compensatory damages in favor of Plaintiff and the other Class members against all defendants, jointly and severally, for all damages sustained as a result of defendants' wrongdoing, in an amount to be proven at trial, including interest thereon;</P>
+<P>C. Awarding Plaintiff and the Class their reasonable costs and expenses incurred in this action, including counsel fees and expert fees; and</P>
+<P>D. Such other and further relief as the Court may deem just and proper.</P>
+</RequestedRelief>
+</Complaint>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>89</RequestNumber>
+<RequestText>Submit all documents listing monthly and/or annual sales for companies in the property and casualty insurance business in the United States between 1980 and the present.</RequestText>
+<BooleanQuery>
+<FinalQuery>(((month! OR annual!) w/15 (sales OR sell! OR revenue)) AND ((property OR casualty) AND insurance)) BUT NOT (England OR "Great Britain" OR U.K. OR UK)</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>(("monthly sales" OR "annual sales") AND ("property insurance" OR "casualty insurance")) AND (United States OR U.S.) AND (198! OR 199!)</ProposalByDefendant>
+<RejoinderByPlaintiff>(month! OR annual!) AND (sales OR sell! OR revenue) AND insurance AND (198! OR 199!)</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>3636</FinalB>
+<RequestSource>2007-D-1</RequestSource>
+<Instruction>
+</Instruction>
+<Definition>
+<P>A. The term "discussing" when used to refer to documents means analyzing, constituting, summarizing, reporting on, considering, recommending, setting forth or describing a subject.  Documents that contain reports, studies, forecasts, analyses, plans, proposals, evaluations, recommendations, directives, procedures, policies, or guidelines regarding a subject should be treated as documents that discuss the subject.</P>
+<P>B. Solely for the purpose of the TREC 2007 legal track, "document" means all data, information or writings stored in the TREC legal database, including without limitation: any written, electronic or computerized files, data or software; memoranda; emails; correspondence; OCR scanned images; communications; reports; summaries; studies; analyses; evaluations; notes or notebooks; indices; spreadsheets; logs; books; pamphlets; binders; calendar or diary entries; ledger entries; press clippings; graphs; tables; charts; printouts; drawings; maps; meeting minutes; transcripts.  The term "document" encompasses all metadata associated with the document.  The term also includes all drafts associated with any particular document.   The term includes all electronically stored information as referenced in the Federal Rules of Civil Procedure</P>
+<P>C. The term "person" includes the company and means any natural person, corporate entity, partnership, association, joint venture, government entity, or trust.</P>
+<P>D. The term "relating to" means in whole or in part constituting, containing, concerning, discussing, describing, analyzing, identifying, or stating.</P>
+<P>E. The term "proposed transaction" means any proposed, planned, or reasonably contemplated acquisition of a property and casualty insurance company.</P>
+</Definition>
+<Complaint>
+<ComplaintNumber>2007-D</ComplaintNumber>
+<Date>July 1, 2007</Date>
+<Court></Court>
+<Plaintiff>United States, brought by Antitrust Division of the U.S. Department of Justice</Plaintiff>
+<Defendant>Unnamed Client Represented by Ralph N. ("Cy") Beltway, Esquire, Black, White, and Grey LLP</Defendant>
+<Introduction>
+</Introduction>
+<Party>
+<PlaintiffParty>United States, brought by Antitrust Division of the U.S. Department of Justice</PlaintiffParty>
+<DefendantParty>Unnamed Client Represented by Ralph N. ("Cy") Beltway, Esquire, Black, White, and Grey LLP</DefendantParty>
+<Coconspirator></Coconspirator>
+</Party>
+<Jurisdiction>
+</Jurisdiction>
+<Background>
+<P>RE: Acquisitions of Insurance Companies by Tobacco Concerns</P>
+<P>Dear Mr. Beltway:</P>
+<P>This request is being made in connection with ongoing investigations being conducted by the Antitrust Division of the U.S. Department of Justice pursuant to Section 7A(e)(1) of the Clayton Act, 15 U.S.C. § 18a, and Section 803.20 of the Premerger Notification Rules and Regulations, 16 C.F.R. § 803.20.</P>
+<P>The Department is seeking information and documents related to proposed, planned, or contemplated acquisitions of companies in the property and casualty insurance industry by companies in or related to the tobacco industry.   This request includes proposed acquisitions in one or more selected foreign countries.</P>
+<P>As you know, in the case or a proposed merger or acquisition, 15 U.S.C. § 18a(e)(2) and 16 C.F.R. § 803.20 permits a second request for information which extends the waiting period during which a proposed transaction may not be consummated for 30 days.  Although this request may be considered informal, and for informational purposes only, we request that you treat it with the same level of urgency as a formal second request.</P>
+<P>To comply with this request, please deliver the materials requested by hand or by registered or certified mail to the Antitrust Division in Washington, D.C.</P>
+<P>The requests for information and documents are contained in the enclosed schedule.</P>
+<P>If you have any questions regarding this matter, you should call or write either to me or the Director of Operations of the Antitrust Division.  If I do not hear from you, I will anticipate receipt of the materials requested in the enclosure.</P>
+<P>Best Regards,</P>
+<P>Ann T. Trust</P>
+<P>Operations &amp; Civil Enforcement</P>
+</Background>
+<CauseOfAction>
+</CauseOfAction>
+<RequestedRelief>
+</RequestedRelief>
+</Complaint>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>102</RequestNumber>
+<RequestText>Documents referring to marketing or advertising restrictions proposed for inclusion in, or actually included in, the Master Settlement Agreement ("MSA"), including, but not limited to, restrictions on advertising on billboards, stadiums, arenas, shopping malls, buses, taxis, or any other outdoor advertising.</RequestText>
+<BooleanQuery>
+<FinalQuery>((marketing OR advertis! OR promot! OR display!) w/10 (restrict! OR limit! OR prohibit! OR ban OR bans OR banned OR disallow!)) AND (("master settlement agreement" OR MSA) OR (billboard! OR arena! OR stadium! OR "shopping mall" OR bus OR buses OR taxi! OR "outdoor advertising" OR subway OR station OR banner OR marquee OR rail OR Amtrak OR "public transportation" OR "mass transit"))</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>(((marketing OR advertising) w/3 restrictions) w/20 ("master settlement agreement" OR MSA)) AND (billboard! OR arena! OR stadium! OR "shopping mall!" OR bus OR buses OR taxi! OR "outdoor advertising")</ProposalByDefendant>
+<RejoinderByPlaintiff>((marketing OR advertis! OR promot! OR display!) w/10 (restrict! OR limit! OR prohibit! OR ban OR bans OR banned OR disallow!)) AND (("master settlement agreement" OR MSA) OR (billboard! OR arena! OR stadium! OR "shopping mall" OR bus OR buses OR taxi! OR "outdoor advertising" OR subway OR train OR station OR banner OR marquee OR boat OR rail OR Amtrak OR "public transportation" OR "mass transit"))</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>86742</FinalB>
+<RequestSource>2008-I-1</RequestSource>
+<Instruction>
+<P>1. These requests require the production of all responsive documents within the sole or joint possession, custody or control of the Defendants, including their agents, departments, attorneys, directors, officers, employees, consultants, investigators, insurance companies, or other persons subject to Defendants' custody or control.</P>
+<P>2. All documents that respond, in whole or in part, to any portion of these Requests must be produced in their entirety, including all attachments and enclosures.</P>
+<P>3. For purposes of these requests, the words used are considered to have, and should be understood to have, their ordinary, everyday meanings. Plaintiffs refer Defendants to any dictionary in the event Defendants asserts that the wording of a request is vague, ambiguous, unintelligible, or confusing.</P>
+</Instruction>
+<Definition>
+<P>4. The words "and," "or," "each," "any," "all," "refer," and "discuss," shall be construed in their broadest form and the singular shall include the plural and the plural shall include the singular whenever necessary so as to bring within the scope of these Requests all documents (defined below) that might otherwise be construed to be outside their scope.</P>
+<P>5. The phrase "advertising, marketing or promotion" of cigarettes includes public relations activities involving smoking and health.</P>
+<P>6. Solely for the purpose of the TREC 2008 legal track, the term "defendant" includes the named company above as well as all other companies whose records are found in the IIT CDIP v. 1.0/TREC Legal Track collection database ("TREC legal database").</P>
+<P>7. Solely for the purpose of the TREC 2008 legal track, "document" means all data, information or writings stored in the TREC legal database, including without limitation: any written, electronic or computerized files, data or software; memoranda; emails; correspondence; OCR scanned images; communications; reports; summaries; studies; analyses; evaluations; notes or notebooks; indices; spreadsheets; logs; books; pamphlets; binders; calendar or diary entries; ledger entries; press clippings; graphs; tables; charts; printouts; drawings; maps; meeting minutes; transcripts. The term "document" encompasses all metadata associated with the document. The term also includes all drafts associated with any particular document.</P>
+<P>8. "Person" or "individual" means natural persons, corporations, firms, partnerships, unincorporated associations, trusts, and any other legal entity.</P>
+<P>9. The term "plans" means tentative and preliminary proposals, recommendations, or considerations, whether or not finalized or authorized, as well as those that have been adopted.</P>
+<P>10. The term "relating to" means in whole or in part constituting, containing, concerning, discussing, describing, analyzing, identifying or stating.</P>
+</Definition>
+<Complaint>
+<ComplaintNumber>2008-I</ComplaintNumber>
+<Date>July 1, 2008</Date>
+<Court>UNITED STATES DISTRICT COURT DISTRICT OF NEW SEARCHLAND</Court>
+<Plaintiff>ANDREW MELLON, On Behalf of Himself and All Others Similarly Situated</Plaintiff>
+<Defendant>ECHINODERM CIGARETTES, INC., and JIM JONES</Defendant>
+<Introduction>
+<P>Plaintiff, Andrew Mellon, individually and on behalf of all other persons and entities similarly situated, by his undersigned attorneys, for his complaint against the above-captioned defendants, alleges upon personal knowledge as to himself and his own acts, and upon information and belief as to all other matters, based upon, inter alia, the investigation made by and through his attorneys, which investigation included, among other things, a review of the public documents, Federal Securities Commission ("FSC") filings, analyst reports, news releases and media reports concerning Echinoderm Cigarettes, Inc. ("Echinoderm" or the "Company"), as follows:</P>
+<P>NATURE OF THE ACTION</P>
+<P>1. This is a federal securities class action on behalf of all persons and entities, other than defendants, who purchased or otherwise acquired the securities of Echinoderm between January 1, 1992 and September 1,2002, inclusive, seeking to pursue remedies under the Securities Exchange Act of 1934 (the "Exchange Act").</P>
+</Introduction>
+<Party>
+<PlaintiffParty>
+<P>6. Plaintiff, Andrew Mellon, purchased Echinoderm common stock during the Class Period, as set forth in the certification attached hereto and incorporated herein by reference, and was damaged thereby. Plaintiff is a citizen of New Searchland.</P>
+</PlaintiffParty>
+<DefendantParty>
+<P>7. Defendant Echinoderm is a New Searchland corporation and maintains its principal executive offices in New Searchland. Echinoderm is a major manufacturer of tobacco products, including cigarettes.</P>
+<P>8. Defendant Jim Jones ("Jones") was Senior Vice President and Chief Financial Officer of the Company at all relevant times. Jones participated in making the false and misleading statements referred to herein.</P>
+<P>9. During the Class Period, Defendant Jones was privy to non-public information concerning the Company's finances, markets and present and future business prospects via access to internal corporate documents, conversations and connections with other corporate officers and employees, and information provided to him in connection therewith. Because of his possession of such information, Defendant Jones knew or recklessly disregarded the fact that adverse facts specified herein had not been disclosed to, and were being concealed from, the investing public. Defendant Jones, by virtue of his high-level position with the Company, directly participated in the management of the Company, was directly involved in the day-to-day operations of the Company at the highest levels, and was privy to confidential proprietary information concerning the Company and its business, operations, growth, financial statements, and financial condition, as alleged herein. Defendant Jones was involved in drafting, producing, reviewing and disseminating the false and misleading statements and information alleged herein. Defendant Jones was aware, or recklessly disregarded, that the statements made concerning the Company during the Class Period were false and misleading, in violation of the federal securities laws.</P>
+<P>10. As an officer and controlling person of a publicly held Company whose securities were and are registered with the FSC pursuant to the Exchange Act, and are traded on the New Searchland Stock Exchange ("NSSE") and governed by the provisions of the federal securities laws, Defendant Jones had a duty to disseminate accurate and truthful information promptly with respect to the Company's financial condition and performance, growth, operations, financial statements, business, markets, management, earnings and present and future business prospects, and to correct any previously issued statements that had become materially misleading or untrue, so that the market price of the Company's publicly traded securities would be based upon truthful and accurate information. Defendant Jones's misrepresentations and omissions during the Class Period violated these specific requirements and obligations.</P>
+<P>11. Both of the defendants are liable as participants in a fraudulent scheme and course of business that operated as a fraud or deceit on purchasers of Echinoderm securities by disseminating materially false and misleading statements and/or concealing material adverse facts. The scheme (i) deceived the investing public regarding Echinoderm's business, operations, management and the intrinsic value of Echinoderm securities; and (ii) caused Plaintiff and other members of the Class to purchase Echinoderm securities at artificially inflated prices.</P>
+</DefendantParty>
+<Coconspirator></Coconspirator>
+</Party>
+<Jurisdiction>
+<P>2. The claims alleged herein arise under Sections 10(b) and 20(a)of the Exchange Act, 15 U.S.C. §§ 78j(b) and 78t, and Rule 10b-5, 17C.F.R. § 240.10b-5 promulgated thereunder.</P>
+<P>3. The jurisdiction of this Court is based on Section 27 of the Exchange Act, 15 U.S.C. § 78aa and 28 U.S.C. § 1331 (federal question jurisdiction).</P>
+<P>4. Venue is proper in this judicial district pursuant to Section 27 of the Exchange Act. Many of the acts and transactions giving rise to the violations of law complained of herein, including the preparation and dissemination to the investing public of materially false and misleading information, occurred in this judicial district. The Company is incorporated and maintains its principal place of business in New Searchland.</P>
+<P>5. In connection with the acts, conduct and other wrongs alleged in this complaint, defendants, directly or indirectly, used the means and instrumentalities of interstate commerce, including but not limited to, the United States mails, interstate telephone communications and the facilities of the national securities exchange.</P>
+</Jurisdiction>
+<Background>
+<P>12. On January 1, 2002, Echinoderm announced record results for the prior year, primarily attributed to strong demand growth in overseas markets, particularly China, for its products. The announcement also touted the fact that Echinoderm was unique among U.S. tobacco companies in that it had seen no decline in domestic sales during the prior three years.</P>
+<P>13. Unbeknownst to shareholders at the time of the January 1, 2002 announcement, defendants had failed to disclose the following facts which they knew at the time, or should have known:</P>
+<P>a. The Company's success in overseas markets resulted in large part from bribes paid to foreign government officials to gain access to their respective markets;</P>
+<P>b. The Company knew that this conduct was in violation of the Foreign Corrupt Practices Act and therefore was likely to result in enormous fines and penalties;</P>
+<P>c. The Company intentionally misrepresented that its success in overseas markets was due to superior marketing.</P>
+<P>d. Domestic demand for the Company's products was dependent on pervasive and ubiquitous advertising, including outdoor, transit, point of sale and counter top displays of the Company's products, in key markets. Such advertising violated the marketing and advertising restrictions to which the Company was subject as a party to the Attorneys General Master Settlement Agreement ("MSA").</P>
+<P>e. The Company knew that it could be ordered at any time to cease and desist from advertising practices that were not in compliance with the MSA and that the inability to continue such practices would likely have a material impact on domestic demand for its products.</P>
+<P>THE TRUTH REVEALED</P>
+<P>14. On June 17, 2002, the Company announced that it was the subject of a U.S. Department of Justice ("DOJ") investigation concerning bribes paid by tobacco companies to foreign governmental officials and of a related inquiry by the FSC concerning Echinoderm's financial statements for the years 1992 through 2000. The Company denied that it had engaged in any wrongful activity or that its financial statements were in any way false and misleading.</P>
+<P>15. On August 1, 2002, the Wall Street Journal ("WSJ") published an article detailing tobacco industry advertising practices. The article specifically described Echinoderm's pervasive advertising campaigns and noted that aspects of these campaigns likely violated restrictions included in the MSA.</P>
+<P>16. On September 1, 2002, Echinoderm announced that Defendant Jones had been indicted by the DOJ for violations of the Foreign Corrupt Practices Act, and that the FSC inquiry had been upgraded to a formal investigation. The Company also revealed that, on August 2, the Company had been notified by the Attorneys General of the states in which it was conducting the advertising campaigns described in the August 1, WSJ article that they believed that many of the practices described were in violation of the MSA. The Company revealed that the Attorneys General had threatened to sue for specific performance if the Company did not amend its practices to comply with the MSA within thirty days. In order to comply, the Company had been forced to cease several of its most effective marketing campaigns.</P>
+<P>17. This news shocked the market. Echinoderm's stock price suffered a one-day drop of $11.94, from $43.14 to $31.20, to hit a two-year low, on exceptionally heavy trading volume.</P>
+<P>18. As a result of defendants' false and misleading statements on January 1, 2002, and June 17, 2002, the financial results of Echinoderm were artificially and materially inflated during the Class Period. Defendants' illegal activities had the intended effect of boosting Echinoderm's financial results and maintaining Echinoderm stock at artificially inflated levels during the Class Period. As the truth was revealed, the artificial inflation came out of Echinoderm's stock price and the stock price plummeted precipitously. As a result of their purchases of Echinoderm securities during the Class Period, plaintiff and other members of the Class suffered damages.</P>
+<P>PLAINTIFF'S CLASS ACTION ALLEGATIONS</P>
+<P>19. Plaintiff brings this action as a class action pursuant to Federal Rules of Civil Procedure 23(a) and 23(b)(3) on behalf of himself and all persons and entities other than defendants who purchased or otherwise acquired the securities of Echinoderm between January 1, 1992, and September 1, 2002, inclusive (the "Class"). Excluded from the Class are defendants herein, members of the immediate family of each of the defendants, any person, firm, trust, corporation, officer, director or other individual or entity in which any defendant has a controlling interest or which is related to or affiliated with any of the defendants, and the legal representatives, agents, affiliates, heirs, successors-in-interest or assigns of any such excluded party.</P>
+<P>20. The members of the Class are so numerous that joinder of all members is impracticable. As of September 1, 2002, Echinoderm had more than 300 million shares outstanding. The precise number of Class members is unknown to plaintiff at this time but is believed to be in the thousands. In addition, the names and addresses of the Class members can be ascertained from the books and records of Echinoderm. Notice can be provided to such record owners by a combination of published notice and first-class mail, using techniques and a form of notice similar to those customarily used in class actions arising under the federal securities laws.</P>
+<P>21. The members of the Class are located in geographically diverse areas and are so numerous that joinder of all members is impractical. While the exact number of Class members is unknown to the plaintiff at this time, and can only be ascertained through appropriate discovery, plaintiff believes there are, at a minimum, thousands of members of the Class.</P>
+<P>22. Common questions of law and fact exist as to all members of the Class and predominate over any questions affecting solely individual members of the Class. Among the questions of law and fact common to the Class are:</P>
+<P>(a) Whether defendants engaged in acts or conduct in violation of the securities laws as alleged herein;</P>
+<P>(b) Whether defendants had a duty to disclose certain information;</P>
+<P>(c) Whether defendants knowingly or recklessly made materially false and misleading statements or failed to correct such statements upon learning that they were materially false and misleading during the Class Period;</P>
+<P>(d) Whether the market price of the Company's securities during the Class Period was artificially inflated because of defendants' conduct complained of herein; and</P>
+<P>(e) Whether members of the Class have sustained damages and, if so, the proper measure of damages.</P>
+<P>23. Plaintiff's claims are typical of the claims of the members of the Class because plaintiff and members of the Class sustained damages arising out of defendants' wrongful conduct in violation of federal law as complained of herein.</P>
+<P>24. Plaintiff will fairly and adequately protect the interests of the members of the Class and has retained counsel competent and experienced in class and securities litigation. Plaintiff has no interests antagonistic to or in conflict with those of the Class.</P>
+<P>25. A class action is superior to other available methods for the fair and efficient adjudication of this controversy since joinder of all members of the Class is impractical. Furthermore, because the damages suffered by individual Class members may be relatively small, the expense and burden of individual litigation make it impossible for the Class members individually to redress the wrongs done to them. There will be no difficulty in the management of this action as a class action.</P>
+<P>Fraud on the Market Presumption</P>
+<P>26. Plaintiff will rely, in part, upon the presumption of reliance established by the fraud-on-the-market doctrine in that:</P>
+<P>(a) Defendants made public misrepresentations or failed to disclose material facts regarding Echinoderm's financial situation during the Class Period;</P>
+<P>(b) the omissions and misrepresentations were material;</P>
+<P>(c) the securities of the Company were actively traded at all relevant times on the NSSE, an efficient and open market;</P>
+<P>(d) the misrepresentations and omissions alleged would tend to induce a reasonable investor to misjudge the value of the Company's securities; and</P>
+<P>(e) Plaintiff and the members of the Class, without knowledge of the misrepresented facts, purchased their Echinoderm securities between the time defendants failed to disclose and/or misrepresented material facts and the time the truth was disclosed.</P>
+<P>27. Echinoderm trades on the NSSE. The price of Echinoderm's stock reflects the effect of news disseminated in the market.</P>
+<P>28. Based upon the foregoing, plaintiff and the members of the Class are entitled to a presumption of reliance upon the integrity of the market</P>
+<P>The Safe Harbor Provision is Inapplicable</P>
+<P>29. The statutory safe harbor provided for forward-looking statements under certain circumstances does not apply to any of the allegedly false statements pleaded in this complaint. The statements alleged to be false and misleading herein all relate to then-existing facts and conditions. In addition, to the extent certain of the statements alleged to be false may be characterized as forward-looking, they were not adequately identified as "forward-looking statements" when made, and there were no meaningful cautionary statements identifying important factors that could cause actual results to differ materially from those in the purportedly forward-looking statements. Alternatively, to the extent that the statutory safe harbor is intended to apply to any forward-looking statements pleaded herein, defendants are liable for those false forward-looking statements because at the time each of those forward-looking statements was made, the defendants had actual knowledge that the particular forward-looking statement was materially false or misleading.</P>
+</Background>
+<CauseOfAction>
+<P>FIRST CLAIM FOR RELIEF</P>
+<P>For Violations of Sections 10(b) and Rule 10b-5 Thereunder</P>
+<P>30. Plaintiff incorporates by reference and realleges each of the foregoing paragraphs.</P>
+<P>31. Plaintiff repeats and realleges each and every allegation contained above as if fully set forth herein.</P>
+<P>32. During the Class Period, defendants carried out a plan, scheme and course of conduct which was intended to and, throughout the Class Period, did: (i) deceive the investing public, including Plaintiff and other Class members, as alleged herein; and (ii) cause Plaintiff and other members of the Class to purchase Echinoderm securities at artificially inflated prices. In furtherance of this unlawful scheme, plan and course of conduct, defendants, and each of them, took the actions set forth herein.</P>
+<P>33. Defendants (a) employed devices, schemes, and artifices to defraud; (b) made untrue statements of material fact and/or omitted to state material facts necessary to make the statements not misleading; and (c) engaged in acts, practices, and a course of business which operated as a fraud and deceit upon the purchasers of the Company's securities in an effort to maintain artificially high market prices for Echinoderm securities in violation of Section 10(b) of the Exchange Act and Rule 10b-5. Defendants are sued either as primary participants in the wrongful and illegal conduct charged herein or as controlling persons as alleged below.</P>
+<P>34. Defendants directly and indirectly, by the use, means or instrumentalities of interstate commerce and/or of the mails, engaged and participated in a course of conduct to conceal adverse material information about the business, operations and future prospects of Echinoderm as specified herein.</P>
+<P>35. Defendants employed devices, schemes, and artifices to defraud, while in possession of material adverse non-public information and engaged in acts, practices, and a course of conduct as alleged herein in an effort to assure investors of Echinoderm's value and performance and continued substantial growth, which included the making of, or the participation in the making of, untrue statements of material facts and omitting to state material facts necessary in order to make the statements made about Echinoderm and its business operations and future prospects in the light of the circumstances under which they were made, not misleading, as set forth more particularly herein, and engaged in transactions, practices and a course of business which operated as a fraud and deceit upon the purchasers of Echinoderm securities during the Class Period.</P>
+<P>36. Defendant Jones's primary liability, and controlling person liability, arises from the following facts: (i) Defendant Jones was a high-level executive at the Company during the Class Period and a member of the Company's management team; (ii) by virtue of his responsibilities and activities as a senior officer of the Company, he was privy to and participated in the creation, development and reporting of the Company's internal budgets, plans, projections and/or reports; (iii) he enjoyed significant personal contact and familiarity with other members of the Company's management team, internal reports and other data and information about the Company's finances, operations, and sales at all relevant times; and (iv) he was aware of the Company's dissemination of information to the investing public which he knew or recklessly disregarded was materially false and misleading.</P>
+<P>37. The defendants had actual knowledge of the misrepresentations and omissions of material facts set forth herein, or acted with reckless disregard for the truth in that they failed to ascertain and to disclose such facts, even though such facts were available to them. Such defendants' material misrepresentations and/or omissions were done knowingly or recklessly and for the purpose and effect of concealing Echinoderm's operating condition and future business prospects from the investing public and supporting the artificially inflated price of its securities. As demonstrated by defendants' misstatements of the Company's business, operations and earnings throughout the Class Period, defendants, if they did not have actual knowledge of the misrepresentations and omissions alleged, were reckless in failing to obtain such knowledge by deliberately refraining from taking those steps necessary to discover whether those statements were false or misleading.</P>
+<P>38. As a result of the dissemination of the materially false and misleading information and failure to disclose material facts, as set forth above, the market price of Echinoderm securities was artificially inflated during the Class Period. In ignorance of the fact that market prices of Echinoderm's publicly traded securities were artificially inflated, and relying directly or indirectly on the false and misleading statements made by defendants, or upon the integrity of the market in which the securities trade, and/or on the absence of material adverse information that was known to or recklessly disregarded by defendants but not disclosed in public statements by defendants during the Class Period, Plaintiff and the other members of the Class acquired Echinoderm securities during the Class Period at artificially high prices and were damaged thereby.</P>
+<P>39. At the time of said misrepresentations and omissions, Plaintiff and other members of the Class were ignorant of their falsity, and believed them to be true. Had Plaintiff and the other members of the Class and the marketplace known the truth regarding Echinoderm's activities, which was not disclosed by defendants, Plaintiff and other members of the Class would not have purchased or otherwise acquired their Echinoderm securities, or, if they had acquired such securities during the Class Period, they would not have done so at the artificially inflated prices which they paid.</P>
+<P>40. By virtue of the foregoing, defendants have violated Section 10(b) of the Exchange Act, and Rule l0b-5 promulgated thereunder.</P>
+<P>41. As a direct and proximate result of defendants' wrongful conduct, Plaintiff and the other members of the Class suffered damages in connection with their respective purchases and sales of the Company's securities during the Class Period.</P>
+<P>SECOND CLAIM FOR RELIEF</P>
+<P>Violation Of Section 20(a) Of The Exchange Act Against Defendant Jones</P>
+<P>42. Plaintiff repeats and realleges each and every allegation contained above as if fully set forth herein.</P>
+<P>43. Defendant Jones acted as a controlling person of Echinoderm within the meaning of Section 20(a) of the Exchange Act as alleged herein. By virtue of his high-level position, and his participation in and/or awareness of the Company's operations and/or intimate knowledge of the financial condition of the Company, Defendant Jones had the power to influence and control and did influence and control, directly or indirectly, the decision-making of the Company, including the content and dissemination of the various statements which Plaintiff contend are false and misleading.</P>
+<P>44. As set forth above, Echinoderm violated Section 10(b) and Rule 10b-5 by its acts and omissions as alleged in this Complaint. By virtue of his positions as controlling person, Defendant Jones is similarly liable pursuant to Section 20(a) of the Exchange Act. As a direct and proximate result of defendants' wrongful conduct, Plaintiff and other members of the Class suffered damages in connection with their purchases of the Company's securities during the Class Period.</P>
+</CauseOfAction>
+<RequestedRelief>
+<P>WHEREFORE, Plaintiff prays for relief and judgment, as follows:</P>
+<P>A. Determining that this action is a proper class action, designating Plaintiff as Lead Plaintiff and certifying Plaintiff as a class representative under Rule 23 of the Federal Rules of Civil Procedure and Plaintiffs counsel as Lead Counsel;</P>
+<P>B. Awarding compensatory damages in favor of Plaintiff and the other Class members against all defendants, jointly and severally, for all damages sustained as a result of defendants' wrongdoing, in an amount to be proven at trial, including interest thereon;</P>
+<P>C. Awarding Plaintiff and the Class their reasonable costs and expenses incurred in this action, including counsel fees and expert fees; and</P>
+<P>D. Such other and further relief as the Court may deem just and proper.</P>
+<P>JURY TRIAL DEMANDED</P>
+<P>Plaintiff hereby demands a trial by jury.</P>
+</RequestedRelief>
+</Complaint>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>103</RequestNumber>
+<RequestText>All documents which describe, refer to, report on, or mention any "in-store," "on-counter," "point of sale," or other retail marketing campaigns for cigarettes.</RequestText>
+<BooleanQuery>
+<FinalQuery>(store OR shop OR "on counter" or "countertop" or "point of sale" or checkout or 7-11) w/5 (marketing OR advertis! OR promot! OR display!)</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>"in store" OR "on counter" OR "point of sale" AND (retail OR marketing OR campaign)</ProposalByDefendant>
+<RejoinderByPlaintiff>(store OR shop OR "on counter" or "countertop" or "point of sale" or "POS" or checkout or 7-11) w/20 (marketing OR advertis! OR promot! OR display!)</RejoinderByPlaintiff>
+<Consensus1>(store OR shop OR "on counter" or "countertop" or "point of sale" or "POS" or checkout or 7-11) w/10 (marketing OR advertis! OR promot! OR display!)</Consensus1>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>80225</FinalB>
+<RequestSource>2008-I-2</RequestSource>
+<Instruction>
+<P>1. These requests require the production of all responsive documents within the sole or joint possession, custody or control of the Defendants, including their agents, departments, attorneys, directors, officers, employees, consultants, investigators, insurance companies, or other persons subject to Defendants' custody or control.</P>
+<P>2. All documents that respond, in whole or in part, to any portion of these Requests must be produced in their entirety, including all attachments and enclosures.</P>
+<P>3. For purposes of these requests, the words used are considered to have, and should be understood to have, their ordinary, everyday meanings. Plaintiffs refer Defendants to any dictionary in the event Defendants asserts that the wording of a request is vague, ambiguous, unintelligible, or confusing.</P>
+</Instruction>
+<Definition>
+<P>4. The words "and," "or," "each," "any," "all," "refer," and "discuss," shall be construed in their broadest form and the singular shall include the plural and the plural shall include the singular whenever necessary so as to bring within the scope of these Requests all documents (defined below) that might otherwise be construed to be outside their scope.</P>
+<P>5. The phrase "advertising, marketing or promotion" of cigarettes includes public relations activities involving smoking and health.</P>
+<P>6. Solely for the purpose of the TREC 2008 legal track, the term "defendant" includes the named company above as well as all other companies whose records are found in the IIT CDIP v. 1.0/TREC Legal Track collection database ("TREC legal database").</P>
+<P>7. Solely for the purpose of the TREC 2008 legal track, "document" means all data, information or writings stored in the TREC legal database, including without limitation: any written, electronic or computerized files, data or software; memoranda; emails; correspondence; OCR scanned images; communications; reports; summaries; studies; analyses; evaluations; notes or notebooks; indices; spreadsheets; logs; books; pamphlets; binders; calendar or diary entries; ledger entries; press clippings; graphs; tables; charts; printouts; drawings; maps; meeting minutes; transcripts. The term "document" encompasses all metadata associated with the document. The term also includes all drafts associated with any particular document.</P>
+<P>8. "Person" or "individual" means natural persons, corporations, firms, partnerships, unincorporated associations, trusts, and any other legal entity.</P>
+<P>9. The term "plans" means tentative and preliminary proposals, recommendations, or considerations, whether or not finalized or authorized, as well as those that have been adopted.</P>
+<P>10. The term "relating to" means in whole or in part constituting, containing, concerning, discussing, describing, analyzing, identifying or stating.</P>
+</Definition>
+<Complaint>
+<ComplaintNumber>2008-I</ComplaintNumber>
+<Date>July 1, 2008</Date>
+<Court>UNITED STATES DISTRICT COURT DISTRICT OF NEW SEARCHLAND</Court>
+<Plaintiff>ANDREW MELLON, On Behalf of Himself and All Others Similarly Situated</Plaintiff>
+<Defendant>ECHINODERM CIGARETTES, INC., and JIM JONES</Defendant>
+<Introduction>
+<P>Plaintiff, Andrew Mellon, individually and on behalf of all other persons and entities similarly situated, by his undersigned attorneys, for his complaint against the above-captioned defendants, alleges upon personal knowledge as to himself and his own acts, and upon information and belief as to all other matters, based upon, inter alia, the investigation made by and through his attorneys, which investigation included, among other things, a review of the public documents, Federal Securities Commission ("FSC") filings, analyst reports, news releases and media reports concerning Echinoderm Cigarettes, Inc. ("Echinoderm" or the "Company"), as follows:</P>
+<P>NATURE OF THE ACTION</P>
+<P>1. This is a federal securities class action on behalf of all persons and entities, other than defendants, who purchased or otherwise acquired the securities of Echinoderm between January 1, 1992 and September 1,2002, inclusive, seeking to pursue remedies under the Securities Exchange Act of 1934 (the "Exchange Act").</P>
+</Introduction>
+<Party>
+<PlaintiffParty>
+<P>6. Plaintiff, Andrew Mellon, purchased Echinoderm common stock during the Class Period, as set forth in the certification attached hereto and incorporated herein by reference, and was damaged thereby. Plaintiff is a citizen of New Searchland.</P>
+</PlaintiffParty>
+<DefendantParty>
+<P>7. Defendant Echinoderm is a New Searchland corporation and maintains its principal executive offices in New Searchland. Echinoderm is a major manufacturer of tobacco products, including cigarettes.</P>
+<P>8. Defendant Jim Jones ("Jones") was Senior Vice President and Chief Financial Officer of the Company at all relevant times. Jones participated in making the false and misleading statements referred to herein.</P>
+<P>9. During the Class Period, Defendant Jones was privy to non-public information concerning the Company's finances, markets and present and future business prospects via access to internal corporate documents, conversations and connections with other corporate officers and employees, and information provided to him in connection therewith. Because of his possession of such information, Defendant Jones knew or recklessly disregarded the fact that adverse facts specified herein had not been disclosed to, and were being concealed from, the investing public. Defendant Jones, by virtue of his high-level position with the Company, directly participated in the management of the Company, was directly involved in the day-to-day operations of the Company at the highest levels, and was privy to confidential proprietary information concerning the Company and its business, operations, growth, financial statements, and financial condition, as alleged herein. Defendant Jones was involved in drafting, producing, reviewing and disseminating the false and misleading statements and information alleged herein. Defendant Jones was aware, or recklessly disregarded, that the statements made concerning the Company during the Class Period were false and misleading, in violation of the federal securities laws.</P>
+<P>10. As an officer and controlling person of a publicly held Company whose securities were and are registered with the FSC pursuant to the Exchange Act, and are traded on the New Searchland Stock Exchange ("NSSE") and governed by the provisions of the federal securities laws, Defendant Jones had a duty to disseminate accurate and truthful information promptly with respect to the Company's financial condition and performance, growth, operations, financial statements, business, markets, management, earnings and present and future business prospects, and to correct any previously issued statements that had become materially misleading or untrue, so that the market price of the Company's publicly traded securities would be based upon truthful and accurate information. Defendant Jones's misrepresentations and omissions during the Class Period violated these specific requirements and obligations.</P>
+<P>11. Both of the defendants are liable as participants in a fraudulent scheme and course of business that operated as a fraud or deceit on purchasers of Echinoderm securities by disseminating materially false and misleading statements and/or concealing material adverse facts. The scheme (i) deceived the investing public regarding Echinoderm's business, operations, management and the intrinsic value of Echinoderm securities; and (ii) caused Plaintiff and other members of the Class to purchase Echinoderm securities at artificially inflated prices.</P>
+</DefendantParty>
+<Coconspirator></Coconspirator>
+</Party>
+<Jurisdiction>
+<P>2. The claims alleged herein arise under Sections 10(b) and 20(a)of the Exchange Act, 15 U.S.C. §§ 78j(b) and 78t, and Rule 10b-5, 17C.F.R. § 240.10b-5 promulgated thereunder.</P>
+<P>3. The jurisdiction of this Court is based on Section 27 of the Exchange Act, 15 U.S.C. § 78aa and 28 U.S.C. § 1331 (federal question jurisdiction).</P>
+<P>4. Venue is proper in this judicial district pursuant to Section 27 of the Exchange Act. Many of the acts and transactions giving rise to the violations of law complained of herein, including the preparation and dissemination to the investing public of materially false and misleading information, occurred in this judicial district. The Company is incorporated and maintains its principal place of business in New Searchland.</P>
+<P>5. In connection with the acts, conduct and other wrongs alleged in this complaint, defendants, directly or indirectly, used the means and instrumentalities of interstate commerce, including but not limited to, the United States mails, interstate telephone communications and the facilities of the national securities exchange.</P>
+</Jurisdiction>
+<Background>
+<P>12. On January 1, 2002, Echinoderm announced record results for the prior year, primarily attributed to strong demand growth in overseas markets, particularly China, for its products. The announcement also touted the fact that Echinoderm was unique among U.S. tobacco companies in that it had seen no decline in domestic sales during the prior three years.</P>
+<P>13. Unbeknownst to shareholders at the time of the January 1, 2002 announcement, defendants had failed to disclose the following facts which they knew at the time, or should have known:</P>
+<P>a. The Company's success in overseas markets resulted in large part from bribes paid to foreign government officials to gain access to their respective markets;</P>
+<P>b. The Company knew that this conduct was in violation of the Foreign Corrupt Practices Act and therefore was likely to result in enormous fines and penalties;</P>
+<P>c. The Company intentionally misrepresented that its success in overseas markets was due to superior marketing.</P>
+<P>d. Domestic demand for the Company's products was dependent on pervasive and ubiquitous advertising, including outdoor, transit, point of sale and counter top displays of the Company's products, in key markets. Such advertising violated the marketing and advertising restrictions to which the Company was subject as a party to the Attorneys General Master Settlement Agreement ("MSA").</P>
+<P>e. The Company knew that it could be ordered at any time to cease and desist from advertising practices that were not in compliance with the MSA and that the inability to continue such practices would likely have a material impact on domestic demand for its products.</P>
+<P>THE TRUTH REVEALED</P>
+<P>14. On June 17, 2002, the Company announced that it was the subject of a U.S. Department of Justice ("DOJ") investigation concerning bribes paid by tobacco companies to foreign governmental officials and of a related inquiry by the FSC concerning Echinoderm's financial statements for the years 1992 through 2000. The Company denied that it had engaged in any wrongful activity or that its financial statements were in any way false and misleading.</P>
+<P>15. On August 1, 2002, the Wall Street Journal ("WSJ") published an article detailing tobacco industry advertising practices. The article specifically described Echinoderm's pervasive advertising campaigns and noted that aspects of these campaigns likely violated restrictions included in the MSA.</P>
+<P>16. On September 1, 2002, Echinoderm announced that Defendant Jones had been indicted by the DOJ for violations of the Foreign Corrupt Practices Act, and that the FSC inquiry had been upgraded to a formal investigation. The Company also revealed that, on August 2, the Company had been notified by the Attorneys General of the states in which it was conducting the advertising campaigns described in the August 1, WSJ article that they believed that many of the practices described were in violation of the MSA. The Company revealed that the Attorneys General had threatened to sue for specific performance if the Company did not amend its practices to comply with the MSA within thirty days. In order to comply, the Company had been forced to cease several of its most effective marketing campaigns.</P>
+<P>17. This news shocked the market. Echinoderm's stock price suffered a one-day drop of $11.94, from $43.14 to $31.20, to hit a two-year low, on exceptionally heavy trading volume.</P>
+<P>18. As a result of defendants' false and misleading statements on January 1, 2002, and June 17, 2002, the financial results of Echinoderm were artificially and materially inflated during the Class Period. Defendants' illegal activities had the intended effect of boosting Echinoderm's financial results and maintaining Echinoderm stock at artificially inflated levels during the Class Period. As the truth was revealed, the artificial inflation came out of Echinoderm's stock price and the stock price plummeted precipitously. As a result of their purchases of Echinoderm securities during the Class Period, plaintiff and other members of the Class suffered damages.</P>
+<P>PLAINTIFF'S CLASS ACTION ALLEGATIONS</P>
+<P>19. Plaintiff brings this action as a class action pursuant to Federal Rules of Civil Procedure 23(a) and 23(b)(3) on behalf of himself and all persons and entities other than defendants who purchased or otherwise acquired the securities of Echinoderm between January 1, 1992, and September 1, 2002, inclusive (the "Class"). Excluded from the Class are defendants herein, members of the immediate family of each of the defendants, any person, firm, trust, corporation, officer, director or other individual or entity in which any defendant has a controlling interest or which is related to or affiliated with any of the defendants, and the legal representatives, agents, affiliates, heirs, successors-in-interest or assigns of any such excluded party.</P>
+<P>20. The members of the Class are so numerous that joinder of all members is impracticable. As of September 1, 2002, Echinoderm had more than 300 million shares outstanding. The precise number of Class members is unknown to plaintiff at this time but is believed to be in the thousands. In addition, the names and addresses of the Class members can be ascertained from the books and records of Echinoderm. Notice can be provided to such record owners by a combination of published notice and first-class mail, using techniques and a form of notice similar to those customarily used in class actions arising under the federal securities laws.</P>
+<P>21. The members of the Class are located in geographically diverse areas and are so numerous that joinder of all members is impractical. While the exact number of Class members is unknown to the plaintiff at this time, and can only be ascertained through appropriate discovery, plaintiff believes there are, at a minimum, thousands of members of the Class.</P>
+<P>22. Common questions of law and fact exist as to all members of the Class and predominate over any questions affecting solely individual members of the Class. Among the questions of law and fact common to the Class are:</P>
+<P>(a) Whether defendants engaged in acts or conduct in violation of the securities laws as alleged herein;</P>
+<P>(b) Whether defendants had a duty to disclose certain information;</P>
+<P>(c) Whether defendants knowingly or recklessly made materially false and misleading statements or failed to correct such statements upon learning that they were materially false and misleading during the Class Period;</P>
+<P>(d) Whether the market price of the Company's securities during the Class Period was artificially inflated because of defendants' conduct complained of herein; and</P>
+<P>(e) Whether members of the Class have sustained damages and, if so, the proper measure of damages.</P>
+<P>23. Plaintiff's claims are typical of the claims of the members of the Class because plaintiff and members of the Class sustained damages arising out of defendants' wrongful conduct in violation of federal law as complained of herein.</P>
+<P>24. Plaintiff will fairly and adequately protect the interests of the members of the Class and has retained counsel competent and experienced in class and securities litigation. Plaintiff has no interests antagonistic to or in conflict with those of the Class.</P>
+<P>25. A class action is superior to other available methods for the fair and efficient adjudication of this controversy since joinder of all members of the Class is impractical. Furthermore, because the damages suffered by individual Class members may be relatively small, the expense and burden of individual litigation make it impossible for the Class members individually to redress the wrongs done to them. There will be no difficulty in the management of this action as a class action.</P>
+<P>Fraud on the Market Presumption</P>
+<P>26. Plaintiff will rely, in part, upon the presumption of reliance established by the fraud-on-the-market doctrine in that:</P>
+<P>(a) Defendants made public misrepresentations or failed to disclose material facts regarding Echinoderm's financial situation during the Class Period;</P>
+<P>(b) the omissions and misrepresentations were material;</P>
+<P>(c) the securities of the Company were actively traded at all relevant times on the NSSE, an efficient and open market;</P>
+<P>(d) the misrepresentations and omissions alleged would tend to induce a reasonable investor to misjudge the value of the Company's securities; and</P>
+<P>(e) Plaintiff and the members of the Class, without knowledge of the misrepresented facts, purchased their Echinoderm securities between the time defendants failed to disclose and/or misrepresented material facts and the time the truth was disclosed.</P>
+<P>27. Echinoderm trades on the NSSE. The price of Echinoderm's stock reflects the effect of news disseminated in the market.</P>
+<P>28. Based upon the foregoing, plaintiff and the members of the Class are entitled to a presumption of reliance upon the integrity of the market</P>
+<P>The Safe Harbor Provision is Inapplicable</P>
+<P>29. The statutory safe harbor provided for forward-looking statements under certain circumstances does not apply to any of the allegedly false statements pleaded in this complaint. The statements alleged to be false and misleading herein all relate to then-existing facts and conditions. In addition, to the extent certain of the statements alleged to be false may be characterized as forward-looking, they were not adequately identified as "forward-looking statements" when made, and there were no meaningful cautionary statements identifying important factors that could cause actual results to differ materially from those in the purportedly forward-looking statements. Alternatively, to the extent that the statutory safe harbor is intended to apply to any forward-looking statements pleaded herein, defendants are liable for those false forward-looking statements because at the time each of those forward-looking statements was made, the defendants had actual knowledge that the particular forward-looking statement was materially false or misleading.</P>
+</Background>
+<CauseOfAction>
+<P>FIRST CLAIM FOR RELIEF</P>
+<P>For Violations of Sections 10(b) and Rule 10b-5 Thereunder</P>
+<P>30. Plaintiff incorporates by reference and realleges each of the foregoing paragraphs.</P>
+<P>31. Plaintiff repeats and realleges each and every allegation contained above as if fully set forth herein.</P>
+<P>32. During the Class Period, defendants carried out a plan, scheme and course of conduct which was intended to and, throughout the Class Period, did: (i) deceive the investing public, including Plaintiff and other Class members, as alleged herein; and (ii) cause Plaintiff and other members of the Class to purchase Echinoderm securities at artificially inflated prices. In furtherance of this unlawful scheme, plan and course of conduct, defendants, and each of them, took the actions set forth herein.</P>
+<P>33. Defendants (a) employed devices, schemes, and artifices to defraud; (b) made untrue statements of material fact and/or omitted to state material facts necessary to make the statements not misleading; and (c) engaged in acts, practices, and a course of business which operated as a fraud and deceit upon the purchasers of the Company's securities in an effort to maintain artificially high market prices for Echinoderm securities in violation of Section 10(b) of the Exchange Act and Rule 10b-5. Defendants are sued either as primary participants in the wrongful and illegal conduct charged herein or as controlling persons as alleged below.</P>
+<P>34. Defendants directly and indirectly, by the use, means or instrumentalities of interstate commerce and/or of the mails, engaged and participated in a course of conduct to conceal adverse material information about the business, operations and future prospects of Echinoderm as specified herein.</P>
+<P>35. Defendants employed devices, schemes, and artifices to defraud, while in possession of material adverse non-public information and engaged in acts, practices, and a course of conduct as alleged herein in an effort to assure investors of Echinoderm's value and performance and continued substantial growth, which included the making of, or the participation in the making of, untrue statements of material facts and omitting to state material facts necessary in order to make the statements made about Echinoderm and its business operations and future prospects in the light of the circumstances under which they were made, not misleading, as set forth more particularly herein, and engaged in transactions, practices and a course of business which operated as a fraud and deceit upon the purchasers of Echinoderm securities during the Class Period.</P>
+<P>36. Defendant Jones's primary liability, and controlling person liability, arises from the following facts: (i) Defendant Jones was a high-level executive at the Company during the Class Period and a member of the Company's management team; (ii) by virtue of his responsibilities and activities as a senior officer of the Company, he was privy to and participated in the creation, development and reporting of the Company's internal budgets, plans, projections and/or reports; (iii) he enjoyed significant personal contact and familiarity with other members of the Company's management team, internal reports and other data and information about the Company's finances, operations, and sales at all relevant times; and (iv) he was aware of the Company's dissemination of information to the investing public which he knew or recklessly disregarded was materially false and misleading.</P>
+<P>37. The defendants had actual knowledge of the misrepresentations and omissions of material facts set forth herein, or acted with reckless disregard for the truth in that they failed to ascertain and to disclose such facts, even though such facts were available to them. Such defendants' material misrepresentations and/or omissions were done knowingly or recklessly and for the purpose and effect of concealing Echinoderm's operating condition and future business prospects from the investing public and supporting the artificially inflated price of its securities. As demonstrated by defendants' misstatements of the Company's business, operations and earnings throughout the Class Period, defendants, if they did not have actual knowledge of the misrepresentations and omissions alleged, were reckless in failing to obtain such knowledge by deliberately refraining from taking those steps necessary to discover whether those statements were false or misleading.</P>
+<P>38. As a result of the dissemination of the materially false and misleading information and failure to disclose material facts, as set forth above, the market price of Echinoderm securities was artificially inflated during the Class Period. In ignorance of the fact that market prices of Echinoderm's publicly traded securities were artificially inflated, and relying directly or indirectly on the false and misleading statements made by defendants, or upon the integrity of the market in which the securities trade, and/or on the absence of material adverse information that was known to or recklessly disregarded by defendants but not disclosed in public statements by defendants during the Class Period, Plaintiff and the other members of the Class acquired Echinoderm securities during the Class Period at artificially high prices and were damaged thereby.</P>
+<P>39. At the time of said misrepresentations and omissions, Plaintiff and other members of the Class were ignorant of their falsity, and believed them to be true. Had Plaintiff and the other members of the Class and the marketplace known the truth regarding Echinoderm's activities, which was not disclosed by defendants, Plaintiff and other members of the Class would not have purchased or otherwise acquired their Echinoderm securities, or, if they had acquired such securities during the Class Period, they would not have done so at the artificially inflated prices which they paid.</P>
+<P>40. By virtue of the foregoing, defendants have violated Section 10(b) of the Exchange Act, and Rule l0b-5 promulgated thereunder.</P>
+<P>41. As a direct and proximate result of defendants' wrongful conduct, Plaintiff and the other members of the Class suffered damages in connection with their respective purchases and sales of the Company's securities during the Class Period.</P>
+<P>SECOND CLAIM FOR RELIEF</P>
+<P>Violation Of Section 20(a) Of The Exchange Act Against Defendant Jones</P>
+<P>42. Plaintiff repeats and realleges each and every allegation contained above as if fully set forth herein.</P>
+<P>43. Defendant Jones acted as a controlling person of Echinoderm within the meaning of Section 20(a) of the Exchange Act as alleged herein. By virtue of his high-level position, and his participation in and/or awareness of the Company's operations and/or intimate knowledge of the financial condition of the Company, Defendant Jones had the power to influence and control and did influence and control, directly or indirectly, the decision-making of the Company, including the content and dissemination of the various statements which Plaintiff contend are false and misleading.</P>
+<P>44. As set forth above, Echinoderm violated Section 10(b) and Rule 10b-5 by its acts and omissions as alleged in this Complaint. By virtue of his positions as controlling person, Defendant Jones is similarly liable pursuant to Section 20(a) of the Exchange Act. As a direct and proximate result of defendants' wrongful conduct, Plaintiff and other members of the Class suffered damages in connection with their purchases of the Company's securities during the Class Period.</P>
+</CauseOfAction>
+<RequestedRelief>
+<P>WHEREFORE, Plaintiff prays for relief and judgment, as follows:</P>
+<P>A. Determining that this action is a proper class action, designating Plaintiff as Lead Plaintiff and certifying Plaintiff as a class representative under Rule 23 of the Federal Rules of Civil Procedure and Plaintiffs counsel as Lead Counsel;</P>
+<P>B. Awarding compensatory damages in favor of Plaintiff and the other Class members against all defendants, jointly and severally, for all damages sustained as a result of defendants' wrongdoing, in an amount to be proven at trial, including interest thereon;</P>
+<P>C. Awarding Plaintiff and the Class their reasonable costs and expenses incurred in this action, including counsel fees and expert fees; and</P>
+<P>D. Such other and further relief as the Court may deem just and proper.</P>
+<P>JURY TRIAL DEMANDED</P>
+<P>Plaintiff hereby demands a trial by jury.</P>
+</RequestedRelief>
+</Complaint>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>104</RequestNumber>
+<RequestText>All documents discussing or referencing payments to foreign government officials, including but not limited to expressly mentioning "bribery" and/or "payoffs."</RequestText>
+<BooleanQuery>
+<FinalQuery>(payment! OR transfer! OR wire! OR fund! OR kickback! OR payola OR grease OR bribery OR payoff!) AND (foreign w/5 (official! OR ministr! OR delegat! OR representative!))</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>(bribery OR payoffs) AND payments AND "foreign government officials"</ProposalByDefendant>
+<RejoinderByPlaintiff>(payment! OR transfer! OR wire! OR fund! OR kickback! OR payola OR grease OR bribery OR payoff!) AND (foreign w/5 (official! OR ministr! OR delegat! OR representative!))</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>2680</FinalB>
+<RequestSource>2008-I-3</RequestSource>
+<Instruction>
+<P>1. These requests require the production of all responsive documents within the sole or joint possession, custody or control of the Defendants, including their agents, departments, attorneys, directors, officers, employees, consultants, investigators, insurance companies, or other persons subject to Defendants' custody or control.</P>
+<P>2. All documents that respond, in whole or in part, to any portion of these Requests must be produced in their entirety, including all attachments and enclosures.</P>
+<P>3. For purposes of these requests, the words used are considered to have, and should be understood to have, their ordinary, everyday meanings. Plaintiffs refer Defendants to any dictionary in the event Defendants asserts that the wording of a request is vague, ambiguous, unintelligible, or confusing.</P>
+</Instruction>
+<Definition>
+<P>4. The words "and," "or," "each," "any," "all," "refer," and "discuss," shall be construed in their broadest form and the singular shall include the plural and the plural shall include the singular whenever necessary so as to bring within the scope of these Requests all documents (defined below) that might otherwise be construed to be outside their scope.</P>
+<P>5. The phrase "advertising, marketing or promotion" of cigarettes includes public relations activities involving smoking and health.</P>
+<P>6. Solely for the purpose of the TREC 2008 legal track, the term "defendant" includes the named company above as well as all other companies whose records are found in the IIT CDIP v. 1.0/TREC Legal Track collection database ("TREC legal database").</P>
+<P>7. Solely for the purpose of the TREC 2008 legal track, "document" means all data, information or writings stored in the TREC legal database, including without limitation: any written, electronic or computerized files, data or software; memoranda; emails; correspondence; OCR scanned images; communications; reports; summaries; studies; analyses; evaluations; notes or notebooks; indices; spreadsheets; logs; books; pamphlets; binders; calendar or diary entries; ledger entries; press clippings; graphs; tables; charts; printouts; drawings; maps; meeting minutes; transcripts. The term "document" encompasses all metadata associated with the document. The term also includes all drafts associated with any particular document.</P>
+<P>8. "Person" or "individual" means natural persons, corporations, firms, partnerships, unincorporated associations, trusts, and any other legal entity.</P>
+<P>9. The term "plans" means tentative and preliminary proposals, recommendations, or considerations, whether or not finalized or authorized, as well as those that have been adopted.</P>
+<P>10. The term "relating to" means in whole or in part constituting, containing, concerning, discussing, describing, analyzing, identifying or stating.</P>
+</Definition>
+<Complaint>
+<ComplaintNumber>2008-I</ComplaintNumber>
+<Date>July 1, 2008</Date>
+<Court>UNITED STATES DISTRICT COURT DISTRICT OF NEW SEARCHLAND</Court>
+<Plaintiff>ANDREW MELLON, On Behalf of Himself and All Others Similarly Situated</Plaintiff>
+<Defendant>ECHINODERM CIGARETTES, INC., and JIM JONES</Defendant>
+<Introduction>
+<P>Plaintiff, Andrew Mellon, individually and on behalf of all other persons and entities similarly situated, by his undersigned attorneys, for his complaint against the above-captioned defendants, alleges upon personal knowledge as to himself and his own acts, and upon information and belief as to all other matters, based upon, inter alia, the investigation made by and through his attorneys, which investigation included, among other things, a review of the public documents, Federal Securities Commission ("FSC") filings, analyst reports, news releases and media reports concerning Echinoderm Cigarettes, Inc. ("Echinoderm" or the "Company"), as follows:</P>
+<P>NATURE OF THE ACTION</P>
+<P>1. This is a federal securities class action on behalf of all persons and entities, other than defendants, who purchased or otherwise acquired the securities of Echinoderm between January 1, 1992 and September 1,2002, inclusive, seeking to pursue remedies under the Securities Exchange Act of 1934 (the "Exchange Act").</P>
+</Introduction>
+<Party>
+<PlaintiffParty>
+<P>6. Plaintiff, Andrew Mellon, purchased Echinoderm common stock during the Class Period, as set forth in the certification attached hereto and incorporated herein by reference, and was damaged thereby. Plaintiff is a citizen of New Searchland.</P>
+</PlaintiffParty>
+<DefendantParty>
+<P>7. Defendant Echinoderm is a New Searchland corporation and maintains its principal executive offices in New Searchland. Echinoderm is a major manufacturer of tobacco products, including cigarettes.</P>
+<P>8. Defendant Jim Jones ("Jones") was Senior Vice President and Chief Financial Officer of the Company at all relevant times. Jones participated in making the false and misleading statements referred to herein.</P>
+<P>9. During the Class Period, Defendant Jones was privy to non-public information concerning the Company's finances, markets and present and future business prospects via access to internal corporate documents, conversations and connections with other corporate officers and employees, and information provided to him in connection therewith. Because of his possession of such information, Defendant Jones knew or recklessly disregarded the fact that adverse facts specified herein had not been disclosed to, and were being concealed from, the investing public. Defendant Jones, by virtue of his high-level position with the Company, directly participated in the management of the Company, was directly involved in the day-to-day operations of the Company at the highest levels, and was privy to confidential proprietary information concerning the Company and its business, operations, growth, financial statements, and financial condition, as alleged herein. Defendant Jones was involved in drafting, producing, reviewing and disseminating the false and misleading statements and information alleged herein. Defendant Jones was aware, or recklessly disregarded, that the statements made concerning the Company during the Class Period were false and misleading, in violation of the federal securities laws.</P>
+<P>10. As an officer and controlling person of a publicly held Company whose securities were and are registered with the FSC pursuant to the Exchange Act, and are traded on the New Searchland Stock Exchange ("NSSE") and governed by the provisions of the federal securities laws, Defendant Jones had a duty to disseminate accurate and truthful information promptly with respect to the Company's financial condition and performance, growth, operations, financial statements, business, markets, management, earnings and present and future business prospects, and to correct any previously issued statements that had become materially misleading or untrue, so that the market price of the Company's publicly traded securities would be based upon truthful and accurate information. Defendant Jones's misrepresentations and omissions during the Class Period violated these specific requirements and obligations.</P>
+<P>11. Both of the defendants are liable as participants in a fraudulent scheme and course of business that operated as a fraud or deceit on purchasers of Echinoderm securities by disseminating materially false and misleading statements and/or concealing material adverse facts. The scheme (i) deceived the investing public regarding Echinoderm's business, operations, management and the intrinsic value of Echinoderm securities; and (ii) caused Plaintiff and other members of the Class to purchase Echinoderm securities at artificially inflated prices.</P>
+</DefendantParty>
+<Coconspirator></Coconspirator>
+</Party>
+<Jurisdiction>
+<P>2. The claims alleged herein arise under Sections 10(b) and 20(a)of the Exchange Act, 15 U.S.C. §§ 78j(b) and 78t, and Rule 10b-5, 17C.F.R. § 240.10b-5 promulgated thereunder.</P>
+<P>3. The jurisdiction of this Court is based on Section 27 of the Exchange Act, 15 U.S.C. § 78aa and 28 U.S.C. § 1331 (federal question jurisdiction).</P>
+<P>4. Venue is proper in this judicial district pursuant to Section 27 of the Exchange Act. Many of the acts and transactions giving rise to the violations of law complained of herein, including the preparation and dissemination to the investing public of materially false and misleading information, occurred in this judicial district. The Company is incorporated and maintains its principal place of business in New Searchland.</P>
+<P>5. In connection with the acts, conduct and other wrongs alleged in this complaint, defendants, directly or indirectly, used the means and instrumentalities of interstate commerce, including but not limited to, the United States mails, interstate telephone communications and the facilities of the national securities exchange.</P>
+</Jurisdiction>
+<Background>
+<P>12. On January 1, 2002, Echinoderm announced record results for the prior year, primarily attributed to strong demand growth in overseas markets, particularly China, for its products. The announcement also touted the fact that Echinoderm was unique among U.S. tobacco companies in that it had seen no decline in domestic sales during the prior three years.</P>
+<P>13. Unbeknownst to shareholders at the time of the January 1, 2002 announcement, defendants had failed to disclose the following facts which they knew at the time, or should have known:</P>
+<P>a. The Company's success in overseas markets resulted in large part from bribes paid to foreign government officials to gain access to their respective markets;</P>
+<P>b. The Company knew that this conduct was in violation of the Foreign Corrupt Practices Act and therefore was likely to result in enormous fines and penalties;</P>
+<P>c. The Company intentionally misrepresented that its success in overseas markets was due to superior marketing.</P>
+<P>d. Domestic demand for the Company's products was dependent on pervasive and ubiquitous advertising, including outdoor, transit, point of sale and counter top displays of the Company's products, in key markets. Such advertising violated the marketing and advertising restrictions to which the Company was subject as a party to the Attorneys General Master Settlement Agreement ("MSA").</P>
+<P>e. The Company knew that it could be ordered at any time to cease and desist from advertising practices that were not in compliance with the MSA and that the inability to continue such practices would likely have a material impact on domestic demand for its products.</P>
+<P>THE TRUTH REVEALED</P>
+<P>14. On June 17, 2002, the Company announced that it was the subject of a U.S. Department of Justice ("DOJ") investigation concerning bribes paid by tobacco companies to foreign governmental officials and of a related inquiry by the FSC concerning Echinoderm's financial statements for the years 1992 through 2000. The Company denied that it had engaged in any wrongful activity or that its financial statements were in any way false and misleading.</P>
+<P>15. On August 1, 2002, the Wall Street Journal ("WSJ") published an article detailing tobacco industry advertising practices. The article specifically described Echinoderm's pervasive advertising campaigns and noted that aspects of these campaigns likely violated restrictions included in the MSA.</P>
+<P>16. On September 1, 2002, Echinoderm announced that Defendant Jones had been indicted by the DOJ for violations of the Foreign Corrupt Practices Act, and that the FSC inquiry had been upgraded to a formal investigation. The Company also revealed that, on August 2, the Company had been notified by the Attorneys General of the states in which it was conducting the advertising campaigns described in the August 1, WSJ article that they believed that many of the practices described were in violation of the MSA. The Company revealed that the Attorneys General had threatened to sue for specific performance if the Company did not amend its practices to comply with the MSA within thirty days. In order to comply, the Company had been forced to cease several of its most effective marketing campaigns.</P>
+<P>17. This news shocked the market. Echinoderm's stock price suffered a one-day drop of $11.94, from $43.14 to $31.20, to hit a two-year low, on exceptionally heavy trading volume.</P>
+<P>18. As a result of defendants' false and misleading statements on January 1, 2002, and June 17, 2002, the financial results of Echinoderm were artificially and materially inflated during the Class Period. Defendants' illegal activities had the intended effect of boosting Echinoderm's financial results and maintaining Echinoderm stock at artificially inflated levels during the Class Period. As the truth was revealed, the artificial inflation came out of Echinoderm's stock price and the stock price plummeted precipitously. As a result of their purchases of Echinoderm securities during the Class Period, plaintiff and other members of the Class suffered damages.</P>
+<P>PLAINTIFF'S CLASS ACTION ALLEGATIONS</P>
+<P>19. Plaintiff brings this action as a class action pursuant to Federal Rules of Civil Procedure 23(a) and 23(b)(3) on behalf of himself and all persons and entities other than defendants who purchased or otherwise acquired the securities of Echinoderm between January 1, 1992, and September 1, 2002, inclusive (the "Class"). Excluded from the Class are defendants herein, members of the immediate family of each of the defendants, any person, firm, trust, corporation, officer, director or other individual or entity in which any defendant has a controlling interest or which is related to or affiliated with any of the defendants, and the legal representatives, agents, affiliates, heirs, successors-in-interest or assigns of any such excluded party.</P>
+<P>20. The members of the Class are so numerous that joinder of all members is impracticable. As of September 1, 2002, Echinoderm had more than 300 million shares outstanding. The precise number of Class members is unknown to plaintiff at this time but is believed to be in the thousands. In addition, the names and addresses of the Class members can be ascertained from the books and records of Echinoderm. Notice can be provided to such record owners by a combination of published notice and first-class mail, using techniques and a form of notice similar to those customarily used in class actions arising under the federal securities laws.</P>
+<P>21. The members of the Class are located in geographically diverse areas and are so numerous that joinder of all members is impractical. While the exact number of Class members is unknown to the plaintiff at this time, and can only be ascertained through appropriate discovery, plaintiff believes there are, at a minimum, thousands of members of the Class.</P>
+<P>22. Common questions of law and fact exist as to all members of the Class and predominate over any questions affecting solely individual members of the Class. Among the questions of law and fact common to the Class are:</P>
+<P>(a) Whether defendants engaged in acts or conduct in violation of the securities laws as alleged herein;</P>
+<P>(b) Whether defendants had a duty to disclose certain information;</P>
+<P>(c) Whether defendants knowingly or recklessly made materially false and misleading statements or failed to correct such statements upon learning that they were materially false and misleading during the Class Period;</P>
+<P>(d) Whether the market price of the Company's securities during the Class Period was artificially inflated because of defendants' conduct complained of herein; and</P>
+<P>(e) Whether members of the Class have sustained damages and, if so, the proper measure of damages.</P>
+<P>23. Plaintiff's claims are typical of the claims of the members of the Class because plaintiff and members of the Class sustained damages arising out of defendants' wrongful conduct in violation of federal law as complained of herein.</P>
+<P>24. Plaintiff will fairly and adequately protect the interests of the members of the Class and has retained counsel competent and experienced in class and securities litigation. Plaintiff has no interests antagonistic to or in conflict with those of the Class.</P>
+<P>25. A class action is superior to other available methods for the fair and efficient adjudication of this controversy since joinder of all members of the Class is impractical. Furthermore, because the damages suffered by individual Class members may be relatively small, the expense and burden of individual litigation make it impossible for the Class members individually to redress the wrongs done to them. There will be no difficulty in the management of this action as a class action.</P>
+<P>Fraud on the Market Presumption</P>
+<P>26. Plaintiff will rely, in part, upon the presumption of reliance established by the fraud-on-the-market doctrine in that:</P>
+<P>(a) Defendants made public misrepresentations or failed to disclose material facts regarding Echinoderm's financial situation during the Class Period;</P>
+<P>(b) the omissions and misrepresentations were material;</P>
+<P>(c) the securities of the Company were actively traded at all relevant times on the NSSE, an efficient and open market;</P>
+<P>(d) the misrepresentations and omissions alleged would tend to induce a reasonable investor to misjudge the value of the Company's securities; and</P>
+<P>(e) Plaintiff and the members of the Class, without knowledge of the misrepresented facts, purchased their Echinoderm securities between the time defendants failed to disclose and/or misrepresented material facts and the time the truth was disclosed.</P>
+<P>27. Echinoderm trades on the NSSE. The price of Echinoderm's stock reflects the effect of news disseminated in the market.</P>
+<P>28. Based upon the foregoing, plaintiff and the members of the Class are entitled to a presumption of reliance upon the integrity of the market</P>
+<P>The Safe Harbor Provision is Inapplicable</P>
+<P>29. The statutory safe harbor provided for forward-looking statements under certain circumstances does not apply to any of the allegedly false statements pleaded in this complaint. The statements alleged to be false and misleading herein all relate to then-existing facts and conditions. In addition, to the extent certain of the statements alleged to be false may be characterized as forward-looking, they were not adequately identified as "forward-looking statements" when made, and there were no meaningful cautionary statements identifying important factors that could cause actual results to differ materially from those in the purportedly forward-looking statements. Alternatively, to the extent that the statutory safe harbor is intended to apply to any forward-looking statements pleaded herein, defendants are liable for those false forward-looking statements because at the time each of those forward-looking statements was made, the defendants had actual knowledge that the particular forward-looking statement was materially false or misleading.</P>
+</Background>
+<CauseOfAction>
+<P>FIRST CLAIM FOR RELIEF</P>
+<P>For Violations of Sections 10(b) and Rule 10b-5 Thereunder</P>
+<P>30. Plaintiff incorporates by reference and realleges each of the foregoing paragraphs.</P>
+<P>31. Plaintiff repeats and realleges each and every allegation contained above as if fully set forth herein.</P>
+<P>32. During the Class Period, defendants carried out a plan, scheme and course of conduct which was intended to and, throughout the Class Period, did: (i) deceive the investing public, including Plaintiff and other Class members, as alleged herein; and (ii) cause Plaintiff and other members of the Class to purchase Echinoderm securities at artificially inflated prices. In furtherance of this unlawful scheme, plan and course of conduct, defendants, and each of them, took the actions set forth herein.</P>
+<P>33. Defendants (a) employed devices, schemes, and artifices to defraud; (b) made untrue statements of material fact and/or omitted to state material facts necessary to make the statements not misleading; and (c) engaged in acts, practices, and a course of business which operated as a fraud and deceit upon the purchasers of the Company's securities in an effort to maintain artificially high market prices for Echinoderm securities in violation of Section 10(b) of the Exchange Act and Rule 10b-5. Defendants are sued either as primary participants in the wrongful and illegal conduct charged herein or as controlling persons as alleged below.</P>
+<P>34. Defendants directly and indirectly, by the use, means or instrumentalities of interstate commerce and/or of the mails, engaged and participated in a course of conduct to conceal adverse material information about the business, operations and future prospects of Echinoderm as specified herein.</P>
+<P>35. Defendants employed devices, schemes, and artifices to defraud, while in possession of material adverse non-public information and engaged in acts, practices, and a course of conduct as alleged herein in an effort to assure investors of Echinoderm's value and performance and continued substantial growth, which included the making of, or the participation in the making of, untrue statements of material facts and omitting to state material facts necessary in order to make the statements made about Echinoderm and its business operations and future prospects in the light of the circumstances under which they were made, not misleading, as set forth more particularly herein, and engaged in transactions, practices and a course of business which operated as a fraud and deceit upon the purchasers of Echinoderm securities during the Class Period.</P>
+<P>36. Defendant Jones's primary liability, and controlling person liability, arises from the following facts: (i) Defendant Jones was a high-level executive at the Company during the Class Period and a member of the Company's management team; (ii) by virtue of his responsibilities and activities as a senior officer of the Company, he was privy to and participated in the creation, development and reporting of the Company's internal budgets, plans, projections and/or reports; (iii) he enjoyed significant personal contact and familiarity with other members of the Company's management team, internal reports and other data and information about the Company's finances, operations, and sales at all relevant times; and (iv) he was aware of the Company's dissemination of information to the investing public which he knew or recklessly disregarded was materially false and misleading.</P>
+<P>37. The defendants had actual knowledge of the misrepresentations and omissions of material facts set forth herein, or acted with reckless disregard for the truth in that they failed to ascertain and to disclose such facts, even though such facts were available to them. Such defendants' material misrepresentations and/or omissions were done knowingly or recklessly and for the purpose and effect of concealing Echinoderm's operating condition and future business prospects from the investing public and supporting the artificially inflated price of its securities. As demonstrated by defendants' misstatements of the Company's business, operations and earnings throughout the Class Period, defendants, if they did not have actual knowledge of the misrepresentations and omissions alleged, were reckless in failing to obtain such knowledge by deliberately refraining from taking those steps necessary to discover whether those statements were false or misleading.</P>
+<P>38. As a result of the dissemination of the materially false and misleading information and failure to disclose material facts, as set forth above, the market price of Echinoderm securities was artificially inflated during the Class Period. In ignorance of the fact that market prices of Echinoderm's publicly traded securities were artificially inflated, and relying directly or indirectly on the false and misleading statements made by defendants, or upon the integrity of the market in which the securities trade, and/or on the absence of material adverse information that was known to or recklessly disregarded by defendants but not disclosed in public statements by defendants during the Class Period, Plaintiff and the other members of the Class acquired Echinoderm securities during the Class Period at artificially high prices and were damaged thereby.</P>
+<P>39. At the time of said misrepresentations and omissions, Plaintiff and other members of the Class were ignorant of their falsity, and believed them to be true. Had Plaintiff and the other members of the Class and the marketplace known the truth regarding Echinoderm's activities, which was not disclosed by defendants, Plaintiff and other members of the Class would not have purchased or otherwise acquired their Echinoderm securities, or, if they had acquired such securities during the Class Period, they would not have done so at the artificially inflated prices which they paid.</P>
+<P>40. By virtue of the foregoing, defendants have violated Section 10(b) of the Exchange Act, and Rule l0b-5 promulgated thereunder.</P>
+<P>41. As a direct and proximate result of defendants' wrongful conduct, Plaintiff and the other members of the Class suffered damages in connection with their respective purchases and sales of the Company's securities during the Class Period.</P>
+<P>SECOND CLAIM FOR RELIEF</P>
+<P>Violation Of Section 20(a) Of The Exchange Act Against Defendant Jones</P>
+<P>42. Plaintiff repeats and realleges each and every allegation contained above as if fully set forth herein.</P>
+<P>43. Defendant Jones acted as a controlling person of Echinoderm within the meaning of Section 20(a) of the Exchange Act as alleged herein. By virtue of his high-level position, and his participation in and/or awareness of the Company's operations and/or intimate knowledge of the financial condition of the Company, Defendant Jones had the power to influence and control and did influence and control, directly or indirectly, the decision-making of the Company, including the content and dissemination of the various statements which Plaintiff contend are false and misleading.</P>
+<P>44. As set forth above, Echinoderm violated Section 10(b) and Rule 10b-5 by its acts and omissions as alleged in this Complaint. By virtue of his positions as controlling person, Defendant Jones is similarly liable pursuant to Section 20(a) of the Exchange Act. As a direct and proximate result of defendants' wrongful conduct, Plaintiff and other members of the Class suffered damages in connection with their purchases of the Company's securities during the Class Period.</P>
+</CauseOfAction>
+<RequestedRelief>
+<P>WHEREFORE, Plaintiff prays for relief and judgment, as follows:</P>
+<P>A. Determining that this action is a proper class action, designating Plaintiff as Lead Plaintiff and certifying Plaintiff as a class representative under Rule 23 of the Federal Rules of Civil Procedure and Plaintiffs counsel as Lead Counsel;</P>
+<P>B. Awarding compensatory damages in favor of Plaintiff and the other Class members against all defendants, jointly and severally, for all damages sustained as a result of defendants' wrongdoing, in an amount to be proven at trial, including interest thereon;</P>
+<P>C. Awarding Plaintiff and the Class their reasonable costs and expenses incurred in this action, including counsel fees and expert fees; and</P>
+<P>D. Such other and further relief as the Court may deem just and proper.</P>
+<P>JURY TRIAL DEMANDED</P>
+<P>Plaintiff hereby demands a trial by jury.</P>
+</RequestedRelief>
+</Complaint>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>105</RequestNumber>
+<RequestText>Please produce all reports, written memoranda, correspondence, and other documents related to building design compliance or noncompliance with structural standards, and compliance or noncompliance with structural regulations.</RequestText>
+<BooleanQuery>
+<FinalQuery>(build! OR structure!) AND (design! OR plan OR scheme OR blueprint) AND ((compliance OR comply OR complies OR obey! OR correspond! OR meet! OR adhere! OR conform) w/5 (regulat! OR code! OR law! OR ordinanc! OR rule! OR statut!))</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>building and design and (compliance OR noncompliance) and "structural standards" OR "structural regulations"</ProposalByDefendant>
+<RejoinderByPlaintiff>(build! OR structure!) AND (design! OR plan OR scheme OR blueprint) AND (compliance OR comply OR complies OR obey! OR correspond! OR meet! OR adhere! OR conform!) AND (regulat! OR code! OR law! OR ordinanc! OR rule! OR statut!)</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>36549</FinalB>
+<RequestSource>2008-F-1</RequestSource>
+<Instruction>
+<P>Plaintiff requests that on ________ (date), on or before _______ (time), that Defendant AGNI PAPER COMPANY identify, produce and permit the inspection, copying or photographing of the following documents, papers, books, photographs, objects, or tangible things at KAGU-TSUCHI &amp; ASSOCIATES, located at 1271 Aventine Hill Halema'uma'u, VULCAN 70024. AGNI PAPER COMPANY is requested to produce all documents, objects, and things described herein that are in its possession, custody, or control.  It is also requested to produce all documents, objects, and things described herein that are in the possession, custody or control of its agents, employees and attorneys.</P>
+</Instruction>
+<Definition>
+<P>1. "The company" refers to Defendant AGNI PAPER COMPANY, and all of its affiliates, laboratories, plants, factories and related distributors.</P>
+<P>2. "Correspondence" refers to any form of written communication, including, but not limited to mailed correspondence, drafts of correspondence, emails, and or other recorded forms of communication such as memoranda, interoffice correspondence, transcripts of telephone conversations and any written record reflecting other interactions between parties.</P>
+<P>3. "Document" refers to any designated document or electronically stored information — including, but not limited to writings, drawings, graphs, charts, photographs, sound recordings, images, and other data or data compilations — stored in any medium from which information can be obtained either directly or, if necessary, after translation by the responding party into a reasonably usable form.</P>
+</Definition>
+<Complaint>
+<ComplaintNumber>2008-F</ComplaintNumber>
+<Date>June 15, 2008</Date>
+<Court>UNITED STATES DISTRICT COURT CENTRAL DISTRICT OF VULCAN</Court>
+<Plaintiff>The Estate of VIRGINIA VESTA</Plaintiff>
+<Defendant>PAZHAR BEDA, an individual, AGNI PAPER COMPANY, a Delaware Corporation, and PELE CLINIC, a private clinic located in Halema'uma'u City.</Defendant>
+<Introduction>
+<P>COMPLAINT FOR COMPENSATORY DAMAGES and PUNITIVE DAMAGES</P>
+<P>1. WRONGFUL DEATH</P>
+<P>2. NEGLIGENCE</P>
+<P>3. MEDICAL MALPRACTICE</P>
+<P>JURY TRIAL DEMANDED</P>
+</Introduction>
+<Party>
+<PlaintiffParty>
+<P>1. Plaintiff VIRGINIA VESTA (hereinafter Plaintiff) was a resident of Halema'uma'u City, which is located in the State of Vulcan.</P>
+<P>2. Plaintiff was an employee at the Halema'uma'u pilot plant which is owned and operated by the Agni paper company.</P>
+</PlaintiffParty>
+<DefendantParty>
+<P>3. Defendant AGNI PAPER COMPANY (hereinafter AGNI), is a Delaware corporation with its principal place of business in Halema'uma'u, Vulcan.  Its primary pilot plant is located in Halema'uma'u, Vulcan, and it employs over one thousand employees at its Halema'uma'u plant.</P>
+<P>4. AGNI specializes in developing fire-resistant stationery for corporations that are particularly concerned with immortalizing their records for future generations to review.  For this reason, AGNI has a special department that tests the ignition propensity of its final products.</P>
+<P>5. Defendant PAZHAR BEDA (hereinafter BEDA) is also a resident of Halema'uma'u City, which is located in the State of Vulcan.  BEDA was also an employee of AGNI and worked closely on a number of projects in the Pilot Plant with Plaintiff.</P>
+<P>6. Defendant PELE CLINIC is a private clinic located in Halema'uma'u City, in the State of Vulcan.</P>
+</DefendantParty>
+<Coconspirator></Coconspirator>
+</Party>
+<Jurisdiction>
+<P>7. All events giving rise to the causes of action that are the subject of this litigation took place at the Agni Paper Company Pilot Plant located at 123 Brighid Lane, Halema'uma'u City, Vulcan.</P>
+</Jurisdiction>
+<Background>
+<P>8. On January 2, 2008, Plaintiff drove to the AGNI Pilot Plant where she parked her car in the company parking lot.  After parking her car, she proceeded to her station at the AGNI Pilot Plant, where her job was to sample paper prototypes of various types of stationery that AGNI produced.</P>
+<P>9. AGNI is a company known for its fire-resistant stationery.  It has developed special patents for certain types of paper with unusually high heat tolerances and also designs custom stationery for corporations located in fire-prone areas, who are particularly concerned with document longevity.</P>
+<P>10. At AGNI's Pilot Plant, Plaintiff's main job consisted of testing paper samples for correct specifications. The primary specification that plaintiff tested for was fire-resistance.</P>
+<P>11. The likelihood of whether an object will burn under certain circumstances is measured in terms of "ignition propensity."  Therefore, ignition propensity testing of stationery prototypes was a large part of Plaintiff's work.</P>
+<P>12. A stationery's ignition propensity is tested in a machine called the "Molins Hopper" (also known as the "Molins Machine", "MH" or the "hopper" – hereinafter the "hopper").  The hopper examines each sheet of paper, burns a portion of a paper sample, and the crumples the unburned portion of the sample into a paper ball called a "muppet."  Muppets are subsequently weighed to determine the level of the sample's fire-resisting properties. Following muppet-weighing, grades are allocated to various varieties of stationery according to their ignition propensity measurements.</P>
+<P>13. During their initial training, employees are instructed to open all windows during the testing of stationery prototypes to ensure that there is an adequate amount of oxygen in the plant.  As a fire precaution, they are further instructed to remove all loose paper and debris from the surrounding area before ignition propensity testing is initiated.</P>
+<P>14. AGNI claims that these instructions are in their employee handbook.</P>
+<P>15. Plaintiff believes that these instructions do not appear in the employee handbook, and that their only reference is oral.</P>
+<P>16. At approximately 3:00pm on January 2, 2008, Plaintiff and BEDA were engaged in testing the ignition propensity of two particular grades of stationery: C2F and Straight Grade.</P>
+<P>17. Plaintiff recommended that all debris and loose paper be removed from the surrounding areas prior to testing the sample.  However, BEDA refused, saying that they should just push the samples through since there were only a small number of samples in this batch and the hopper rarely caught on fire.  He assured Plaintiff that this would be safe, and that it would also save them a lot of time.</P>
+<P>18. Notwithstanding BEDA's assurances, Plaintiff insisted on removing the surrounding debris and loose paper per standard company policy.  However, there were no supervisors in the immediate vicinity to whom Plaintiff could turn for support.</P>
+<P>19. Within a minute of the disagreement, BEDA had already commenced with the ignition propensity testing himself and had ignored Plaintiff's pleas to take the recommended precautions.</P>
+<P>20. The first several samples proceeded smoothly.  However, all of a sudden the hopper jammed and there was a huge explosion which caused the west wall to collapse.</P>
+<P>21. Both Plaintiff and BEDA sustained serious burns and injuries as a result of the explosion, and Plaintiff's car was crushed by the collapsing wall.</P>
+<P>22. Plaintiff also suffered from the preexisting condition of chronic asthma, making the inhalation of debris from the explosion particularly dangerous.</P>
+<P>23. Immediately following the explosion, co-workers called an ambulance.</P>
+<P>24. The ambulance intended to take Plaintiff to a nearby state-of-the-art hospital.  However, that hospital did not accept Plaintiff's health insurance so Plaintiff insisted that the ambulance take her to PELE CLINIC which was the only medical treatment facility that AGNI health insurance plan covered.</P>
+<P>25. At Plaintiff's request, the ambulance took her to PELE CLINIC (hereinafter "CLINIC").</P>
+<P>26. The CLINIC was at capacity and unable to assist Plaintiff for five hours.  When the CLINIC finally had room to provide Plaintiff with a bed, Plaintiff was unable to breathe and her burn wounds had already started to bleed.</P>
+<P>27. At the CLINIC, nurses placed Plaintiff directly onto a bed without changing the previous sheet.</P>
+<P>28. The nurses failed to ask Plaintiff whether she had asthma, and hooked Plaintiff up to an IV that administered fluids which gave her an allergic reaction.</P>
+<P>29. Due to the severity of Plaintiff's burn wounds and the negative impact of the unknown IV medication, Plaintiff's health deteriorated.  She lived long enough to provide a full account of her experiences, but died following a serious asthma attack and the onset of infection a week later.</P>
+</Background>
+<CauseOfAction>
+<P>IV. FIRST CAUSE OF ACTION:</P>
+<P>WRONGFUL DEATH</P>
+<P>(Alleged against all Defendants)</P>
+<P>30. Plaintiff incorporates by reference all paragraphs above as though fully set forth herein.</P>
+<P>31. AGNI failed to provide written safety instructions to its employees concerning the safe operation of testing equipment in addition to its oral instructions.</P>
+<P>32. AGNI failed to provide strict supervision of dangerous testing operations.</P>
+<P>33. AGNI failed to adequately test and maintain its Molins Hopper.</P>
+<P>34. BEDA failed to follow the standard practice of removing debris and loose paper from the testing area prior to starting the sample testing, and furthermore ignored Plaintiff's instructions that debris and loose paper be removed prior to testing the samples.</P>
+<P>35. CLINIC failed to provide prompt service to Plaintiff, notwithstanding Plaintiff's diagnosis of serious burns.</P>
+<P>36. CLINIC failed to ask Plaintiff whether she had asthma, resulting in the use of IV medication that gave her an allergic reaction and caused her health to deteriorate.</P>
+<P>37. CLINIC failed to provide sanitary sheets for Plaintiff's bed, notwithstanding its knowledge of Plaintiff's open wounds, making Plaintiff particularly susceptible to infection.</P>
+<P>38. As a proximate cause of Defendants' acts and omissions, individually and jointly, Plaintiff endured physical suffering, and died as a result of burns and injuries sustained in the explosion as well as substandard medical treatment received at the CLINIC afterwards.</P>
+<P>39. Plaintiff has a surviving spouse, and 2 children for which she was the sole supporter.</P>
+<P>V. SECOND CAUSE OF ACTION:</P>
+<P>NEGLIGENCE</P>
+<P>(Alleged against all Defendants)</P>
+<P>40. Plaintiff incorporates by reference all above paragraphs as though fully set forth herein.</P>
+<P>41. AGNI had a duty to provide written safety instructions to its employees concerning the safe operation of testing equipment in addition to its oral instructions.  AGNI failed to do so.</P>
+<P>42. AGNI had a duty to provide strict supervision of dangerous testing operations.  AGNI failed to do so.</P>
+<P>43. AGNI had a duty to adequately test and maintain its Molins Hopper.  AGNI failed to do so.</P>
+<P>44. BEDA had a duty to comply with the standard company practice of removing debris and loose paper from the surrounding areas prior to testing the ignition propensity of samples. Furthermore, he either knew or should have known that it was unsafe to operate the hopper without first removing all debris and loose paper per Plaintiff's instructions.  BEDA failed to do so.</P>
+<P>45. CLINIC had a duty to provide prompt service to Plaintiff, to ask Plaintiff whether she suffered from asthma, and to follow standard sanitation procedures prior to admitting Plaintiff for treatment. CLINIC failed to do so.</P>
+<P>46. As a proximate cause of Defendants' acts and omissions, individually and jointly, a serious explosion resulted, causing Plaintiff to endure physical suffering, burns, and other injuries, and eventually her subsequent death as a result of infection from inadequate sanitation at the CLINIC that treated her after the incident.</P>
+<P>47. As a proximate result of Defendants' conduct, Plaintiff has incurred actual, incidental, and consequential damages according to proof.  Plaintiff died as a proximate result of the incident, and Plaintiff's car was destroyed during the explosion.</P>
+<P>VI. THIRD CAUSE OF ACTION:</P>
+<P>MEDICAL MALPRACTICE</P>
+<P>(Alleged against the CLINIC)</P>
+<P>48. Plaintiff incorporates by reference all above paragraphs as though fully set forth herein.</P>
+<P>49. The CLINIC had a duty of care to Plaintiff once they admitted her for treatment.</P>
+<P>50. The CLINIC had a duty to ask Plaintiff whether she suffered from asthma upon admitting her for treatment in order to make sure that medications provided did not cause Plaintiff to have an allergic reaction.  CLINIC failed to do so.</P>
+<P>51. The CLINIC had a duty to provide fresh linens to Plaintiff, as part of standard sanitation procedures that are recognized across the medical profession. This was particularly important in Plaintiff's case where she had open burn wounds, making her particularly susceptible to infection.</P>
+<P>52. As a direct result of the CLINIC's actions, Plaintiff contracted an infection from which she subsequently died.  Accordingly, Plaintiff's estate has incurred actual, incidental, and consequential damages according to proof.</P>
+</CauseOfAction>
+<RequestedRelief>
+<P>WHEREFORE, Plaintiff prays judgment against DEFENDANTS as follows:</P>
+<P>1. For compensatory damages, according to proof;</P>
+<P>2. For punitive damages, as to each of the Defendants, in an amount determined to be appropriate by the court;</P>
+<P>3. For exemplary damages as to each of the Defendants, in an amount determined to be appropriate by the court;</P>
+<P>4. For reasonable statutory attorney's fees according to proof;</P>
+<P>5. For costs of suit; and</P>
+<P>6. For such other and further relief as the court may deem proper.</P>
+</RequestedRelief>
+</Complaint>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>138</RequestNumber>
+<RequestText>All documents describing or detailing instances of government subsidies for competitive local products.</RequestText>
+<BooleanQuery>
+<FinalQuery>(China OR CN OR PRC OR "Hong Kong" OR HK OR Japan OR JP OR Taiwan OR TW OR ROC OR India OR Philippines OR PH OR Cambodia OR KH OR Vietnam OR VN OR "North Korea" OR "South Korea" OR KP OR Thailand OR Asia OR EMEA OR Government OR Market) AND (Subsidy OR subsidies)</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>(China OR Hong Kong OR Japan OR Taiwan OR India OR Philippines OR Cambodia OR Vietnam OR North Korea OR South Korea OR Thailand ) AND (Government w/5 subsidy)</ProposalByDefendant>
+<RejoinderByPlaintiff>(China OR CN OR PRC OR Hong Kong OR HK OR Japan OR JP OR Taiwan TW OR ROC OR India OR Philippines PH OR Cambodia OR KH OR Vietnam OR VN OR North Korea KP OR South Korea OR KP OR Thailand OR Asia OR EMEA OR Government OR Market) AND (Subsid!)</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>16279</FinalB>
+<RequestSource>2008-G-9</RequestSource>
+<Instruction>
+<P>If your company is receiving this voluntary document request, the ITA asks that you search all available documents (both hard copy and electronic) as described in the "Request for Production of Documents" below, and produce relevant documentation to the ITA within the next 90 days.</P>
+<P>1. These Requests are for the production of responsive documents within the possession, custody or control of any recipient company, its departments, subsidiaries, partners, and joint ventures.</P>
+<P>2. All Requests should be interpreted to include documents that respond, in whole or in part, to any portion of these requests.  Responsive documents should be produced in their entirety, including all attachments and enclosures.</P>
+<P>3. Relevant documents should relate to business conducted with the following Asian nations:  China (including Hong Kong), Japan, Taiwan, India, the Philippines, Cambodia, Vietnam, North Korea, South Korea, and Thailand, or Asian countries as a group or as a whole.</P>
+</Instruction>
+<Definition>
+<P>1. The words "and," "or," "each," "any," "all," "refer," and "discuss," should be construed in their broadest form and the singular shall include the plural and the plural shall include the singular whenever necessary so as to bring within the scope of these Requests all documents (defined below) that might otherwise be construed to be outside their scope.</P>
+<P>2. The scope of the search includes records found in the Tobacco Master Settlement Agreement database.</P>
+<P>3. Solely for the purpose of the TREC 2008 legal track, "document" means all text-searchable data, information or writings stored in the Tobacco Master Settlement Agreement database, including without limitation: any written, electronic or computerized files, data or software; memoranda; emails; correspondence; OCR scanned images; communications; reports; summaries; studies; analyses; evaluations; notes or notebooks; indices; spreadsheets; logs; books; pamphlets; binders; calendar or diary entries; ledger entries; press clippings; graphs; tables; charts; printouts; drawings; maps; meeting minutes; transcripts.  The term "document" encompasses all metadata associated with the document.  The term also includes all drafts associated with any particular document.</P>
+<P>4. The terms "relating to," "describing," "listing," and "referencing" mean in whole or in part constituting, containing, concerning, discussing, describing, analyzing, identifying or stating.</P>
+</Definition>
+<Complaint>
+<ComplaintNumber>2008-G</ComplaintNumber>
+<Date></Date>
+<Court></Court>
+<Plaintiff>United States International Trade Administration (ITA)</Plaintiff>
+<Defendant></Defendant>
+<Introduction>
+<P>The United States International Trade Administration (ITA) is an agency of the U.S. Department of Commerce that promotes American exports of nonagricultural U.S. services and goods.  The ITA's mission is to create prosperity by strengthening the competitiveness of U.S. industry, promoting trade and investment, and ensuring fair trade and compliance with trade laws and agreements.</P>
+<P>As part of its mission to ensure fair trade, the ITA monitors industry access to overseas markets and works to remove costly barriers to product and service exports.  This helps obtain market access for American firms and workers and to achieve full compliance by foreign nations with trade agreements.  The ITA is able to track specific cases where U.S. firms are experiencing barriers to entry or not receiving the full potential of negotiated agreements, and has the authority to act in response. Unfair foreign pricing and government subsidies distort the free flow of goods and adversely affect American business in the global marketplace. When that happens, the ITA can take enforcement actions.</P>
+<P>The ITA is currently investigating a variety of incidents in the Asian trade market involving violations of binding trade agreements between the United States and Asian trading partners, and is seeking documentary evidence related to such violations.  For the purpose of this request, the ITA is specifically focused on the following Asian nations:  China (including Hong Kong), Japan, Taiwan, India, the Philippines, Cambodia, Vietnam, North Korea, South Korea, and Thailand.  The violations under investigation can be grouped into five broad categories as described below.</P>
+</Introduction>
+<Party>
+<PlaintiffParty></PlaintiffParty>
+<DefendantParty></DefendantParty>
+<Coconspirator></Coconspirator>
+</Party>
+<Jurisdiction>
+</Jurisdiction>
+<Background>
+</Background>
+<CauseOfAction>
+<P>The first category of potential trade violation being investigated includes tariff or customs barriers, such as foreign customs offices that refuse to clear exported goods to buyers or importer.  Examples of this may include the following:</P>
+<P>- Unreasonable foreign customs office documentation requirements</P>
+<P>- Rejection of trade goods for unclear or incorrect reasons</P>
+<P>- Higher than expected import duties charged for goods</P>
+<P>- Lack of official public sources of information regarding a country's customs procedures (including all relevant laws, regulations, rules, procedures, decisions and administration actions pertaining to or affecting trade).</P>
+<P>- Registration requirements, licensing procedures, qualification requirements and procedures, and technical standards in a foreign market that are more burdensome for American companies than for domestic companies</P>
+<P>- Foreign laws not administered in a reasonable and impartial manner</P>
+<P>- Foreign trade laws that discriminate against American companies as opposed to companies from third party countries</P>
+<P>- Restrictions in establishing or expanding a commercial presence in a foreign country</P>
+<P>- Limitations on the size or location of American offices in foreign countries</P>
+<P>- Limitations or restrictions on the temporary entry/mobility of key business personnel (including executives, managers and other skilled intercorporate transferees) in business operations in foreign markets</P>
+<P>The second category of potential trade violation being investigated by the ITA includes barriers related to product standards for American exports.  This may include the following:</P>
+<P>- New and/or unclear standards</P>
+<P>- Unclear or unreasonable labeling requirements</P>
+<P>- Burdensome testing, or testing that applies only to foreign companies</P>
+<P>- Requirements for a national quality mark</P>
+<P>- Unreasonable certification requirements</P>
+<P>- Processes that are vague, unclear or not open to all stakeholders</P>
+<P>- Unreasonable time frames to meet testing or standard requirements</P>
+<P>The third category of potential trade violation being investigated covers intellectual property rights issues.  This may include the following:</P>
+<P>- Patents, trademarks, or copyrights being used illegally in a foreign market</P>
+<P>- Foreign governments that refuse to register patents, trademarks, or copyrights for American companies while similar domestic trademarks, patents, or copyrights can be registered in that country</P>
+<P>- A foreign government that has passed confidential business information, technology, or trade secrets to a local company without permission</P>
+<P>- A foreign government's refusal to stop trademark, patent or copyright violation</P>
+<P>The fourth category of potential trade violation being investigated involves market access barriers to trade.  This may include the following:</P>
+<P>- Subsidies for competitive local products.</P>
+<P>- Product restrictions based upon percentage of foreign-owned content</P>
+<P>- Product restrictions due to components/ingredients, structural composition, or product design</P>
+<P>- Instances in which foreign wholesalers, retailers, or customers are required to obtain certifications, licenses, or other burdensome documentation to sell/use American products</P>
+<P>- Requests to disclose proprietary product information before allowing products to be imported</P>
+<P>The final category of potential trade violation includes problems related to import licensing.  This may include the following:</P>
+<P>- Excessive licensing requirements/fees associated with obtaining an import license</P>
+<P>- Overly burdensome process to obtain an import license</P>
+<P>- Lengthy time required to receive approval for an import license</P>
+</CauseOfAction>
+<RequestedRelief>
+</RequestedRelief>
+</Complaint>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>145</RequestNumber>
+<RequestText>All documents concerning actual or projected sales.</RequestText>
+<BooleanQuery>
+<FinalQuery>(estimate! OR anticipate! OR forecast! OR actual OR project!) w/2 sales</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>"actual sales" OR "projected sales"</ProposalByDefendant>
+<RejoinderByPlaintiff>(estimate! OR anticipate! OR forecast! OR actual OR project!) w/5 sales</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>40315</FinalB>
+<RequestSource>2008-H-4</RequestSource>
+<Instruction>
+<P>1. These requests require the production of all responsive documents within the sole or joint possession, custody or control of the Defendants, including their agents, departments, attorneys, directors, officers, employees, consultants, investigators, insurance companies, or other persons subject to Defendants' custody or control.</P>
+<P>2. All documents that respond, in whole or in part, to any portion of these Requests must be produced in their entirety, including all attachments and enclosures.</P>
+<P>3. For purposes of these requests, the words used are considered to have, and should be understood to have, their ordinary, everyday meanings.  Plaintiffs refer Defendants to any dictionary in the event Defendants asserts that the wording of a request is vague, ambiguous, unintelligible, or confusing.</P>
+</Instruction>
+<Definition>
+<P>4. The words "and," "or," "each," "any," "all," "refer," and "discuss," shall be construed in their broadest form and the singular shall include the plural and the plural shall include the singular whenever necessary so as to bring within the scope of these Requests all documents (defined below) that might otherwise be construed to be outside their scope.</P>
+<P>5. The phrase "advertising, marketing or promotion" of cigarettes includes public relations activities involving smoking and health.</P>
+<P>6. For present purposes, the term "defendants" includes Smokin' Cigarettes Inc. as well as those companies whose records are found in the Tobacco Master Settlement Agreement database.</P>
+<P>7. Solely for the purpose of the TREC 2008 legal track, "document" means all text-searchable data, information or writings stored in the Tobacco Master Settlement Agreement database, including without limitation: any written, electronic or computerized files, data or software; memoranda; emails; correspondence; OCR scanned images; communications; reports; summaries; studies; analyses; evaluations; notes or notebooks; indices; spreadsheets; logs; books; pamphlets; binders; calendar or diary entries; ledger entries; press clippings; graphs; tables; charts; printouts; drawings; maps; meeting minutes; transcripts.  The term "document" encompasses all metadata associated with the document.  The term also includes all drafts associated with any particular document.</P>
+<P>8. "Person" or "individual" means natural persons, corporations, firms, partnerships, unincorporated associations, trusts, and any other legal entity.</P>
+<P>9. The term "plans" means tentative and preliminary proposals, recommendations, or considerations, whether or not finalized or authorized, as well as those that have been adopted.</P>
+<P>10. The term "relating to" means in whole or in part constituting, containing, concerning, discussing, describing, analyzing, identifying or stating.</P>
+</Definition>
+<Complaint>
+<ComplaintNumber>2008-H</ComplaintNumber>
+<Date>July 1, 2008</Date>
+<Court>UNITED STATES DISTRICT COURT DISTRICT OF NEW SEARCHLAND
+</Court>
+<Plaintiff>JENNY JESSEN, On Behalf of Herself and All Others Similarly Situated</Plaintiff>
+<Defendant>SMOKIN' CIGARETTES, INC., and JESSE WINSTON</Defendant>
+<Introduction>
+<P>Plaintiff, Jenny Jessen, individually and on behalf of all other persons and entities similarly situated, by her undersigned attorneys, for her complaint against the above-captioned defendants, alleges upon personal knowledge as to herself and her own acts, and upon information and belief as to all other matters, based upon, inter alia, the investigation made by and through her attorneys, which investigation included, among other things, a review of the public documents, Securities and Exchange Commission ("SEC") filings, analyst reports, news releases and media reports concerning Smokin' Cigarettes, Inc. ("Smokin'" or the "Company"), as follows:</P>
+<P>NATURE OF THE ACTION</P>
+<P>1. This is a federal securities class action on behalf of all persons and entities, other than defendants, who purchased or otherwise acquired the securities of Smokin' between January 1, 1995 and June 27, 1996, inclusive, seeking to pursue remedies under the Securities Exchange Act of 1934 (the "Exchange Act").</P>
+</Introduction>
+<Party>
+<PlaintiffParty>
+<P>6. Plaintiff, Jenny Jessen, purchased Smokin' common stock during the Class Period, as set forth in the certification attached hereto and incorporated herein by reference, and was damaged thereby.  Plaintiff is a citizen of New Searchland.</P>
+</PlaintiffParty>
+<DefendantParty>
+<P>7. Defendant Smokin' is a New Searchland corporation and maintains its principal executive offices in New Searchland.  Smokin' is a major manufacturer of tobacco products, including cigarettes.</P>
+<P>8. Defendant Jesse Winston ("Winston") was Chairman and Chief Executive Officer ("CEO") of the Company at all relevant times.   Winston participated in making the false and misleading statements referred to herein.</P>
+<P>9. During the Class Period, Defendant Winston was privy to non-public information concerning the Company's finances, markets and present and future business prospects via access to internal corporate documents, conversations and connections with other corporate officers and employees, and information provided to him in connection therewith.  Because of his possession of such information, Defendant Winston knew or recklessly disregarded the fact that adverse facts specified herein had not been disclosed to, and were being concealed from, the investing public.  Defendant Winston, by virtue of his high-level position with the Company, directly participated in the management of the Company, was directly involved in the day-to-day operations of the Company at the highest levels, and was privy to confidential proprietary information concerning the Company and its business, operations, growth, financial statements, and financial condition, as alleged herein.  Defendant Winston was involved in drafting, producing, reviewing and disseminating the false and misleading statements and information alleged herein.  Defendant Winston was aware, or recklessly disregarded, that the statements made concerning the Company during the Class Period were false and misleading, in violation of the federal securities laws.</P>
+<P>10. As an officer and controlling person of a publicly held Company whose securities were and are registered with the SEC pursuant to the Exchange Act, and are traded on the New Smokeland Stock Exchange ("NSSE") and governed by the provisions of the federal securities laws, Defendant Winston had a duty to disseminate accurate and truthful information promptly with respect to the Company's financial condition and performance, growth, operations, financial statements, business, markets, management, earnings and present and future business prospects, and to correct any previously issued statements that had become materially misleading or untrue, so that the market price of the Company's publicly traded securities would be based upon truthful and accurate information.  Defendant Winston's misrepresentations and omissions during the Class Period violated these specific requirements and obligations.</P>
+<P>11. Both of the defendants are liable as participants in a fraudulent scheme and course of business that operated as a fraud or deceit on purchasers of Smokin' securities by disseminating materially false and misleading statements and/or concealing material adverse facts.  The scheme (i) deceived the investing public regarding the Company's business, operations, management and the intrinsic value of the Company's securities; and (ii) caused Plaintiff and other members of the Class to purchase the Company's securities at artificially inflated prices.</P>
+</DefendantParty>
+<Coconspirator></Coconspirator>
+</Party>
+<Jurisdiction>
+<P>2. The claims alleged herein arise under Sections 10(b) and 20(a) of the Exchange Act, 15 U.S.C. §§ 78j(b) and 78t, and Rule 10b-5, 17 C.F.R. § 240.10b-5 promulgated thereunder.</P>
+<P>3. The jurisdiction of this Court is based on Section 27 of the Exchange Act, 15 U.S.C. § 78aa and 28 U.S.C. § 1331 (federal question jurisdiction).</P>
+<P>4. Venue is proper in this judicial district pursuant to Section 27 of the Exchange Act.  Many of the acts and transactions giving rise to the violations of law complained of herein, including the preparation and dissemination to the investing public of materially false and misleading information, occurred in this judicial district.  The Company is incorporated and maintains its principal place of business in New Searchland.</P>
+<P>5. In connection with the acts, conduct and other wrongs alleged in this complaint, defendants, directly or indirectly, used the means and instrumentalities of interstate commerce, including but not limited to, the United States mails, interstate telephone communications and the facilities of the national securities exchange.</P>
+</Jurisdiction>
+<Background>
+<P>Contingent Sales</P>
+<P>12. On April 15, 1995, the Company announced record sales for the quarter ended March 31, 1995 ("1Q95").  In the press release issued that day, Defendant Winston credited the Company's "We're Smokin!" advertising campaign for driving demand.  Defendant Winston noted that "[w]e have successfully reinvigorated our marketing efforts.  The ‘We're Smokin!' campaign is truly a breath of fresh air, helping us to connect with the hard working men and women who deserve a great cigarette at a fair price."</P>
+<P>13. Similar press releases, announcing continuing strong growth were issued on July 14, 1995, October 16, 1995, and January 13, 1996, for the quarters ended June 30, 1995 ("2Q95"), September 30, 1995 ("3Q95"), and December 31, 1995 ("4Q95"), respectively.  The January 13, 1996 press release also announced preliminary results for the year ended December 31, 1995 ("FY95").  All of the press releases attributed the strong sales to increasing demand for the Company's products.</P>
+<P>14. On April 16, 1996, the Company issued a press release reporting strong sales and increased demand for its products, resulting in record sales for the quarter ended March 31, 1996.  Indeed, the Company noted that sales had increased 23% from the same quarter a year ago.  Defendant Winston again credited the "We're Smokin!" campaign for the record quarterly revenue results, noting that "[w]e have struck a chord with the hard working men and women of America.  Providing a great quality cigarette at a fair price has shown them how much we care."</P>
+<P>15. On July 14, 1996, the Company again announced record quarterly revenue results, which increased 27% from the same quarter a year ago.  Defendant Winston attributed the record results to the impressive, continuing demand growth."</P>
+<P>16. Unbeknownst to shareholders at the time of the above announcements, defendants had failed to disclose the following facts which they knew at the time, or should have known:</P>
+<P>(a) Beginning on January 1, 1995, the company had improperly recorded as sales, shipments of cigarettes that had been sent to customers on a sale-or-return basis;</P>
+<P>(b) The customers to whom the cigarettes had been shipped had not sold a significant percentage of the cigarettes they received;</P>
+<P>(c) The customers had notified Smokin' of the poor sales and their intent to exercise their right of return;</P>
+<P>(d) Defendant Wilson knew that approximately one-third of the shipped cigarettes had not been sold and would be returned;</P>
+<P>(e) The company continued to ship cigarettes on a sale-or-return basis to customers and record such shipments as sales even after returns of cigarettes had begun.</P>
+<P>Family Medical Leave Act Claims</P>
+<P>17. During 1995, at least fifteen employees filed formal complaints with the Company's Human Resources department alleging that they had suffered retaliation as a result of taking leave under the Family Medical Leave Act of 1993 ("FMLA").  Specifically, the employees alleged that they had either been demoted or not received promised promotions shortly after returning from FMLA leave.</P>
+<P>18. Defendant Winston directed the Company's outside counsel to investigate these claims and, no later than January 1996, received a report that concluded that the conduct likely amounted to a violation of the FMLA which expressly prohibits using "the taking of FMLA leave as a negative factor in employment actions, such as hiring, promotions or disciplinary actions . . ." 29 C.F.R. 825.220.</P>
+<P>19. The report prepared by outside counsel further concluded that the Company's liability for the alleged FMLA violations could be estimated with a reasonable degree of certainty, likely constituted a liability that was subject to recognition under Generally Accepted Accounting Principles ("GAAP") and advised the Company to apprise its outside auditors of the report's findings.</P>
+<P>20. Aware that the Company's reported revenues would be dramatically reduced when its contingent sales practices were discovered, Defendant Wilson failed to alert the Company's outside auditors to the FMLA liability and further failed to disclose the liability in any of the Company's financial statements.</P>
+<P>THE TRUTH REVEALED</P>
+<P>21. On June 3, 1996, the Wall Street Journal revealed that the FSC had commenced an informal investigation into the Company.  Citing unnamed sources, the article stated that the investigation concerned contingent sales of cigarettes.  The article also revealed that numerous employees had notified the Company of their intent to sue to the Company for FMLA violations during 1995.</P>
+<P>22. On June 27, 1996, the Company issued a press release announcing that it would likely be forced to restate quarterly and annual results for 1995, and for the first six months of 1996.  The Company admitted that the restatement was necessitated by improperly recorded sales and that such sales were likely to have materially increased the Company's reported revenues for 1995 and the first six months of 1996.  The press release also disclosed the FMLA complaints and announced that it was creating a reserve to $50 million to pay such claims if it were found to have violated the FMLA.</P>
+<P>23. Following this announcement, the price of the Company's stock dropped dramatically on exceptionally heavy trading volume, closing at $73, down $23 from the June 26, 1996 closing pricing of $96.</P>
+<P>24. As a result of defendants' false and misleading statements as detailed above, the financial results of Smokin' were artificially and materially inflated during the Class Period.  Defendants' illegal activities had the intended effect of boosting the Company's financial results for the year 1995, and the first six months of 1996, and maintaining Smokin' stock at artificially inflated levels during the Class Period.  As the truth was revealed, the artificial inflation came out of the Company's stock price and the stock price plummeted.  As a result of their purchases of the Company's securities during the Class Period, plaintiff and other members of the Class suffered damages.</P>
+<P>PLAINTIFF'S CLASS ACTION ALLEGATIONS</P>
+<P>25. Plaintiff brings this action as a class action pursuant to Federal Rules of Civil Procedure 23(a) and 23(b)(3) on behalf of herself and all persons and entities other than defendants who purchased or otherwise acquired the securities of Smokin' between January 1, 1995, and June 27, 1996, inclusive (the "Class").  Excluded from the Class are defendants herein, members of the immediate family of each of the defendants, any person, firm, trust, corporation, officer, director or other individual or entity in which any defendant has a controlling interest or which is related to or affiliated with any of the defendants, and the legal representatives, agents, affiliates, heirs, successors-in-interest or assigns of any such excluded party.</P>
+<P>26. The members of the Class are so numerous that joinder of all members is impracticable.  As of June 27, 1996, Smokin' had more than 500 million shares outstanding.  The precise number of Class members is unknown to plaintiff at this time but is believed to be in the thousands.  In addition, the names and addresses of the Class members can be ascertained from the books and records of Smokin'.  Notice can be provided to such record owners by a combination of published notice and first-class mail, using techniques and a form of notice similar to those customarily used in class actions arising under the federal securities laws.</P>
+<P>27. The members of the Class are located in geographically diverse areas and are so numerous that joinder of all members is impractical.  While the exact number of Class members is unknown to the plaintiff at this time, and can only be ascertained through appropriate discovery, plaintiff believes there are, thousands of members of the Class, at a minimum.</P>
+<P>28. Common questions of law and fact exist as to all members of the Class and predominate over any questions affecting solely individual members of the Class.  Among the questions of law and fact common to the Class are:</P>
+<P>(a) Whether defendants engaged in acts or conduct in violation of the securities laws as alleged herein;</P>
+<P>(b) Whether defendants had a duty to disclose certain information;</P>
+<P>(c) Whether defendants knowingly or recklessly made materially false and misleading statements or failed to correct such statements upon learning that they were materially false and misleading during the Class Period;</P>
+<P>(d) Whether the market price of the Company's securities during the Class Period was artificially inflated because of defendants' conduct complained of herein; and</P>
+<P>(e) Whether members of the Class have sustained damages and, if so, the proper measure of damages.</P>
+<P>29. Plaintiff's claims are typical of the claims of the members of the Class because plaintiff and members of the Class sustained damages arising out of defendants' wrongful conduct in violation of federal law as complained of herein.</P>
+<P>30. Plaintiff will fairly and adequately protect the interests of the members of the Class and has retained counsel competent and experienced in class and securities litigation.  Plaintiff has no interests antagonistic to or in conflict with those of the Class.</P>
+<P>31. A class action is superior to other available methods for the fair and efficient adjudication of this controversy since joinder of all members of the Class is impractical.  Furthermore, because the damages suffered by individual Class members may be relatively small, the expense and burden of individual litigation make it impossible for the Class members individually to redress the wrongs done to them.  There will be no difficulty in the management of this action as a class action.</P>
+<P>Fraud on the Market Presumption</P>
+<P>32. Plaintiff will rely, in part, upon the presumption of reliance established by the fraud-on-the-market doctrine in that:</P>
+<P>(a) Defendants made public misrepresentations or failed to disclose material facts regarding the Company's financial situation during the Class Period;</P>
+<P>(b) the omissions and misrepresentations were material;</P>
+<P>(c) the securities of the Company were actively traded at all relevant times on the NSSE, an efficient and open market;</P>
+<P>(d) the misrepresentations and omissions alleged would tend to induce a reasonable investor to misjudge the value of the Company's securities; and</P>
+<P>(e) Plaintiff and the members of the Class, without knowledge of the misrepresented facts, purchased their Smokin' securities between the time defendants failed to disclose and/or misrepresented material facts and the time the truth was disclosed.</P>
+<P>33. Smokin' trades on the NSSE.  The price of the Company's stock reflects the effect of news disseminated in the market.</P>
+<P>34. Based upon the foregoing, plaintiff and the members of the Class are entitled to a presumption of reliance upon the integrity of the market</P>
+<P>The Safe Harbor Provision is Inapplicable</P>
+<P>35. The statutory safe harbor provided for forward-looking statements under certain circumstances does not apply to any of the allegedly false statements pleaded in this complaint.  The statements alleged to be false and misleading herein all relate to then-existing facts and conditions.  In addition, to the extent certain of the statements alleged to be false may be characterized as forward-looking, they were not adequately identified as "forward-looking statements" when made, and there were no meaningful cautionary statements identifying important factors that could cause actual results to differ materially from those in the purportedly forward-looking statements.  Alternatively, to the extent that the statutory safe harbor is intended to apply to any forward-looking statements pleaded herein, defendants are liable for those false forward-looking statements because at the time each of those forward-looking statements was made, the defendants had actual knowledge that the particular forward-looking statement was materially false or misleading.</P>
+</Background>
+<CauseOfAction>
+<P>FIRST CLAIM FOR RELIEF</P>
+<P>For Violations of Sections 10(b) and Rule 10b-5 Thereunder</P>
+<P>36. Plaintiff incorporates by reference and realleges each of the foregoing paragraphs.</P>
+<P>37. During the Class Period, defendants carried out a plan, scheme and course of conduct which was intended to and, throughout the Class Period, did:  (i) deceive the investing public, including Plaintiff and other Class members, as alleged herein; and (ii) cause Plaintiff and other members of the Class to purchase Smokin' securities at artificially inflated prices.  In furtherance of this unlawful scheme, plan and course of conduct, defendants, and each of them, took the actions set forth herein.</P>
+<P>38. Defendants (a) employed devices, schemes, and artifices to defraud; (b) made untrue statements of material fact and/or omitted to state material facts necessary to make the statements not misleading; and (c) engaged in acts, practices, and a course of business which operated as a fraud and deceit upon the purchasers of the Company's securities in an effort to maintain artificially high market prices for Smokin' securities in violation of Section 10(b) of the Exchange Act and Rule 10b-5.  Defendants are sued either as primary participants in the wrongful and illegal conduct charged herein or as controlling persons as alleged below.</P>
+<P>39. Defendants directly and indirectly, by the use, means or instrumentalities of interstate commerce and/or of the mails, engaged and participated in a course of conduct to conceal adverse material information about the business, operations and future prospects of Smokin' as specified herein.</P>
+<P>40. Defendants employed devices, schemes, and artifices to defraud, while in possession of material adverse non-public information and engaged in acts, practices, and a course of conduct as alleged herein in an effort to assure investors of the Company's value and performance and continued substantial growth, which included the making of, or the participation in the making of, untrue statements of material facts and omitting to state material facts necessary in order to make the statements made about the Company and its business operations and future prospects in the light of the circumstances under which they were made, not misleading, as set forth more particularly herein, and engaged in transactions, practices and a course of business which operated as a fraud and deceit upon the purchasers of Smokin' securities during the Class Period.</P>
+<P>41. Defendant Winston's primary liability, and controlling person liability, arises from the following facts: (i) Defendant Winston was a high-level executive at the Company during the Class Period and a member of the Company's management team; (ii) by virtue of his responsibilities and activities as a senior officer of the Company, he was privy to and participated in the creation, development and reporting of the Company's internal budgets, plans, projections and/or reports; (iii) he enjoyed significant personal contact and familiarity with other members of the Company's management team, internal reports and other data and information about the Company's finances, operations, and sales at all relevant times; and (iv) he was aware of the Company's dissemination of information to the investing public which he knew or recklessly disregarded was materially false and misleading.</P>
+<P>42. The defendants had actual knowledge of the misrepresentations and omissions of material facts set forth herein, or acted with reckless disregard for the truth in that they failed to ascertain and to disclose such facts, even though such facts were available to them.  Such defendants' material misrepresentations and/or omissions were done knowingly or recklessly and for the purpose and effect of concealing the Company's operating condition and future business prospects from the investing public and supporting the artificially inflated price of its securities.  As demonstrated by defendants' misstatements of the Company's business, operations and earnings throughout the Class Period, defendants, if they did not have actual knowledge of the misrepresentations and omissions alleged, were reckless in failing to obtain such knowledge by deliberately refraining from taking those steps necessary to discover whether those statements were false or misleading.</P>
+<P>43. As a result of the dissemination of the materially false and misleading information and failure to disclose material facts, as set forth above, the market price of Smokin' securities was artificially inflated during the Class Period.  In ignorance of the fact that market prices of the Company's publicly traded securities were artificially inflated, and relying directly or indirectly on the false and misleading statements made by defendants, or upon the integrity of the market in which the securities trades, and/or on the absence of material adverse information that was known to or recklessly disregarded by defendants but not disclosed in public statements by defendants during the Class Period, Plaintiff and the other members of the Class acquired Smokin' securities during the Class Period at artificially high prices and were damaged thereby.</P>
+<P>44. At the time of said misrepresentations and omissions, Plaintiff and other members of the Class were ignorant of their falsity, and believed them to be true.  Had Plaintiff and the other members of the Class and the marketplace known the truth regarding the Company's activities, which was not disclosed by defendants, Plaintiff and other members of the Class would not have purchased or otherwise acquired their Smokin' securities, or, if they had acquired such securities during the Class Period, they would not have done so at the artificially inflated prices which they paid.</P>
+<P>45. By virtue of the foregoing, defendants have violated Section 10(b) of the Exchange Act, and Rule l0b-5 promulgated thereunder.</P>
+<P>46. As a direct and proximate result of defendants' wrongful conduct, Plaintiff and the other members of the Class suffered damages in connection with their respective purchases and sales of the Company's securities during the Class Period.</P>
+<P>SECOND CLAIM FOR RELIEF</P>
+<P>Violation Of Section 20(a) Of</P>
+<P>The Exchange Act Against Defendant Jones</P>
+<P>47. Plaintiff repeats and realleges each and every allegation contained above as if fully set forth herein.</P>
+<P>48. Defendant Winston acted as a controlling person of Smokin' within the meaning of Section 20(a) of the Exchange Act as alleged herein.  By virtue of his high-level position, and his participation in and/or awareness of the Company's operations and/or intimate knowledge of the financial condition of the Company, Defendant Winston had the power to influence and control and did influence and control, directly or indirectly, the decision-making of the Company, including the content and dissemination of the various statements which Plaintiff contends are false and misleading.</P>
+<P>49. As set forth above, Smokin' violated Section 10(b) and Rule 10b-5 by its acts and omissions as alleged in this Complaint.  By virtue of his positions as controlling person, Defendant Winston is similarly liable pursuant to Section 20(a) of the Exchange Act.  As a direct and proximate result of defendants' wrongful conduct, Plaintiff and other members of the Class suffered damages in connection with their purchases of the Company's securities during the Class Period.</P>
+</CauseOfAction>
+<RequestedRelief>
+<P>WHEREFORE, Plaintiff prays for relief and judgment, as follows:</P>
+<P>A. Determining that this action is a proper class action, designating Plaintiff as Lead Plaintiff and certifying Plaintiff as a class representative under Rule 23 of the Federal Rules of Civil Procedure and Plaintiffs counsel as Lead Counsel;</P>
+<P>B. Awarding compensatory damages in favor of Plaintiff and the other Class members against all defendants, jointly and severally, for all damages sustained as a result of defendants' wrongdoing, in an amount to be proven at trial, including interest thereon;</P>
+<P>C. Awarding Plaintiff and the Class their reasonable costs and expenses incurred in this action, including counsel fees and expert fees; and</P>
+<P>D. Such other and further relief as the Court may deem just and proper.</P>
+<P>JURY TRIAL DEMANDED</P>
+<P>Plaintiff hereby demands a trial by jury.</P>
+</RequestedRelief>
+</Complaint>
+</ProductionRequest>
+
+</TrecLegalProductionRequest>

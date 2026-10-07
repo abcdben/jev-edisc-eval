@@ -32,10 +32,22 @@ site/tools/build_cutoffs.py
 # (anchored: on case-insensitive filesystems an unanchored `TREC/` would also
 # swallow data/trec/)
 /TREC/
+# selective extraction of the eval-sample e-mails from the user's zip of the collection (ablation round 2); the zip itself too
+data/trec/raw/jeb_bush_txt/
+/data/TREC 2016 - Jeb Bush.zip
 data/trec/*.jsonl
 !data/trec/*_ids.jsonl
 # CUAD upstream files: re-downloaded by `bench cuad-build`.
 data/cuad/raw/
+# EDRM Enron v2 text rendering (TREC Legal 2009/2010 Interactive collection), from
+# trec-legal.umiacs.umd.edu/corpora/trec/legal10/. Not redistributed; the built
+# corpora with text are not tracked either, only the NIST qrels under data/legal*/raw/.
+/EDRM/
+data/legal09/*.jsonl
+!data/legal09/*_ids.jsonl
+data/legal10/*.jsonl
+# Learning-task qrels (102 MB gz, 325 MB plain; over GitHub's file limit): https://trec.nist.gov/data/legal/10/qrels.t10legallearn.gz
+data/legal10/raw/qrels.t10legallearn*
 
 # --- results ----------------------------------------------------------------
 # Per-decision .jsonl records live in the GitHub Release (see results/README.md).
@@ -54,3 +66,26 @@ results/*/*
 !results/tar_grid/*.json
 results/**/*.jsonl
 results_gpu*/
+
+# contamination probe items contain document text from non-redistributed corpora
+data/contam/*.jsonl
+data/contam/raw/
+!results/contam/contamination_report.html
+!results/contam/paper.html
+!results/contam/explainer.html
+!results/contam/report_short.html
+!results/contam/explainer_lawyer.html
+!results/contam/verbatim_review.html
+!results/contam/report_documents.html
+!results/contam/report_case.html
+!results/contam/story.html
+!results/ablation/ablation_report.html
+# Big Thorium: Relativity's synthetic aiR-for-Review demo workspace (RelativityOne ARM archive, ~1.5 GB zip, 1.6 GB unpacked).
+# Provided by the user; not redistributed. `bench bigthorium extract` regenerates data/bigthorium/*.jsonl from the unpacked archive.
+/Bigthorium_*.zip
+data/bigthorium/raw/
+data/bigthorium/derived/
+# user's local copy of the raw TREC material
+/Archive.zip
+/Archive/
+!data/bigthorium/raw/SOURCES.md

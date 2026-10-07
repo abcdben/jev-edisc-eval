@@ -1,0 +1,119 @@
+# TREC Legal Track, Complaint J (2009) requests 201-206 as reused by the 2010 Learning task on the EDRM Enron v2
+# collection (data/legal10/learn.jsonl). Request text verbatim from the complaint; the responsive / not-responsive
+# descriptions are neutral paraphrases of the request and carry no facts about the underlying case.
+# Used by the pseudonymisation ablation (ediscovery_bench/ablation). Topic 207 (fantasy football) is included as an
+# in-mailbox control whose relevance does not depend on knowledge of the matter.
+
+name: enron_j
+kind: binary
+positive_label: responsive
+negative_label: not_responsive
+
+context: |
+  Matter: a securities-fraud class action on behalf of purchasers of the Company's common stock between June 1, 1999
+  and December 2, 2001. The Company produced electric energy and natural gas and traded energy and other
+  commodities. The complaint alleges that the Company concealed debt through structured commodity transactions
+  known as "prepay transactions" and through transactions it characterised as compliant with FAS 140; that it
+  misrepresented whether it would meet its financial forecasts; that executives destroyed documents and deleted
+  electronic data as its financial condition came to light; that it filed energy schedules and bids misrepresenting
+  the amount and location of load; and that it managed its contacts with securities analysts. The documents are the
+  Company's e-mails and attachments, reproduced with their headers as a reviewer would see them; quoted earlier
+  messages in a thread are part of the document.
+
+questions:
+
+  prepay_transactions:
+    title: Prepay transactions
+    rfp_text: |
+      All documents or communications that describe, discuss, refer to, report on, or relate to the Company's
+      engagement in structured commodity transactions known as "prepay transactions."
+    positive_desc: |
+      The document describes, discusses, refers to or reports on the Company's engagement in structured commodity
+      transactions known as prepay transactions, including their structure, counterparties, accounting, approval
+      or disclosure.
+    negative_desc: |
+      The document does not concern prepay transactions. Ordinary commodity trades, general financing discussions
+      and other business traffic are not responsive.
+
+  fas140:
+    title: FAS 140 transactions
+    rfp_text: |
+      All documents or communications that describe, discuss, refer to, report on, or relate to the Company's
+      engagement in transactions that the Company characterized as compliant with FAS 140 (or its predecessor
+      FAS 125).
+    positive_desc: |
+      The document describes, discusses, refers to or reports on transactions the Company characterised as
+      compliant with FAS 140 or FAS 125 (accounting for transfers of financial assets), including their structure,
+      accounting treatment, approval or disclosure.
+    negative_desc: |
+      The document does not concern FAS 140 / FAS 125 transactions. General accounting or financing discussions that
+      do not involve such transactions are not responsive.
+
+  financial_forecasts:
+    title: Meeting financial forecasts
+    rfp_text: |
+      All documents or communications that describe, discuss, refer to, report on, or relate to whether the Company
+      had met, or could, would, or might meet its financial forecasts, models, projections, or plans at any time
+      after January 1, 1999.
+    positive_desc: |
+      The document discusses whether the Company had met, or could, would or might meet, its financial forecasts,
+      models, projections, plans, earnings targets or guidance, at any time after January 1, 1999.
+    negative_desc: |
+      The document does not concern whether the Company would meet its financial forecasts or plans. Routine
+      financial data without reference to forecasts, and forecasts about other companies or markets, are not
+      responsive.
+
+  document_destruction:
+    title: Document retention and destruction
+    rfp_text: |
+      All documents or communications that describe, discuss, refer to, report on, or relate to any intentions,
+      plans, efforts, or activities involving the alteration, destruction, retention, lack of retention, deletion,
+      or shredding of documents or other evidence, whether in hard-copy or electronic form.
+    positive_desc: |
+      The document concerns the alteration, destruction, retention, deletion or shredding of documents or
+      electronic records, including retention policies, instructions to keep or discard records, and the actual
+      disposal of material.
+    negative_desc: |
+      The document does not concern the retention, deletion or destruction of documents or records. Routine
+      attachments, forwarding of files and ordinary record-keeping are not responsive.
+
+  energy_schedules:
+    title: Energy schedules and bids
+    rfp_text: |
+      All documents or communications that describe, discuss, refer to, report on, or relate to energy schedules
+      and bids, including but not limited to, estimates, forecasts, descriptions, characterizations, analyses,
+      evaluations, projections, plans, and reports on the volume(s) or geographic location(s) of energy loads.
+    positive_desc: |
+      The document concerns energy schedules or bids, or estimates, forecasts, analyses or reports on the volume
+      or geographic location of energy loads.
+    negative_desc: |
+      The document does not concern energy schedules, bids or load volumes and locations. General energy-market
+      news and trading unrelated to scheduling or bidding is not responsive.
+
+  financial_analysts:
+    title: Contacts with financial analysts
+    rfp_text: |
+      All documents or communications that describe, discuss, refer to, report on, or relate to any discussion(s),
+      communication(s), or contact(s) with financial analyst(s), or with the firm(s) that employ them, regarding
+      (i) the Company's financial condition, (ii) analysts' coverage of the Company and/or its financial condition,
+      (iii) analysts' rating of the Company's stock, or (iv) the impact of an analyst's coverage of the Company on
+      the business relationship between the Company and the firm that employs the analyst.
+    positive_desc: |
+      The document concerns discussions, communications or contacts with financial analysts or their firms about
+      the Company's financial condition, analysts' coverage or ratings of the Company, or the effect of that
+      coverage on the Company's business relationship with the firm.
+    negative_desc: |
+      The document does not concern contacts with financial analysts about the Company. Analyst reports on other
+      companies, and general market commentary, are not responsive.
+
+  fantasy_football:
+    title: Fantasy football
+    rfp_text: |
+      All documents or communications that describe, discuss, refer to, report on, or relate to fantasy football,
+      gambling on football, and related activities, including but not limited to, football teams, football players,
+      football games, football statistics, and football performance.
+    positive_desc: |
+      The document concerns fantasy football, gambling on football, or football teams, players, games, statistics
+      or performance.
+    negative_desc: |
+      The document does not concern football or fantasy football.

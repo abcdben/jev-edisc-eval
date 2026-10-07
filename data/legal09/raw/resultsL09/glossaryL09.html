@@ -1,0 +1,374 @@
+<HTML>
+
+<HEAD>
+<TITLE>TREC 2009 Legal Track: Batch Task Glossary</TITLE>
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF">
+
+<H1>TREC 2009 Legal Track: Batch Task Glossary</H1>
+
+<H2>Revision History</H2>
+<UL>
+<LI>2009 Oct 7: st: added median, low, and high score files
+<LI>2009 Oct 5: st: updates for glossaryL09.html
+<LI>2008 Oct 14: st: updates for Relevance Feedback task (residual evaluation)
+<LI>2008 Oct 7: is: make qrelsL08.runids available after conference 
+<LI>2008 Oct 5: st: updates for glossaryL08.html 
+(e.g. added reference to .evalH files which just use highly relevant documents,
+added reference to :est_K-F1: (F1@K measure) and :est_R-F1: (F1@R measure), etc.)
+<LI>2007 Oct 2: st: created glossaryL07.html 
+</UL>
+
+<H2>Relevance Assessments</H2>
+
+<P>
+The relevance assessments are in the "qrels" files.
+They have the following format:
+</P>
+
+<OL>
+<LI>The 1st column is the topic number (from 7 to 145).
+<LI>The 2nd column is always a 0.
+<LI>The 3rd column is the document identifier (e.g. tmw65c00).
+<LI>The 4th column is the relevance judgment: 
+2 for "highly relevant", 1 for "relevant", 0 for "non-relevant", -1 for "gray" and -2 for "gray".
+(Note: A "gray" document is a document that was presented to the assessor,
+but an assessment could not be determined,
+such as because the document was too long to review (more than 300 pages)
+or there was a technical problem displaying the document.
+In the assessor system, -1 was "unsure" (the default setting for all documents) 
+and -2 was "unjudged" (the intended label for gray documents).)
+<LI>The 5th column is the probability the document had of being selected for assessment 
+from the pool of all submitted documents.
+<LI>The 6th column is the highest rank at which any submitted run retrieved the document
+(where 1 is the highest possible rank).  
+<LI>The 7th column is one of the systems that retrieved the document at that rank.
+</OL>
+
+<P>
+There are 3 qrels files for the 2009 Batch task:
+</P>
+<UL>
+<LI>
+The qrelsL09.normal file just includes the first 4 columns and is compatible with
+the traditional trec_eval utility.
+<LI>
+The qrelsL09.probs file has the same first 4 columns as qrelsL09.normal, plus
+the above listed 5th probablity column which the l07_eval utility can use for 
+estimating scores at greater depths from the judged samples.
+<LI>
+The qrelsL09.runids file has the same first 5 columns as qrelsL09.probs,
+plus the above listed 6th and 7th columns which indicate which system most favored
+each assessed document.  This qrels file will be available to participants after TREC.
+</UL>
+
+<H2>.eval and .evalH file format</H2>
+
+<P>
+The .eval files (such as refL09B.eval) and .evalH files (such as refL09B.evalH)
+produced by l07_eval 
+use a similar format as trec_eval 8.0, with several additional measures.
+</P>
+
+<P>
+Note: in the 2009 Batch task:
+</P>
+<UL>
+<LI>The .eval files count both relevant and highly relevant documents as relevant.
+<LI>The .evalH files just count highly relevant documents as relevant.
+</UL>
+
+<H3>
+.eval and .evalH measures:
+</H3>
+
+<P>
+The first 27 measures for each topic ("num_ret" though "P1000") 
+are the same as in trec_eval 8.0
+(but the calculation was done with l07_eval software instead of trec_eval).
+These measures do not use the probabilities for estimation.
+They are defined in 
+<A HREF="http://trec.nist.gov/pubs/trec15/appendices/CE.MEASURES06.pdf">http://trec.nist.gov/pubs/trec15/appendices/CE.MEASURES06.pdf</A>.
+</P>
+<P>
+The next 41 measures for each topic (":S1:" though ":SLastJudgedB:")
+also do not use the probabilities for estimation.
+(We will provide definitions in a later version of this document.)
+</P>
+<P>
+Of the remaining measures, those which start with the "est_" prefix
+use estimation.  For individual topics:
+<UL>
+
+<LI>est_rel: Estimated number of relevant documents 
+in the pool of all submitted documents for the topic 
+(known as "R" in the 
+<A HREF="http://trec-legal.umiacs.umd.edu/adhocRF08b.html">2008 Ad Hoc task guidelines</A>, 
+which specifies the estimation formulas).
+<LI>est_nonrel: Estimated number of non-relevant documents 
+in the pool of all submitted documents for the topic.
+<LI>est_gray: Estimated number of gray documents 
+in the pool of all submitted documents for the topic.
+
+<LI>est_rel_ret: Estimated number of relevant documents retrieved by this run for the topic.
+<LI>est_non_ret: Estimated number of non-relevant documents retrieved by this run for the topic.
+<LI>est_gray_ret: Estimated number of gray documents retrieved by this run for the topic.
+
+<LI>est_PB: Estimated Precision@B, 
+where B is the number of documents matching the 
+final negotiated boolean query (as per run refL09B, 
+and also listed in the ":B:" entry for the topic).
+
+<LI>est_RB: Estimated Recall@B, 
+where B is the number of documents matching the 
+final negotiated boolean query (as per run refL09B, 
+and also listed in the ":B:" entry for the topic).
+
+<LI>est_gray_B: Estimated percentage of gray documents@B, 
+where B is the number of documents matching the 
+final negotiated boolean query (as per run refL09B, 
+and also listed in the ":B:" entry for the topic).
+
+<LI>est_R-F1: Estimated F1@R.
+(Note that R was rounded up to next integer for each topic for this calculation
+as listed in the ":est_R-Ceil:" entry for each topic.)
+
+<LI>est_K-Prec: Estimated Precision@K, where K was the cutoff chosen by the system.
+(Note that K is listed in the ":K:" entry for each topic.)
+
+<LI>est_K-Recall: Estimated Recall@K, where K was the cutoff chosen by the system.
+(Note that K is listed in the ":K:" entry for each topic.)
+
+<LI>est_K-F1: Estimated F1@K, where K was the cutoff chosen by the system.
+(Note that K is listed in the ":K:" entry for each topic.)
+
+</UL>
+<P>
+Miscellaneous notes for other measures:
+</P>
+<UL>
+<LI>
+Unlike the past couple years, the first 5 documents of all submitted runs for each topic
+were not necessarily judged (particularly for topics 51 and 89 for which not
+all bins were completed by the volunteer assessors).
+So ":est_P5:" (estimated precision@5)
+may differ from the traditional "P5" (precision@5) even if there 
+are no gray documents in the first 5 retrieved.
+<LI>
+Marginal precision measures beyond depth 100000 have not yet been added.
+</UL>
+
+<P>
+The ":relstring:" listing for each topic uses the following codes 
+for the first 100 retrieved documents: 
+H=highly relevant, R=relevant, N=non-relevant, U=gray. 
+A hyphen (-) is used for documents which were not shown to the assessor.
+</P>
+
+<P>
+At the end of the .eval or .evalH file, the summary over "all" topics is given
+for each measure.  For all of the estimated ("est_") measures,
+the arithmetic mean is used (all topics are weighted equally).
+The mean is also used for most other measures 
+(except a few of the trec_eval measures).
+</P>
+
+<P>
+The evaluation software (l07_eval.c) is described below.
+</P>
+
+<H2>Median Scores</H2>
+
+<P>
+Median scores for each measure over the 10 submitted runs of the 2009 Batch task
+are provided in the medL09_all10.eval and medL09_all10.evalH files.
+(Low and high scores respectively are provided in the loL09* and hiL09* files.)
+</P>
+<P>
+The median, low and high scores do not include the reference runs (below).
+</P>
+
+<H2>Reference Runs</H2>
+
+<P>
+For the 2009 Batch task,
+results for 4 reference runs are provided:
+</P>
+<UL>
+<LI>fullset09: all 6,910,192 documents of the collection
+<LI>oldrel09: all judged relevant documents from qrelsL09.pass1
+<LI>oldnon09: all judged non-relevant documents from qrelsL09.pass1
+<LI>refL09B: final negotiated Boolean query (from the FinalQuery field of the .xml topic file)
+</UL>
+
+<H2>Evaluation Software</H2>
+
+<P>
+The source code of the evaluation software is included in l07_sort.c (version 2.1) and l07_eval.c (version 2.3).
+Pre-compiled Win32 executables are in l07_sort.exe and l07_eval.exe.
+For Unix, the compilation syntax is typically something like this: 
+</P>
+<BLOCKQUOTE>
+<PRE>
+gcc -lm -o l07_eval.exe l07_eval.c
+</PRE>
+</BLOCKQUOTE>
+
+<H2>Batch Task Evaluation</H2>
+
+<P>
+As a usage example, here are the steps to evaluating the refL09B run,
+assuming it is in the submitted form
+(i.e. the K and Kh values are appended to the end of the run
+as specified by the <A HREF="http://trec-legal.umiacs.umd.edu/batch09a.html">guidelines</A> for submission).
+</P>
+
+<H3>Sorting the run</H3>
+
+<P>
+The first step is to sort the run in canonical order.
+The canonical order used is based
+on the trec_eval canonical order:
+</P>
+<UL>
+<LI>Within a retrieval set, increasing order by topic (from 7 to 145, the 1st column of the retrieval set).
+<LI>Within a topic, descending order by rsv (retrieval status value, the 5th column of the retrieval set).
+<LI>For ties in rsv, descending alphabetical order by docno (the 3rd column of the retrieval set, 
+e.g. zzm84e00, yvw14f00, xjq48e00, etc.).
+</UL>
+<P>
+Note: the specified rank (column 4 of the retrieval set) is not actually a factor in the canonical order.
+</P>
+
+<P>
+To sort the run in canonical order:
+</P>
+
+<P>
+1. Save the retrieval set (e.g. refL09B) in a subdirectory named 'unsorted'.
+</P>
+
+<P>
+2. Make a subdirectory named 'sorted'.
+</P>
+
+<P>
+3. Make a text file named 'sortlist.txt' which 
+contains a line specifying each run's name, such as follows:
+</P>
+<BLOCKQUOTE>
+<PRE>
+refL09B
+</PRE>
+</BLOCKQUOTE>
+
+<P>
+4. Run l07_sort.exe to sort the runs and output them to the subdirectory named 'sorted' as follows:
+</P>
+<BLOCKQUOTE>
+<PRE>
+l07_sort.exe in=sortlist.txt inDir=unsorted\ outDir=sorted\ trecevalOrder kExtract
+</PRE>
+</BLOCKQUOTE>
+
+<P>
+Note: on Unix platforms, you may need to use forward slashes instead of backslashes.
+<P>
+
+<P>
+The sorting can take several seconds to run.
+</P>
+
+<P>
+5. Verify that the sorted run appears in the 'sorted' subdirectory,
+along with the .K and .Kh files.
+For refL08B, the first 3 lines of the sorted version should be as follows:
+</P>
+<BLOCKQUOTE>
+<PRE>
+102     Q0      zzz10d00        1       1       refL08B
+102     Q0      zzy76d00        1       1       refL08B
+102     Q0      zzy42f00        1       1       refL08B
+</PRE>
+</BLOCKQUOTE>
+
+<H3>l07_eval command-line</H3>
+
+<P>
+l07_eval assumes the input run is already in evaluation order.
+</P>
+
+<P>
+1. To produce the refL09B.eval file from the sorted refL09B file, use the following syntax:
+</P>
+
+<BLOCKQUOTE>
+l07_eval.exe run=sorted\refL09B q=qrelsL09.probs out=ignore1 out2=ignore2 out5=refL09B.eval stringDisplay=100 M1000=6910192 probD=6910192 precB=B09.txt estopt=0 Kfile=sorted\refL09B.K
+</BLOCKQUOTE>
+
+<P>
+Note: on Unix platforms, you may need to use forward slashes instead of backslashes.
+<P>
+
+<P>
+The command can take a few seconds to run.  Once it has completed, 
+you should have a refL09B.eval file of scores.
+</P>
+
+<P>
+2. To produce the .evalH file (evaluation with just Highly relevant judgments), 
+add 'MinRelLevel=2' to the command-line, 
+read from the .Kh file and write to a .evalH file, as follows:
+</P>
+
+<BLOCKQUOTE>
+l07_eval.exe run=sorted\refL09B q=qrelsL09.probs out=ignore1 out2=ignore2 out5=refL09B.evalH stringDisplay=100 M1000=6910192 probD=6910192 precB=B09.txt estopt=0 Kfile=sorted\refL09B.Kh MinRelLevel=2
+</BLOCKQUOTE>
+
+<H2>Recommended Measures</H2>
+
+<P>
+The main measure for the track this year is F1@K (":est_K-F1:").
+</P>
+
+<P>
+A secondary (rank-based) measure for the track this year is F1@R (":est_R-F1:").
+</P>
+
+<P>
+In 2007, the main measure was Recall@B (":est_RB:").
+</P>
+
+<P>
+In the case of the reference Boolean run (refL09B),
+the ordering is descending alphabetical by docno.
+Hence only measures at depth B (or depth K, which is the same as B for the Boolean run)
+are applicable for the reference Boolean run,
+so that the ordering does not matter.
+e.g. F1@K and Recall@B are fair measures for comparing to the Boolean run,
+but F1@R and P@5 are not.
+</P>
+
+<P>
+For the other 3 reference runs (fullset09, oldrel09, oldnon09)
+only measures at depth K are applicable.
+</P>
+
+<P>
+Measures just counting highly relevant documents may be considered as or more important
+than those based on general relevance (to be discussed at the conference).
+</P>
+
+<H2>For Additional Information</H2>
+
+<P>
+The track Web site 
+at <A HREF="http://trec-legal.umiacs.umd.edu/">http://trec-legal.umiacs.umd.edu/</A>
+contains links
+to resources and background information.  The track mailing list
+archives can be reached through a link from that page.
+</P>
+
+</BODY>
+</HTML>

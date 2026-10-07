@@ -1,0 +1,396 @@
+{
+ "steps": [
+  {
+   "step": "paraphrase:cuad:pilot60",
+   "estimate_usd": 0.016,
+   "realised_usd": 0.0107,
+   "at": "2026-10-04 17:20",
+   "n": 60,
+   "ok": 59,
+   "retried": 3
+  },
+  {
+   "step": "paraphrase:cuad",
+   "estimate_usd": 0.336,
+   "realised_usd": 0.2509,
+   "at": "2026-10-04 17:26",
+   "n": 1200,
+   "ok": 1155,
+   "retried": 151
+  },
+  {
+   "step": "paraphrase:veridian",
+   "estimate_usd": 0.162,
+   "realised_usd": 0.1112,
+   "at": "2026-10-04 17:28",
+   "n": 500,
+   "ok": 478,
+   "retried": 39
+  },
+  {
+   "step": "fidelity:cuad",
+   "estimate_usd": 0.16,
+   "realised_usd": 0.0722,
+   "at": "2026-10-04 17:28",
+   "n": 100,
+   "equivalent": 89
+  },
+  {
+   "step": "fidelity:veridian",
+   "estimate_usd": 0.08,
+   "realised_usd": 0.0335,
+   "at": "2026-10-04 17:28",
+   "n": 50,
+   "equivalent": 49
+  },
+  {
+   "step": "memo_probe",
+   "estimate_usd": 1.3329000000000002,
+   "realised_usd": 0.9617,
+   "at": "2026-10-04 17:30",
+   "windows": 157,
+   "responses": 1350
+  },
+  {
+   "step": "run:cuad:named:jev@base",
+   "estimate_usd": 0.135,
+   "realised_usd": 0.1347,
+   "at": "2026-10-04 17:31",
+   "rows": 14400,
+   "docs": 1200
+  },
+  {
+   "step": "run:cuad:renamed:jev@base",
+   "estimate_usd": 0.135,
+   "realised_usd": 0.1345,
+   "at": "2026-10-04 17:31",
+   "rows": 14400,
+   "docs": 1200
+  },
+  {
+   "step": "run:cuad:paraphrased:jev@base",
+   "estimate_usd": 0.135,
+   "realised_usd": 0.1346,
+   "at": "2026-10-04 17:31",
+   "rows": 14400,
+   "docs": 1200
+  },
+  {
+   "step": "run:veridian:paraphrased:jev@base",
+   "estimate_usd": 0.073,
+   "realised_usd": 0.0733,
+   "at": "2026-10-04 17:31",
+   "rows": 5000,
+   "docs": 500
+  },
+  {
+   "step": "run:jeb:named:jev@base (superseded: 600-doc local subset, 11 questions)",
+   "estimate_usd": 0.094,
+   "realised_usd": 0.0889,
+   "at": "2026-10-04 17:32",
+   "rows": 6600,
+   "docs": 600
+  },
+  {
+   "step": "run:jeb:renamed:jev@base (superseded: 600-doc local subset, 11 questions)",
+   "estimate_usd": 0.094,
+   "realised_usd": 0.0886,
+   "at": "2026-10-04 17:32",
+   "rows": 6600,
+   "docs": 600
+  },
+  {
+   "step": "run:cuad:named:gpt-5.6-luna",
+   "estimate_usd": 0.47,
+   "realised_usd": 0.4762,
+   "at": "2026-10-04 17:45",
+   "rows": 14400,
+   "docs": 1200
+  },
+  {
+   "step": "run:cuad:renamed:gpt-5.6-luna",
+   "estimate_usd": 0.47,
+   "realised_usd": 0.4759,
+   "at": "2026-10-04 17:45",
+   "rows": 14400,
+   "docs": 1200
+  },
+  {
+   "step": "run:jeb:named:jev@base",
+   "estimate_usd": 0.157,
+   "realised_usd": 0.1584,
+   "at": "2026-10-04 18:01",
+   "rows": 12000,
+   "docs": 1000
+  },
+  {
+   "step": "run:jeb:renamed:jev@base",
+   "estimate_usd": 0.157,
+   "realised_usd": 0.1578,
+   "at": "2026-10-04 18:02",
+   "rows": 12000,
+   "docs": 1000
+  },
+  {
+   "step": "run:veridian:paraphrased:gpt-5.6-luna",
+   "estimate_usd": 0.231,
+   "realised_usd": 0.2252,
+   "at": "2026-10-04 18:03",
+   "rows": 5000,
+   "docs": 500
+  },
+  {
+   "step": "run:jeb:named:gpt-5.6-luna",
+   "estimate_usd": 0.499,
+   "realised_usd": 0.5071,
+   "at": "2026-10-04 18:09",
+   "rows": 12000,
+   "docs": 1000
+  },
+  {
+   "step": "run:jeb:renamed:gpt-5.6-luna",
+   "estimate_usd": 0.499,
+   "realised_usd": 0.5062,
+   "at": "2026-10-04 18:15",
+   "rows": 12000,
+   "docs": 1000
+  },
+  {
+   "step": "run:cuad:named:gpt-5.6-sol",
+   "estimate_usd": 8.891,
+   "realised_usd": 8.9836,
+   "at": "2026-10-04 18:24",
+   "rows": 14400,
+   "docs": 1200
+  },
+  {
+   "step": "run:cuad:renamed:gpt-5.6-sol",
+   "estimate_usd": 8.884,
+   "realised_usd": 8.9742,
+   "at": "2026-10-04 18:29",
+   "rows": 14400,
+   "docs": 1200
+  },
+  {
+   "step": "run:cuad:paraphrased:gpt-5.6-sol",
+   "estimate_usd": 8.895,
+   "realised_usd": 8.841,
+   "at": "2026-10-04 18:34",
+   "rows": 14400,
+   "docs": 1200
+  },
+  {
+   "step": "run:jeb:named:gpt-5.6-sol",
+   "estimate_usd": 9.52,
+   "realised_usd": 9.6733,
+   "at": "2026-10-04 18:39",
+   "rows": 12000,
+   "docs": 1000
+  },
+  {
+   "step": "run:jeb:renamed:gpt-5.6-sol",
+   "estimate_usd": 9.525,
+   "realised_usd": 9.6597,
+   "at": "2026-10-04 18:50",
+   "rows": 12000,
+   "docs": 1000
+  },
+  {
+   "step": "run:veridian:paraphrased:gpt-5.6-sol",
+   "estimate_usd": 4.409,
+   "realised_usd": 4.4258,
+   "at": "2026-10-04 18:51",
+   "rows": 5000,
+   "docs": 500
+  },
+  {
+   "step": "run:cuad:paraphrased:gpt-5.6-luna",
+   "estimate_usd": 0.471,
+   "realised_usd": 0.4655,
+   "at": "2026-10-04 18:54",
+   "rows": 14400,
+   "docs": 1200,
+   "note": "ledger corrected after dedupe; duplicate cost under duplicate_rows_waste"
+  },
+  {
+   "step": "duplicate_rows_waste",
+   "estimate_usd": 0.0,
+   "realised_usd": 0.1558,
+   "at": "2026-10-04 18:54",
+   "files": [
+    "results/ablation/round2/veridian/multi/gpt-5.6-luna__paraphrased__all.jsonl",
+    "results/ablation/round2/cuad/multi/gpt-5.6-luna__paraphrased__all.jsonl (8,412 duplicate rows, cost estimated at the per-row mean)"
+   ],
+   "cause": "the interrupted Luna run was writing concurrently with a second instance of the same command"
+  },
+  {
+   "step": "run:jeb:named:gpt-5.6-terra",
+   "estimate_usd": 4.987,
+   "realised_usd": 5.0411,
+   "at": "2026-10-06 08:26",
+   "rows": 12000,
+   "docs": 1000
+  },
+  {
+   "step": "run:cuad:named:gpt-5.6-terra",
+   "estimate_usd": 4.705,
+   "realised_usd": 4.7494,
+   "at": "2026-10-06 08:27",
+   "rows": 14400,
+   "docs": 1200
+  },
+  {
+   "step": "run:jeb:renamed:gpt-5.6-terra",
+   "estimate_usd": 4.989,
+   "realised_usd": 5.0618,
+   "at": "2026-10-06 08:32",
+   "rows": 12000,
+   "docs": 1000
+  },
+  {
+   "step": "run:cuad:renamed:gpt-5.6-terra",
+   "estimate_usd": 4.701,
+   "realised_usd": 4.7585,
+   "at": "2026-10-06 08:34",
+   "rows": 14400,
+   "docs": 1200
+  },
+  {
+   "step": "leak_check",
+   "estimate_usd": 0.9,
+   "realised_usd": 0.7804,
+   "at": "2026-10-06 08:38",
+   "answers": 756
+  },
+  {
+   "step": "run:veridian:paraphrased:gpt-5.6-terra",
+   "estimate_usd": 2.308,
+   "realised_usd": 2.3174,
+   "at": "2026-10-06 08:44",
+   "rows": 5000,
+   "docs": 500
+  },
+  {
+   "step": "run:cuad:paraphrased:gpt-5.6-terra",
+   "estimate_usd": 4.706,
+   "realised_usd": 4.6918,
+   "at": "2026-10-06 08:45",
+   "rows": 14400,
+   "docs": 1200
+  },
+  {
+   "step": "rerun:veridian:renamed:v2 (renamer audit fix; round-1 arm)",
+   "estimate_usd": 14.21,
+   "realised_usd": 14.21,
+   "at": "2026-10-06 10:55",
+   "rows": 40000,
+   "docs": 1000,
+   "per_model": {
+    "gpt-5.6-luna": 0.465,
+    "gpt-5.6-terra": 4.672,
+    "gpt-5.6-sol": 8.922,
+    "jev@base": 0.148
+   },
+   "note": "supersedes the round-1 Veridian renamed run ($14.20, kept in results/ablation/veridian/multi/leaky_v1/); includes a $0.02 Luna smoke test on 50 documents that the full run resumed from"
+  },
+  {
+   "step": "bigthorium:run:named:gpt-5.6-luna",
+   "estimate_usd": 0.402,
+   "realised_usd": 0.4557,
+   "at": "2026-10-06 20:52",
+   "rows": 8000,
+   "docs": 1000
+  },
+  {
+   "step": "bigthorium:run:named:gpt-5.6-terra",
+   "estimate_usd": 4.023,
+   "realised_usd": 4.598,
+   "at": "2026-10-06 20:56",
+   "rows": 8000,
+   "docs": 1000
+  },
+  {
+   "step": "bigthorium:run:named:gpt-5.6-sol",
+   "estimate_usd": 7.713,
+   "realised_usd": 8.8444,
+   "at": "2026-10-06 21:00",
+   "rows": 8000,
+   "docs": 1000
+  },
+  {
+   "step": "bigthorium:run:named:jev@base",
+   "estimate_usd": 0.131,
+   "realised_usd": 0.1146,
+   "at": "2026-10-06 21:00",
+   "rows": 8000,
+   "docs": 1000
+  },
+  {
+   "step": "bigthorium:run:renamed:gpt-5.6-luna",
+   "estimate_usd": 0.402,
+   "realised_usd": 0.4666,
+   "at": "2026-10-06 21:06",
+   "rows": 8000,
+   "docs": 1000
+  },
+  {
+   "step": "bigthorium:run:renamed:gpt-5.6-terra",
+   "estimate_usd": 4.023,
+   "realised_usd": 4.6664,
+   "at": "2026-10-06 21:09",
+   "rows": 8000,
+   "docs": 1000
+  },
+  {
+   "step": "bigthorium:run:renamed:gpt-5.6-sol",
+   "estimate_usd": 7.713,
+   "realised_usd": 8.981,
+   "at": "2026-10-06 21:14",
+   "rows": 8000,
+   "docs": 1000
+  },
+  {
+   "step": "bigthorium:run:renamed:jev@base",
+   "estimate_usd": 0.131,
+   "realised_usd": 0.1174,
+   "at": "2026-10-06 21:14",
+   "rows": 8000,
+   "docs": 1000
+  },
+  {
+   "step": "bigthorium:run:brief:gpt-5.6-luna",
+   "estimate_usd": 0.126,
+   "realised_usd": 0.1793,
+   "at": "2026-10-06 21:16",
+   "rows": 2400,
+   "docs": 300
+  },
+  {
+   "step": "bigthorium:run:brief:gpt-5.6-terra",
+   "estimate_usd": 1.262,
+   "realised_usd": 1.7931,
+   "at": "2026-10-06 21:17",
+   "rows": 2400,
+   "docs": 300
+  },
+  {
+   "step": "bigthorium:run:brief:gpt-5.6-sol",
+   "estimate_usd": 2.425,
+   "realised_usd": 3.4807,
+   "at": "2026-10-06 21:18",
+   "rows": 2400,
+   "docs": 300
+  },
+  {
+   "step": "bigthorium:run:brief:jev@base",
+   "estimate_usd": 0.063,
+   "realised_usd": 0.0525,
+   "at": "2026-10-06 21:19",
+   "rows": 2400,
+   "docs": 300
+  }
+ ],
+ "total_realised_usd": 131.1406,
+ "total_estimate_usd": 125.7509,
+ "note": "total includes the 2026-10-06 Veridian renamed re-run ($14.21), which is a round-1 arm; round 2 proper is $83.18"
+}

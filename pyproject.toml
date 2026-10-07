@@ -19,6 +19,8 @@ dependencies = [
 
 [project.optional-dependencies]
 laya = ["laya>=0.3.4"]
+# reading the Relativity ARM archive's analytics-set Avro (Big Thorium; `bench bigthorium extract`)
+bigthorium = ["fastavro>=1.9", "python-snappy>=0.7"]
 
 [project.scripts]
 bench = "ediscovery_bench.cli:app"

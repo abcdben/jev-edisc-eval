@@ -1,0 +1,756 @@
+Page 1 of 8 
+ 
+TREC-2010 Legal Track - Interactive Task 
+Topic-Specific Guidelines - Topic 301 
+Updated: 09/29/10 
+ 
+ 
+1.  Introduction - The Purpose and Use of this Document 
+This document is intended to clarify the intent and scope of Topic 301 featured in the TREC-
+2010 Legal Track‟s Interactive Task.  The document is a summary of the guidance that the Topic 
+Authority for Topic 301 gave to the participating teams in the course of their work on the task.  It 
+is intended to guide the volunteer assessors in their review of documents contained in the 
+evaluation samples. 
+The Interactive Task tests how effective participating teams are at replicating a Topic 
+Authority‟s conception of relevance across a test population of documents.1  In assessing the 
+sampled documents on the basis of which the teams‟ efforts will be evaluated, it is vital that the 
+documents be reviewed in accordance with the Topic Authority‟s conception of relevance, as 
+outlined in this document.  The criteria specified herein represent the Topic Authority‟s 
+conception of relevance and are the criteria by which assessors should judge the relevance of the 
+documents they review.  
+While the criteria specified in this document seek to clarify the scope of the topic, it is to be 
+expected that assessors will, in the course of their review, encounter documents that prompt 
+questions that are not addressed by the criteria outlined below.  In such instances, the assessors 
+are asked to submit their questions to us via the link on the review platform; we will provide 
+answers to such questions as soon as possible. 
+Please note that this document is intended to provide topic-specific guidance for determining 
+relevance.  Guidance on general procedures for conducting the assessment exercise is provided 
+in a companion document (the “„How-To‟ Guide for Assessors”).  Again, assessors with any 
+questions, procedural or topic-specific, should not hesitate to email us their questions. 
+ 
+2.  Statement and General Characterization of the Topic 
+The document request that is the basis for Topic 301 is stated as follows (see Complaint K). 
+All documents or communications that describe, discuss, refer to, report on, or 
+relate to onshore or offshore oil and gas drilling or extraction activities, whether 
+past, present or future, actual, anticipated, possible or potential, including, but not 
+limited to, all business and other plans relating thereto, all anticipated revenues 
+                                                           
+1  For purposes of this document, the words “relevant” and “responsive” are interchangeable. 
+Page 2 of 8 
+ 
+therefrom, and all risk calculations or risk management analyses in connection 
+therewith. 
+The request targets documents that fall into one or more of three categories: 
+1. Any documents related to the business of onshore or offshore oil and gas drilling or 
+extraction activities. 
+2. Business Plans and other documents providing information regarding revenues from oil 
+and gas drilling or extraction activities. 
+3. Documents reflecting risk calculations or risk management analyses about oil and gas 
+drilling or extraction activities. 
+ 
+3.  Guidelines for Determining Responsiveness  
+ 
+As explained in the “How-To” Guide, the Topic Authority in this exercise plays the part of a 
+senior attorney overseeing a large document production.  An attorney in that role must weigh 
+his/her obligations under the document request, as well as the risks of  having the completeness 
+and accuracy of the production challenged in court.  The outcome of these considerations is 
+found in the topic characterization (above) and the guidelines provided below.   
+Documents that discuss, or are evidence of, the following subject matter are to be considered 
+responsive for purposes of this exercise. 
+ 3.1.  Responsive Subject Matter, Topic 301 Generally.   
+3.1.1. Each document is to be evaluated for responsiveness within the “four-
+corners” of the document.  Responsiveness should not be speculative.  A 
+document must provide responsive information without requiring the 
+consideration of tangential information. 
+3.1.2. There are no date restrictions that apply to this topic.  Each document is to 
+be assessed for responsiveness regardless of its date. 
+3.1.3. Drafts or redlined versions of documents responsive to this topic should 
+also be considered responsive.  Legal privileges should not be considered 
+when assessing responsiveness to this topic. 
+3.1.4. All documents responsive to this topic, regardless of which category or 
+categories they fall within, must contain substantive evidence related to 
+the business of or activities surrounding oil and gas drilling or extraction. 
+3.1.5. Documents may relate to the business of oil and gas drilling and extraction 
+anywhere in the world, not just in the United States. 
+Page 3 of 8 
+ 
+3.1.6. Documents responsive to this topic may discuss either or both onshore or 
+offshore oil and gas drilling or extraction activities.  This would include 
+documents discussing the transportation of oil and/or gas along pipelines. 
+3.1.7. All documents responsive to this topic should relate specifically to 
+activities performed by the company, not just to general industry activity 
+or the business of oil and gas drilling or extraction generally.  Documents 
+that discuss oil and gas drilling or extraction activities generally, or as 
+applicable to the industry at large, without specifically referencing activity 
+performed by the company are nonresponsive. 
+ 
+ 3.2.  Documents Responsive to Topic 301, Category 1.   
+3.2.1. Documents that discuss the company‟s actual past or present oil and gas 
+drilling or extraction activities are responsive.   
+3.2.2. Documents that discuss the company‟s planned or anticipated future oil 
+and gas drilling or extraction activities are responsive even if the future 
+activity is not carried out. 
+3.2.3. Documents that discuss possible or potential oil and gas drilling or 
+extraction activities to be undertaken by the company are responsive even 
+if the activity is not carried out.   
+ 
+ 3.3.  Documents Responsive to Topic 301, Category 2.   
+3.3.1. Documents must discuss revenue derived from oil and gas drilling or 
+extraction activities.   
+3.3.2. Documents may be “high-level” or “company-wide” documents that have, 
+as a component, a discussion of revenue derived from oil and gas drilling 
+or extraction activities.  A document may be responsive to this topic even 
+if it covers a much broader report on or discussion about financial 
+information. 
+ 
+ 3.4.  Documents Responsive to Topic 301, Category 3. 
+3.4.1. Documents must involve a risk analysis or risk calculation of the 
+company‟s oil and gas drilling or extraction activities.   
+ 
+Page 4 of 8 
+ 
+4.  Examples of Responsive and Nonresponsive Documents 
+ 4.1.  Topic 301 Generally. 
+  4.1.1.  Examples of Responsive documents. 
+ Documents involving offshore drilling by Mariner Energy, a Louisiana-based 
+petroleum exploration and production company partially owned by the 
+company. 
+ Documents involving offshore drilling by BHLP. 
+ Documents discussing Project Seabreeze. 
+ Minutes or reports that discuss oil and gas drilling or extraction activity by the 
+company or any subsidiaries. 
+ Documents about the UBP Task Force. 
+ 
+  4.1.2.  Examples of Nonresponsive documents. 
+ Newspaper articles and other third-party media coverage, including auto-
+generated emails (e.g. NY Times Daily News Summary), about oil and gas 
+drilling or extraction generally or about the oil and gas industry, unless they 
+are forwarded onwards with substantive comments by company employees 
+that tie the articles to the company‟s activities. 
+ Sections of the Code of Federal Regulations (“CFR”) relating to the regulation 
+of oil and gas drilling or extraction. 
+ Testimony of government officials (e.g. Alan Greenspan) regarding the oil 
+and gas industry. 
+ Deposition transcripts of company employees are nonresponsive, unless they 
+specifically discuss the company‟s oil and gas drilling or extraction activities, 
+revenues therefrom, or risk analyses in connection therewith. 
+ Documents related to interactions with political figures discussing policy 
+considerations relevant to the oil and gas industry. 
+ Documents from the US WTO promoting open markets for energy services, 
+including oil and gas drilling. 
+ Documents about Indian Mesa, a wind energy related entity. 
+ The company‟s document retention notice. 
+ A calendar entry or meeting request or notice stating nothing further than the 
+time, place, and attendees for a meeting with industry participation.   
+ A list of companies, some of which provide oil and gas drilling services, with 
+no further context. 
+Page 5 of 8 
+ 
+ A list of outside counsel who are assigned to various contracts with companies 
+who engage in oil and gas extraction activities. 
+ The company‟s response to an RFP for IT solutions. 
+ Documents that discuss staffing or headcount for the company‟s oil and gas 
+drilling or extraction businesses. 
+ 
+ 4.2.  Topic 301, Category 1.   
+  4.2.1.  Examples of Responsive documents. 
+ Weekly internal reports that discuss, among other topics, the company‟s oil 
+and gas drilling or extraction activities. 
+ Internal company newsletters, including “EnTouch,” that discuss, among 
+other topics, the company‟s oil and gas drilling or extraction activities. 
+ Issues of BTU Weekly that discuss, among other topics, the company‟s actual 
+or planned activity related to oil and gas drilling or extraction. 
+ Shareholder presentations, financial presentations, or reports that discuss the 
+company‟s oil and gas drilling or extraction activities. 
+ Press releases, Qs&As, and talking points that discuss the company‟s oil and 
+gas drilling or extraction activities. 
+ Construction Agency Agreement that relates to constructing a facility for, 
+among other things, the extraction of gas. 
+ Plans to survey, analyze and process 3D seismic data for oil and gas 
+extraction. 
+ A list of generators and suppliers. 
+ Documents discussing the company‟s plans for oil and gas drilling or 
+extraction activities in specific locations nationally or internationally. 
+ 
+  4.2.2.  Examples of Nonresponsive documents. 
+ Communication from the company‟s corporate counsel providing a 
+“representative recitation of services” for core company trademarks. 
+ Memo from the US WTO, promoting open markets for energy services, 
+including oil and gas drilling. 
+ A list of companies, some which provide oil and gas drilling services. 
+ Weekly natural gas reports prepared by third parties that do not specifically 
+mention the company‟s oil and gas drilling or extraction activities. 
+ 
+Page 6 of 8 
+ 
+ 4.3.  Topic 301, Category 2.   
+  4.3.1.  Examples of Responsive documents. 
+ Copies of the company‟s 10Ks and 10Qs and other SEC filings. 
+ Copies of the company‟s audited financial statements. 
+ Copies of the company‟s annual reports. 
+ Copies of the company‟s business plans, profit plans and other documents that 
+provide information on the company‟s assets, liabilities, equity, income and 
+expenses, some of which relates to oil and gas drilling or extraction activities. 
+ Shareholder presentations or reports that discuss the company‟s revenues 
+derived from oil and gas drilling or extraction activities. 
+ Press releases, Qs&As, and talking points that discuss the company‟s revenues 
+derived from oil and gas drilling or extraction activities. 
+ Documents discussing the company‟s financial goals and objectives. 
+ Spreadsheets of invoices or payments, some of which involve oil and gas 
+drilling companies.   
+ Agreements related to revenues generated from the business of oil and gas 
+drilling or extraction including, without limitation, Gas Purchase Agreements, 
+Purchase and Sale Agreements, Termination Agreements, Gas Gathering 
+Agreements, Field Services Agreements, Gas Turbine Purchase Agreements, 
+Compression Administration Agreements, Energy Management Services 
+Agreements. 
+ Enron Online Management Report related to gas trading and other documents 
+related to the price of natural gas. 
+ Batch funding requests. 
+ Management‟s Discussion and Analysis of Financial Condition and Results of 
+Operations. 
+ Documents showing financial transactions around a project, Raptor-I, 
+involving oil and gas exploration and transportation. 
+ Memo re EES Canada discussing potential revenue related to deregulation. 
+ Global Contract Report indicating volumes and value of oil contracts; Credit 
+Letter Log indicating volumes and levels of crude oil. 
+ Spreadsheets of financial reconciliations or profits and losses tied to the 
+company‟s oil and gas drilling or extraction activities. 
+ 
+Page 7 of 8 
+ 
+  4.3.2.  Examples of Nonresponsive documents. 
+ Derivatives Trading Agreements and related documents. 
+ 
+ 4.4.  Topic 301, Category 3.   
+  4.4.1.  Examples of Responsive documents. 
+ Risk management policies, proposals, and other documents that discuss 
+operational risk management. 
+ Probabilistic Risk Assessment (“PRA”) or other systematic or comprehensive 
+safety assessments or analyses to evaluate risks. 
+ Documents that assess the magnitude or severity of the possible adverse 
+consequence(s) of an event or failure and the likelihood or probability of 
+occurrence of each consequence.  
+ Regulatory Risk Management Reports. 
+ Spill Prevention Control and Countermeasure Plans (“SPCC”).   
+ Emails that evaluate candidates to handle risk management. 
+ Risk Assessment and Deal Approval Sheet for Energy and Facilities 
+Management. 
+ Memo re Legal Risks re Storage and Gas Purchase Agreement, particularly 
+the sections on environmental liability and abatement. 
+ Enterprise risk management (“ERM”) documents. 
+ Interconnect Agreements that discuss the delivery of the commodity, rather 
+than drilling or extraction and allocate risks to each party. 
+ Documents involving risk assessment of emissions. 
+ Documents assessing risk of supply-side strategies. 
+ External due diligence for a pipeline project in Illinois. 
+ Documents referencing Standard Industrial Classification “SIC” codes as they 
+relate to the company‟s oil and gas drilling or extraction business. 
+ 
+  4.4.2.  Examples of Nonresponsive documents. 
+ Documents that discuss risk associated with corporate activities other than the 
+company‟s oil and gas drilling or extraction. 
+ Documents that discuss risk associated only tangentially with oil and gas 
+drilling or extraction, such as investment in or trading of securities involving 
+oil and gas drilling or extraction. 
+Page 8 of 8 
+ 
+ Risk Assessment and Control Deal Approval Sheets and other documents that 
+assess financial and legal risk pertaining to a financial transaction, rather than 
+risk associated with oil and gas drilling or extraction. 
+ Material generated by third-party hosted risk management conferences, 
+including agendas and brochures. 
+ Project Merlin Due Diligence Report and other documents that analyze 
+proposed corporate acquisitions or perform due diligence into financial and 
+legal soundness of the proposed acquisition rather than evaluate oil and gas 
+drilling or extraction activity. 
+Page 1 of 3 
+ 
+TREC-2010 Legal Track - Interactive Task 
+Topic-Specific Guidelines - Topic 302 
+Updated: 11/09/10 
+1.  Introduction - The Purpose and Use of this Document 
+This document is intended to clarify the intent  and scope of Topic 302 featured in the TREC-
+2010 Legal Track’s Interactive Task.  The document is a summary of the guidance that the Topic 
+Authority for Topic 302 gave to the participating teams in the course of their work on the task.  It 
+is intended to guide th e volunteer assessors in their review  of documents contained in the 
+evaluation samples. 
+The Interactive Task tests how effective par ticipating teams are at replicating a Topic 
+Authority’s conception of relevance across a test popula tion of documents. 1  In assessing the 
+sampled documents on the basis of which the teams’ efforts will be evaluated, it is vital that the 
+documents be reviewed in accordance with the T opic Authority’s conception of relevance, as 
+outlined in this document.  The criteria specified herein represent the Topic Authority’s 
+conception of relevance and are th e criteria by which assessors should judge the relevance of the 
+documents they review.  
+While the criteria specified in this document seek to clarify the scope of the topic, it is to be 
+expected that assessors will, in the course of  their review, encounter documents that prompt 
+questions that are not addressed by the criteria ou tlined below.  In such instances, the assessors 
+are asked to submit their questions to us via the link on the review platform; we will provide 
+answers to such questions as soon as possible. 
+Please note that this document is intended to provide topic-specific guidance for determining 
+relevance.  Guidance on general procedures fo r conducting the assessment exercise is provided 
+in a companion document (the “‘How-To’ Guide for Assessors”).  Again, assessors with any 
+questions, procedural or topic-specific, should not hesitate to email us their questions. 
+2.  Statement and General Characterization of the Topic 
+The document request that is the basis for Topic 302 is stated as follows (see Complaint K). 
+All documents or communications that de scribe, discuss, refer to, report on, or 
+relate to actual, anticipated, possible or potential responses to oil and gas spills, 
+blowouts or releases, or pipeline erupt ions, whether past, present or future, 
+including, but not limited to, any assessm ent, evaluation, remediation or repair 
+activities, contingency plan s and/or environmental disa ster, recovery or clean-up 
+efforts.. 
+The operative language of this request focuse s on documents or email communications that 
+address actual or potential “responses to oil and gas spills,” which would include evaluations of 
+the responses to a past spill or other enviro nmental incident including remediation efforts 
+                                                           
+1  For purposes of this document, the words “r elevant” and “responsive” are interchangeable. 
+Page 2 of 3 
+ 
+involving oil and gas; discussions  or evaluations of current or ongoing responses, capabilities or 
+remediation efforts; and discussions of plans to potential events and related risks. 
+3.  Guidelines for Determining Responsiveness 
+As explained in the “How-To” Guide, the Topic Au thority in this exercise plays the part of a 
+senior attorney overseeing a la rge document production.  An attorn ey in that role must weigh 
+his/her obligations under th e document request, as well as the risks of havi ng the completeness 
+and accuracy of the production challenged in cour t.  The outcome of these considerations is 
+found in the topic characterization (above) and the guidelines provided below.   
+The Topic Authority for Topic 302 interprets th e document request “narrowly” and views the 
+operative terms to be “oil spill responses” with a specific focus on documents that involve 
+planning for such events and th e analysis of responses such  as “assessments” “contingency 
+plans” and “clean up efforts”.  In order to be re levant to the topic, therefore, a document must 
+contain both a reference to a pertinent spill incident (hypo thetical or real) and a reference to a 
+response (hypothetical or real) to the incident. More specific criteria are as follows. 
+3.1. On incidents 
+3.1.1. Pertinent incidents are (hypothetical or real) unplanned leaks, spills, or releases of 
+oil or gas. 
+3.1.2. Planned releases (e.g., a planned gas release) are not relevant. 
+3.1.3. Again, reference to a pertinent incident alone does not suffice to make a 
+document relevant; in order to be relevant the document must also include reference 
+to a response to the incident (as defined in 3.2 below). 
+3.2. On responses   
+3.2.1. Relevant response activities include the following (hypothetical or real). 
+3.2.1.1. Assessments of an incident. 
+3.2.1.2. Assessments of response capabilities for an incident. 
+3.2.1.3. Contingency plans for an incident. 
+3.2.1.4. Remediation efforts. 
+3.2.1.5. Training for response to incidents. 
+3.2.1.6. Environmental studies and audits that pertain to an incident. 
+3.2.2. Also relevant are any documents related to the above activi ties (e.g., discussions 
+of training manuals or oil spill response manuals would be relevant). 
+3.2.3. Also relevant are evaluations of the e ffectiveness of any of the above response 
+activities. 
+3.2.4. Bans on oil drilling are not relevant. 
+3.3. Additional considerations   
+3.3.1. News articles are relevant if they refer bot h to a spill incident and to a response to 
+it (in accordance with the above criteria). 
+Page 3 of 3 
+ 
+3.3.2. Administrative documents. Admin documents that refer to relevant subject matter 
+are relevant. (For example, a scheduling em ail that referred to oil spill training 
+would be relevant. Documents related to  an employment application (resumes, 
+interview appointments) could be relevant, but  only if they referred to a response to 
+a spill incident.) 
+3.3.3. Contracts. Contracts that contain terms specifying a party’s response obligations 
+in the event of a spill are relevant. 
+3.3.3.1. However, terms that specify monetary indemnification requirements in the 
+event of a spill do not suffice to make a contract relevant. 
+3.3.4. Legal rulings. Discussions of  legal rulings are releva nt only if they contain 
+reference to a response to a spill incident (as defined by the above criteria). 
+3.3.5. Geographic restrictions. No geographic c onstraints apply to the assessment of 
+relevance; i.e., discussions of responses to non-US spills (e.g., the Transredes spill 
+in Bolivia) are relevant. 
+3.3.5.1. However, discussions of legal obligations under foreign law are not 
+relevant. 
+3.3.6. Date restrictions. No date constraints a pply to the assessment of relevance (the 
+date of a document can be ignored for purposes of assessing relevance). 
+3.3.7. On parties other than Enron. The document request is written without a restriction 
+to party; accordingly, documents discussi ng any party (Enron or  not) engaging in 
+the activities that meet the criteria of relevance are relevant. 
+3.3.8. On non-English content. In making a relevance assessment, consider only English 
+content; non-English content is not relevant. 
+Page 1 of 5 
+ 
+TREC-2010 Legal Track - Interactive Task 
+Topic-Specific Guidelines - Topic 303 
+Updated: 12/10/10 
+1.  Introduction - The Purpose and Use of this Document 
+This document is intended to clarify  the intent and scope of Topic 30 3 featured in the TREC -
+2010 Legal Track‟s Interactive Task.  The document is a summary of the guidance that the Topic 
+Authority for Topic 303 gave to the participating teams in the course of their work on the task.  It 
+is i ntended to guide the volunteer assessors in their review of documents contained in the 
+evaluation samples. 
+The Interactive Task tests how effective participating teams are at replicating a Topic 
+Authority‟s conception of relevance across a test population of documents. 1  In assessing the 
+sampled documents on the basis of which the teams‟ efforts will be evaluated, it is vital that the 
+documents be reviewed in accordance with the Topic Authority‟s conception of relevance, as 
+outlined in this document.  The c riteria specified herein represent the Topic Authority‟s 
+conception of relevance and are the criteria by which assessors should judge the relevance of the 
+documents they review.  
+While the criteria specified in this document seek to clarify the scope of th e topic, it is to be 
+expected that assessors will, in the course of their review, encounter documents that prompt 
+questions that are not addressed by the criteria outlined below.  In such instances, the assessors 
+are asked to submit their questions to us via the link on the review platform; we will provide 
+answers to such questions as soon as possible. 
+Please note that this document is intended to provide topic -specific guidance for determining  
+relevance.  Guidance on general procedures for conducting the a ssessment exercise is provided 
+in a companion document (the “„ How-To‟ Guide for Assessors”).  Again, a ssessors with any 
+questions, procedural or topic-specific, should not hesitate to email us their questions. 
+2.  Statement and General Characterization of the Topic 
+The document request that is the basis for Topic 303 is stated as follows (see Complaint K). 
+All documents or communications that describe, discuss, refer to, report on, or 
+relate to activities, plans or efforts (whether past, present or future) aimed, 
+intended or directed at lobbying public or other officials regarding any actual, 
+pending, anticipated, possible or potential legislation, including but not limited to, 
+activities aimed, intended or directed at influencing or affecting any actual, 
+pending, anticipated, possible or potential rule, regulation, standard, policy, law or 
+amendment thereto. 
+The document request is written broadly; covered by the document request (and so to be deemed 
+relevant) are any documents pertaining to the Company's efforts, plans, or policies with regard to 
+lobbying or with regard to legislation or regulations that are the focus of lobbying efforts.  In the 
+                                                           
+1  For purposes of this document, the words “relevant” and “responsive” are interchangeable. 
+Page 2 of 5 
+ 
+next section we provide specific criteria for determining what is and is not to be considered 
+responsive to the request. 
+3.  Guidelines for Determining Responsiveness 
+As explained in the “How -To” Guide, the Topic Authority in this exercise plays the part of a 
+senior attorney overseeing a large document production.  An attorney in that role must weigh 
+his/her obligations under the document request, as well as the risks of having the completeness 
+and accuracy of the production challenged in court.  The outcome of these considerations is 
+found in the topic characterization (above) and the guidelines provided below.   
+The specific criteria to be followed in assessing the relevance of documents to Topic 303 are as 
+follows. 
+3.1. The Company’s lobbying plans, practices, or policies   
+3.1.1. Plans and p ractices. Documents pertaining to the Company‟s plans or practices 
+with regard to lobbying, whether in the US or abroad, are relevant. 
+3.1.1.1. Documents discussing or evidencing Company efforts or practices with 
+regard to lobbying are relevant. Also relevant are documents pertaining to the 
+Company‟s decisions not to lobby on a particular issue. 
+3.1.1.2. Documents discussing plans to utilize media outlets to shape public policy 
+are relevant. 
+3.1.1.3. Documents discussing talking points intended to influence public discussion 
+of pertinent laws or regulations are relevant. 
+3.1.1.4. Documents discussing the Company‟s efforts to win approval of planned 
+business activities are relevant. 
+3.1.1.5. Documents in which there is a mere mention that Enron was a lobbyist (or 
+did lobbying) but in which the focus of the document was not on Enron's 
+lobbying efforts or plans are not relevant . For ex ample, an ar ticle that 
+referenced Enron as “ a leading energy regulation lobbyist” but that went on to 
+talk about non -lobbying relating activities (e.g ., the Enron ba nkruptcy) would 
+not be relevant. 
+3.1.2. Policy documents. Documents referencing the Company‟s poli cies regarding 
+lobbying are relevant. 
+3.1.3. Administrative documents. Documents pertaining to administrative aspects of the 
+Company‟s lobbying efforts are relevant. Examples include the following. 
+3.1.3.1. Calendar entries. Calendar entries are relevant, (a) if the meeting is with a 
+public official or (b) if the meeting concerns the Company‟s lobbying efforts. 
+3.1.3.2. Budget documents. Documents pertaining to the Company‟s budget for 
+lobbying activities are relevant. 
+3.1.3.3. Reporting documents. Documents reporting on the Company‟s lobbying 
+activities (including political contributions) , and the results of those activities, 
+are relevant. 
+Page 3 of 5 
+ 
+3.1.3.4. Procedural documents. Documents discussing registration of lobbyists as 
+lobbyists are relevant. 
+3.1.3.5. Employment applications. Resumes, CVs, job interviews for positions at the 
+Company with lobbying responsibilities are not relevant. 
+3.1.3.6. Signature lines. An email consisting of just a signature line is not relevant. 
+3.1.4. Government Affairs (GA) documents. GA documents (or emails from/to GA 
+members) are not to be cons idered relevant automatically; their relevance must be 
+decided on a case by case basis ( i.e., if they meet the relevance criteria specified 
+herein). 
+3.1.5. Articles and press releases. 
+3.1.5.1. An article, if it is on the topic of Company‟s  lobbying efforts (past, present , 
+or future) is relevant. 
+3.1.5.2. An a rticle, if it mentions only that the Company is a  lobbyist, is  not 
+relevant. 
+3.1.5.3. Included under the rubric of articles are : news articles,  Enron newsletter 
+articles, editorials, academic papers/articles, and press releases. 
+3.1.6. Ordinary (n on-lobbying) business practices and transactions. Documents 
+pertaining to business  practices or  transactions that are not the focus of lobbying 
+efforts (e.g., a memorandum of u nderstanding outlining the terms of an energy 
+transaction, a discussi on of bids on a mineral lease , discussion of (non -lobbying) 
+activities related to a trade association) are not relevant. 
+3.1.7. Litigation filings. L itigation filings are , generally, not relevant ; if, however,  a 
+filing contains information in the colloquy regardi ng the position a party is either 
+taking or lobbying a legislative body or public official to take, then it is relevant. 
+3.2. Legislation or regulations that are the focus of lobbying efforts   
+3.2.1. Changes to laws or regulations. Any discussion  of a change to a law or regulation 
+that is  the focus of lobbying activities is relevant (e.g., discussions of the Direct 
+Access initiative are relevant). 
+3.2.2. Existing laws or regulations  and their application . Discussions regarding  an 
+existing law/regulation or its application (e.g., the possibility of a loophole), with no 
+reference, explicit or implied, of an effort to change the law/regulation,  are not 
+relevant. 
+3.2.3. Requests for comment. Reports sent to the Company about a regulatory proposal, 
+if they are sent with the intent of prompting feedback, are relevant. 
+3.2.4. Legislative summaries. 
+3.2.4.1. Legislative summaries , if they contain discussion of regulatory 
+interpretations of the legislation and the Company ‟s position on th ose 
+interpretations, are relevant. 
+3.2.4.2. Legislative summaries, if they contain no discussion of Company‟s position, 
+are not relevant. 
+Page 4 of 5 
+ 
+3.2.5. Communications with public officials and entities. 
+3.2.5.1. Communications with public officials or entities regarding changes to 
+regulations, standards, policies, or laws are relevant. 
+3.2.5.2. Communications wit h public officials that are part of the Company‟s 
+ordinary conduct of business, with no discussion of changes to regulations or 
+laws, are not relevant. (E.g., a document discussing the royalty payments due 
+for a particular transaction would not be relevant ; on the other hand,  a 
+document discussing changes to regulations regarding when royalty pay ments 
+are due would be relevant). 
+3.2.6. Third party communications regarding regulations or legislation that are the focus 
+of lobbying efforts (e.g., a letter from a Sena tor to a Governor or comments made in 
+a press conference) are relevant. 
+3.2.7. Political landscape. 
+3.2.7.1. Public officials. Discussions of the political status of public officials that are 
+the focus of lobbying efforts (e.g., key regulators) are relevant. However, a bio 
+of a public official, with no reference to the official‟s position on a 
+law/regulation that is the focus of lobbying efforts, is not relevant. 
+3.2.7.2. Polls. Discussions of polls that pertain to issues that are the focus of 
+lobbying efforts are relevant. 
+3.2.8. IEP doc uments. The Independent Energy Producers Association (IEP) is a 
+lobbying organization. Accordingly, all documents concerning IEP‟s actions/efforts, 
+including admin-type documents (e.g., a scheduling email) are relevant. 
+3.2.9. Meetings and Conferences. 
+3.2.9.1. Meetings. Discussions of meetings of public off icials at which lobbying or 
+regulations that are the focus of lobbying are discussed (e.g., the CPUC) are 
+relevant. 
+3.2.9.2. Conferences. Documents discussing the Company‟s attendance at a 
+pertinent conference (e.g., a conferenc e on the California energy crisis) are to 
+be assessed as follows. 
+3.2.9.2.1. If the Company gives a presentation at the conference: relevant. 
+3.2.9.2.2. If the Company merely attends, but it is known that a public official 
+also attends: relevant. 
+3.2.9.2.3. If the Company merely attends, and there is no indication that a public 
+official also attends: not relevant.  
+3.2.10. Investigations. Documents discussing investigations of the Company‟s activitie s 
+in the California energy markets are not relevant (unless they spe cifically relate to 
+lobbying). 
+3.2.11. Offshore regulatory conditions. Discussions of political/regulatory environment in 
+countries in which Enron could not exert lobbying power are not relevant. 
+Page 5 of 5 
+ 
+3.2.12. FERC refund. Documents discussing the FERC‟s decision to require refunds are 
+not relevant. 
+3.3. Additional Considerations   
+3.3.1. Date restrictions . No date constraints apply to the assessment of relevance (the 
+date of a document can be ignored for purposes of assessing relevance). 
+3.3.2. On parties other than Enron. The document request is written without a restriction 
+to party; accordingly, documents discussing any party (Enron or not) engaging in 
+the activities that meet the criteria of relevance are relevant. 
+3.3.2. On “Enron Mentions” emails. In the document collection, there are instances of 
+broadcast emails  to a large number of recipients regarding “Enron mentions”  in 
+news articles around the country.  While some of the article s included as 
+attachments to such “Enron mentions ” emails  may relate to lobbying or new 
+rules/regulations, these articles, when attached to an “Enron Mentions” email, are to 
+be assessed as not relevant  to Topic 303  (on the grounds that the focus of the 
+“Enron Mentions” news is not  specifically lobbying). This general rule only applies 
+to the “Enron mentions”  emails and does not impact instances where a specific 
+article or articles are sent to groups. 
+3.3.2.1. On follow-ups to an “Enron Mentions” email. T he “Enron Mentions” rule 
+extends to f ollow-ups on such email , unless the follow-up specifically relates 
+to lobbying activities, plans, or efforts. 
+3.3.3. On non-English content. In making a relevance assessment, c onsider only English 
+content; non-English content is not relevant. 
+Page 1 of 6 
+ 
+TREC-2010 Legal Track – Interactive Task 
+Topic-Specific Guidelines – Topic 304 
+Updated: 09/29/10 
+1.  Introduction – The Purpose and Use of this Document 
+This document is intended to clarify the intent and scope of Topic 304 featured in the TREC-
+2010 Legal Track‟s Interactive Task.  The document is a summarization of the guidance that the 
+Topic Authority for Topic 304 gave to the participating teams in the course of their work on the 
+task.  It is intended to guide the volunteer assessors in their review of documents contained in the 
+evaluation samples. 
+The Interactive Task tests how effective participating teams are at replicating a Topic 
+Authority‟s conception of relevance across a test population of documents.1  In assessing the 
+sampled documents on the basis of which the teams‟ efforts will be evaluated, it is vital that the 
+documents be reviewed in accordance with the Topic Authority‟s conception of relevance.  The 
+criteria specified here represent the Topic Authority‟s conception of relevance and are the 
+criteria by which assessors should judge the relevance of the documents they review. 
+While the criteria specified in this document seek to clarify the scope of the topic, it is to be 
+expected that assessors will, in the course of their review, encounter documents that prompt 
+questions that are not addressed by the criteria outlined below. In such instances, the assessors 
+are asked to submit their questions to us via the link on the review platform; we will provide 
+answers to such questions as soon as possible. 
+Please note that this document is intended to provide topic-specific guidance for determining 
+relevance.  Guidance on general procedures for conducting the assessment exercise is provided 
+in a companion document (the “„How To‟ Guide for Assessors”).  Again, assessors with any 
+questions, procedural or topic-specific, should not hesitate to email us their questions. 
+2.  Statement and General Characterization of the Topic 
+Topic 304 is based on the following document request: 
+“all documents or communications that are subject to a claim of attorney-client privilege, 
+work-product, or other any other applicable privilege or protection, whether or not they 
+are responsive to any of the [other] document requests….”     
+This request seeks the identification of documents that are subject to protection from production 
+iin litigation pursuant to the attorney-client privilege or as trial preparation materials under Fed. 
+R. Civ. P. 26, otherwise known as “work product” materials.  Together, these types of documents 
+are generically known as “privileged” documents.    
+                                                           
+1 For purposes of this document, the words “relevant” and “responsive” are interchangeable.  
+Page 2 of 6 
+ 
+3.  Guidelines for Determining Relevance 
+3.1.   Background on Attorney-Client and Work Product Materials   
+To be protected by the attorney-client privilege, a document must meet four factors.  It must 
+a) be a communication b) between “privileged persons” c) made with respect to legal advice or 
+services d) with an expectation of confidentiality.   For our purposes, all the documents you 
+encounter in this exercise will meet the first requirement of being a “communication.”    
+Privileged persons include counsel (lawyers) and client.   In this exercise, the client includes 
+the company and its employees.  The lawyers can be either in-house counsel (lawyers employed 
+directed by the company) or outside counsel (lawyers who practice at a firm or otherwise not 
+through being employed by the client). Communications between privileged persons, therefore, 
+can include messages between counsel and an employee or employees, between a lawyer and 
+another lawyer or lawyers, or between an employee and other employees where they are 
+discussing a matter of legal advice.    
+To be protected as an attorney-client privileged communication, a document must be related 
+to a request for legal advice.   That is, the communication must be for the primary purpose of 
+seeking, rendering, communicating, or otherwise obtaining legal advice or a related legal service, 
+such as drafting a contract.  Hence, communications that provide or seek confidential client 
+information necessary to facilitate the rendition of legal advice with respect to a specific question 
+can also be privileged.   
+Finally, the attorney-client privilege requires strict confidentiality.  If the communication 
+involves any independent, third party other than counsel and the client or its employees, it is 
+quite rare that such communication will be protected under the attorney-client privilege unless 
+the other party is not truly independent, such as an advertising agency subject to the same legal 
+rules as the client.    
+Documents can also be protected from discovery if they represent or disclose “work 
+product,” 
+that is, a) materials prepared b) by employees or counsel c) in anticipation of litigation that are 
+kept c) confidential from current litigation adversaries.  For purposes of this exercise, every 
+document you review will meet the requirement of being “material,” that is, a company record or 
+tangible thing.   
+Work product materials need not be, but often are, prepared by a client‟s lawyers while they 
+are preparing for litigation or under such lawyers‟ direction.  Whether or not a lawyer is 
+expressly involved in generating the document, the important decision is determining whether a 
+document was prepared “in anticipation of litigation.”    
+Page 3 of 6 
+ 
+For purposes of determining whether a document is protected by the work product doctrine, 
+“litigation” means any types of adversarial proceeding in which witnesses are put under oath or 
+in which a participant is allowed to submit counterarguments or rebuttal evidence or testimony.  
+Hence, litigation can include judicial, administrative, regulatory or legislative proceedings in 
+which the parties have the right to either (1) cross-examine witnesses, or (2) to present evidence 
+or information to counter subject an opposing party‟s presentation.  If the litigation is currently 
+pending, materials prepared for that proceeding is protected.  To be “reasonably anticipated” 
+litigation, such a proceeding must be identifiable, imminent, likely or probable.  If a claim 
+against a client can be articulated with specificity, litigation is also “reasonably anticipated” for 
+purposes of claiming work product protection.   
+Confidentiality of the material is also required for the work product doctrine to protect it.  
+But that confidentiality requirement is not as strict as under the attorney-client privilege.  Hence, 
+where it is consistent with otherwise confidential trial preparation and not shared with current 
+adversaries in the case, litigation preparation materials can still be protected if they are shared 
+with the likes of advertisers, insurers, public relations advisers and other consultants.  So long as 
+there is no expectation that the person with whom the material is shared would have an interest 
+in providing it to current adversaries, the work product is still protected.   
+Work product materials are usually recognizable in two forms, so-called fact or opinion work 
+product.  Opinion work product includes the mental impressions, conclusions, opinions, or legal 
+theories of an attorney or other representative of a party concerning the litigation.  For instance, 
+if someone representing the client, whether employee or counsel, ranks certain facts or potential 
+claims or witnesses in a case in order of importance, that listing would be opinion work product.  
+Documents that are related to considerations of litigation strategy are also protected as opinion 
+work product.  All other materials prepared in anticipation of litigation is considered fact or 
+“ordinary” work product.  Either type of material is protected under the work product doctrine 
+and both should be marked as protected under Topic 304.   
+ Documents may be subject to one or the other protection, either as attorney-client privileged 
+or as work product, both protections, or neither protection.  To ensure accuracy, each document 
+must be analyzed for both protections.  If it is subject to either protection or both, mark the 
+document as relevant to Topic 304.  If the document is subject to neither protection, mark it as 
+not relevant to Topic 304.   
+3.2.   Definitions and Types of Relevant Documents 
+Information in any form that was created, received, or distributed by an employee or otherwise 
+created by the defendant and that relates to the defendant or its business will constitute a 
+communication or material potentially subject to the attorney-client privilege or the work product 
+protection.  The definition of document is not limited to particular media and includes, for 
+example, information contained on paper or microfilm as well as electronically or magnetically 
+Page 4 of 6 
+ 
+stored information.  For purposes of this exercise, all writings, drawings, graphs, charts, books, 
+and other data compilations which you may encounter should be considered to meet the 
+requirements of being a “communication,” “material” or “tangible thing.”    
+3.2.1.   Transmitting Documents  For purposes of this exercise, you should assess and 
+designate all individual documents (e.g., email or attachment) as privileged or work product 
+independently.  In addition, if an attachment is protected as privileged or work product, an email 
+to which it is attached should also be marked as protected.   
+ 
+3.2.2.   Documents Subject to Redaction  If an entire document is not subject to protection as 
+attorney-client communication or work product, the portion(s) of the document that could be 
+protected are sometimes “redacted,” that is, blacked out before being produced to an opponent in 
+actual litigation.   Because redaction was not a part of TREC Legal Track 2010, you should 
+apply the following rule:  if any part of the document would be subject to redaction, the entire 
+document should be marked as privileged.    
+ 
+For instance, because draft contracts are most often shared with the other side negotiating the 
+agreement, the only portions of draft contracts, including those that are interlineated with 
+changes, that are protectable are the portions that disclose a confidential request for legal advice 
+or an express piece of legal advice.  If a draft contract contains such an interlineated piece of or 
+request for legal advice, the entire draft contract should be marked privileged.   
+ 
+3.2.3.   Topical Documents   Documents that discuss or list lawyers for the client (whether at 
+law firms or in-house) or the assignments on which they are working are not privileged or 
+protected as work product unless they otherwise meet all the other requirements of one or the 
+other of those protections.    
+ 
+3.3.   Additional Guiding Principles 
+ There are no date restrictions that apply to this topic.  Assess a document as privileged or 
+work product (or not) regardless of its date. 
+ As explained in the "How-To" guide, the Topic Authority, in this exercise, plays the part 
+of a senior attorney overseeing a large document production.  An attorney in that role 
+must weigh the client‟s (here, the defendants‟) obligations under the document request as 
+well as the risks of having the completeness and accuracy of the production challenged in 
+court.  The outcome of these considerations is the topic definition provided in this 
+document.  While assessors may find, in some instances, that the definition of 
+responsiveness includes some documents that do not appear to bear on the allegations in 
+the Complaint, assessors should keep in mind that the Topic Authority has defined the 
+topic somewhat broadly so as to minimize risk of challenge or sanction.  Assessors 
+Page 5 of 6 
+ 
+should adhere to the guidelines in this document even if the document would not 
+otherwise be considered relevant to the litigation.     
+ Generally, if an attorney-client communication is (1) disclosed to independent third 
+parties, or (2) broadly distributed among company employees (especially employees 
+beyond those with a need for the information) with no indication that the employee 
+recipients are expected to keep the communication confidential, the communication is no 
+longer confidential for purposes of applying the privilege.  
+ Distribution lists, record custodians, confidentiality labels and other express limitations 
+on further distribution must be considered in making the determination whether a 
+Company Record remained “confidential” after it was created.   
+ If a lawyer is requesting an employee to prepare some material for the lawyer or to 
+provide the employee‟s best recollection about a subject, consider related context (e.g., 
+the transmitting or responding email) to determine whether the work product document 
+would protect the document.    
+4.  Questions and Clarifications  
+4.1.   Would a document be privileged if it was created for a business purposes as well as a 
+litigation purpose? 
+Yes.  Material may be protected as work product so long as there is a single, current litigation 
+based reason for creating the document, even if there is also be a business purposes for the 
+document.    
+4.2.   Would a document be protected if it is a communication from a lawyer with respect to 
+business advice? 
+No.  Business advice, even from a lawyer, if not protected under the attorney-client privilege.   If 
+the communication renders both business advice and legal advice in separate portions or 
+sentences of the document, it should be marked as protected.   If the business and legal advice 
+are intertwined, you should only mark the document as privileged if the legal advice 
+predominates over the business advice after using your best judgment.   
+4.3.  Would a legal bill be privileged if it merely identifies the lawyer who worked for the 
+company and the topics on which the lawyer worked?    
+No.   Legal bills are only protected if they reveal a confidential request for or piece of legal 
+advice or otherwise reveal litigation strategy for pending or anticipated cases. 
+4.4  If a communication is related to a public event in the nature of continuing legal 
+education, is it privileged?   
+Page 6 of 6 
+ 
+No.  CLE classes are generally not related to confidential legal advice or litigation planning for a 
+client and so are not protected. 
+4.5  Are communications with lobbyists privileged? 
+Generally, no.   Lobbying materials and lobbying advice are generally considered business 
+communications and business advice and so are not protected.   Use caution, however, because 
+many lobbyists are also lawyers who may from time to time render legal advice as part of their 
+lobbying service, particularly if they opine upon what effect a current piece of legislation may 
+have upon some specific aspect of the client‟s operations. 

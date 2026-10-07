@@ -1,0 +1,117 @@
+{
+ "enron": {
+  "context": "Matter: a securities-fraud class action on behalf of purchasers of the Company's common stock between June 1, 1999\nand December 2, 2001. The Company produced electric energy and natural gas and traded energy and other\ncommodities. The complaint alleges that the Company concealed debt through structured commodity transactions\nknown as \"prepay transactions\" and through transactions it characterised as compliant with FAS 140; that it\nmisrepresented whether it would meet its financial forecasts; that executives destroyed documents and deleted\nelectronic data as its financial condition came to light; that it filed energy schedules and bids misrepresenting\nthe amount and location of load; and that it managed its contacts with securities analysts. The documents are the\nCompany's e-mails and attachments, reproduced with their headers as a reviewer would see them; quoted earlier\nmessages in a thread are part of the document.",
+  "requests": {
+   "spe_vehicles": {
+    "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to special-purpose entities, partnerships or trusts used to hedge the Company's merchant investments or to keep assets, debt or losses off the Company's balance sheet, including their formation, capitalisation, valuation, restructuring or unwinding.",
+    "positive_desc": "The document concerns a special-purpose entity, partnership or trust of this kind: its transactions with the Company, hedges, capitalisation, credit capacity, valuation, distributions, restructuring, unwind, documentation or accounting treatment.",
+    "negative_desc": "The document does not concern such a vehicle. Ordinary trading, the Company's operating businesses and subsidiaries, and projects or products that are not financing vehicles are not responsive."
+   }
+  },
+  "tokens": {
+   "Raptor": "Tercel",
+   "Talon": "Spur",
+   "LJM2": "HLM2",
+   "Chewco": "Brixco",
+   "Whitewing": "Greyfeather",
+   "JEDI": "VEDA",
+   "Osprey": "Kittiwake",
+   "Marlin": "Sailfin",
+   "Azurix": "Aquarel",
+   "Dabhol": "Ratnagar",
+   "EnronOnline": "VolteronOnline",
+   "Portland General": "Cascade General"
+  },
+  "n_pairs": 40,
+  "n_signal": 28,
+  "n_decoy": 12
+ },
+ "jebbush": {
+  "context": "Matter: a public-records request against the Executive Office of the Governor of Florida, covering email sent\nor received by Governor Jeb Bush and his staff during his two terms (1999-2007). The collection is government\nemail: constituent letters, staff correspondence, press clippings and news forwards, scheduling, legislation\nand budget traffic, agency reports, and personal messages. Emails are shown with their headers, as a reviewer\nwould see them; quoted earlier messages and forwarded articles are part of the document.\n\nEach request names an issue. The requesting party reads every request at the level of the issue, not the\nsentence: an email is responsive if it substantively concerns the issue, its background, the policy fights and\nlegislation around it, or its consequences in Florida, even when the request's exact words never appear. A\nconstituent asking the Governor to sign or veto a bill on the issue is responsive. A passing use of a word\nfrom the request, with no substantive connection to the issue, is not. Note that \"Governor Bush\" and \"Jeb\" in\nthese emails refer to Jeb Bush, the Governor of Florida, not to his brother the President.",
+  "requests": {
+   "family_dispute": {
+    "rfp_text": "All documents concerning the involvement of the Governor, the Legislature or a Florida state agency in a contested family custody or end-of-life medical dispute that became a public controversy, including litigation, legislation, executive action, and public or constituent reaction.",
+    "positive_desc": "The email concerns such a dispute: the court proceedings, any bill or executive action about the person at its centre, the Governor's position or statements, meetings with the family or their lawyers, and constituent or press reaction to the state's involvement.",
+    "negative_desc": "The email does not concern a contested custody or end-of-life dispute. Other health, education, budget or agency matters, and controversies of other kinds, are not responsive."
+   },
+   "preferences": {
+    "rfp_text": "All documents concerning the Governor's initiative to end race- and gender-based preferences in state university admissions and state contracting, including its design, implementation, legal challenges, and public or legislative reaction.",
+    "positive_desc": "The email concerns that initiative: the executive order, admissions or contracting rules made under it, enrolment or vendor figures used to defend it, litigation over it, protests or sit-ins against it, and the Governor's statements about it.",
+    "negative_desc": "The email does not concern the initiative to end preferences. General education, procurement or civil-rights traffic with no connection to it is not responsive."
+   },
+   "agency_head_misconduct": {
+    "rfp_text": "All documents concerning allegations of corruption, kickbacks or other criminal misconduct by the head of a Florida state agency appointed by the Governor, including the investigation, resignation or prosecution and the Governor's response.",
+    "positive_desc": "The email concerns such allegations against an agency head: the investigation by law enforcement or prosecutors, the contracts or payments at issue, the resignation or removal, and the Governor's office's handling of it.",
+    "negative_desc": "The email does not concern criminal misconduct by an agency head. Routine appointments, agency business, and personnel matters without an allegation of corruption are not responsive."
+   }
+  },
+  "tokens": {
+   "Schiavo": "Petrossi",
+   "Elián": "Dariel",
+   "Elian": "Dariel",
+   "One Florida": "Open Florida",
+   "Crosby": "Hadley",
+   "FCAT": "SPAT",
+   "Scripps": "Lorrance"
+  },
+  "n_pairs": 31,
+  "n_signal": 23,
+  "n_decoy": 8
+ },
+ "mnk": {
+  "context": "Matter: opioid litigation against Mallinckrodt plc and Mallinckrodt LLC (MDL 2804, In re National Prescription Opiate Litigation, and related state actions). The Company manufactured generic and branded prescription opioids and also sold non-opioid products that are not at issue. Plaintiffs allege that the Company failed to maintain effective controls against diversion, including its suspicious order monitoring program for wholesaler and distributor orders; that it had visibility into downstream distribution to pharmacies and did not act on it; that it promoted opioids while minimizing addiction risk; and that it sought ever-larger DEA production quota. The relevant period is 2006 through 2017. The documents are emails, reproduced with their headers as a reviewer would see them; quoted earlier messages in a thread are part of the document.",
+  "requests": {
+   "opioid_marketing": {
+    "rfp_text": "All documents concerning the marketing, promotion or sale of any of the Company's opioid products, including promotional materials, messaging, sales training and call plans, speaker programmes, market research, formulary positioning and sales performance.",
+    "positive_desc": "The document concerns the marketing, promotion, sales strategy, messaging, training, speaker programmes, formulary status or sales performance of an opioid product of the Company.",
+    "negative_desc": "The document does not concern an opioid product's marketing or sale. Non-opioid products, manufacturing and supply, and compliance matters with no marketing content are not responsive."
+   },
+   "subsidiary_dea": {
+    "rfp_text": "All documents concerning communications with or actions by the U.S. Drug Enforcement Administration regarding the controlled-substance obligations of the Company or of its controlled-substance manufacturing subsidiary, including production quota, registrations, inspections and investigations.",
+    "positive_desc": "The document concerns DEA quota, registration, inspection, audit or investigation matters of the Company or of a subsidiary of the Company that manufactures controlled substances.",
+    "negative_desc": "The document does not concern DEA dealings of the Company or its subsidiary. DEA matters of unrelated third parties, and regulatory matters that do not involve DEA, are not responsive."
+   }
+  },
+  "tokens": {
+   "Exalgo": "Veltrano",
+   "Methadose": "Dolomere",
+   "Roxicodone": "Oxirell",
+   "SpecGx": "CoreGx",
+   "Ofirmev": "Acetrava",
+   "INOmax": "NitroVent",
+   "Acthar": "Corthar"
+  },
+  "n_pairs": 31,
+  "n_signal": 19,
+  "n_decoy": 12
+ },
+ "endo": {
+  "context": "Matter: opioid litigation against Endo International plc, Endo Health Solutions Inc. and Endo Pharmaceuticals Inc. (MDL 2804, In re National Prescription Opiate Litigation, state attorney-general actions, and Endo's 2022 chapter 11 case). The Company sold branded and generic prescription opioids, including a reformulated extended-release opioid with a crush-resistant design, and also sold non-opioid products that are not at issue. Plaintiffs allege that the Company marketed its extended-release opioid with claims about abuse deterrence and addiction risk that were not supported; that its sales representatives, speaker programmes and training materials minimised the risk of addiction; that it funded third-party pain advocacy organisations, key opinion leaders and continuing medical education on pain messaging; and that it did not adequately identify or report suspicious orders or suspicious prescribing. The relevant period is 2006 through 2017. The documents are emails, reproduced with their headers as a reviewer would see them; quoted earlier messages in a thread are part of the document.",
+  "requests": {
+   "opioid_marketing": {
+    "rfp_text": "All documents concerning the marketing, promotion or sale of any of the Company's opioid products, including promotional materials, messaging, sales training and call plans, speaker programmes, market research, formulary positioning and sales performance.",
+    "positive_desc": "The document concerns the marketing, promotion, sales strategy, messaging, training, speaker programmes, formulary status or sales performance of an opioid product of the Company.",
+    "negative_desc": "The document does not concern an opioid product's marketing or sale. Non-opioid products, manufacturing and supply, and compliance matters with no marketing content are not responsive."
+   },
+   "abuse_deterrence": {
+    "rfp_text": "All documents concerning claims, statements or evidence about the abuse-deterrent, tamper-resistant or crush-resistant properties of a reformulated extended-release opioid product of the Company, including laboratory or clinical data on defeating the formulation, the technology used, regulatory correspondence about such claims, and their use in promotion.",
+    "positive_desc": "The document concerns the abuse-deterrent or tamper-resistant properties of a reformulated extended-release opioid of the Company: manipulation studies, the formulation technology and its licence, FDA correspondence about the claims, or promotional use of such claims.",
+    "negative_desc": "The document does not concern abuse-deterrence properties of a Company opioid. Non-opioid products, general promotion without abuse-deterrence content, and third-party products are not responsive."
+   }
+  },
+  "tokens": {
+   "Opana ER": "Veltrex ER",
+   "Opana": "Veltrex",
+   "Percocet": "Norvocet",
+   "Qualitest": "Quantrex",
+   "INTAC": "DURAX",
+   "Lidoderm": "Dermalin",
+   "Voltaren Gel": "Flexaren Gel",
+   "Aveed": "Testrel",
+   "Supprelin": "Histrelex"
+  },
+  "n_pairs": 31,
+  "n_signal": 19,
+  "n_decoy": 12
+ }
+}

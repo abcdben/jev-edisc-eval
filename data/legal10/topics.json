@@ -1,0 +1,39 @@
+{
+  "source": "TREC 2010 Legal Track. Interactive task: Complaint K (LT10_Complaint_K_final-corrected.pdf), Requests for Production 301-303 and privilege request 304, verbatim. Learning task: topics 201-207 reuse the 2009 Complaint J requests (see ../legal09/topics.json); topic 200 was new in 2010 and its request text is not in any surviving public document (Cormack's plg.uwaterloo.ca/~gvcormac/legal10 page is gone and not archived).",
+  "collection": "EDRM Enron v2 (ZL Technologies), 455,449 unique messages + 230,143 attachments = 685,592 documents; text rendering edrmv2txt-v2.tar.bz2 from trec-legal.umiacs.umd.edu/corpora/trec/legal10/.",
+  "topics": {
+    "301": {
+      "key": "oil_gas_drilling",
+      "title": "Oil and gas drilling",
+      "task": "interactive",
+      "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to onshore or offshore oil and gas drilling or extraction activities, whether past, present or future, actual, anticipated, possible or potential, including, but not limited to, all business and other plans relating thereto, all anticipated revenues therefrom, and all risk calculations or risk management analyses in connection therewith."
+    },
+    "302": {
+      "key": "spill_response",
+      "title": "Spill and blowout response",
+      "task": "interactive",
+      "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to actual, anticipated, possible or potential responses to oil and gas spills, blowouts or releases, or pipeline eruptions, whether past, present or future, including, but not limited to, any assessment, evaluation, remediation or repair activities, contingency plans and/or environmental disaster, recovery or clean-up efforts."
+    },
+    "303": {
+      "key": "lobbying",
+      "title": "Lobbying",
+      "task": "interactive",
+      "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to activities, plans or efforts (whether past, present or future) aimed, intended or directed at lobbying public or other officials regarding any actual, pending, anticipated, possible or potential legislation, including but not limited to, activities aimed, intended or directed at influencing or affecting any actual, pending, anticipated, possible or potential rule, regulation, standard, policy, law or amendment thereto."
+    },
+    "304": {
+      "key": "privilege",
+      "title": "Privilege review",
+      "task": "interactive",
+      "rfp_text": "Should Defendants choose to withhold from production any documents or communications in the TREC Legal Track Enron Collection on the basis of a claim of privilege, attorney work-product, or any other applicable protection, they should identify all such documents or communications.",
+      "note": "A privilege review, not a responsiveness review: 'relevant' means the document would be withheld as privileged or work product. Detailed guidance in AssessmentGuidelines_leg_int_2010.pdf."
+    },
+    "200": { "key": "topic_200", "title": "Topic 200 (text not recovered)", "task": "learning", "rfp_text": null },
+    "201": { "key": "prepay_transactions", "title": "Prepay transactions", "task": "learning", "rfp_text_ref": "../legal09/topics.json#201" },
+    "202": { "key": "fas140", "title": "FAS 140 transactions", "task": "learning", "rfp_text_ref": "../legal09/topics.json#202" },
+    "203": { "key": "financial_forecasts", "title": "Meeting financial forecasts", "task": "learning", "rfp_text_ref": "../legal09/topics.json#203" },
+    "204": { "key": "document_destruction", "title": "Document retention and destruction", "task": "learning", "rfp_text_ref": "../legal09/topics.json#204" },
+    "205": { "key": "energy_schedules", "title": "Energy schedules and bids", "task": "learning", "rfp_text_ref": "../legal09/topics.json#205" },
+    "206": { "key": "financial_analysts", "title": "Contacts with financial analysts", "task": "learning", "rfp_text_ref": "../legal09/topics.json#206" },
+    "207": { "key": "fantasy_football", "title": "Fantasy football", "task": "learning", "rfp_text_ref": "../legal09/topics.json#207" }
+  }
+}

@@ -1,0 +1,51 @@
+{
+ "cuad": {
+  "n": 1200,
+  "positive_excerpts": 718,
+  "positive_labels": 867,
+  "contracts": 102,
+  "gray_excerpts": 10,
+  "mean_chars": 1153,
+  "renamed_unchanged": 0,
+  "phrases_total": 873,
+  "contracts_with_people": 59
+ },
+ "veridian": {
+  "n": 500,
+  "mean_chars": 1365
+ },
+ "jeb": {
+  "n": 1000,
+  "source": "eval.jsonl",
+  "strata": {
+   "random": 235,
+   "hard_neg": 207,
+   "pos": 558
+  },
+  "positives_matter": {
+   "recount_2000": 61,
+   "rilya_wilson": 62,
+   "medicaid_reform": 61,
+   "gw_bush": 60,
+   "a1_terri_schiavo": 63
+  },
+  "positives_control": {
+   "movie_gallery": 60,
+   "condominiums": 60,
+   "bottled_water": 60,
+   "marketing": 60,
+   "faith_based": 60,
+   "nra_rifle": 60,
+   "nra_aliens": 18
+  },
+  "mean_chars": 2353,
+  "residual_jeb_bush_docs": 0,
+  "dose_bands": {
+   "0": 536,
+   "1-2": 274,
+   "3+": 190
+  },
+  "phrases": 19,
+  "people": 715
+ }
+}

@@ -1,0 +1,346 @@
+<HTML>
+
+<HEAD>
+<TITLE>Relevance Assessments and Scoring Software for the TREC 2009 Legal Track Interactive Task</TITLE>
+</HEAD>
+
+<BODY>
+
+<H1>Relevance Assessments and Scoring Software for the TREC 2009 Legal Track Interactive Task</H1>
+
+<H2>Revision History</H2>
+<UL>
+<LI>2010 May 24: st: updated the l07_eval instructions for Interactive Task usage
+</UL>
+
+<H2>
+What was the TREC 2009 Legal Track Interactive Task?
+</H2>
+
+<P>
+The TREC 2009 Legal Track Interactive Task was a collaborative research effort to create
+standard tests for email-based e-Discovery scenarios.
+For more information, please see the track overview paper at
+<A HREF="http://trec.nist.gov/pubs/trec18/t18_proceedings.html">http://trec.nist.gov/pubs/trec18/t18_proceedings.html</A>,
+the track web site at <A HREF="http://trec-legal.umiacs.umd.edu/">http://trec-legal.umiacs.umd.edu/</A>
+(and particularly the task guidelines at <A HREF="http://trec-legal.umiacs.umd.edu/LT09_ITG_final.pdf">http://trec-legal.umiacs.umd.edu/LT09_ITG_final.pdf</A>),
+and the NIST archive for the track at <A HREF="http://trec.nist.gov/data/legal09.html">http://trec.nist.gov/data/legal09.html</A>.
+</P>
+
+<H2>
+Which files contain the relevance assessments?
+</H2>
+
+<P>
+The relevance assessments are in 4 "qrels" files:
+</P>
+<UL>
+<LI>qrels_msg_pre_all.txt: message-based, pre-adjudication judgments
+<LI>qrels_msg_post_all.txt: message-based, post-adjudication judgments
+<LI>qrels_doc_pre_all.txt: document-based, pre-adjudication judgments
+<LI>qrels_doc_post_all.txt: document-based, post-adjudication judgments
+</UL>
+
+<H2>
+What are the codes used in the qrels files?
+</H2>
+
+<OL>
+<LI>The 1st column is the topic number (from 201 to 207).
+<LI>The 2nd column is always a 0.
+<LI>The 3rd column is the document or message identifier (e.g. 0.7.47.1000898).
+<LI>The 4th column is the relevance judgment: 
+1 for "relevant", 0 for "non-relevant", -1 for "gray" and -2 for "gray".
+(In the assessor system, -1 was "unsure" (the default setting for all documents) 
+and -2 was "unjudged" (the intended label for gray documents).)
+<LI>The 5th column is the probability the item had of being selected for assessment
+(please see the track overview paper for more information).
+</OL>
+
+<H2>
+How can I compute the precision, recall and F1 scores of my own result sets?
+</H2>
+
+<P>
+You can use the software and instructions as documented below.
+</P>
+
+<H2>
+Do I need to compile the software?
+</H2>
+
+<P>
+If you are using a Win32 platform, you can use the included l07_eval.exe and leg09docs2recs.exe executables as is.
+(If in doubt, try running the executables from the Windows Command Prompt to see if the usage message comes up.)
+<P>
+<P>
+For other platforms (e.g., Unix platforms), you would need to compile the software to executables for your platform.
+The compilation syntax is typically something like this: 
+</P>
+<BLOCKQUOTE>
+<PRE>
+gcc -lm -o l07_eval.exe l07_eval.c
+gcc -o leg09docs2recs.exe leg09docs2recs.c
+</PRE>
+</BLOCKQUOTE>
+</P>
+<P>
+Note that as of this writing, compilation of these versions has not been tested on non-Win32 platforms.
+If you encounter any issues (such as having to add a missing cast to get the
+compilation to succeed), please let us know (especially stephent (at) magma.ca)
+so that we can make the fix available to everyone.
+</P>
+
+<H2>
+How do I produce the document-based scores?
+</H2>
+
+<P>
+We suggest you practice first by computing the scores for the included "examp09" example result set,
+which specifies 2154 documents for topic 201.
+Once you have run the example successfully, you can then try substituting your own result set. 
+</P>
+
+<P>
+To compute the document-based (post-adjudication) scores for "examp09", run l07_eval.exe as follows
+(this command line is also in the included evalDoc1.bat file):
+</P>
+
+<BLOCKQUOTE>
+l07_eval run=<B>examp09</B> q=qrels_doc_post_all.txt out=ignore1 out2=ignore2 out5=<B>examp09.doc_post_eval</B> stringDisplay=100 M1000=7000000 probD=847791 estopt=1
+</BLOCKQUOTE>
+
+<P>
+The command should run within a few seconds as the examp09 result set is fairly small.
+Once it has completed, please verify that
+your output in examp09.doc_post_eval is the same as the included examp09.expected_doc_eval.
+</P>
+
+<P>
+In particular, you should find these lines in examp09.doc_post_eval,
+which show, for topic 201, the number retrieved, the precision, the recall,
+and the F1 score (respectively):
+</P>
+
+<BLOCKQUOTE>
+<PRE>
+:K:            	201	2154.0000
+:est_K-Prec:   	201	0.9371
+:est_K-Recall: 	201	0.8434
+...
+:est_K-F1:     	201	0.8878
+</PRE>
+</BLOCKQUOTE>
+
+<P>
+More of the measures are documented further below.
+However, for historical reasons, there are many reported measures included
+which are not applicable to the Interactive task that you can safely ignore.
+</P>
+
+<P>
+Note: when scoring your own runs, you are responsible for ensuring that there
+are no duplicated docids in your result sets.
+</P>
+
+<H2>
+How do I produce the message-based scores?
+</H2>
+
+<P>
+If your result set is already message-based, you can skip to step 6 below.
+</P>
+
+<P>
+If your result set is document-based, then you need to create its 
+corresponding message-based set (also known as the record-based set).
+You can do this by using the leg09docs2recs utility, as follows:
+</P>
+
+<P>
+1. Ensure that only one topic's result set is in the input file.
+(The example "examp09" file just contains a result set for 1 topic (#201).)
+If you have multiple topic results, 
+redo the below steps separately for each topic.
+</P>
+
+<P>
+2. Ensure the result set is sorted in increasing alphabetical order.
+(The sorting can typically be done by the 'sort' utility of the operating system platform.)
+The example "examp09" result set file is already sorted.
+</P>
+
+<P>
+3. Create a subdirectory named 'docs' and copy the sorted result set to that subdirectory
+(e.g., docs\examp09).
+</P>
+
+<P>
+4. Create a subdirectory named 'msgs'.  (This is where the message-based set will be created.)
+</P>
+
+<P>
+5. To create the message-based set for docs\examp09 and place it in the msgs subdirectory,
+run leg09docs2recs.exe as follows
+(this command line is also in the included doc2msg1.bat file):
+</P>
+
+<BLOCKQUOTE>
+leg09docs2recs in=<B>examp09</B> indir=docs\ outdir=msgs\
+</BLOCKQUOTE>
+
+<P>
+Note: on Unix platforms, you may need to use forward slashes instead of backslashes.
+<P>
+
+<P>
+The command should run within a few seconds, depending on the length of the input file.
+In the case of the examp09 example, 
+please verify that your output in msgs\examp09 is the same as the included examp09.msgs file.
+</P>
+
+<P>
+6. To compute the message-based (post-adjudication) scores for examp09.msgs, run l07_eval.exe as follows
+(this command line is also in the included evalMsg1.bat file):
+</P>
+
+<BLOCKQUOTE>
+l07_eval run=<B>examp09.msgs</B> q=qrels_msg_post_all.txt out=ignore1 out2=ignore2 out5=<B>examp09.msg_post_eval</B> stringDisplay=100 M1000=7000000 probD=569034 estopt=1
+</BLOCKQUOTE>
+
+<P>
+The command should run within a few seconds as the examp09 result set is fairly small.
+Once it has completed, please verify that
+your output in examp09.msg_post_eval is the same as the included examp09.expected_msg_eval.
+</P>
+
+<P>
+In particular, you should find these lines in examp09.msg_post_eval,
+which show, for topic 201, the number retrieved, the precision, the recall,
+and the F1 score (respectively):
+</P>
+
+<BLOCKQUOTE>
+<PRE>
+:K:            	201	1330.0000
+:est_K-Prec:   	201	0.9124
+:est_K-Recall: 	201	0.7776
+...
+:est_K-F1:     	201	0.8396
+</PRE>
+</BLOCKQUOTE>
+
+<P>
+Note: when scoring your own runs, you are responsible for ensuring that there
+are no duplicated message-ids in your result sets.
+</P>
+
+<H2>
+How do I compute the scores with the <I>pre</I>-adjudication relevance assessments?
+</H2>
+
+<P>
+To use the pre-adjudication relevance assessments:
+</P>
+<P>
+For document-based scoring, 
+substitute "qrels_doc_pre_all.txt" for "qrels_doc_post_all.txt"
+in the l07_eval command above.
+</P>
+<P>
+For message-based scoring,
+substitute "qrels_msg_pre_all.txt" for "qrels_msg_post_all.txt"
+in the l07_eval command above.
+</P>
+
+<H2>
+How can I know what scores have been attained by others on these tests?
+</H2>
+
+<P>
+The scores of various experimental approaches for each test topic
+are posted in an appendix document of the TREC 2009 conference proceedings at 
+<A HREF="http://trec.nist.gov/pubs/trec18/t18_proceedings.html">http://trec.nist.gov/pubs/trec18/t18_proceedings.html</A>.
+</P>
+
+<H2>
+What is the format of the output of l07_eval?
+</H2>
+
+<P>
+The output produced by l07_eval 
+uses a similar format as trec_eval 8.0, with several additional measures.
+</P>
+
+<P>
+The first 27 measures for each topic ("num_ret" though "P1000") 
+are the same as in trec_eval 8.0
+(but the calculation was done with l07_eval software instead of trec_eval).
+Most of these measures are rank-based measures and are not applicable to 
+the Interactive Task.
+These measures do not use the probabilities for estimation.
+They are defined in 
+<A HREF="http://trec.nist.gov/pubs/trec15/appendices/CE.MEASURES06.pdf">http://trec.nist.gov/pubs/trec15/appendices/CE.MEASURES06.pdf</A>.
+</P>
+<P>
+Of the remaining measures, those which start with the "est_" prefix
+use estimation based on the sampling probabilities.  For individual topics:
+
+<UL>
+<LI>est_rel: Estimated number of relevant items for the topic.
+
+<LI>est_rel_ret: Estimated number of relevant items retrieved by this run for the topic.
+<LI>est_non_ret: Estimated number of non-relevant items retrieved by this run for the topic.
+<LI>est_gray_ret: Estimated number of gray items retrieved by this run for the topic.
+
+<LI>K: Number of items retrieved by this run for the topic.
+<LI>est_K-Prec: Estimated precision of the set of items retrieved by this run for the topic
+(est_rel_ret / (est_rel_ret + est_non_ret), or 0 if the denominator is 0).
+<LI>est_K-Recall: Estimated recall of the set of items retrieved by this run for the topic
+(est_rel_ret / est_rel).
+<LI>est_K-F1: Estimated F1 of the set of items retrieved by this run for the topic
+(2 * est_K-Prec * est_K-Recall / (est_K-Prec + est_K-Recall), or 0 if the denominator is 0).
+<LI>est_K-Gray: Estimated percentage of gray items in the set of items retrieved by this run for the topic
+(est_gray_ret / (est_rel_ret + est_non_ret + est_gray_ret),
+or 0 if the denominator is 0).
+
+<LI>K-rel_ret: Raw number of judged relevant items retrieved.
+<LI>K-nonrel_ret: Raw number of judged non-relevant items retrieved.
+<LI>K-gray_ret: Raw number of gray items retrieved.
+<LI>K-jg_ret: Raw number of judged items retrieved (including gray items).
+</UL>
+
+<P>
+The ":relstring:" listing for each topic uses the following codes 
+for the first 100 retrieved documents: 
+R=relevant, N=non-relevant, U=gray. 
+A hyphen (-) is used for documents which were not shown to the assessor.
+</P>
+
+<P>
+At the end of the l07_eval output, the summary over "all" topics is given
+for each measure.  For all of the estimated ("est_") measures,
+the arithmetic mean is used (all topics are weighted equally).
+The mean is also used for most other measures 
+(except a few of the trec_eval measures).
+(Typically, averaging over topics is not meaningful for the Interactive task.)
+</P>
+
+<H2>
+What if I have further questions?
+</H2>
+
+<P>
+The best place to ask questions is the track mailing list (see the track web site at 
+<A HREF="http://trec-legal.umiacs.umd.edu/">http://trec-legal.umiacs.umd.edu/</A>
+for how to join the list and see the archives).  
+The mailing list is monitored by practically all of the users of l07_eval, 
+giving you the best chance for a quick response.
+</P>
+
+<P>
+(end)
+</P>
+
+</BODY>
+</HTML>

@@ -1,0 +1,41 @@
+{
+  "source": "TREC 2009 Legal Track, Complaint J (LT09_Complaint_J_final.pdf), Requests for Production 201-207, verbatim.",
+  "collection": "TREC 2009 Enron collection (Clearwell / University of Maryland build; 569,034 unique messages + attachments). Not the EDRM v2 collection: document ids are of the form 0.7.47.1000898 and do not resolve against EDRM v2.",
+  "topics": {
+    "201": {
+      "key": "prepay_transactions",
+      "title": "Prepay transactions",
+      "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to the Company's engagement in structured commodity transactions known as \"prepay transactions.\""
+    },
+    "202": {
+      "key": "fas140",
+      "title": "FAS 140 transactions",
+      "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to the Company's engagement in transactions that the Company characterized as compliant with FAS 140 (or its predecessor FAS 125)."
+    },
+    "203": {
+      "key": "financial_forecasts",
+      "title": "Meeting financial forecasts",
+      "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to whether the Company had met, or could, would, or might meet its financial forecasts, models, projections, or plans at any time after January 1, 1999."
+    },
+    "204": {
+      "key": "document_destruction",
+      "title": "Document retention and destruction",
+      "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to any intentions, plans, efforts, or activities involving the alteration, destruction, retention, lack of retention, deletion, or shredding of documents or other evidence, whether in hard-copy or electronic form."
+    },
+    "205": {
+      "key": "energy_schedules",
+      "title": "Energy schedules and bids",
+      "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to energy schedules and bids, including but not limited to, estimates, forecasts, descriptions, characterizations, analyses, evaluations, projections, plans, and reports on the volume(s) or geographic location(s) of energy loads."
+    },
+    "206": {
+      "key": "financial_analysts",
+      "title": "Contacts with financial analysts",
+      "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to any discussion(s), communication(s), or contact(s) with financial analyst(s), or with the firm(s) that employ them, regarding (i) the Company's financial condition, (ii) analysts' coverage of the Company and/or its financial condition, (iii) analysts' rating of the Company's stock, or (iv) the impact of an analyst's coverage of the Company on the business relationship between the Company and the firm that employs the analyst."
+    },
+    "207": {
+      "key": "fantasy_football",
+      "title": "Fantasy football",
+      "rfp_text": "All documents or communications that describe, discuss, refer to, report on, or relate to fantasy football, gambling on football, and related activities, including but not limited to, football teams, football players, football games, football statistics, and football performance."
+    }
+  }
+}

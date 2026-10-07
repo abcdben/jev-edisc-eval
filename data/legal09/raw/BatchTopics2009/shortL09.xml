@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="ISO-8859-1"?> 
+<TrecLegalProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>7</RequestNumber>
+<RequestText>All documents discussing, referencing, or relating to company guidelines, strategies, or internal approval for placement of tobacco products in movies that are mentioned as G-rated.</RequestText>
+<BooleanQuery>
+<FinalQuery>((guide! OR strateg! OR approv!) AND (place! or promot!)) AND (("G-rated" OR "G rated" OR family) W/5 (movie! OR film! OR picture!))</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>(guidelines OR strategies OR "internal approval") AND placement AND "G-rated movie"</ProposalByDefendant>
+<RejoinderByPlaintiff>((guide! OR strateg! OR approv!) AND (place! or promot!)) AND (("G-rated" OR "G rated" OR family) W/5 (movie! OR film! OR picture!))</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>648</FinalB>
+<RequestSource>2006-A-2</RequestSource>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>51</RequestNumber>
+<RequestText>All documents referencing or regarding lawsuits involving claims related to memory loss.</RequestText>
+<BooleanQuery>
+<FinalQuery>((memory w/2 loss) OR amnesia OR Alzheimer! OR dementia) AND (lawsuit! OR litig! OR case OR (tort w/2 claim!) OR complaint OR allegation!)</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>(lawsuits OR "tort claims") AND "memory loss"</ProposalByDefendant>
+<RejoinderByPlaintiff>((memory w/2 loss) OR amnesia OR Alzheimer! OR dementia) AND (lawsuit! OR litig! OR case OR (tort w/2 claim!) OR complaint OR allegation!)</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>7216</FinalB>
+<RequestSource>2006-E-10</RequestSource>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>80</RequestNumber>
+<RequestText>All documents making a connection between folk songs and music and the sale of cigarettes.</RequestText>
+<BooleanQuery>
+<FinalQuery>("folk songs" OR "folk music" OR "folk artists") AND (sale! OR sell! OR promot! OR advertis! OR market!)</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>"folk songs" AND (sale! OR sell! OR promot! OR advertis! OR market!)</ProposalByDefendant>
+<RejoinderByPlaintiff>folk AND (sale OR sell! OR promot! OR advertis! OR market!)</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>331</FinalB>
+<RequestSource>2007-C-2</RequestSource>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>89</RequestNumber>
+<RequestText>Submit all documents listing monthly and/or annual sales for companies in the property and casualty insurance business in the United States between 1980 and the present.</RequestText>
+<BooleanQuery>
+<FinalQuery>(((month! OR annual!) w/15 (sales OR sell! OR revenue)) AND ((property OR casualty) AND insurance)) BUT NOT (England OR "Great Britain" OR U.K. OR UK)</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>(("monthly sales" OR "annual sales") AND ("property insurance" OR "casualty insurance")) AND (United States OR U.S.) AND (198! OR 199!)</ProposalByDefendant>
+<RejoinderByPlaintiff>(month! OR annual!) AND (sales OR sell! OR revenue) AND insurance AND (198! OR 199!)</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>3636</FinalB>
+<RequestSource>2007-D-1</RequestSource>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>102</RequestNumber>
+<RequestText>Documents referring to marketing or advertising restrictions proposed for inclusion in, or actually included in, the Master Settlement Agreement ("MSA"), including, but not limited to, restrictions on advertising on billboards, stadiums, arenas, shopping malls, buses, taxis, or any other outdoor advertising.</RequestText>
+<BooleanQuery>
+<FinalQuery>((marketing OR advertis! OR promot! OR display!) w/10 (restrict! OR limit! OR prohibit! OR ban OR bans OR banned OR disallow!)) AND (("master settlement agreement" OR MSA) OR (billboard! OR arena! OR stadium! OR "shopping mall" OR bus OR buses OR taxi! OR "outdoor advertising" OR subway OR station OR banner OR marquee OR rail OR Amtrak OR "public transportation" OR "mass transit"))</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>(((marketing OR advertising) w/3 restrictions) w/20 ("master settlement agreement" OR MSA)) AND (billboard! OR arena! OR stadium! OR "shopping mall!" OR bus OR buses OR taxi! OR "outdoor advertising")</ProposalByDefendant>
+<RejoinderByPlaintiff>((marketing OR advertis! OR promot! OR display!) w/10 (restrict! OR limit! OR prohibit! OR ban OR bans OR banned OR disallow!)) AND (("master settlement agreement" OR MSA) OR (billboard! OR arena! OR stadium! OR "shopping mall" OR bus OR buses OR taxi! OR "outdoor advertising" OR subway OR train OR station OR banner OR marquee OR boat OR rail OR Amtrak OR "public transportation" OR "mass transit"))</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>86742</FinalB>
+<RequestSource>2008-I-1</RequestSource>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>103</RequestNumber>
+<RequestText>All documents which describe, refer to, report on, or mention any "in-store," "on-counter," "point of sale," or other retail marketing campaigns for cigarettes.</RequestText>
+<BooleanQuery>
+<FinalQuery>(store OR shop OR "on counter" or "countertop" or "point of sale" or checkout or 7-11) w/5 (marketing OR advertis! OR promot! OR display!)</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>"in store" OR "on counter" OR "point of sale" AND (retail OR marketing OR campaign)</ProposalByDefendant>
+<RejoinderByPlaintiff>(store OR shop OR "on counter" or "countertop" or "point of sale" or "POS" or checkout or 7-11) w/20 (marketing OR advertis! OR promot! OR display!)</RejoinderByPlaintiff>
+<Consensus1>(store OR shop OR "on counter" or "countertop" or "point of sale" or "POS" or checkout or 7-11) w/10 (marketing OR advertis! OR promot! OR display!)</Consensus1>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>80225</FinalB>
+<RequestSource>2008-I-2</RequestSource>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>104</RequestNumber>
+<RequestText>All documents discussing or referencing payments to foreign government officials, including but not limited to expressly mentioning "bribery" and/or "payoffs."</RequestText>
+<BooleanQuery>
+<FinalQuery>(payment! OR transfer! OR wire! OR fund! OR kickback! OR payola OR grease OR bribery OR payoff!) AND (foreign w/5 (official! OR ministr! OR delegat! OR representative!))</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>(bribery OR payoffs) AND payments AND "foreign government officials"</ProposalByDefendant>
+<RejoinderByPlaintiff>(payment! OR transfer! OR wire! OR fund! OR kickback! OR payola OR grease OR bribery OR payoff!) AND (foreign w/5 (official! OR ministr! OR delegat! OR representative!))</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>2680</FinalB>
+<RequestSource>2008-I-3</RequestSource>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>105</RequestNumber>
+<RequestText>Please produce all reports, written memoranda, correspondence, and other documents related to building design compliance or noncompliance with structural standards, and compliance or noncompliance with structural regulations.</RequestText>
+<BooleanQuery>
+<FinalQuery>(build! OR structure!) AND (design! OR plan OR scheme OR blueprint) AND ((compliance OR comply OR complies OR obey! OR correspond! OR meet! OR adhere! OR conform) w/5 (regulat! OR code! OR law! OR ordinanc! OR rule! OR statut!))</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>building and design and (compliance OR noncompliance) and "structural standards" OR "structural regulations"</ProposalByDefendant>
+<RejoinderByPlaintiff>(build! OR structure!) AND (design! OR plan OR scheme OR blueprint) AND (compliance OR comply OR complies OR obey! OR correspond! OR meet! OR adhere! OR conform!) AND (regulat! OR code! OR law! OR ordinanc! OR rule! OR statut!)</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>36549</FinalB>
+<RequestSource>2008-F-1</RequestSource>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>138</RequestNumber>
+<RequestText>All documents describing or detailing instances of government subsidies for competitive local products.</RequestText>
+<BooleanQuery>
+<FinalQuery>(China OR CN OR PRC OR "Hong Kong" OR HK OR Japan OR JP OR Taiwan OR TW OR ROC OR India OR Philippines OR PH OR Cambodia OR KH OR Vietnam OR VN OR "North Korea" OR "South Korea" OR KP OR Thailand OR Asia OR EMEA OR Government OR Market) AND (Subsidy OR subsidies)</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>(China OR Hong Kong OR Japan OR Taiwan OR India OR Philippines OR Cambodia OR Vietnam OR North Korea OR South Korea OR Thailand ) AND (Government w/5 subsidy)</ProposalByDefendant>
+<RejoinderByPlaintiff>(China OR CN OR PRC OR Hong Kong OR HK OR Japan OR JP OR Taiwan TW OR ROC OR India OR Philippines PH OR Cambodia OR KH OR Vietnam OR VN OR North Korea KP OR South Korea OR KP OR Thailand OR Asia OR EMEA OR Government OR Market) AND (Subsid!)</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>16279</FinalB>
+<RequestSource>2008-G-9</RequestSource>
+</ProductionRequest>
+
+<ProductionRequest>
+<RequestNumber>145</RequestNumber>
+<RequestText>All documents concerning actual or projected sales.</RequestText>
+<BooleanQuery>
+<FinalQuery>(estimate! OR anticipate! OR forecast! OR actual OR project!) w/2 sales</FinalQuery>
+<NegotiationHistory>
+<ProposalByDefendant>"actual sales" OR "projected sales"</ProposalByDefendant>
+<RejoinderByPlaintiff>(estimate! OR anticipate! OR forecast! OR actual OR project!) w/5 sales</RejoinderByPlaintiff>
+</NegotiationHistory>
+</BooleanQuery>
+<FinalB>40315</FinalB>
+<RequestSource>2008-H-4</RequestSource>
+</ProductionRequest>
+
+</TrecLegalProductionRequest>

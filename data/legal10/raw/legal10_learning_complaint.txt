@@ -1,0 +1,460 @@
+TREC 2009 Legal Track – Complaint J 
+ 
+UNITED STATES DISTRICT COURT 
+SOUTHERN DISTRICT OF NEW SEARCHLAND 
+ 
+JONAS GRUMBY, On Behalf of Himself and All Others 
+Similarly Situated, 
+ 
+Plaintiff, 
+ 
+v. 
+ 
+VOLTERON CORP. and JANE DOE and JOHN DOE, in their 
+individual capacities as officers of Volteron Corp., 
+ 
+Defendants. 
+ 
+Civ. No. 
+ 
+CLASS ACTION 
+ 
+COMPLAINT  
+ 
+DEMAND FOR JURY TRIAL 
+ 
+  Plaintiff, Jonas Grumby, individually and on behalf of all other persons and entities 
+similarly situated, by his undersigned attorneys, alleges upon personal knowledge as to himself 
+and his own acts, and upon information and belief as to all other matters, based upon, inter 
+alia, the investigation made by and through his attorneys, which investigation included, among 
+other things, a review of public documents, Securities and Exchange commission (“SEC”) filings, 
+analyst reports, news releases and media reports concerning Volteron Corporation (“Volteron” 
+or the “Company”) as follows: 
+NATURE OF THE ACTION 
+1. This is a securities fraud class action on behalf of purchasers of the common stock of 
+Volteron Corp. (“Volteron”) between June 1, 1999 and December 2, 2001 (“The Class Period”), 
+seeking to pursue remedies under the Securities Exchange Act of 1934 (the “Exchange Act”). 
+JURISDICTION AND VENUE 
+2. The claims alleged herein arise under Sections 10(b) and 20(a) of the Exchange Act, 15 
+U.S.C. §§ 78j(b) and 78t, and Rule 10b‐5, 17 C.F.R. § 240.10b‐5 promulgated thereunder. 
+TREC 2009 Legal Track – Complaint J 
+ 
+  2 
+3. The jurisdiction of this Court is based on Section 27 of the Exchange Act, 15 U.S.C. 
+§ 78aa and 28 U.S.C. § 1331 (federal question jurisdiction). 
+4. Venue is proper in this judicial district pursuant to Section 27 of the Exchange Act.  
+Many of the acts and transactions giving rise to the violations of law complained of herein 
+occurred in this judicial district.  The Company is incorporated and maintains its principal place 
+of business in New Searchland. 
+5. In connection with the acts, conduct and other wrongs alleged in this complaint, 
+defendants, directly or indirectly, used the means and instrumentalities of interstate 
+commerce, including but not limited to, the United States mails, interstate telephone 
+communications and the facilities of the national securities markets. 
+PARTIES 
+6. Plaintiff, Jonas Grumby, as set forth in the accompanying certification, incorporated by 
+reference herein, purchased the common stock of Volteron at artificially inflated prices during 
+the Class Period and has been damaged thereby.  Plaintiff is a citizen of New Searchland.   
+7. Defendant Volteron is a New Searchland corporation and maintains its principal 
+executive offices in New Searchland.  Volteron produces electric energy and natural gas. 
+8. Defendant John Doe was Chief Financial Officer (the “CFO”) of Volteron at all relevant 
+times.   The CFO participated in making the false and misleading statements and/or omissions 
+referenced herein. 
+9. Defendant Jane Doe was the Chief Executive Officer (the “CEO”) of Volteron at all 
+relevant times.  The CEO participated in making the false and misleading statements and/or 
+omissions referenced herein. 
+TREC 2009 Legal Track – Complaint J 
+ 
+  3 
+10. Collectively, the defendants identified in paragraphs 8 and 9 are referred to as the 
+“Individual Defendants.”  The Individual Defendants, through their positions as senior officers 
+of Volteron, had responsibility for the management of Volteron’s business and operations.   
+PLAINTIFF’S CLASS ACTION ALLEGATIONS 
+11. Plaintiff brings this action as a class action pursuant to Federal Rules of Civil Procedure 
+23(a) and 23(b)(3) on behalf of himself and all persons and entities other than defendants who 
+purchased or otherwise acquired the securities of Volteron between June 1, 1999, and 
+December 2, 2001, inclusive (the “Class”).  Excluded from the Class are defendants herein, 
+members of the immediate family of each of the defendants, any person, firm, trust, 
+corporation, officer, director or other individual or entity in which any defendant has a 
+controlling interest or which is related to or affiliated with any of the defendants, and the legal 
+representatives, agents, affiliates, heirs, successors‐in‐interest or assigns of any such excluded 
+party. 
+12. The members of the Class are so numerous that joinder of all members is 
+impracticable.  As of June 21, 2001, Volteron had more than 300 million shares outstanding.  
+The precise number of Class members is unknown to plaintiff at this time but is believed to be 
+in the thousands.  In addition, the names and addresses of the Class members can be 
+ascertained from the books and records of Volteron.  Notice can be provided to such record 
+owners by a combination of published notice and first‐class mail, using techniques and a form 
+of notice similar to those customarily used in class actions arising under the federal securities 
+laws. 
+TREC 2009 Legal Track – Complaint J 
+ 
+  4 
+13. The members of the Class are located in geographically diverse areas and are so 
+numerous that joinder of all members is impractical.  While the exact number of Class members 
+is unknown to the plaintiff at this time, and can only be ascertained through appropriate 
+discovery, plaintiff believes there are, at a minimum, thousands of members of the Class. 
+14. Common questions of law and fact exist as to all members of the Class and 
+predominate over any questions affecting solely individual members of the Class.  Among the 
+questions of law and fact common to the Class are: 
+(a) Whether defendants engaged in acts or conduct in violation of the 
+securities laws as alleged herein; 
+(b) Whether defendants had a duty to disclose certain information; 
+(c) Whether defendants knowingly or recklessly made materially false and 
+misleading statements and/or omissions or failed to correct such statements and/or omissions 
+upon learning that they were materially false and misleading during the Class Period; 
+(d) Whether the market price of the Company’s securities during the Class 
+Period was artificially inflated because of defendants’ conduct complained of herein; and 
+(e) Whether members of the Class have sustained damages and, if so, the 
+proper measure of damages. 
+15. Plaintiff’s claims are typical of the claims of the members of the Class because plaintiff 
+and members of the Class sustained damages arising out of defendants’ wrongful conduct in 
+violation of federal law as complained of herein. 
+TREC 2009 Legal Track – Complaint J 
+ 
+  5 
+16. Plaintiff will fairly and adequately protect the interests of the members of the Class 
+and has retained counsel competent and experienced in class and securities litigation.  Plaintiff 
+has no interests antagonistic to or in conflict with those of the Class. 
+17. A class action is superior to other available methods for the fair and efficient 
+adjudication of this controversy since joinder of all members of the Class is impractical.  
+Furthermore, because the damages suffered by individual Class members may be relatively 
+small, the expense and burden of individual litigation make it impossible for the Class members 
+individually to redress the wrongs done to them.  There will be no difficulty in the management 
+of this action as a class action. 
+SUBSTANTIVE ALLEGATIONS 
+18. On April 2, 2001, the Company released its annual report on Form 10‐K,   containing 
+information concerning Volteron’s financial position as of December 31, 2000.  The 10‐K 
+included a certification pursuant to Rules 13a‐14(a) and 15d‐14(a) under the Securities 
+Exchange Act of 1934, as amended, signed by both John Doe and Jane Doe, stating that the 
+financial report included in the 10‐K “does not contain any untrue statement of a material fact 
+or omit to state a material fact necessary to make the statements made, in light of the 
+circumstances under which such statements were made, not misleading with respect to the 
+period covered by [the] report,” and that “the financial statements, and other financial 
+information included in [the] report, fairly present in all material respects the financial 
+conditions, results of operations and cash flows of [Volteron] as of, and for the periods 
+represented in [the] report.” 
+TREC 2009 Legal Track – Complaint J 
+ 
+  6 
+19. During a conference call with financial analysts held on April 17, 2001, when the CEO 
+was asked a question about an ambiguous item on Volteron’s balance sheet, the CEO 
+responded  that the inquirer “[did not] need to worry because [Volteron’s] compliance 
+department is the best in the industry,” and that “the only thing lacking in our accounting 
+practices is error.” 
+20. By late April 2001, an anonymous whistleblower came forward and made a number of 
+allegations of wrongdoing by Volteron, which were printed in an article appearing in the Wall 
+Street Journal. 
+21. As a result of the article in the Wall Street Journal, several criminal and regulatory 
+investigations ensued, revealing that, unbeknownst to shareholders at the time of the release 
+of the 10‐K on April 2, 2001, and the public statements made by John Doe on behalf of Volteron 
+on April 17, 2001, defendants had failed to disclose the following facts which were known or 
+should have been known at the time the misrepresentations and omissions were made: 
+a. A special purpose entity (“SPE”) called RND7 was created by Volteron employees 
+in late 1999, as a vehicle to hide Volteron’s liabilities, so the Company could report strong 
+earnings in its 1999 year‐end financial report.  RND7 participated in a wide variety of 
+investments and convoluted financial transactions designed to deceive Volteron’s investors and 
+to enrich defendants; 
+b. Various improper accounting manipulations affected many aspects of Volteron’s 
+reported financial condition, as they falsely inflated Volteron’s revenues, earnings, assets, and 
+equity, and concealed billions of dollars in debt that should have been shown on Volteron’s 
+balance sheet; 
+TREC 2009 Legal Track – Complaint J 
+ 
+  7 
+c. The accounting techniques improperly used by Volteron included, but were not 
+limited to, (i) engaging in structured commodity transactions known as “prepay transactions” 
+and (ii) engaging in transactions that Volteron characterized as compliant with FAS 140 (or its 
+predecessor FAS 125); 
+d. By mid‐to‐late April 2001, as more and more revelations came to light about the 
+true financial condition of the Company, Volteron executives undertook massive efforts to 
+destroy documents and evidence relating to RND7 and Volteron’s improper accounting 
+practices.  For example, for a period of several days, Volteron employees worked nonstop in 
+Volteron’s New Searchland headquarters to shred hard‐copy documents.  Moreover, electronic 
+data was deliberately deleted as part of the massive evidence destruction effort; 
+e. Volteron knowingly and intentionally filed energy schedules and bids that 
+misrepresented the amount and geographic location of the load they intended to serve.  
+Volteron did so for the purpose of increasing the appearance of congestion on transmission 
+lines in order to increase the market price for congestion fees for transmission between zones 
+and to earn congestion payments that otherwise would not have been available.  This 
+manipulation produced market prices that were not the result of true competitive conditions 
+and therefore did not produce just and reasonable prices in the energy market; and 
+f. Finally, it was disclosed that hundreds of Volteron employees had participated in 
+a company‐wide internet fantasy football league and National Football League gambling ring.  
+As a result of Volteron’s involvement in this unlawful gambling ring,  a group of employees who 
+had lost thousands of dollars participating in illegal gambling activities brought a class action 
+lawsuit against Volteron.  The fines, penalties and other liability likely to accrue as a result of 
+TREC 2009 Legal Track – Complaint J 
+ 
+  8 
+criminal, regulatory, and civil actions in connection with this misconduct should have been 
+recorded in Volteron’s litigation reserve, as required  under Generally Accepted Accounting 
+Principles (GAAP).  Furthermore, Volteron should have disclosed this liability in its financial 
+statements but knowingly and intentionally chose not to do so.  Volteron’s failure to disclose 
+this information artificially and materially inflated Volteron’s stock price during the Class Period, 
+such that when the news of the gambling ring was ultimately leaked to the general public, 
+Volteron’s reputation was irreparably harmed, which further contributed to its collapse. 
+22. The revelation of the aforementioned facts severely damaged Volteron’s reputation, 
+leading to its downfall and eventual bankruptcy filing on December 2, 2001. 
+23. At the time of Volteron’s bankruptcy, the Class Members held and continued to hold 
+Volteron common stock purchased during the Class Period.  
+24. When Volteron collapsed and filed for bankruptcy protection on December 2, 2001, 
+Plaintiffs suffered substantial losses.  The equities held by Plaintiffs became worthless and the 
+debt securities held by Plaintiffs were worth pennies on the dollar. 
+Fraud on the Market Presumption 
+25. Plaintiff will rely, in part, upon the presumption of reliance established by the fraud‐
+on‐the‐market doctrine in that: 
+(a) Defendants made misrepresentations or failed to disclose material facts 
+regarding Volteron’s financial situation during the Class Period; 
+(b) the misrepresentations or omissions were material; 
+(c) the securities of the Company were actively traded at all relevant times 
+on the New Searchland Stock Exchange (“NSSE”), an efficient and open market; 
+TREC 2009 Legal Track – Complaint J 
+ 
+  9 
+(d) the misrepresentations and omissions alleged would tend to induce a 
+reasonable investor to misjudge the value of the Company’s securities; and 
+(e) Plaintiff and the members of the Class, without knowledge of the 
+misrepresented or omitted facts, purchased their Volteron securities between the time 
+defendants misrepresented and/or failed to disclose material facts and the time the truth was 
+disclosed. 
+26. Volteron trades on the NSSE.  The price of Volteron’s stock reflects the effect of news 
+disseminated in the market. 
+27. Based upon the foregoing, plaintiff and the members of the Class are entitled to a 
+presumption of reliance upon the integrity of the market. 
+The Safe Harbor Provision is Inapplicable 
+28. The statutory safe harbor provided for forward‐looking statements under certain 
+circumstances does not apply to any of the allegedly false statements pleaded in this complaint.  
+The statements alleged to be false and misleading herein all relate to then‐existing facts and 
+conditions.  In addition, to the extent certain of the statements alleged to be false may be 
+characterized as forward‐looking, they were not adequately identified as “forward‐looking 
+statements” when made, and there were no meaningful cautionary statements identifying 
+important factors that could cause actual results to differ materially from those in the 
+purportedly forward‐looking statements.  Alternatively, to the extent that the statutory safe 
+harbor is intended to apply to any forward‐looking statements pleaded herein, defendants are 
+liable for those false forward‐looking statements because at the time each of those forward‐
+TREC 2009 Legal Track – Complaint J 
+ 
+  10 
+looking statements was made, the defendants had actual knowledge that the particular 
+forward‐looking statement was materially false or misleading. 
+CAUSES OF ACTION 
+COUNT 1 
+For Violation of  
+Sections 10(b) of the Exchange Act and Rule 10b‐5 Promulgated Thereunder 
+29. Plaintiff incorporates by reference and realleges each allegation above as if fully set 
+forth herein. 
+30. During the Class Period, defendants engaged in a plan, scheme and course of conduct, 
+pursuant to which they knowingly and/or recklessly engaged in acts, transactions, practices, 
+and a course of business which operated as a fraud upon plaintiff and other members of the 
+Class, made various untrue and deceptive statements of material fact, and omitted to state 
+material facts necessary in order to make the statements made, in light of the circumstances 
+under which they were made, not misleading to plaintiff and other Class members. The purpose 
+and effect of this scheme was to induce plaintiff and other members of the Class to purchase 
+Volteron common stock at artificially inflated prices. 
+31. During the Class Period, defendants, pursuant to their plan, scheme and unlawful 
+course of conduct, knowingly and/or recklessly issued, or caused to be issued, misleading 
+and/or false statements and/or omissions to the investing public, including Plaintiff and other 
+Class members, as described above. 
+32. As high‐level executives of Volteron during the Class Period and as members of the 
+Company’s management team, the Individual Defendants’ primary liability and controlling 
+liability arises from the fact that The Individual Defendants (i) had access to the nonpublic 
+TREC 2009 Legal Track – Complaint J 
+ 
+  11 
+information detailed above and was aware of the company’s dissemination of information to 
+the investing public, which he knew or recklessly disregarded was materially false and 
+misleading; (ii) was privy to and participated in the creation, development and reporting of the 
+Company’s internal budgets, plans, projections and/or reports; and (iii) enjoyed significant 
+personal contact and familiarity with other members of the company’s management team, 
+internal reports and other data and information about the Company’s finances, operations, and 
+sales at all relevant times. 
+33. Throughout  the  Class  Period,  Volteron  acted  through  The  Individual  Defendants, 
+whom  it  portrayed  and  represented  to  the  press  and  public  as  its  valid  representative.   The 
+willfulness,  motive,  knowledge,  and  recklessness  of  The  Individual  Defendants  are  therefore 
+imputed to Volteron, which is primarily responsible for The Individual Defendants’ violations of 
+the securities laws, as he was acting in his official capacity as a company representative, or, in 
+the  alternative,  which  is  liable  for  The  Individual  Defendants’  acts  under  the  doctrine  of 
+respondeat superior. 
+34. Defendants knew or recklessly disregarded the fact that the above acts and practices, 
+misleading  statements  and  omissions  would  adversely  affect  the  integrity  of  the  market  in 
+Volteron common stock.  Had the adverse facts defendants concealed been properly disclosed, 
+Volteron’s shares would not have sold at the artificially inflated prices at which they were sold 
+during the Class Period. 
+35. Having  been  lied  to  and  mislead  by  defendants,  plaintiff  and  other  members  of  the 
+Class  relied,  to  their  detriment,  on  the  integrity  of  the  market  as  to  the  price  of  Volteron 
+common stock. 
+TREC 2009 Legal Track – Complaint J 
+ 
+  12 
+36. Had  plaintiff  and  other  members  of  the  Class  known  of  the  true  operating  and 
+financial  results  of  Volteron,  which,  due  to  the  actions  of  defendants  were  not  disclosed, 
+plaintiff and the Class would not have purchased or otherwise acquired their Volteron common 
+stock during the Class Period or, if they had acquired Volteron common stock during the Class 
+Period, they would not have done so at the artificially inflated prices at which they purchased 
+their stock during the Class Period.   Therefore, plaintiff and other members of the Class were 
+damaged by defendants’ violations of Section 10(b) and Rule 10b‐5. 
+37. The price of Volteron common stock declined materially upon public disclosure of the 
+true facts which had been misrepresented or concealed, as alleged in this Complaint.   Plaintiff 
+and other members of the Class have suffered substantial damages as a result of this decline 
+and the wrongs alleged herein. 
+38. By reason of the foregoing, defendants violated Section 10(b) of the Exchange Act and 
+Rule 10b‐5 promulgated thereunder. 
+COUNT 2 
+For Violation of  
+Section 20(a) of the Exchange Act 
+39. Plaintiffs repeat and reallege each and every allegation contained above as if fully set 
+forth herein. 
+40. The Individual Defendants acted as controlling persons of Volteron within the meaning 
+of Section 20(a) of the Exchange Act as alleged herein.  By virtue of his high‐level positions, and 
+his  ownership  and  contractual  rights,  participation  in  and/or  awareness  of  the  Company’s 
+operations  and/or  intimate  knowledge  of  the  false  financial  statements  filed  by  the  company 
+with  the  SEC  and  disseminated  to  the  investing  public,  The  Individual  Defendants  had  the 
+TREC 2009 Legal Track – Complaint J 
+ 
+  13 
+power  to  influence  and  control  and  did  influence  and  control,  directly  or  indirectly,  the 
+decision‐making  of  the  Company,  including  the  content  and  dissemination  of  the  various 
+statements which  plaintiffs  contend  are  false  and  misleading.   The  Individual  Defendants  was 
+provided  with  or  had  unlimited  access  to  copies  of  the  Company’s  reports,  press  releases, 
+public filings and other statements alleged by plaintiffs to be misleading prior to and/or shortly 
+after  these  statements  were  issued  and  had  the  ability  to  prevent  the  issuance  of  the 
+statements or cause the statements to be corrected. 
+41. In particular, The Individual Defendants had direct and supervisory involvement in the 
+day‐to‐day operations of the Company and, therefore, is presumed to have had the power to 
+control or influence the particular transactions giving rise to the securities violations as alleged 
+herein, and exercised the same. 
+42. As  set  forth  above,  Volteron  violated  Section  10(b)  and  Rule  10b‐5  by  its  acts  and 
+omissions  as  alleged  in  this  Complaint.   By  virtue  of  his  position  as  a  controlling  person,  The 
+Individual Defendants are liable pursuant to Section 20(a) of the Exchange Act.  As a direct and 
+proximate  result  of  defendants’  wrongful  conduct,  plaintiff  and  other  members  of  the  Class 
+suffered  damages  in  connection  with  their  purchases  of  the  Company’s  securities  during  the 
+Class Period. 
+  WHEREFORE, Plaintiff prays for relief and judgment, as follows: 
+A.  Determining  that  this  action  is  a  proper  class  action,  designating  Plaintiff  as  Lead 
+Plaintiff and certifying Plaintiff as a class representative under Rule 23 of the Federal Rules of 
+Civil Procedure and Plaintiffs counsel as Lead Counsel; 
+TREC 2009 Legal Track – Complaint J 
+ 
+  14 
+B.  Awarding  compensatory  damages  in  favor  of  Plaintiff  and  the  other  Class  members 
+against all defendants, jointly and severally, for all damages sustained as a result of defendants’ 
+wrongdoing, in an amount to be proven at trial, including interest thereon; 
+C.  Awarding Plaintiff and the Class their reasonable costs and expenses incurred in this 
+action, including counsel fees and expert fees; and 
+D.  Such other and further relief as the Court may deem just and proper. 
+JURY TRIAL DEMANDED 
+Plaintiff hereby demands a trial by jury. 
+Dated: New Searchland, New Searchland 
+  June 18, 2009 
+ 
+ 
+TREC 2009 Legal Track – Complaint J 
+ 
+  15 
+PLAINTIFF’S REQUESTS FOR PRODUCTION OF DOCUMENTS 
+ 
+Pursuant to Rule 34 of the Federal Rules of Civil Procedure, plaintiffs Jonas Grumby, et al., 
+request that defendants Volteron Corp., Jane Doe, and John Doe produce all responsive 
+documents requested herein at the office of undersigned counsel as soon as practicable. 
+ 
+INSTRUCTIONS 
+ 
+1.  These requests require the production of all responsive documents within the sole or 
+joint possession, custody or control of the Defendants, including their agents, departments, 
+attorneys, directors, officers, employees, consultants, investigators, insurance companies, or 
+other persons subject to Defendants’ custody or control.  
+ 
+2.  All documents that respond, in whole or in part, to any portion of these Requests must 
+be produced in their entirety, including all attachments and enclosures. 
+ 
+3.  For purposes of these requests, the words used are considered to have, and should be 
+understood to have, their ordinary, everyday meanings.  Plaintiffs refer Defendants to any 
+dictionary in the event Defendants asserts that the wording of a request is vague, ambiguous, 
+unintelligible, or confusing. 
+ 
+DEFINITIONS 
+ 
+4.  The words “and,” “or,” “each,” “any,” “all,” “refer,” and “discuss,” shall be construed in 
+their broadest form and the singular shall include the plural and the plural shall include the 
+singular whenever necessary so as to bring within the scope of these Requests all documents 
+(defined below) that might otherwise be construed to be outside their scope. 
+ 
+5.  “Person” or “individual” means natural persons, corporations, firms, partnerships, 
+unincorporated associations, trusts, and any other legal entity. 
+ 
+6.  The term “plans” means tentative and preliminary proposals, recommendations, or 
+considerations, whether or not finalized or authorized, as well as those that have been 
+adopted. 
+ 
+7.  The term “relating to” means in whole or in part constituting, containing, concerning, 
+discussing, describing, analyzing, identifying or stating. 
+ 
+8.  Solely for the purpose of the TREC 2009 Legal Track, the term “defendant” includes the 
+named company above as well as all other companies or persons whose records are found in 
+the TREC Legal Track Enron Test Collection. 
+ 
+9.  Solely for the purpose of the TREC 2009 Legal Track, “document” means all data, 
+information or writings stored in the TREC Legal Track Enron Test Collection, including without 
+TREC 2009 Legal Track – Complaint J 
+ 
+  16 
+limitation: any written, electronic or computerized files, data or software; memoranda; emails; 
+correspondence; OCR scanned images; voice mail or voice recordings; communications; 
+reports; summaries; studies; analyses; evaluations; notes or notebooks; indices; spreadsheets; 
+logs; books; pamphlets; binders; calendar or diary entries; ledger entries; press clippings; 
+graphs; tables; charts; printouts; drawings; maps; meeting minutes; transcripts.  The term 
+“document” encompasses all metadata associated with the document.  The term also includes 
+all drafts associated with any particular document. 
+ 
+10.  Solely for the purpose of the TREC 2009 Legal Track, the term “Prepay Transactions” 
+refers to transactions in which the Company:  (i) delivers (or pays the financial equivalent of) a 
+commodity in the future, in exchange for a single prepayment from a conduit entity or other 
+counterparty; (ii) repays the prepayment over time, with a fixed amount of interest, through a 
+prepaid forward contract or swap; and (iii) receives the precise amounts of commodities (or the 
+financial equivalent) it contracted to deliver. 
+ 
+  
+FIRST SET OF REQUESTS FOR PRODUCTION: 
+ 
+Plaintiffs request that Defendants produce all responsive documents on the following topics. 
+ 
+201.  All documents or communications that describe, discuss, refer to, report on, or relate to 
+the Company’s engagement in structured commodity transactions known as “prepay 
+transactions.” 
+ 
+202.  All documents or communications that describe, discuss, refer to, report on, or relate to 
+the Company’s engagement in transactions that the Company characterized as compliant with 
+FAS 140 (or its predecessor FAS 125). 
+ 
+203.  All documents or communications that describe, discuss, refer to, report on, or relate to 
+whether the Company had met, or could, would, or might meet its financial forecasts, models, 
+projections, or plans at any time after January 1, 1999. 
+ 
+204.  All documents or communications that describe, discuss, refer to, report on, or relate to 
+any intentions, plans, efforts, or activities involving the alteration, destruction, retention, lack 
+of retention, deletion, or shredding of documents or other evidence, whether in hard‐copy or 
+electronic form. 
+ 
+205.  All documents or communications that describe, discuss, refer to, report on, or relate to 
+energy schedules and bids, including but not limited to, estimates, forecasts, descriptions, 
+characterizations, analyses, evaluations, projections, plans, and reports on the volume(s) or 
+geographic location(s) of energy loads. 
+ 
+206.  All documents or communications that describe, discuss, refer to, report on, or relate to 
+any discussion(s), communication(s), or contact(s) with financial analyst(s), or with the firm(s) 
+TREC 2009 Legal Track – Complaint J 
+ 
+  17 
+that employ them, regarding (i) the Company’s financial condition, (ii) analysts’ coverage of the 
+Company and/or its financial condition, (iii) analysts’ rating of the Company’s stock, or (iv) the 
+impact of an analyst’s coverage of the Company on the business relationship between the 
+Company and the firm that employs the analyst. 
+ 
+207.  All documents or communications that describe, discuss, refer to, report on, or relate to 
+fantasy football, gambling on football, and related activities, including but not limited to, 
+football teams, football players, football games, football statistics, and football performance.  
+ 
+Important procedural note specific to Topic 207: solely for the purpose of the TREC 2009 Legal Track, 
+any participant who chooses to submit results for Topic 207 must also submit results for at least one of 
+the other topics (201‐206) featured in the 2009 Interactive Task. 
+ 

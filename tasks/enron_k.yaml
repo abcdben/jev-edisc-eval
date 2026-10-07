@@ -1,0 +1,61 @@
+# TREC Legal Track 2010, Complaint K (interactive task) requests 301-303 on the EDRM Enron v2 collection
+# (data/legal10/legal10.jsonl). Complaint K is a fictional oil-spill fact pattern laid over the Enron mailbox, so
+# relevance does not depend on knowledge of the Enron matter: the knowledge-poor control for the ablation.
+# Request text verbatim; descriptions are neutral paraphrases. Request 304 (privilege) is excluded.
+
+name: enron_k
+kind: binary
+positive_label: responsive
+negative_label: not_responsive
+
+context: |
+  Matter: a class action for damages from the oil spill that followed the explosion, fire and sinking of a mobile
+  offshore drilling unit on the outer continental shelf, brought against the well's operator (the Company), the rig
+  owner, the blowout-preventer manufacturer and the cementing contractor. The documents are the Company's e-mails
+  and attachments, reproduced with their headers as a reviewer would see them; quoted earlier messages in a thread
+  are part of the document.
+
+questions:
+
+  oil_gas_drilling:
+    title: Oil and gas drilling
+    rfp_text: |
+      All documents or communications that describe, discuss, refer to, report on, or relate to onshore or offshore
+      oil and gas drilling or extraction activities, whether past, present or future, actual, anticipated, possible
+      or potential, including, but not limited to, all business and other plans relating thereto, all anticipated
+      revenues therefrom, and all risk calculations or risk management analyses in connection therewith.
+    positive_desc: |
+      The document concerns onshore or offshore oil and gas drilling or extraction activities, including business
+      plans, anticipated revenues, or risk analyses connected with such activities.
+    negative_desc: |
+      The document does not concern oil and gas drilling or extraction. Trading of oil or gas as commodities,
+      pipeline transport, and power generation without reference to drilling or extraction are not responsive.
+
+  spill_response:
+    title: Spill and blowout response
+    rfp_text: |
+      All documents or communications that describe, discuss, refer to, report on, or relate to actual, anticipated,
+      possible or potential responses to oil and gas spills, blowouts or releases, or pipeline eruptions, whether
+      past, present or future, including, but not limited to, any assessment, evaluation, remediation or repair
+      activities, contingency plans and/or environmental disaster, recovery or clean-up efforts.
+    positive_desc: |
+      The document concerns actual or potential responses to oil or gas spills, blowouts, releases or pipeline
+      eruptions, including assessment, remediation, repair, contingency planning, disaster recovery or clean-up.
+    negative_desc: |
+      The document does not concern responses to spills, blowouts, releases or pipeline eruptions. General safety or
+      environmental topics without such an incident or contingency are not responsive.
+
+  lobbying:
+    title: Lobbying
+    rfp_text: |
+      All documents or communications that describe, discuss, refer to, report on, or relate to activities, plans or
+      efforts (whether past, present or future) aimed, intended or directed at lobbying public or other officials
+      regarding any actual, pending, anticipated, possible or potential legislation, including but not limited to,
+      activities aimed, intended or directed at influencing or affecting any actual, pending, anticipated, possible
+      or potential rule, regulation, standard, policy, law or amendment thereto.
+    positive_desc: |
+      The document concerns activities, plans or efforts to lobby public officials or otherwise influence actual or
+      potential legislation, rules, regulations, standards or policies.
+    negative_desc: |
+      The document does not concern lobbying or efforts to influence legislation or regulation. News about
+      legislation without any effort to influence it is not responsive.
