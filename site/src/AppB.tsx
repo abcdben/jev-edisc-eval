@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { DATA, fmtInt, issueLabel, corpusKey, starOf } from "./data";
-import { LATENCY_ITEMS, PRCard, Shell, costItems, useCompareItems, type Chart, type CompareProps } from "./App";
+import { LATENCY_ITEMS, PRCard, Shell, costItems, useStatsItems, type Chart, type CompareProps } from "./App";
+import { StatsRow } from "./components/CompareStats";
+import { reviewerNotes } from "./compareStats";
 import { HoverProvider } from "./components/hover";
 import { Hint, Seg } from "./components/ui";
 import { StudioBars, StudioScatter } from "./components/StudioCharts";
@@ -57,9 +59,11 @@ export default function AppB() {
 const SUBSET_NOTE = "* scored on a stratified subset";
 
 /** The Compare models section of B: the active tab's chart alone, full width, with that chart's controls in its card header. */
-function CompareTabs({ v, on, explain }: CompareProps) {
+function CompareTabs({ v, on, explain, stats, setStats }: CompareProps) {
   const tab = useContext(TabContext);
-  const { sel, items } = useCompareItems(v, on);
+  // the selection under the Statistics row's setting (App.tsx useStatsItems): the reviewer's re-pointed TAR rows reach the Cost and Speed tabs too
+  const st = useStatsItems(v, on, stats, setStats);
+  const { sel, items } = st;
   const [chart, setChart] = useState<Chart>("map");
   const [costChart, setCostChart] = useState<CostChart>("bars");
   const [costUnit, setCostUnit] = useState<CostUnit>("100k");
@@ -72,18 +76,21 @@ function CompareTabs({ v, on, explain }: CompareProps) {
   const meta = DATA.corpora[corpusKey(v.corpus, v.tag)];
   const subset = sel.some((r) => starOf(r));
   // the chart's legend line, the subset star and how to reach the details modal (the A cards say it in their hover tooltips; these charts have none)
-  const caption = (lines: string[], what: "row" | "mark" = "row") => (
+  // `notes`: the reviewer's caption lines on the charts its grid reaches (cost, speed)
+  const caption = (lines: string[], what: "row" | "mark" = "row", notes: string[] = []) => (
     <div className="legend-note">
       {lines.map((t, i) => <span key={i}>{t}</span>)}
       {subset && <span>{SUBSET_NOTE}</span>}
+      {notes.map((t, i) => <span key={`n${i}`}>{t}</span>)}
       <span>Click a {what} for the model's details.</span>
     </div>
   );
+  const revNotes = reviewerNotes(st, stats.tarReviewer);
 
   let card: ReactNode;
   if (tab === "pr") {
     // taller than A's map (380), which shares its height with the side stack: alone across the page a 620 px plot keeps the interval boxes near square
-    card = <PRCard items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain} pulse ranked="rail" sig={v.corpus} height={620} />;
+    card = <PRCard items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain} pulse ranked="rail" sig={v.corpus} height={620} sort={{ value: stats.sort, onSort: st.onSort }} notes={st.notes} />;
   } else if (tab === "cost") {
     const cu = COST_UNIT[costUnit];
     card = (
@@ -104,7 +111,7 @@ function CompareTabs({ v, on, explain }: CompareProps) {
         ) : (
           <StudioBars rows={costRows(sel, costUnit)} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={costAxis(costChart, costUnit, costScale)} fmtTick={fmtMoneyTick} onSelect={explain} />
         )}
-        {caption(costCaption(costChart, costUnit, costScale), costChart === "scatter" ? "mark" : "row")}
+        {caption(costCaption(costChart, costUnit, costScale), costChart === "scatter" ? "mark" : "row", revNotes)}
       </div>
     );
   } else if (tab === "speed") {
@@ -122,7 +129,7 @@ function CompareTabs({ v, on, explain }: CompareProps) {
           rows={speedRows(sel, speedChart, speedUnit)} kind={speedChart === "dots" ? "dot" : "bar"} scale={speedChart === "dots" ? "log" : "linear"} sort={speedChart === "throughput" ? "desc" : "asc"}
           axis={speedAxis(speedChart)} fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} onSelect={explain}
         />
-        {caption(speedCaption(speedChart))}
+        {caption(speedCaption(speedChart), "row", revNotes)}
       </div>
     );
   } else {
@@ -155,6 +162,8 @@ function CompareTabs({ v, on, explain }: CompareProps) {
   // Hint (ui.tsx), whose popover title is read from the card heading once, on mount.
   return (
     <section className="section cmp-full">
+      {/* the Statistics row (components/CompareStats.tsx): the threshold on the recall/precision tab, the reviewer on the tabs its grid reaches, the sort in the ranked view */}
+      <StatsRow stats={stats} set={setStats} applied={st} threshold={tab === "pr"} reviewer={tab !== "stability"} ranked={tab === "pr" && chart === "ranked"} />
       <HoverProvider>
         <div className="dash ranked" key={tab}>{card}</div>
       </HoverProvider>

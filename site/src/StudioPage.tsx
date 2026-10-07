@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DATA, PRIMARY_BY_KEY, corpusKey, displayMeta, fmtInt, issueLabel, siteCorpus, starOf, CORPORA } from "./data";
 import { ModelPicker, TarPicker, useCompareItems, type View } from "./App";
-import { INTERVAL_MODES, MARK_SHAPES, PRScatter, intervalHasArea, type PRDomain } from "./components/PRScatter";
+import { INTERVAL_MODES, MARK_SHAPES, PRScatter, intervalHasArea, type LegendGroup, type MarkShape, type PRDomain } from "./components/PRScatter";
+import { TarReviewerControl } from "./components/TarReviewer";
+import { fmtRate, publishedText, reviewerToken } from "./tarGrid";
+import { applyStats, reviewerNotes, thresholdNotes } from "./compareStats";
 import { FILL_MODES, isOutlined } from "./components/hatch";
-import { PRRail } from "./components/PRRail";
+import { PRRail, RAIL_METRIC_LABEL, RAIL_SORT_DEFAULT, type RailMetric } from "./components/PRRail";
 import { StudioArmsMap, StudioBars, StudioScatter } from "./components/StudioCharts";
 import { ARMS_KEY_NAMES, ARMS_LAYOUTS, ARMS_METRICS, COST_UNIT, STAB_T0, armsAxis, armsCaption, armsPts, armsRows, costAxis, costCaption, costPts, costRows, fmtMoneyTick, fmtMsTick, fmtPctTick, speedAxis, speedCaption, speedRows, stabAxis, stabCaption, stabPaired, stabRows, type StabT0 } from "./opsRows";
 import { Control, Seg } from "./components/ui";
@@ -15,6 +18,7 @@ import { PALETTES, siblingHue, toHex, toVars, varOf } from "./palettes";
 import type { LogosMode } from "./logos";
 import { THEME_OPTIONS } from "./theme";
 import { useSeriesColors } from "./seriesColors";
+import { DEFAULT_THRESHOLD, THRESHOLD_MAX, THRESHOLD_MIN, THRESHOLD_STEP, fmtThreshold } from "./sweep";
 import { FAMILIES, FAMILY_BASIC_VAR, FAMILY_COMPOSED_VAR, FAMILY_MEMBERS, MAKERS, familyColor, familyOf, makerColor, makerName, makerOf } from "./makers";
 import {
   BUILTIN_PRESETS, BUILTIN_PREFIX, JEV_SCALE, MARK_SCALE, SCHEME_MODELS, SCHEME_SLIDERS, SCHEME_SURFACE, SCHEME_VARS, TEXT_SCALE, builtinState, cleanVars, decodeHash, defaults, encodeHash,
@@ -46,6 +50,22 @@ const PRESETS: SizePreset[] = [
 ];
 
 /**
+ * Journal (academic), the `paper` style (styles.css `.studio-plot[data-style="paper"]` for the ink and face; the rest is here): the figure a data
+ * scientist expects in a paper. Beyond its CSS it changes what the recall/precision charts draw: every item takes a marker shape by its maker
+ * (paperShape: filled circle TypeSafe, open circle OpenAI, square Anthropic, triangle Google, diamond ConvAI, open square TAR, open triangle other;
+ * with Key → by family the composed Jev variants an open diamond) so the figure reads in greyscale, the legend lists the makers by shape under the plot
+ * while the points keep their name labels (PRScatter `groups` + `shapeOf` + `legendBelow`), the axes carry outward ticks (`axisTicks`), the ranked view is a
+ * forest plot (PRRail `forest`) and the note under the chart is a numbered figure caption (figureCaption) that states the corpus, n, the threshold and the
+ * TAR reviewer rates. PAPER_PROFILE is its profile (STYLES): capped error bars (Interval → whiskers), no frame, logos or background, Text M.
+ */
+const PAPER_PROFILE: Profile = { labels: "legend", leaders: false, mark: "dot", markSize: "m", jevSize: "same", bg: "off", frame: false, logos: "none", text: "m", contrast: "normal", colors: "style", interval: "whiskers", fill: "filled", ticks: "sparse", key: "model" };
+/** The marker shape of a model in the Journal (academic) style: one per maker (makers.ts), the composed Jev variants an open diamond when the Key is by family. */
+const PAPER_SHAPES: Record<string, MarkShape> = { typesafe: "dot", openai: "ocircle", anthropic: "square", google: "triangle", convai: "diamond", tar: "osquare", other: "otriangle" };
+const paperShape = (byFamily: boolean) => (id: string): MarkShape => (byFamily && familyOf(id).id === "jev-composed" ? "odiamond" : PAPER_SHAPES[makerOf(id).id] ?? "otriangle");
+/** The legend groups of the Journal (academic) style: by family when the Key is, else by maker; each in the shape's own ink (the group's colour variable where it has one). */
+const paperGroup = (byFamily: boolean) => (id: string): LegendGroup => { const g = byFamily ? familyOf(id) : makerOf(id); return { id: g.id, name: g.label, color: g.colorVar ? `var(${g.colorVar})` : "var(--ink)", title: g.title }; };
+
+/**
  * Plot style presets (styles.css `.studio-plot[data-style=…]`): every one but `site` fully specifies its own panel, ink, grid and model palette, so the masthead
  * Dark/Light theme does not reach the panel. `custom` has no CSS block: its variables are the user's (the scheme editor below), written as inline custom
  * properties on the `.studio-scheme` wrapper around the panel, so the preset CSS, the high-contrast block and the PNG export read them unchanged;
@@ -53,10 +73,15 @@ const PRESETS: SizePreset[] = [
  * A preset may carry a `profile`: the companion settings (labels, marks, background, panel frame, logos, colours, text, contrast) that reproduce its reference
  * look, applied once, when the preset is chosen (onStyle), never on reload or while it stays on, so every control still moves freely afterwards.
  */
-type Profile = Partial<Pick<StudioState, "labels" | "leaders" | "mark" | "markSize" | "bg" | "frame" | "logos" | "text" | "contrast" | "colors">>;
+type Profile = Partial<Pick<StudioState, "labels" | "leaders" | "mark" | "markSize" | "jevSize" | "bg" | "frame" | "logos" | "text" | "contrast" | "colors" | "interval" | "fill" | "ticks" | "key">>;
 const STYLES: { id: PlotStyle; label: string; title: string; profile?: Profile }[] = [
   { id: "site", label: "Site", title: "The site's own look; follows the Dark/Light theme" },
   { id: "journal", label: "Journal", title: "Academic figure: white, black hairline axes, serif labels, Okabe–Ito colorblind-safe palette" },
+  {
+    id: "paper", label: "Journal (academic)",
+    title: "A paper figure that reads in greyscale: white, black and dark-grey ink, Times, thin black axes with outward ticks, a faint grid, one marker shape per model family (filled circle TypeSafe, open circle OpenAI, square Anthropic, triangle Google, diamond ConvAI, open square TAR), 95% intervals as capped error bars, a legend keyed by shape under the plot, a numbered caption that states the threshold and reviewer settings, and the ranked view as a forest plot with an estimate [lo, hi] column. Choosing it also sets Labels → legend, Marks → dot M, Interval → whiskers, Gridlines → sparse, Key → by model, plain background and panel, names only, the style's own colours, Text M, normal contrast (each can be changed again after)",
+    profile: PAPER_PROFILE,
+  },
   { id: "newsroom", label: "Newsroom", title: "Editorial data graphic: warm greys, dotted grid, muted news palette" },
   { id: "linkedin", label: "LinkedIn", title: "LinkedIn brand: #0A66C2 blues for Jev, LinkedIn accent colours for the LLMs" },
   { id: "slate", label: "Slate", title: "Dark slate, Jev in one saturated accent, every LLM in a shade of grey" },
@@ -178,7 +203,7 @@ export default function StudioPage() {
   // every remembered field whose stored form changed goes back to its own key, as the page always wrote it (studioState.ts FIELDS)
   useEffect(() => { if (!persistRef.current) return; writeChanged(lastWritten.current, state); lastWritten.current = state; }, [state]);
   const {
-    plot, corpus, issue, on, chart, costChart, costUnit, costScale, speedChart, speedUnit, stabChart, stabT0, stabT0Tag, stabT0Key, hideUnmeasured, orient, armsMetric, armsLayout, armsDelta, armsKey, axes, ax, swap, ticks,
+    plot, corpus, issue, on, chart, costChart, costUnit, costScale, speedChart, speedUnit, stabChart, stabT0, stabT0Tag, stabT0Key, hideUnmeasured, orient, armsMetric, armsLayout, armsDelta, armsKey, axes, ax, swap, ticks, threshold, sort, tarReviewer,
     mark, markSize, jevSize, fill: fillMode, interval, labels: labelsMode, leaders, key, famBasic, famComposed, w, h, title, frame, legend, caption, logos, bg, style, colors: colorMode, custom, text, contrast,
     scheme, schemeName, exScale, exBg, theme,
   } = state;
@@ -187,7 +212,7 @@ export default function StudioPage() {
   // a typed title belongs to the chart it was written for: changing the plot clears it, so a Stability title never sits over the Cost chart
   const setPlot = (p: StudioState["plot"]) => { if (p !== plot) patch({ plot: p, title: "" }); }, setCorpus = (c: string) => patch({ corpus: siteCorpus(c), issue: null }), setIssue = setter("issue"), setOn = setter("on");
   const setChart = setter("chart"), setCostChart = setter("costChart"), setCostUnit = setter("costUnit"), setCostScale = setter("costScale"), setSpeedChart = setter("speedChart"), setSpeedUnit = setter("speedUnit");
-  const setStabChart = setter("stabChart"), setStabT0 = setter("stabT0"), setStabT0Tag = setter("stabT0Tag"), setStabT0Key = setter("stabT0Key"), setHideUnmeasured = setter("hideUnmeasured"), setOrient = setter("orient"), setArmsMetric = setter("armsMetric"), setArmsLayout = setter("armsLayout"), setArmsDelta = setter("armsDelta"), setArmsKey = setter("armsKey"), setAxes = setter("axes"), setSwap = setter("swap"), setTicks = setter("ticks");
+  const setStabChart = setter("stabChart"), setStabT0 = setter("stabT0"), setStabT0Tag = setter("stabT0Tag"), setStabT0Key = setter("stabT0Key"), setHideUnmeasured = setter("hideUnmeasured"), setOrient = setter("orient"), setArmsMetric = setter("armsMetric"), setArmsLayout = setter("armsLayout"), setArmsDelta = setter("armsDelta"), setArmsKey = setter("armsKey"), setAxes = setter("axes"), setSwap = setter("swap"), setTicks = setter("ticks"), setThreshold = setter("threshold");
   // the bar charts (StudioCharts.tsx StudioBars, in any of their modes): the plots the Orientation control applies to; `vertical` is columns
   const armsMap = plot === "arms" && armsLayout === "map";
   const barPlot = (plot === "cost" && costChart !== "scatter") || plot === "speed" || plot === "stability" || (plot === "arms" && !armsMap);
@@ -200,7 +225,23 @@ export default function StudioPage() {
   const setText = setter("text"), setContrast = setter("contrast"), setExScale = setter("exScale"), setExBg = setter("exBg"), setTheme = setter("theme");
   const v: View = { corpus, tag: "", arm: "multi", gray: "all", level: "doc", issue };
   const meta = DATA.corpora[corpusKey(v.corpus, v.tag)];
-  const { sel, items } = useCompareItems(v, on);
+  const { sel: selPublished, items: ownItems } = useCompareItems(v, on);
+  // The Statistics section's inputs applied (compareStats.ts applyStats, shared with the site's Compare models section). TAR reviewer error rates
+  // (tarGrid.ts, results/tar_grid.json; the two sliders, shown while a TAR workflow is selected): "published" is the published figures exactly; otherwise
+  // every selected TAR record whose corpus has a grid is re-pointed at the cell nearest the rates before anything below reads it (recall/precision/F1,
+  // per-issue intervals, review effort, cost and hours, so the Cost and Speed plots follow too), a ‡ on the rows that leaves off their published rates;
+  // TAR rows with no grid on this corpus stay put, and the control and the caption say so. Model threshold (sweep.ts; the slider, on the recall/precision plot): at the default the items are the site's own,
+  // each model at its own label (findings.json); anywhere else every model with a sweep curve is re-cut at p(responsive) ≥ threshold under the same
+  // view, and the rows without one (classical TAR) keep their published point with a † in their name, which the caption explains. Every item carries F1
+  // with its interval (sweep.ts f1Of) for the ranked view's third column. `thrOn` is whether the slider is off the default on the recall/precision plot.
+  const stats = useMemo(() => applyStats(ownItems, selPublished, v, plot === "pr" ? threshold : DEFAULT_THRESHOLD, tarReviewer), [ownItems, selPublished, corpus, issue, plot, threshold, tarReviewer]); // eslint-disable-line react-hooks/exhaustive-deps
+  const { sel, items, fixedIds, movedIds, applied, revArms, thrOn, revSnapped, revOff } = stats;
+  // the plots the TAR reviewer grid reaches (the Statistics section shows its control on these)
+  const revPlot = plot === "pr" || plot === "cost" || plot === "speed";
+  // Ranked view sort (PRRail.tsx; the `sort` field): a header click ranks by that metric best first, a second click on the same header flips it
+  const onSort = (by: RailMetric) => set("sort", (p) => (p.by === by ? { by, dir: p.dir === "desc" ? "asc" : "desc" } : { by, dir: "desc" }));
+  const sortNonDefault = sort.by !== RAIL_SORT_DEFAULT.by || sort.dir !== RAIL_SORT_DEFAULT.dir;
+  const sortText = `${sort.by === "f1" ? "F1" : RAIL_METRIC_LABEL[sort.by].toLowerCase()} ${sort.dir === "desc" ? "↓" : "↑"}`;
   const { colors: seriesColors } = useSeriesColors();
   // A map with a full TAR sweep is not legible. Move to named ranked rows when the selection first becomes dense;
   // the user can still deliberately switch back to the map while that selection remains.
@@ -235,6 +276,10 @@ export default function StudioPage() {
   };
   const keyedItems = useMemo(() => items.map(keyed), [items, key, seriesColors]); // eslint-disable-line react-hooks/exhaustive-deps
   const pointLabels = labelsMode === "beside" || !!groupOf;
+  // Journal (academic) (PAPER_PROFILE above): per-family marker shapes, the maker legend under the plot with the points named, outward ticks, the forest plot
+  const paper = style === "paper";
+  const shapeOf = paper ? paperShape(byFamily) : undefined;
+  const paperGroups = paper ? paperGroup(byFamily) : undefined;
   // Marks: the point shape when logos are off (the glyph stands in for it otherwise), and the size of whichever is drawn; the Jev rows' own size (`same` follows Mark size)
   const ms = MARK_SCALE[markSize];
   const jms = jevSize === "same" ? ms : JEV_SCALE[jevSize];
@@ -509,11 +554,15 @@ export default function StudioPage() {
   const plotBg = (dflt: PlotBg): PlotBg => (bg === "auto" ? dflt : bg === "off" ? "none" : bg);
   const inkPct = (darkPanel ? 13 : contrast === "high" ? 30 : 20) * (bg === "grid" ? 0.6 : 1);
   const bgVars: Record<string, string> = bg !== "auto" && bg !== "off" && !presetDots ? { "--plot-dots": `color-mix(in srgb, var(--ink) ${inkPct}%, transparent)` } : {};
+  // The TAR reviewer caption, whenever the setting moves a figure off findings.json: the rates every gridded TAR row was re-run at, the ‡ rows, and the rows no grid could move
+  const revLines = reviewerNotes(stats, tarReviewer);
   const legendText = (): string[] => {
     // the note names the mark drawn at the point (Marks control); with every logo on it keeps the site's wording
     const what = logos === "all" || mark === "dot" ? "Dot" : mark === "x" ? "Cross" : mark[0].toUpperCase() + mark.slice(1);
     if (plot === "pr") {
-      if (chart !== "map") return [];
+      // the Model threshold, whenever it is off the default: what was re-cut and at what, and the † on the rows that could not be (PNG exports carry it)
+      const thrLines = [...thresholdNotes(stats, threshold), ...revLines];
+      if (chart !== "map") return thrLines;
       // the interval mark (Interval control), named only where the panel draws it: an area mode when its fill or outline is visible (marks.boxes), a line mode when --op-whisker is
       const fillWord = fillMode === "filled" ? "Shaded" : fillMode === "hatched" ? "Hatched" : fillMode === "outline" ? "Outlined" : "Hatched, outlined";
       // the directions follow the Axes orientation: recall is the width / horizontal on the site's map, the height / vertical when swapped
@@ -525,10 +574,10 @@ export default function StudioPage() {
         : interval === "band" && marks.whiskers ? "Whisker: 95% interval on recall."
         : interval === "bracket" && marks.whiskers ? `Brackets: corners of the 95% interval on recall (${rDim}) and precision (${pDim}).`
         : null;
-      return [ci ? `${what}: point estimate. ${ci}` : `${what}: point estimate.`];
+      return [ci ? `${what}: point estimate. ${ci}` : `${what}: point estimate.`, ...thrLines];
     }
-    if (plot === "cost") return barNote(costCaption(costChart, costUnit, costScale, marks.whiskers));
-    if (plot === "speed") return barNote(speedCaption(speedChart, marks.whiskers));
+    if (plot === "cost") return [...barNote(costCaption(costChart, costUnit, costScale, marks.whiskers)), ...revLines];
+    if (plot === "speed") return [...barNote(speedCaption(speedChart, marks.whiskers)), ...revLines];
     // the dumbbell (StudioBars' lollipop) draws no whiskers: the segment between the two dots takes the row
     if (plot === "arms") return barNote(armsCaption(armsLayout, armsMetric, meta, arms.missing, v, armsIssue, marks.whiskers && !(armsLayout === "dumbbell" && arms.hasSingle), armsDelta && arms.hasSingle));
     // the lollipop (Temperature 0 → dots) draws no whiskers: the segment between the two dots takes the row
@@ -548,7 +597,36 @@ export default function StudioPage() {
     if (first.startsWith("Dot:")) return [`Dot, one column per model:${first.slice(4)}`, ...rest];
     return [`${first} One column per model.`, ...rest];
   };
-  const legendLines = legendText();
+  /**
+   * The Journal (academic) style's numbered figure caption, in place of the legend lines: what is plotted and its interval, the corpus and its n (the issue when
+   * one is chosen), then the statistical settings read off the Statistics section: the threshold always (0.50 = the published cut) and the TAR reviewer rates
+   * whenever a TAR workflow is on (its default rates at the published figures); then the † and * notes where they apply. Percentages elsewhere in the figure are one decimal.
+   */
+  const figureCaption = (): string[] => {
+    const corpusName = CORPORA.find((c) => c.id === corpus)?.label ?? meta?.display ?? corpus;
+    const where = `${corpusName}, n = ${meta ? fmtInt(meta.n_docs) : "—"} documents${v.issue ? `, issue “${issueLabel(meta, v.issue).split(" · ")[0]}”` : ""}`;
+    // the gridded TAR arms by their short name (the part before the first " · ": "TAR 2.0"), one sentence each at the slider's rates or, at the published figures, each arm's own rates
+    const tarArms = revArms.filter((a) => a.grid), armName = (a: { name: string }) => a.name.split(" · ")[0];
+    const names = [...new Set(tarArms.map(armName))], joined = names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}` : names[0];
+    const reviewer = !tarArms.length ? ""
+      : revSnapped ? `${joined} reviewer miss rate ${fmtRate(revSnapped.fn)}, over-code rate ${fmtRate(revSnapped.fp)}.`
+      : tarArms.map((a) => `${armName(a)} reviewer miss rate ${fmtRate(a.grid!.default.fn)}, over-code rate ${fmtRate(a.grid!.default.fp)}, as published.`).filter((l, i, arr) => arr.indexOf(l) === i).join(" ");
+    const offArms = revArms.filter((a) => applied.offPublished.includes(a.model));
+    const notes = [
+      ...(plot === "pr" && fixedIds.length ? ["† No probability to re-cut (classical TAR); shown at its published point."] : []),
+      ...(offArms.length ? [`‡ Differs from the published figure: ${offArms.map((a) => `${armName(a)} assumed ${publishedText(a.grid!.default)}`).join(", ")}.`] : []),
+      ...(applied.fixed.length ? [`${applied.fixed.map((m) => revArms.find((a) => a.model === m)?.name ?? m).join(", ")}: fixed at the published point; ${stats.fixedHint}.`] : []),
+    ];
+    if (plot === "pr") {
+      const what = chart === "ranked" ? "Recall, precision and F1 with 95% Wilson intervals (F1 by the delta method)" : "Recall and precision with 95% Wilson intervals";
+      return [`Figure 1. ${what}, ${where}. Threshold ${fmtThreshold(threshold)}.${reviewer ? ` ${reviewer}` : ""}`, ...notes];
+    }
+    // the other plots keep their own first caption line; the corpus and n follow on the per-corpus ones (cost, speed; the arms caption names its own, stability is measured on a fixed sample)
+    const [first, ...rest] = legendText();
+    const perCorpus = plot === "cost" || plot === "speed";
+    return [`Figure 1. ${first ?? ""}${first && !first.endsWith(".") ? "." : ""}${perCorpus ? ` ${where}.` : ""}${reviewer && revPlot ? ` ${reviewer}` : ""}`.trim(), ...rest.filter((l) => !revLines.includes(l)), ...notes];
+  };
+  const legendLines = paper ? figureCaption() : legendText();
   /** A bar chart's host: the filling canvas in columns (the chart sizes to its box), the chart alone in rows (it sizes to them). */
   const barHost = (chart: React.ReactNode) => (vertical ? <div className="studio-canvas">{chart}</div> : chart);
   const showIssue = plot === "pr" || (plot === "cost" && costChart === "scatter") || plot === "arms";
@@ -557,12 +635,20 @@ export default function StudioPage() {
     const chartId = plot === "pr" ? chart : plot === "cost" ? costChart : plot === "speed" ? speedChart : plot === "arms" ? `${armsMetric}-${armsLayout}` : stabChart;
     const styleId = style === "custom" && schemeName.trim() ? `custom-${schemeName.trim()}` : style;
     const t0Id = plot === "stability" && stabT0Draw !== "off" ? `t0-${stabT0Draw}` : "";
-    return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, t0Id, vertical ? "vertical" : "", plot === "pr" && chart === "map" && swap ? "precision-x" : "", corpus, styleId, colorMode === "style" ? "" : colorMode, byMaker ? "by-maker" : byFamily ? "by-family" : ""].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
+    const thrId = thrOn ? `thr${Math.round(threshold * 100)}` : "";
+    const sortId = plot === "pr" && chart === "ranked" && sortNonDefault ? `by-${sort.by}-${sort.dir}` : "";
+    const revId = revSnapped && revOff ? reviewerToken(revSnapped) : "";
+    return `${slug(["jev", plot === "pr" ? "recall-precision" : plot, chartId, t0Id, vertical ? "vertical" : "", plot === "pr" && chart === "map" && swap ? "precision-x" : "", sortId, thrId, revId, corpus, styleId, colorMode === "style" ? "" : colorMode, byMaker ? "by-maker" : byFamily ? "by-family" : ""].join("-"))}-${el.offsetWidth}x${el.offsetHeight}@${exScale}x.png`;
   };
   const exportSize = `${w * Number(exScale)} × ${fills ? h * Number(exScale) : "auto"} px`;
 
   // The sections' one-line summaries while closed (Inspector.tsx summarize): the values a closed section holds, in the order its controls come.
   const markText = `${fills && logos === "all" ? "logos" : MARK_SHAPES.find((m) => m.id === mark)?.label} ${markSize.toUpperCase()}${jevSize === "same" ? "" : ` · Jev ${jevSize === "xxl" ? "2XL" : jevSize.toUpperCase()}`}`;
+  // Statistics: the threshold, the reviewer and the sort, when each moves a figure off the published one; "published figures" when none does (or none reaches the plot)
+  const statsSummary = summarize(
+    thrOn && `threshold ${fmtThreshold(threshold)}`, revSnapped && revOff && `TAR reviewer ${fmtRate(revSnapped.fn).replace(/%$/, "")}/${fmtRate(revSnapped.fp)}`,
+    plot === "pr" && chart === "ranked" && sortNonDefault && `sorted by ${sortText}`,
+  ) || "published figures";
   const chartSummary = summarize(
     plot === "pr" && chart, plot === "pr" && (axes === "full" ? "0–100%" : axes === "zoom" ? "fit to data" : `${ax.xlo}–${ax.xhi}%${chart === "map" ? ` × ${ax.ylo}–${ax.yhi}%` : ""}`), plot === "pr" && chart === "map" && swap && "precision on x",
     plot === "cost" && (costChart === "scatter" ? "cost vs recall" : costChart === "dots" ? "dots · log" : `bars · ${costScale}`), plot === "cost" && COST_UNIT[costUnit].axis,
@@ -666,6 +752,44 @@ export default function StudioPage() {
 
       {/* Inspector (components/Inspector.tsx): every other control, grouped in disclosure sections that summarise their values while closed. */}
       <div className="studio-ins">
+        {/* Statistics: the inputs that change the figures (not their look): the model threshold, the TAR reviewer's error rates and the ranked view's order. Every
+            section after it is formatting. Each control appears on the plots it reaches; a plot none reaches says so. */}
+        <Section id="stats" title="Statistics" open={!!sections.open.stats} onToggle={() => sections.toggle("stats")} summary={statsSummary}>
+          {/* Model threshold (sweep.ts, results/sweep.json): the same slider as the Population explorer's; every model with a probability is re-cut at p ≥ t
+              and its marker, row and interval move along its sweep curve; 0.50 is the published point (each model's own label). TAR rows have no probability and stay put (†). */}
+          {plot === "pr" && (
+            <Control label="Threshold">
+              <label className="studio-slider" title={`Re-cut every model with a probability at p(responsive) ≥ this, live, from its saved per-document probabilities (results/sweep.json). At ${fmtThreshold(DEFAULT_THRESHOLD)} the chart shows the published figures: each model at its own label. Classical TAR rows are hard decisions and keep their point (†).`}>
+                <span>p ≥</span>
+                <input type="range" min={THRESHOLD_MIN} max={THRESHOLD_MAX} step={THRESHOLD_STEP} value={threshold} onChange={(e) => setThreshold(Number(e.target.value))} aria-label="model threshold" />
+                <span className="val">{fmtThreshold(threshold)}</span>
+              </label>
+              {thrOn && <button type="button" className="studio-btn small" onClick={() => setThreshold(DEFAULT_THRESHOLD)} title={`Back to ${fmtThreshold(DEFAULT_THRESHOLD)}, the published operating point`}>reset</button>}
+              <span className="studio-hint small">
+                {!thrOn ? `${fmtThreshold(DEFAULT_THRESHOLD)} = published figures (each model's own label)`
+                  : `${movedIds.length} re-cut at p ≥ ${fmtThreshold(threshold)}${fixedIds.length ? ` · ${fixedIds.length} fixed †` : ""}`}
+              </span>
+            </Control>
+          )}
+          {/* TAR reviewer error rates (tarGrid.ts, results/tar_grid.json; components/TarReviewer.tsx): shown while a TAR workflow is selected, on every plot
+              the grid can move (recall/precision, cost, speed). Each gridded TAR row is re-pointed at the cell nearest the two rates; "published" is the published figures. */}
+          {revPlot && (
+            <Control label="TAR reviewer">
+              {revArms.length > 0 ? <TarReviewerControl value={tarReviewer} onChange={setter("tarReviewer")} arms={revArms} fixedHint={stats.fixedHint} /> : <span className="studio-hint small">no TAR workflow selected</span>}
+            </Control>
+          )}
+          {/* the ranked view's order (PRRail.tsx; the `sort` field): the same as clicking a column header, which still works */}
+          {plot === "pr" && chart === "ranked" && (
+            <Control label="Sort">
+              <Seg value={sort.by} onChange={(by) => set("sort", (p) => ({ ...p, by }))} options={[{ id: "recall", label: "recall" }, { id: "precision", label: "precision" }, { id: "f1", label: "F1" }]} />
+              <Seg value={sort.dir} onChange={(dir) => set("sort", (p) => ({ ...p, dir }))} options={[{ id: "desc", label: "best first" }, { id: "asc", label: "worst first" }]} />
+              {sortNonDefault && <button type="button" className="studio-btn small" onClick={() => set("sort", RAIL_SORT_DEFAULT)} title="Back to recall, best first">reset</button>}
+              <span className="studio-hint small">or click a column header on the chart</span>
+            </Control>
+          )}
+          {!(plot === "pr" || revPlot) && <span className="studio-hint small">No statistical inputs reach this plot; the figures are the published ones.</span>}
+        </Section>
+
         <Section id="chart" title="Chart" open={!!sections.open.chart} onToggle={() => sections.toggle("chart")} summary={chartSummary}>
           {plot === "pr" && (
             <>
@@ -1004,10 +1128,10 @@ export default function StudioPage() {
             {title.trim() ? <div className="studio-title">{title.trim()}</div> : null}
             {plot === "pr" && chart === "map" && (
               <div className="studio-canvas">
-                <PRScatter items={keyedItems} zoom={zoom} domain={domain} swap={swap} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={false} labels="legend" mark={mark} markSize={ms} jevMarkSize={jms} boxes={fillMode} interval={interval} bg={plotBg("dots")} ticks={ticks} />
+                <PRScatter items={keyedItems} zoom={zoom} domain={domain} swap={swap} emptyText={emptyText} logos={logos} fill textScale={ts} leaders={false} labels="legend" mark={mark} markSize={ms} jevMarkSize={jms} boxes={fillMode} interval={interval} bg={plotBg("dots")} ticks={ticks} shapeOf={shapeOf} groups={paperGroups} axisTicks={paper} legendBelow={paper} />
               </div>
             )}
-            {plot === "pr" && chart === "ranked" && <PRRail items={keyedItems} zoom={zoom} range={range} sortBy="recall" logos={logos} textScale={ts} mark={mark} bg={plotBg("dots")} interval={interval} ticks={ticks} />}
+            {plot === "pr" && chart === "ranked" && <PRRail items={keyedItems} zoom={zoom} range={range} sortBy={sort.by} sortDir={sort.dir} onSort={onSort} f1 logos={logos} textScale={ts} mark={mark} bg={plotBg("dots")} interval={interval} ticks={ticks} forest={paper} shapeOf={shapeOf} note={!paper} />}
             {plot === "cost" && costChart === "scatter" && (
               <div className="studio-canvas">
                 <StudioScatter pts={costPts(sel, v, costUnit).map(keyed)} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} logos={logos} emptyText={emptyText} textScale={ts} leaders={false} labels="legend" mark={mark} markSize={ms} jevMarkSize={jms} bg={plotBg("none")} ticks={ticks} />
@@ -1045,7 +1169,7 @@ export default function StudioPage() {
             )}
             {caption && legendLines.length > 0 && (
               <div className="legend-note">
-                {legendLines.map((t, i) => <span key={i}>{t}</span>)}
+                {legendLines.map((t, i) => <span key={i}>{paper && i === 0 && t.startsWith("Figure 1.") ? <><b>Figure 1.</b>{t.slice("Figure 1.".length)}</> : t}</span>)}
                 {plot === "pr" && chart === "map" && items.some((i) => i.subset) && <span>* scored on a stratified subset</span>}
                 {plot !== "pr" && sel.some((r) => starOf(r)) && <span>* scored on a stratified subset</span>}
               </div>

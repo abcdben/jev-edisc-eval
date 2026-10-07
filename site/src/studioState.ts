@@ -9,6 +9,9 @@ import type { ExportBackground } from "./exportPng";
 import { PALETTES, varOf, type PaletteId } from "./palettes";
 import type { LogosMode } from "./logos";
 import { THEMES, THEME_KEY, type Theme } from "./theme";
+import { DEFAULT_THRESHOLD, asThreshold } from "./sweep";
+import { RAIL_SORT_DEFAULT, type RailMetric, type SortDir } from "./components/PRRail";
+import { REALISTIC_REVIEWER, asReviewer, type ReviewerSetting } from "./tarGrid";
 
 /**
  * The studio's settings as one object (StudioPage.tsx holds one `StudioState` in state), and the registry that knows, for each field, its default,
@@ -25,7 +28,8 @@ import { THEMES, THEME_KEY, type Theme } from "./theme";
 export const PLOTS = ["pr", "cost", "speed", "stability", "arms"] as const;
 /** The five plots. `pr` is the site's recall/precision chart (map or ranked); the others are the studio's own bar, dot and scatter charts (opsRows.ts); `arms` is Single vs bundled, each model's one-issue run against its all-issues run. */
 export type Plot = (typeof PLOTS)[number];
-export const PLOT_STYLES = ["site", "journal", "newsroom", "linkedin", "slate", "economist", "epoch", "typesafe", "custom"] as const;
+/** `paper` is Journal (academic): the greyscale-legible figure with per-family marker shapes, capped error bars, a forest-plot ranked view and a numbered caption (StudioPage.tsx STYLES, paperShape, figureCaption). */
+export const PLOT_STYLES = ["site", "journal", "paper", "newsroom", "linkedin", "slate", "economist", "epoch", "typesafe", "custom"] as const;
 export type PlotStyle = (typeof PLOT_STYLES)[number];
 export const isPlotStyle = (s: string | null): s is PlotStyle => (PLOT_STYLES as readonly string[]).includes(s ?? "");
 /** Mark sizes (Mark size control): the multiplier on every point mark and vendor glyph (--mark-user). */
@@ -80,6 +84,12 @@ export type StudioState = {
   /** Single vs bundled (opsRows.ts): the figure compared, the layout, and its two marks: the signed Δ tag after the single-issue value and the two-entry key (bundled / single issue). */
   armsMetric: ArmsMetric; armsLayout: ArmsLayout; armsDelta: boolean; armsKey: boolean;
   axes: Axes; ax: AxBounds; swap: boolean; ticks: TickDensity;
+  /** Model threshold (sweep.ts): the recall/precision plot re-cuts every model with a probability at p(responsive) ≥ this; 0.50 is the published point (each model's own label, findings.json). */
+  threshold: number;
+  /** The ranked view's row order (components/PRRail.tsx): the metric and direction; RAIL_SORT_DEFAULT (recall, best first) is what the rows always had. */
+  sort: { by: RailMetric; dir: SortDir };
+  /** The TAR reviewer's error rates (tarGrid.ts): a pair re-points every gridded TAR row at that cell of results/tar_grid.json (REALISTIC_REVIEWER, 10% / 2%, to start); "published" is the published figures exactly. */
+  tarReviewer: ReviewerSetting;
   mark: MarkShape; markSize: MarkSize; jevSize: JevMarkSize; fill: FillMode; interval: IntervalMode; labels: LabelsMode; leaders: boolean; key: KeyMode;
   /** Key → by family swatches: a hex over the style's own colour for the Jev basic forms / composed variants, or "" for the style's (makers.ts FAMILY_*_VAR). */
   famBasic: string; famComposed: string;
@@ -116,7 +126,8 @@ const isRecord = (o: unknown): o is Record<string, unknown> => !!o && typeof o =
 const isOpenMap = (o: unknown): o is Record<string, boolean> => isRecord(o) && Object.values(o).every((v) => typeof v === "boolean");
 const ids = <T extends string>(xs: readonly { id: T }[]) => xs.map((x) => x.id);
 
-export const DEFAULT_SECTIONS: Record<string, boolean> = { chart: true, canvas: true, style: false, scheme: true, export: false };
+/** `stats` is the Statistics section (threshold, TAR reviewer, sort), first in the inspector; a stored map from before it existed gains it open through the merge in `sections.coerce`. */
+export const DEFAULT_SECTIONS: Record<string, boolean> = { stats: true, chart: true, canvas: true, style: false, scheme: true, export: false };
 export const DEFAULT_SIZE = { w: 1200, h: 675 };
 
 export const FIELDS: Fields = {
@@ -155,6 +166,13 @@ export const FIELDS: Fields = {
   },
   swap: { dflt: false, key: "studio-swap", store: "onoff", coerce: bool },
   ticks: { dflt: "normal", key: "studio-ticks", store: "string", coerce: oneOf(ids(TICK_DENSITIES)) },
+  threshold: { dflt: DEFAULT_THRESHOLD, key: "studio-threshold", store: "string", coerce: asThreshold },
+  sort: {
+    dflt: RAIL_SORT_DEFAULT, key: "studio-sort", store: "json",
+    coerce: (r) => { const by = isRecord(r) ? oneOf(["recall", "precision", "f1"] as const)(r.by) : undefined, dir = isRecord(r) ? oneOf(["desc", "asc"] as const)(r.dir) : undefined; return by && dir ? { by, dir } : undefined; },
+  },
+  // a stored null (the published figures, before the realistic default existed) coerces to undefined and so starts at the default
+  tarReviewer: { dflt: REALISTIC_REVIEWER, key: "studio-tar-reviewer", store: "json", coerce: asReviewer },
   mark: { dflt: "dot", key: "studio-mark", store: "string", coerce: oneOf(ids(MARK_SHAPES)) },
   markSize: { dflt: "m", key: "studio-mark-scale", store: "string", coerce: oneOf(["s", "m", "l", "xl"] as const) },
   jevSize: { dflt: "same", key: "studio-jev-mark", store: "string", coerce: oneOf(["same", "s", "m", "l", "xl", "xxl"] as const) },
@@ -303,6 +321,11 @@ export const BUILTIN_PRESETS: { name: string; title: string; state: Partial<Stud
   {
     name: "Journal figure", title: "An academic figure: the Journal style (white, serif, Okabe–Ito), Text L, filled interval boxes, no frame, plain marks without vendor logos; 1200 × 675",
     state: { style: "journal", text: "l", fill: "filled", interval: "box", frame: false, logos: "none", mark: "dot", markSize: "m", labels: "beside", bg: "auto", colors: "style", contrast: "normal", w: 1200, h: 675 },
+  },
+  {
+    name: "Journal (academic) figure", title: "A paper figure: the Journal (academic) style with its profile: black ink on white, no frame or logos, per-family marker shapes, capped 95% error bars, legend below the plot, a numbered caption; Text M; 1200 × 675",
+    // the Journal (academic) style's own profile (StudioPage.tsx STYLES), so the two agree
+    state: { style: "paper", labels: "legend", leaders: false, mark: "dot", markSize: "m", jevSize: "same", bg: "off", frame: false, logos: "none", text: "m", contrast: "normal", colors: "style", interval: "whiskers", fill: "filled", ticks: "sparse", key: "model", legend: true, caption: true, w: 1200, h: 675 },
   },
   {
     name: "Slate dark", title: "The Slate style in high contrast with Text XL, on the page's dark theme; 1200 × 675",

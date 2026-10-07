@@ -176,6 +176,14 @@ svg text { user-select: none; font-family: var(--sans); }
 .seg button.seg-hl.pulse::before { animation: seg-flash 0.65s ease-in-out 2; }
 @keyframes seg-flash { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
 
+/* The Compare models Statistics row (components/CompareStats.tsx): the analysis inputs (threshold, TAR reviewer, sort) in the control bar's idiom, one
+   wrapping row under the sticky bar, a hairline below it; the slider and reviewer controls reuse the studio's `.studio-slider` / `.tar-rev` pieces. */
+.stats-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; padding: 10px 0 12px; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
+.stats-row-lab { font-size: 11px; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+.stats-row .control > .lab { white-space: nowrap; }
+.stats-row .studio-slider input[type="range"] { width: 120px; }
+.stats-row .studio-hint.small { max-width: 40ch; line-height: 1.3; }
+
 /* sections */
 .section { padding: 14px 0 8px; }
 .sec-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; }
@@ -791,6 +799,23 @@ svg text { user-select: none; font-family: var(--sans); }
 .studio-slider input[type="range"] { width: 88px; margin: 0; accent-color: var(--ink); }
 .studio-slider .val { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink-3); min-width: 4ch; }
 label.studio-btn { display: inline-block; }
+/* TAR reviewer error-rate control (components/TarReviewer.tsx): two index sliders over the grid's rates, inline in the Studio's control bar, stacked in the rails */
+.tar-rev { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: 12.5px; color: var(--ink-2); }
+.tar-rev.stacked { display: flex; flex-direction: column; align-items: stretch; gap: 5px; padding: 4px 8px 6px; font-size: 12px; }
+.tar-rev-row { display: inline-flex; align-items: center; gap: 6px; }
+.tar-rev-row .k { color: var(--ink-3); }
+.tar-rev.stacked .tar-rev-row .k { min-width: 68px; }
+.tar-rev-row input[type="range"] { width: 96px; margin: 0; accent-color: var(--ink); }
+.tar-rev.stacked .tar-rev-row input[type="range"] { flex: 1; width: auto; }
+.tar-rev-row .val { font-variant-numeric: tabular-nums; font-size: 12px; color: var(--ink); min-width: 4ch; }
+.tar-rev-btns { display: inline-flex; gap: 6px; }
+/* the hint is two short lines (what a setting does; where each arm stands) on their own row under the sliders, whichever way the control is laid out */
+.tar-rev-hint { display: flex; flex-direction: column; gap: 2px; flex-basis: 100%; min-width: 0; line-height: 1.35; }
+.tar-rev-hint, .tar-rev-fixed { font-size: 11.5px; color: var(--ink-4); }
+/* in the Compare Statistics row the reviewer control takes a line of its own, so the label and sliders sit together on the left and the two hint lines run under them at full width */
+.stats-row .control.tar-rev-ctl { flex: 1 1 100%; min-width: 0; align-items: flex-start; }
+.stats-row .control.tar-rev-ctl > .lab { padding-top: 5px; }
+.stats-row .tar-rev { flex: 1 1 0; min-width: 0; }
 
 /* Studio plot style presets (StudioPage.tsx STYLES → data-style on .studio-plot). Each preset redefines, inside the panel only, the surface
    and ink variables, the grid, the box fill/outline alphas, the face (svg text and .legend-note read --sans) and the model palette
@@ -814,6 +839,35 @@ label.studio-btn { display: inline-block; }
   border-radius: 0;
 }
 .studio-plot[data-style="journal"].framed { border-color: #000000; }
+
+/* Journal (academic), `paper`: the figure for a paper or report, legible in greyscale. White, black and dark-grey ink only, Times, thin black axes
+   (the charts add outward ticks and numeric labels on both axes in this style: PRScatter axisTicks, PRRail forest), a faint light-grey grid, no dots,
+   no box fills (the style's profile draws 95% intervals as capped whiskers at full strength), no rounding. Every model colour is black or a dark grey,
+   one per maker, so the swatches in the maker legend and the points agree: the models tell apart by marker shape (StudioPage.tsx paperShape), not hue;
+   the TAR and calibration colours (site vars --c-tar-*, --c-cal) go grey with them. The note under the chart is a numbered figure caption: full ink,
+   serif, one paragraph, "Figure 1." leading. StudioPage.tsx STYLES gives it a profile: Labels → legend, Marks → dot M, Interval → whiskers, Gridlines → sparse,
+   Key → by model, plain background and panel, names only, the style's own colours, Text M, normal contrast. */
+.studio-plot[data-style="paper"] {
+  --sans: "Times New Roman", Times, Georgia, serif;
+  --panel: #ffffff; --ink: #000000; --ink-2: #000000; --ink-3: #222222; --ink-4: #555555;
+  --line: #d9d9d9; --line-2: #9a9a9a; --grid: #e6e6e6; --grid-x: #e6e6e6; --dots: transparent; --axis: #000000; --axis-y: #000000;
+  --box-alpha: 0; --box-stroke: 0.9; --box-stroke-w: 0.75; --bar-alpha: 0.85; --op-whisker: 1; --hl: #f2f2f2;
+  --c-jev: #000000; --v3: #000000; --v5: #000000; --v1: #000000; --v9: #000000; --v14: #000000; --c-laya-ft: #333333;
+  --c-haiku: #444444; --c-sonnet: #444444; --c-luna: #000000; --c-terra: #000000; --c-flashlite: #555555; --c-flash: #555555; --c-gemma: #777777;
+  --c-tar-1: #666666; --c-tar-2: #666666; --c-tar-3: #666666; --c-tar-4: #666666; --c-cal: #666666;
+  --fam-basic: #000000; --fam-composed: #333333; /* Key → by family: the composed variants an open diamond in dark grey beside the basic forms' filled black circle */
+  border-radius: 0;
+}
+.studio-plot[data-style="paper"].framed { border-color: #000000; }
+.studio-plot[data-style="paper"] svg text { font-weight: 400; }
+.studio-plot[data-style="paper"] svg text.lg { fill: var(--ink); }
+/* the figure caption: one justified-left paragraph in full ink, each line a sentence run on, the "Figure 1." lead in bold (its own span, first) */
+.studio-plot[data-style="paper"] .legend-note { display: block; color: var(--ink); line-height: 1.4; margin-top: 10px; max-width: none; }
+.studio-plot[data-style="paper"] .legend-note span { display: inline; }
+.studio-plot[data-style="paper"] .legend-note span + span::before { content: " "; }
+.studio-plot[data-style="paper"] .legend-note b { font-weight: 700; }
+/* high contrast keeps the figure's faint grid rather than darkening it; everything else (weights, strokes, marks) applies */
+.studio-plot[data-style="paper"][data-contrast="high"] { --grid: #e0e0e0; --grid-x: #e0e0e0; --dots: transparent; }
 
 /* Newsroom: an editorial data graphic. White, warm dark-grey text, light dotted grid, Franklin/Helvetica-like sans, a muted news palette (red-orange, blues, teals, golds, plum). */
 .studio-plot[data-style="newsroom"] {

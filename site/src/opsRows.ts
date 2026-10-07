@@ -1,5 +1,6 @@
 import { DATA, PRIMARY_BY_KEY, costPerDoc, fmtInt, fmtPct, isDecider, pick, starOf, type Rec } from "./data";
 import { detFor } from "./components/Consistency";
+import { gridRowName } from "./tarNames";
 import type { StudioArmsPt, StudioRow, StudioScatterPt } from "./components/StudioCharts";
 import type { View } from "./App";
 
@@ -49,26 +50,28 @@ export const fmtLatency = (ms: number, unit: SpeedUnit) => (unit === "s" ? `${(m
 
 /** The row fields every chart shares: colours and short names from the roster (so the studio's Style presets apply), the decider marker and the subset star. */
 export const rowBase = (r: Rec) => ({ id: r.model, name: PRIMARY_BY_KEY[r.model].short, color: PRIMARY_BY_KEY[r.model].color, decider: isDecider(PRIMARY_BY_KEY[r.model].kind ?? r.kind), subset: starOf(r) });
+/** The same for the charts the TAR reviewer grid reaches (Cost, Speed): a TAR row re-run off its published rates is named with them and a ‡ (tarNames.ts gridRowName). */
+const gridRowBase = (r: Rec) => { const b = rowBase(r); return { ...b, name: gridRowName(r, b.name) }; };
 
 export function costRows(sel: Rec[], unit: CostUnit): StudioRow[] {
   const cu = COST_UNIT[unit];
   return sel.map((r) => {
     const c = costPerDoc(r), val = c == null ? null : c * cu.mult(r);
-    return { ...rowBase(r), value: val, label: val == null ? "" : fmtMoney(val) };
+    return { ...gridRowBase(r), value: val, label: val == null ? "" : fmtMoney(val) };
   });
 }
 
 export function costPts(sel: Rec[], v: View, unit: CostUnit): StudioScatterPt[] {
   const cu = COST_UNIT[unit];
-  return sel.map((r) => { const c = costPerDoc(r); return { ...rowBase(r), x: c == null ? null : c * cu.mult(r), y: pick(r, v.level, v.gray, v.issue).recall }; });
+  return sel.map((r) => { const c = costPerDoc(r); return { ...gridRowBase(r), x: c == null ? null : c * cu.mult(r), y: pick(r, v.level, v.gray, v.issue).recall }; });
 }
 
 export function speedRows(sel: Rec[], chart: SpeedChart, unit: SpeedUnit): StudioRow[] {
   return sel.map((r) => {
     const p50 = r.ops.doc_latency_p50_ms, ci = r.ops.doc_latency_p50_ci_ms ?? null;
-    if (chart === "throughput") { const val = p50 == null ? null : 3.6e6 / p50; return { ...rowBase(r), value: val, label: val == null ? "" : `${fmtInt(Math.round(val))} docs/h` }; }
+    if (chart === "throughput") { const val = p50 == null ? null : 3.6e6 / p50; return { ...gridRowBase(r), value: val, label: val == null ? "" : `${fmtInt(Math.round(val))} docs/h` }; }
     // Whisker: the 95% bootstrap interval for the median (two-sided), not the p95 tail.
-    return { ...rowBase(r), value: p50, lo: ci?.[0] ?? null, hi: ci?.[1] ?? null, label: p50 == null ? "" : fmtLatency(p50, unit) };
+    return { ...gridRowBase(r), value: p50, lo: ci?.[0] ?? null, hi: ci?.[1] ?? null, label: p50 == null ? "" : fmtLatency(p50, unit) };
   });
 }
 

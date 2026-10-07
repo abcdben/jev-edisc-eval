@@ -6,7 +6,11 @@ import {
 } from "./data";
 import { Control, Hint, MethodContext, ROW_PULSE_MS, Seg, usePulseWindow, type HintItem, type TipLine } from "./components/ui";
 import { PRScatter, type PRItem } from "./components/PRScatter";
-import { PRRail } from "./components/PRRail";
+import { PRRail, type RailMetric } from "./components/PRRail";
+import { StatsRow } from "./components/CompareStats";
+import { applyStats, nextSort, reviewerNotes, thresholdNotes, useSiteStats, type Sort, type Stats, type StatsApplied } from "./compareStats";
+import { PUBLISHED, applyReviewer, fmtRate, type ReviewerSetting } from "./tarGrid";
+import { compareName, movedName, tarName, tarOption, type TarOption } from "./tarNames";
 import { PRHeat } from "./components/PRHeat";
 import { OpsBars, type BarItem } from "./components/OpsBars";
 import { Consistency, detFor, detLines } from "./components/Consistency";
@@ -32,12 +36,15 @@ const KIND_SHORT: Record<Kind, string> = { system1: "Decision models", system1_f
 /** `pulse` (Compare models only: the Configurations page shows one family, so no decider to single out) lets the deciders' interval boxes breathe for a few cycles when the map loads or its points change. */
 /** `ranked` picks the ranked view's component: `rail` (PRRail, Compare models) or `heat` (PRHeat, Compare configurations, differenced against `referenceId`, the family's base configuration). Both draw their own legend line. */
 /** `sig` names what the card is showing (the corpus, and the family on Configurations): the `ranked` option's accent (ui.tsx Seg `accent`) breathes once when the card mounts and again whenever it changes, not on every model toggle. */
-export function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false, ranked, referenceId, sig = "card", seriesKey }: { items: PRItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean; ranked: "rail" | "heat"; referenceId?: string; sig?: string; seriesKey?: ReactNode }) {
+/** `sort` (Compare models: the Statistics row's order, compareStats.ts) turns the rail's F1 column on and its Recall / Precision / F1 headers into sort controls; `notes` are caption lines under either view (the threshold and reviewer notes). */
+export function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = true, height = 380, explain, pulse = false, ranked, referenceId, sig = "card", seriesKey, sort, notes = [] }: { items: PRItem[]; chart: Chart; onChart: (c: Chart) => void; defaultZoom: boolean; emptyText?: string; logos?: boolean; height?: number; explain?: (k: string) => void; pulse?: boolean; ranked: "rail" | "heat"; referenceId?: string; sig?: string; seriesKey?: ReactNode; sort?: { value: Sort; onSort: (by: RailMetric) => void }; notes?: string[] }) {
   const setChart = onChart;
   const [zoom, setZoom] = useState(defaultZoom);
   const onSelect = explain && ((it: PRItem) => explain(it.id));
   const hover = useHover();
   const rowProps = { items, zoom, sortBy: "recall" as const, logos, onSelect, highlight: hover.id, onHover: hover.set };
+  // the rail with the Statistics row's sort: the F1 column on, the headers clickable (PRRail.tsx); without one, the plain recall-ranked rail
+  const railProps = sort ? { ...rowProps, f1: true, sortBy: sort.value.by, sortDir: sort.value.dir, onSort: sort.onSort } : rowProps;
   const accentPulse = usePulseWindow(sig, true, ROW_PULSE_MS);
   const options: { id: Chart; label: string; title?: string; accent?: boolean }[] = [
     { id: "map", label: "map", title: "Recall against precision, one box per model" },
@@ -53,15 +60,17 @@ export function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = 
         </span>
       </div>
       {chart === "map" && <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill onSelect={onSelect} highlight={hover.id} onHover={hover.set} pulse={pulse} labels={seriesKey ? "none" : "beside"} /></div>}
-      {chart === "ranked" && ranked === "rail" && <PRRail {...rowProps} />}
+      {chart === "ranked" && ranked === "rail" && <PRRail {...railProps} />}
       {chart === "ranked" && ranked === "heat" && <PRHeat {...rowProps} referenceId={referenceId} />}
       {seriesKey}
       {chart === "map" && (
         <div className="legend-note">
           <span>Dot: point estimate. Shaded box: 95% interval on recall (width) and precision (height).</span>
           {items.some((i) => i.subset) && <span>* scored on a stratified subset (hover for the count)</span>}
+          {notes.map((t, i) => <span key={i}>{t}</span>)}
         </div>
       )}
+      {chart === "ranked" && notes.length > 0 && <div className="legend-note">{notes.map((t, i) => <span key={i}>{t}</span>)}</div>}
     </div>
   );
 }
@@ -284,26 +293,6 @@ export function ModelPicker({ v, on, setOn, explain }: { v: View; on: Set<string
     </div></> : undefined} />;
 }
 
-type TarOption = { row: Rec; n: number | null; sampling: "Random" | "Diversity" | null; reviewer: string; order: number };
-function tarOption(row: Rec): TarOption {
-  const v = row.model.replace(/^tar@/, "");
-  if (v.startsWith("cal")) {
-    const reviewer = v === "cal" ? "80% recall target · 90% relevant-document coding accuracy" : v === "cal_75" ? "75% recall target · 90% relevant-document coding accuracy" : v === "cal_perfect" ? "80% recall target · perfect coding" : v === "cal_knee" ? "Knee stop · 90% relevant-document coding accuracy" : row.name.replace(/^TAR 2\.0\s*·?\s*/, "");
-    return { row, n: null, sampling: null, reviewer, order: { cal: 0, cal_75: 1, cal_perfect: 2, cal_knee: 3 }[v] ?? 9 };
-  }
-  const m = /^t1_(\d+)(.*)$/.exec(v);
-  const n = m ? Number(m[1]) : 0, suffix = m?.[2] ?? "";
-  const sampling = suffix.endsWith("_div") ? "Diversity" : "Random";
-  const acc = /_acc(\d+)/.exec(suffix)?.[1];
-  const reviewer = acc ? `${acc}% relevant-document coding accuracy${acc === "90" ? " · sweep" : ""}` : suffix.includes("_noisy") ? "90% relevant-document coding accuracy · baseline" : suffix.includes("_f1") ? "Perfect coding · F1 cutoff" : "Perfect coding · 80% recall cutoff";
-  return { row, n, sampling, reviewer, order: (sampling === "Random" ? 0 : 10) + (acc ? Number(acc) / 10 : suffix.includes("_noisy") ? 9 : suffix.includes("_f1") ? 8 : 0) };
-}
-
-const tarName = (x: TarOption) => x.n == null
-  ? `TAR 2.0 · CAL · ${x.reviewer}`
-  : `TAR 1.0 · ${fmtInt(x.n)} reviewed · ${x.sampling?.toLowerCase()} · ${x.reviewer}`;
-const compareName = (r: Rec) => r.model.startsWith("tar@") ? tarName(tarOption(r)) : displayMeta(r.model, r).short;
-
 type TarWorkflow = "t1" | "cal";
 type TarSampling = "random" | "diversity";
 type TarAccuracy = "60" | "70" | "80" | "90" | "perfect";
@@ -313,10 +302,20 @@ const ACCURACY_OPTIONS: { id: TarAccuracy; label: string }[] = [
 ];
 
 /** TAR workflow builder: independent variables resolve to an existing result key; selected combinations remain a multi-select comparison. */
-export function TarPicker({ v, on, setOn }: { v: View; on: Set<string>; setOn: (s: Set<string>) => void }) {
+/** `reviewer` is the Statistics row's TAR reviewer setting (compareStats.ts): off `published`, the foot note states the rates the selected gridded workflows are re-run at instead of the published runs' rule. */
+export function TarPicker({ v, on, setOn, reviewer = PUBLISHED }: { v: View; on: Set<string>; setOn: (s: Set<string>) => void; reviewer?: ReviewerSetting }) {
   const rows = useRows(v);
   const { colorOf, setColor } = useSeriesColors();
-  const options = tarRowsOf(rows).map(tarOption);
+  const options = tarRowsOf(rows).map((r) => tarOption(r));
+  // the rates the Statistics row's reviewer sliders put the selected gridded workflows at (tarGrid.ts applyReviewer snaps to the grid), the selected ones no grid can move,
+  // and each selected workflow's name under them (tarNames.ts movedName: the applied rates and a ‡ where they are not the published run's)
+  const rev = useMemo(() => {
+    const selected = options.filter((x) => on.has(x.row.model)).map((x) => x.row);
+    const a = applyReviewer(selected, reviewer);
+    const snapped = a.moved.size ? [...a.moved.values()][0] : null;
+    const nameOf = (x: TarOption) => { const m = a.moved.get(x.row.model); return m && a.offPublished.includes(x.row.model) ? movedName(x.row, m) : tarName(x); };
+    return { snapped, nameOf, fixed: a.fixed.map((m) => { const o = options.find((x) => x.row.model === m); return o ? tarName(o) : m; }) };
+  }, [options, on, reviewer]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!options.length) return null;
   const sizes = [...new Set(options.flatMap((x) => x.n == null ? [] : [x.n]))].sort((a, b) => a - b);
   const ids = new Set(options.map((x) => x.row.model));
@@ -374,7 +373,7 @@ export function TarPicker({ v, on, setOn }: { v: View; on: Set<string>; setOn: (
               <span className="pick-selected-lab">Selected</span>
               {selectedOptions.length ? <div className="series-selected">
                 {selectedOptions.map((x) => {
-                  const name = tarName(x), fallback = displayMeta(x.row.model, x.row).color;
+                  const name = rev.nameOf(x), fallback = displayMeta(x.row.model, x.row).color;
                   return <div className="series-selected-row" key={x.row.model}><SeriesColorControl id={x.row.model} color={colorOf(x.row.model, fallback)} onColor={setColor} label={name} /><span>{name}</span><button type="button" onClick={() => remove(x.row.model)} aria-label={`Remove ${name}`}>×</button></div>;
                 })}
               </div> : <span className="pick-empty">No TAR workflow is currently shown.</span>}
@@ -402,7 +401,11 @@ export function TarPicker({ v, on, setOn }: { v: View; on: Set<string>; setOn: (
           <div className="pick-foot">
             <button type="button" onClick={reset}>Restore defaults</button>
             <button type="button" onClick={() => { const next = new Set([...on].filter((k) => !k.startsWith("tar@"))); setOn(next); }}>Clear TAR</button>
-            <span className="pick-foot-r"><span className="pick-note">Percentages are relevant-document coding accuracy, not overall agreement. The non-relevant false-positive rate is one-fifth of the miss rate.</span></span>
+            <span className="pick-foot-r"><span className="pick-note">
+              {rev.snapped
+                ? `Percentages are the published runs' relevant-document coding accuracy, not overall agreement. The Statistics row's reviewer sliders currently re-run the selected workflows at a ${fmtRate(rev.snapped.fn)} miss rate and a ${fmtRate(rev.snapped.fp)} non-relevant false-positive rate${rev.fixed.length ? ` (${rev.fixed.join(", ")}: no grid for this corpus, fixed at the published run)` : ""}.`
+                : "Percentages are relevant-document coding accuracy, not overall agreement. The non-relevant false-positive rate is one-fifth of the miss rate."}
+            </span></span>
           </div>
         </div>
       )}
@@ -442,13 +445,31 @@ function ComparisonKey({ items, on, setOn }: { items: PRItem[]; on: Set<string>;
   </div>;
 }
 
-/** What the page shell hands its Compare models section: the view, the model selection and the details-modal opener. */
-export type CompareProps = { v: View; on: Set<string>; explain: (k: string) => void; setOn?: (s: Set<string>) => void };
+/** What the page shell hands its Compare models section: the view, the model selection, the details-modal opener and the Statistics setting (compareStats.ts) with its updater. */
+export type CompareProps = { v: View; on: Set<string>; explain: (k: string) => void; setOn?: (s: Set<string>) => void; stats: Stats; setStats: (p: Partial<Stats>) => void };
 
-function CompareSection({ v, on, explain, setOn }: CompareProps) {
+/**
+ * The Compare models selection under the Statistics row's setting (compareStats.ts applyStats): the published items re-cut at the threshold and the
+ * TAR rows re-pointed by the reviewer, every item with its F1; at the defaults the published figures exactly. With the caption lines that name what
+ * moved, and the header-click sort handler. Shared by both Compare sections (App.tsx CompareSection, AppB.tsx CompareTabs).
+ */
+export function useStatsItems(v: View, on: Set<string>, stats: Stats, setStats: (p: Partial<Stats>) => void): StatsApplied & { selPublished: Rec[]; notes: string[]; onSort: (by: RailMetric) => void } {
+  const { sel: selPublished, items: ownItems } = useCompareItems(v, on);
+  const applied = useMemo(() => applyStats(ownItems, selPublished, v, stats.threshold, stats.tarReviewer), [ownItems, selPublished, v, stats.threshold, stats.tarReviewer]);
+  const notes = useMemo(() => [...thresholdNotes(applied, stats.threshold), ...reviewerNotes(applied, stats.tarReviewer)], [applied, stats.threshold, stats.tarReviewer]);
+  const onSort = (by: RailMetric) => setStats({ sort: nextSort(stats.sort, by) });
+  return { ...applied, selPublished, notes, onSort };
+}
+
+function CompareSection({ v, on, explain, setOn, stats, setStats }: CompareProps) {
   const rows = useRows(v);
-  const { sel, items } = useCompareItems(v, on);
+  const st = useStatsItems(v, on, stats, setStats);
+  const { sel, items } = st;
   const { colorOf } = useSeriesColors();
+  // the Stability card keeps the published run's name (the grid does not reach it); on the cards the grid does reach (Cost, Speed) a row off its published
+  // rates is named by the applied cell's rates with a ‡ (tarNames.ts movedName), as the recall/precision items are (compareStats.ts applyStats)
+  const publishedName = (r: Rec) => compareName(st.selPublished.find((x) => x.model === r.model) ?? r);
+  const gridName = (r: Rec) => { const m = st.applied.moved.get(r.model); return m && st.applied.offPublished.includes(r.model) ? movedName(r, m) : publishedName(r); };
   const [chart, setChart] = useState<Chart>("map");
   const manyTar = items.filter((x) => x.id.startsWith("tar@")).length >= 12;
   const wasManyTar = useRef(manyTar);
@@ -459,17 +480,19 @@ function CompareSection({ v, on, explain, setOn }: CompareProps) {
 
   return (
     <section className="section">
+      {/* the Statistics row (components/CompareStats.tsx): the threshold, the TAR reviewer and the ranked view's sort, above the charts they move */}
+      <StatsRow stats={stats} set={setStats} applied={st} ranked={chart === "ranked"} />
       {manyTar && <div className="tar-chart-note" role="status"><b>Dense TAR comparison.</b> Ranked view keeps workflow names and confidence intervals readable; you can still switch back to the map.</div>}
       <HoverProvider>
         <div className={`dash${chart !== "map" ? " ranked" : ""}`}>
           <PRCard
             items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={(k) => { if (!k.startsWith("tar@")) explain(k); }}
-            pulse ranked="rail" sig={v.corpus}
+            pulse ranked="rail" sig={v.corpus} sort={{ value: stats.sort, onSort: st.onSort }} notes={st.notes}
             seriesKey={setOn ? <ComparisonKey items={items} on={on} setOn={setOn} /> : undefined}
           />
           <div className="stack">
-            <OpsCards recs={sel} colorOf={(r) => colorOf(r.model, displayMeta(r.model, r).color)} nameOf={compareName} explain={(k) => { if (!k.startsWith("tar@")) explain(k); }} decider={decider} emphasis={emphasis} />
-            <ConsistencyCard recs={sel} colorOf={(r) => colorOf(r.model, displayMeta(r.model, r).color)} nameOf={compareName} arm={v.arm} onSelect={(r) => { if (!r.model.startsWith("tar@")) explain(r.model); }} emphasis={emphasis} />
+            <OpsCards recs={sel} colorOf={(r) => colorOf(r.model, displayMeta(r.model, r).color)} nameOf={gridName} explain={(k) => { if (!k.startsWith("tar@")) explain(k); }} decider={decider} emphasis={emphasis} />
+            <ConsistencyCard recs={sel} colorOf={(r) => colorOf(r.model, displayMeta(r.model, r).color)} nameOf={publishedName} arm={v.arm} onSelect={(r) => { if (!r.model.startsWith("tar@")) explain(r.model); }} emphasis={emphasis} />
           </div>
         </div>
         <TarDepthCharts rows={rows} />
@@ -571,6 +594,8 @@ export function Shell({ Compare = CompareSection, mast, controlsTail, compareHas
   // The Method modal (components/Method.tsx) is not mounted for now; hint "more" links open the About modal instead.
   const openMethod = disclaimer.show;
   const [on, setOn] = useState<Set<string>>(new Set(DEFAULT_ON));
+  // the Compare models Statistics row's setting (compareStats.ts: threshold, reviewer, sort), remembered under the site's own key; the TAR picker reads the reviewer for its note
+  const [stats, setStats] = useSiteStats();
   const [grp, setGrp] = useState("jev");
   const off = useMemo(() => new Set<string>(), []); // every configuration of the family is shown
   const corpusTitle = `${fmtInt(meta.n_docs)} documents · ${meta.n_issues} issues · ${fmtInt(meta.n_pos_docs_any)} responsive to at least one (${fmtPct(meta.n_pos_docs_any / meta.n_docs, 0)}) · gold: ${meta.gold}`;
@@ -603,7 +628,7 @@ export function Shell({ Compare = CompareSection, mast, controlsTail, compareHas
           <Hint title={meta.display} text={corpusTitle} />
         </Control>
         {pageId === "compare"
-          ? <><ModelPicker v={v} on={on} setOn={setOn} explain={setExplain} /><TarPicker v={v} on={on} setOn={setOn} /></>
+          ? <><ModelPicker v={v} on={on} setOn={setOn} explain={setExplain} /><TarPicker v={v} on={on} setOn={setOn} reviewer={stats.tarReviewer} /></>
           : <VariantPicker grp={grp} setGrp={setGrp} />}
         <Control label="Issue">
           <span className="select">
@@ -618,7 +643,7 @@ export function Shell({ Compare = CompareSection, mast, controlsTail, compareHas
         {pageId === "compare" && controlsTail}
       </div>
 
-      {pageId === "compare" ? <Compare v={v} on={on} setOn={setOn} explain={setExplain} /> : <AblationSection v={v} grp={grp} off={off} explain={setExplain} />}
+      {pageId === "compare" ? <Compare v={v} on={on} setOn={setOn} explain={setExplain} stats={stats} setStats={setStats} /> : <AblationSection v={v} grp={grp} off={off} explain={setExplain} />}
       {explain && (
         <ExplainModal
           initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)}

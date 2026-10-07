@@ -19,9 +19,10 @@ export type Rec = {
   primary: boolean; group: string | null; variant: string | null; lever: string | null;
   subset: string | null; ops: Ops; all: Score; nogray: Score;
   tar?: {
-    variant: string; kind: string; docs_reviewed: number; n_corpus: number; review_share: number;
-    sampling: "random" | "diversity" | null;
-    reviewer: { docs_per_hour: number; usd_per_hour: number; miscode_rate: number };
+    variant: string; kind: string; docs_reviewed: number; n_corpus: number; review_share: number; hours: number; cost_usd: number;
+    sampling: "random" | "diversity" | null; recall_range?: [number, number] | null; precision_range?: [number, number] | null;
+    /** The simulated reviewer: economics, and its two error rates (tar.py Reviewer): `miscode_rate` the miss rate on relevant documents, `fp_rate` the over-code rate on non-relevant ones (sidecars before it existed imply miscode_rate / 5). */
+    reviewer: { docs_per_hour: number; usd_per_hour: number; miscode_rate: number; fp_rate?: number };
   };
 };
 export type CorpusMeta = {
@@ -96,6 +97,10 @@ export const modelKind = (key: string): string | undefined => DATA.models[key]?.
 /** Headline roster, in display order, with a stable colour each. `kind` overrides the record's kind for grouping on the Compare page. HIDDEN_MODELS are filtered out below.
  * Compare models lists a curated set of Jev configurations. The three question forms (Noul, Choice, Score) start checked; the others are off. Flat-Text State and No Criteria stay on the Configurations page.
  * `shortInMaker` (the studio's Key → by maker mode, makers.ts; the site never reads it) is the name with the vendor prefix dropped, where `short` carries one that a maker legend makes redundant. */
+/** The CAL row's reviewer error rates as the runs recorded them (the `tar` sidecar; tar.py NOISE_RATE and NOISE_FP_RATIO), for the roster note: the copy follows the data. */
+const CAL_REVIEWER = DATA.records.find((r) => r.model === "tar@cal")?.tar?.reviewer;
+const CAL_RATES = { fn: CAL_REVIEWER?.miscode_rate ?? 0.1, fp: CAL_REVIEWER?.fp_rate ?? (CAL_REVIEWER?.miscode_rate ?? 0.1) / 5 };
+const ratePct = (x: number) => `${Math.round(x * 1000) / 10}%`;
 const ALL_PRIMARY: { key: string; color: string; short: string; shortInMaker?: string; note: string; kind?: Kind }[] = [
   { key: "jev@base", color: "var(--c-jev)", short: "Jev · Noul", note: "TypeSafe Jev 1.13, Noul: one yes/no Noul per issue, prose criteria, RFP phrasing, matter context as a structured object. On by default." },
   { key: "jev@choice", color: "var(--v3)", short: "Jev · Choice", note: "TypeSafe Jev 1.13, Choice: the same instruction and criteria, asked as a Choice between the two labels rather than a yes/no Noul. On by default." },
@@ -112,7 +117,7 @@ const ALL_PRIMARY: { key: string; color: string; short: string; shortInMaker?: s
   { key: "gemini-3.8-flash", color: "var(--c-flash)", short: "Gemini 3.8 Flash", shortInMaker: "3.8 Flash", note: "Google Gemini 3.8 Flash, structured output." },
   { key: "gemma3-12b", color: "var(--c-gemma)", short: "Gemma 3 12B", kind: "llm", note: "Local, open-weight. Google Gemma 3 12B run via Ollama on a rented A100. Scored on a 400-600 document stratified subsample; latency measured with 4 concurrent requests." },
   { key: "tar@t1_1000_div", color: "var(--c-tar-3)", short: "TAR 1.0 · 1,000", note: "A simulated reviewer codes 1,000 documents chosen by cluster-stratified diversity sampling; TF-IDF + logistic regression labels the rest with a cutoff targeting 80% recall, chosen by cross-validation on the coded sample. Median of 5 seeds." },
-  { key: "tar@cal", color: "var(--c-cal)", short: "TAR 2.0 · CAL", note: "Continuous active learning with an imperfect reviewer (misses 10% of relevant documents and over-codes 2% of non-relevant documents). It stops after a random control set estimates 80% recall for two consecutive batches; the plotted result is the production set the reviewer coded relevant." },
+  { key: "tar@cal", color: "var(--c-cal)", short: "TAR 2.0 · CAL", note: `Continuous active learning with an imperfect reviewer (misses ${ratePct(CAL_RATES.fn)} of relevant documents and over-codes ${ratePct(CAL_RATES.fp)} of non-relevant documents). It stops after a random control set estimates 80% recall for two consecutive batches; the plotted result is the production set the reviewer coded relevant.` },
 ];
 export const PRIMARY = ALL_PRIMARY.filter((p) => !isHidden(p.key));
 const TAR_SIZE_COLOR: Record<number, string> = {

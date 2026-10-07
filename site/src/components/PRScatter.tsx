@@ -9,10 +9,11 @@ import { HatchDefs, OUTLINE_W, hatchAlpha, isHatched, isOutlined, useHatchIds, t
 import { gridOn, labelEvery, labelledAt, pctStep, pctTicks, type TickDensity } from "./ticks";
 
 /** `sub` is the one secondary line of the hover tooltip (what the point was scored on); the full figures live in the details modal. `decider` sets the row's name heavier in the tables; on the map it only selects which interval boxes breathe when `pulse` is on (the mark and label are drawn like every other). `emphasis` (Compare models: the decision-model rows, Jev and Laya) tints the row in the ranked table (ui.tsx RowTint); the map ignores it. */
-export type PRItem = { id: string; name: string; color: string; recall: CI; precision: CI; dashed?: boolean; subset?: string | null; sub?: string; decider?: boolean; emphasis?: boolean };
+/** `f1` (the studio's ranked view; sweep.ts f1Of / recut) is F1 with its delta-method interval; undefined where the chart carries none (the site). */
+export type PRItem = { id: string; name: string; color: string; recall: CI; precision: CI; f1?: CI; dashed?: boolean; subset?: string | null; sub?: string; decider?: boolean; emphasis?: boolean };
 
-/** The compact hover tooltip of a recall/precision mark or row: both intervals and the scoring line. */
-export const prTip = (p: PRItem, icon?: ReactNode): TipContent => ({ title: p.name, color: p.color, icon, lines: [["Recall", fmtCI(p.recall)], ["Precision", fmtCI(p.precision)]], sub: p.sub });
+/** The compact hover tooltip of a recall/precision mark or row: both intervals (and F1 where the item carries it) and the scoring line. */
+export const prTip = (p: PRItem, icon?: ReactNode): TipContent => ({ title: p.name, color: p.color, icon, lines: [["Recall", fmtCI(p.recall)], ["Precision", fmtCI(p.precision)], ...(p.f1 !== undefined ? [["F1", fmtCI(p.f1)] as [string, string]] : [])], sub: p.sub });
 
 const PR = 20, PT = 18;
 /** Tick and axis-title font sizes at text scale 1 (the studio's Text control multiplies them). */
@@ -27,12 +28,15 @@ const TICK_FS = 10.5, TITLE_FS = 12;
  * above the bottom edge. At scale 1 with two-digit ticks this gives the site's 56 and 48.
  */
 export const tickTextW = (labels: string[], s: number) => Math.max(0, ...labels.map((l) => l.length)) * 0.78 * TICK_FS * s;
-export function axisMargins(yTickLabels: string[], s: number) {
+/** `tick` is the length of outward tick marks on the axes (the Journal (academic) style's; 0 otherwise): the tick labels move out by it, and the margins with them. */
+export function axisMargins(yTickLabels: string[], s: number, tick = 0) {
   const titleX = 2 + TITLE_FS * s;
-  const PL = Math.round(titleX + 0.25 * TITLE_FS * s + Math.max(6, 5 * s) + tickTextW(yTickLabels, s) + 8);
-  const PB = Math.round(16 * s + 3 * s + 8 + TITLE_FS * s + 9 * s);
+  const PL = Math.round(titleX + 0.25 * TITLE_FS * s + Math.max(6, 5 * s) + tickTextW(yTickLabels, s) + 8 + tick);
+  const PB = Math.round(16 * s + 3 * s + 8 + TITLE_FS * s + 9 * s + tick);
   return { PL, PB, titleX };
 }
+/** Outward axis tick length at text scale 1, px (PRScatter `axisTicks`, PRRail `forest`). */
+export const AXIS_TICK = 4;
 
 /**
  * Leader line (the studio's Leaders control, `leaders` on PRScatter and StudioScatter) from a label the placement pushed away from its mark back to
@@ -76,8 +80,16 @@ export const LEADER_STYLE = { strokeWidth: "calc(0.75 * var(--sw-mult, 1))" } as
  * `transform-origin: cx cy` in px: WebKit resolves those lengths with the page zoom folded in, so on a zoomed page (Safari at anything but 100%)
  * the mark scaled about a point off to the side and drifted across the chart, the ranked view's marks landing on its value columns.
  */
-export type MarkShape = "dot" | "plus" | "x" | "ring" | "square" | "diamond";
-export const MARK_SHAPES: { id: MarkShape; label: string }[] = [{ id: "dot", label: "dot" }, { id: "plus", label: "plus" }, { id: "x", label: "×" }, { id: "ring", label: "ring" }, { id: "square", label: "square" }, { id: "diamond", label: "diamond" }];
+/**
+ * `triangle` is a filled triangle, apex up, side 2.2 r. The open shapes (`ocircle`, `osquare`, `odiamond`, `otriangle`; the Journal (academic)
+ * style's per-family markers, StudioPage.tsx paperShape) are the filled ones drawn as a 1.5 px outline over a panel-coloured fill, so an error bar
+ * behind them is hidden where they sit, as open markers are in a printed figure; `ring` keeps its transparent middle. The Marks control offers the
+ * filled shapes; the open ones are drawn where a chart's `shapeOf` names them.
+ */
+export type MarkShape = "dot" | "plus" | "x" | "ring" | "square" | "diamond" | "triangle" | "ocircle" | "osquare" | "odiamond" | "otriangle";
+export const MARK_SHAPES: { id: MarkShape; label: string }[] = [{ id: "dot", label: "dot" }, { id: "plus", label: "plus" }, { id: "x", label: "×" }, { id: "ring", label: "ring" }, { id: "square", label: "square" }, { id: "diamond", label: "diamond" }, { id: "triangle", label: "triangle" }];
+/** The open-marker stroke: 1.5 px × --sw-mult, over a panel-coloured fill. */
+const OPEN_STYLE = { strokeWidth: "calc(1.5 * var(--sw-mult, 1))", fill: "var(--panel, #fff)" } as const;
 /** The user's size factor on a mark: the Jev mark size where the item is a Jev row and the control is set, else the Mark size. */
 export const userScale = (jev: boolean) => (jev ? "var(--mark-jev, var(--mark-user, 1))" : "var(--mark-user, 1)");
 /** The CSS transform that sizes a vendor glyph: the studio's Mark size (or Jev mark size, for a Jev row) × the high-contrast enlargement. */
@@ -88,6 +100,20 @@ export function Mark({ shape = "dot", cx = 0, cy = 0, r, color, fixed = false, j
   const st = scale ? ({ transform: scale, transformOrigin: "0px 0px" } as React.CSSProperties) : undefined;
   if (shape === "dot") return <circle className={className} cx={cx} cy={cy} r={r} fill={color} style={{ ...st, r: fixed ? undefined : `calc(${r}px + var(--r-add, 0px))` } as React.CSSProperties} />;
   if (shape === "ring") return <circle className={className} cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth={1.5} style={{ ...st, strokeWidth: "calc(1.5 * var(--sw-mult, 1))" }} />;
+  if (shape === "ocircle") return <circle className={className} cx={cx} cy={cy} r={r} stroke={color} strokeWidth={1.5} style={{ ...st, ...OPEN_STYLE }} />;
+  if (shape === "triangle" || shape === "otriangle") {
+    // an equilateral triangle, apex up, with the same area as the 1.8 r square
+    const side = 2.2 * r, hgt = side * 0.866, d = `M${cx} ${cy - (2 / 3) * hgt}L${cx + side / 2} ${cy + hgt / 3}L${cx - side / 2} ${cy + hgt / 3}Z`;
+    return <g className={className} style={st}>{shape === "triangle" ? <path d={d} fill={color} /> : <path d={d} stroke={color} strokeWidth={1.5} strokeLinejoin="round" style={OPEN_STYLE} />}</g>;
+  }
+  if (shape === "osquare" || shape === "odiamond") {
+    const side = 1.8 * r;
+    return (
+      <g className={className} style={st}>
+        <rect x={cx - side / 2} y={cy - side / 2} width={side} height={side} stroke={color} strokeWidth={1.5} strokeLinejoin="round" style={OPEN_STYLE} transform={shape === "odiamond" ? `rotate(45 ${cx} ${cy})` : undefined} />
+      </g>
+    );
+  }
   // the size transform goes on an outer group (a CSS transform would replace an element's own transform attribute), the turn on the inner one
   if (shape === "plus" || shape === "x") {
     const a = 1.6 * r;
@@ -232,8 +258,9 @@ const PULSE_CYCLES = 2, PULSE_CYCLE_MS = 650;
 /** `bg` (the studio's Background control; the site's dot matrix, `dots`) is the pattern behind the plot area (plotBg.tsx). */
 /** `swap` (the studio's Axes orientation control; off on the site) puts precision on x and recall on y. Every item's (recall, precision) is read through `xCI` / `yCI` once, so the marks, intervals (the box's width becomes the precision interval, the recall whisker vertical), fit-to-data domain, ticks, titles, labels and leaders all follow. `domain` is always in plot x/y (the caller maps its metric bounds). */
 /** `ticks` (the studio's Gridlines control; `normal` on the site) is the tick and gridline density on both axes (ticks.ts TickDensity): gridlines and tick labels share the step; labels thin to every n-th tick where they would touch. */
+/** `shapeOf` (the studio's Journal (academic) style; StudioPage.tsx paperShape) gives each item its own mark shape in place of `mark` (the legend swatches follow it); `axisTicks` draws outward tick marks on both axes (AXIS_TICK × textScale) with the tick labels moved out past them; `legendBelow` puts the legend rows under the x-axis title instead of above the plot. */
 export type PRDomain = { x: [number, number]; y: [number, number] };
-export function PRScatter({ items, zoom, domain, swap = false, xLabel = swap ? "Precision" : "Recall", yLabel = swap ? "Recall" : "Precision", emptyText, logos: logosIn, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, boxes: boxMode = "filled", interval = "box", bg = "dots", groups, ticks = "normal" }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; swap?: boolean; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean | LogosMode; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; boxes?: FillMode; interval?: IntervalMode; bg?: PlotBg; groups?: (id: string) => LegendGroup; ticks?: TickDensity }) {
+export function PRScatter({ items, zoom, domain, swap = false, xLabel = swap ? "Precision" : "Recall", yLabel = swap ? "Recall" : "Precision", emptyText, logos: logosIn, height = 520, fill = false, onSelect, highlight, onHover, pulse = false, textScale = 1, leaders = false, labels: labelsMode = "beside", mark = "dot", markSize = 1, jevMarkSize = markSize, boxes: boxMode = "filled", interval = "box", bg = "dots", groups, ticks = "normal", shapeOf, axisTicks = false, legendBelow = false }: { items: PRItem[]; zoom: boolean; domain?: PRDomain; swap?: boolean; xLabel?: string; yLabel?: string; emptyText?: string; logos?: boolean | LogosMode; height?: number; fill?: boolean; onSelect?: (item: PRItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; pulse?: boolean; textScale?: number; leaders?: boolean; labels?: LabelsMode; mark?: MarkShape; markSize?: number; jevMarkSize?: number; boxes?: FillMode; interval?: IntervalMode; bg?: PlotBg; groups?: (id: string) => LegendGroup; ticks?: TickDensity; shapeOf?: (id: string) => MarkShape; axisTicks?: boolean; legendBelow?: boolean }) {
   const { tip, show, hide, hostRef } = useTip();
   const logos = logosMode(logosIn, false);
   const hasLogo = (p: PRItem) => logoShown(logos, p.id) && !!logoFor(p.id);
@@ -287,20 +314,27 @@ export function PRScatter({ items, zoom, domain, swap = false, xLabel = swap ? "
   const xt = pctTicks(dom.x[0], dom.x[1], xStep), yt = pctTicks(dom.y[0], dom.y[1], yStep);
   const grid = gridOn(ticks);
   const tickLabel = (t: number) => `${Math.round(t * 100)}%`;
-  const { PL, PB, titleX } = axisMargins(yt.map(tickLabel), s);
+  const tk = axisTicks ? AXIS_TICK * s : 0;
+  const { PL, PB, titleX } = axisMargins(yt.map(tickLabel), s, tk);
   // legend mode: the legend rows sit at the top (from LEGEND_Y), and the plot area starts LEGEND_GAP below them instead of at PT; the rows list the
-  // items, or the groups they fall into (`groups`), in which case the points keep their labels (pointLabels) as in beside mode
+  // items, or the groups they fall into (`groups`), in which case the points keep their labels (pointLabels) as in beside mode.
+  // `legendBelow` puts the rows under the x-axis title instead: the plot area ends LEGEND_GAP above them and the top keeps PT.
   const LEGEND_Y = 4;
   const grouped = labelsMode === "legend" && groups ? legendGroups(pts.map((p) => p.id), groups) : null;
   const legendItems = grouped ?? pts.map((p) => ({ id: p.id, name: p.name + (p.subset ? " *" : ""), color: p.color, sample: p.id }));
   const pointLabels = labelsMode === "beside" || !!grouped;
   const legendH = labelsMode === "legend" ? legendLayout(legendItems.map((i) => i.name), s, PL, W - PR, measure).height : 0;
-  const top = labelsMode === "legend" ? Math.max(PT, LEGEND_Y + legendH + LEGEND_GAP * s) : PT;
+  const legendTop = labelsMode === "legend" && !legendBelow;
+  const top = legendTop ? Math.max(PT, LEGEND_Y + legendH + LEGEND_GAP * s) : PT;
+  const bottomExtra = labelsMode === "legend" && legendBelow && legendH ? legendH + LEGEND_GAP * s : 0;
+  // the x axis's y: the plot area's bottom edge (PB below it hold the tick labels and the x title, then the legend rows when they sit below)
+  const AX = H - PB - bottomExtra;
+  const legendY = legendTop ? LEGEND_Y : H - legendH;
   const X = (v: number) => PL + ((v - dom.x[0]) / (dom.x[1] - dom.x[0] || 1)) * (W - PL - PR);
-  const Y = (v: number) => top + (1 - (v - dom.y[0]) / (dom.y[1] - dom.y[0] || 1)) * (H - top - PB);
+  const Y = (v: number) => top + (1 - (v - dom.y[0]) / (dom.y[1] - dom.y[0] || 1)) * (AX - top);
   // labels on every n-th tick where adjacent ones would touch ("100%" at its measured width plus 8 s along x; a line's height along y); every tick keeps its gridline
   const xEvery = labelEvery(measure("100%", TICK_FS * s, "mono") + 8 * s, ((W - PL - PR) * xStep) / 100 / (xSpan || 1));
-  const yEvery = labelEvery(TICK_FS * s * 1.4, ((H - top - PB) * yStep) / 100 / (ySpan || 1));
+  const yEvery = labelEvery(TICK_FS * s * 1.4, ((AX - top) * yStep) / 100 / (ySpan || 1));
 
   // Per item: its size factor (the Jev mark size for a Jev row, else the Mark size), the mark radius as drawn (the glyph's half-size or the dot's radius, × that),
   // and the beside-the-mark label offset: 9 s at size 1, grown so the gap to a larger mark stays. `grow` is what a larger mark adds; the placement pads each dot by its own.
@@ -357,27 +391,29 @@ export function PRScatter({ items, zoom, domain, swap = false, xLabel = swap ? "
           {/* hatch tiles (hatch.tsx), one per item, in the hatched modes */}
           <HatchDefs items={drawn} s={s} hatchId={hatchId} on={hatched} />
         </defs>
-        {bg !== "none" && <rect x={PL} y={top} width={W - PR - PL} height={H - PB - top} fill={`url(#${bgId})`} />}
+        {bg !== "none" && <rect x={PL} y={top} width={W - PR - PL} height={AX - top} fill={`url(#${bgId})`} />}
         {/* vertical gridlines read --grid-x (falls back to --grid), so a preset can keep horizontal rules only (Epoch); the y-axis line likewise --axis-y */}
         {xt.map((t) => (
           <g key={`x${t}`}>
-            {grid && <line className="gl" x1={X(t)} x2={X(t)} y1={top} y2={H - PB} stroke="var(--grid-x, var(--grid))" />}
-            {labelledAt(t * 100, xStep, xEvery) && <text x={X(t)} y={H - PB + 16 * s} fontSize={TICK_FS * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{tickLabel(t)}</text>}
+            {grid && <line className="gl" x1={X(t)} x2={X(t)} y1={top} y2={AX} stroke="var(--grid-x, var(--grid))" />}
+            {axisTicks && <line x1={X(t)} x2={X(t)} y1={AX} y2={AX + tk} stroke="var(--axis)" style={{ strokeWidth: "var(--sw-mult, 1)" }} />}
+            {labelledAt(t * 100, xStep, xEvery) && <text x={X(t)} y={AX + tk + 16 * s} fontSize={TICK_FS * s} textAnchor="middle" fill="var(--ink-3)" className="mono">{tickLabel(t)}</text>}
           </g>
         ))}
         {yt.map((t) => (
           <g key={`y${t}`}>
             {grid && <line className="gl" x1={PL} x2={W - PR} y1={Y(t)} y2={Y(t)} stroke="var(--grid)" />}
-            {labelledAt(t * 100, yStep, yEvery) && <text x={PL - 8} y={Y(t) + 3.5 * s} fontSize={TICK_FS * s} textAnchor="end" fill="var(--ink-3)" className="mono">{tickLabel(t)}</text>}
+            {axisTicks && <line x1={PL - tk} x2={PL} y1={Y(t)} y2={Y(t)} stroke="var(--axis-y, var(--axis))" style={{ strokeWidth: "var(--sw-mult, 1)" }} />}
+            {labelledAt(t * 100, yStep, yEvery) && <text x={PL - 8 - tk} y={Y(t) + 3.5 * s} fontSize={TICK_FS * s} textAnchor="end" fill="var(--ink-3)" className="mono">{tickLabel(t)}</text>}
           </g>
         ))}
         <g stroke="var(--axis)" style={{ strokeWidth: "var(--sw-mult, 1)" }}>
-          <line x1={PL} x2={W - PR} y1={H - PB} y2={H - PB} />
-          <line x1={PL} x2={PL} y1={top} y2={H - PB} stroke="var(--axis-y, var(--axis))" />
+          <line x1={PL} x2={W - PR} y1={AX} y2={AX} />
+          <line x1={PL} x2={PL} y1={top} y2={AX} stroke="var(--axis-y, var(--axis))" />
         </g>
-        <text x={(PL + W - PR) / 2} y={H - 10 * s} fontSize={TITLE_FS * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
-        <text x={titleX} y={(top + H - PB) / 2} fontSize={TITLE_FS * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(top + H - PB) / 2})`}>{yLabel}</text>
-        {labelsMode === "legend" && <Legend items={legendItems} s={s} x0={PL} x1={W - PR} y={LEGEND_Y} mark={(id) => legendSwatch(logos, mark)(legendItems.find((i) => i.id === id)?.sample ?? id)} measure={measure} />}
+        <text x={(PL + W - PR) / 2} y={AX + PB - 10 * s} fontSize={TITLE_FS * s} textAnchor="middle" fill="var(--ink-2)" className="ax">{xLabel}</text>
+        <text x={titleX} y={(top + AX) / 2} fontSize={TITLE_FS * s} textAnchor="middle" fill="var(--ink-2)" className="ax" transform={`rotate(-90 ${titleX} ${(top + AX) / 2})`}>{yLabel}</text>
+        {labelsMode === "legend" && <Legend items={legendItems} s={s} x0={PL} x1={W - PR} y={legendY} mark={(id) => { const sample = legendItems.find((i) => i.id === id)?.sample ?? id; return shapeOf && !logoShown(logos, sample) ? shapeOf(sample) : legendSwatch(logos, mark)(sample); }} measure={measure} />}
         {probes}
 
         {/* CI marks (IntervalMode) first so dots sit on top; every box or ellipse is drawn the same way (FillMode), the highlighted one a little deeper */}
@@ -456,7 +492,7 @@ export function PRScatter({ items, zoom, domain, swap = false, xLabel = swap ? "
               {hasLogo(p) ? (
                 <g color={p.color} style={{ transform: glyphScale(isJev(p.id)) }}><LogoGlyph model={p.id} cx={0} cy={0} size={glyph(p)} /></g>
               ) : (
-                <Mark shape={mark} r={3.2} color={p.color} jev={isJev(p.id)} />
+                <Mark shape={shapeOf ? shapeOf(p.id) : mark} r={3.2} color={p.color} jev={isJev(p.id)} />
               )}
               {l && (
                 <text x={l.x} y={l.y + 10 * s} fontSize={11 * s} fill="var(--ink)" className="nm" style={{ paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 2.5, strokeLinejoin: "round", pointerEvents: onSelect ? "auto" : "none" }}>
