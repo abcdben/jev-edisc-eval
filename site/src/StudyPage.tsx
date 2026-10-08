@@ -59,6 +59,7 @@ export default function StudyPage() {
           <p className="sub">Decision models, LLMs and classical TAR beside the human reviewers who built the test collections. Hatched or dashed marks are placeholders for experiments not yet run.</p>
         </div>
         <div className="study-hdr-r">
+          <a className="home-link" href="./" title="The landing page: every page of the site">Home</a>
           <Seg value={s.mode} onChange={(m) => up({ mode: m })} options={[{ id: "plot", label: "Plot" }, { id: "table", label: "Table" }]} />
           <Seg value={theme} onChange={setTheme} options={THEME_OPTIONS.map((t) => ({ id: t.id, label: t.label, title: t.title }))} />
         </div>

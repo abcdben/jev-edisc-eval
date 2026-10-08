@@ -13,7 +13,7 @@ import {
 } from "./opsRows";
 
 /**
- * Variant B of the site (b.html → b.tsx → this page), for an A/B comparison with index.html. Everything is the shell App.tsx renders (masthead, control
+ * Variant B of the site (b.html → b.tsx → this page), for an A/B comparison with compare.html. Everything is the shell App.tsx renders (masthead, control
  * bar, Compare configurations, modals, foot) except the Compare models section: instead of one recall/precision plot with the Speed, Cost and Stability
  * cards small beside it, a tab strip at the foot of the sticky control bar (Recall / precision · Cost · Speed · Stability) shows one full-width chart at a
  * time, each with its own controls in the card header. The Cost, Speed and Stability charts are the studio's full-size ones (components/StudioCharts.tsx;
@@ -48,7 +48,7 @@ export default function AppB() {
       <Seg value={tab} onChange={setTab} options={TABS} />
     </div>
   );
-  const mast = <a className="variant" href="./index.html" title="The A layout: one recall/precision plot with the Speed, Cost and Stability cards beside it">Variant B · view A</a>;
+  const mast = <a className="variant" href="./compare.html" title="The A layout: one recall/precision plot with the Speed, Cost and Stability cards beside it">Variant B · view A</a>;
   return (
     <TabContext.Provider value={tab}>
       <Shell Compare={CompareTabs} mast={mast} controlsTail={tabs} compareHash={tabHash(tab)} />

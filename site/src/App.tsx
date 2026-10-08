@@ -625,7 +625,7 @@ export function Shell({ Compare = CompareSection, mast, controlsTail, compareHas
           ))}
         </nav>
         {mast}
-        <span className="theme"><Seg value={theme} onChange={setTheme} options={THEME_OPTIONS} /></span>
+        <span className="theme"><a className="home-link" href="./" title="The landing page: every page of the site">Home</a><Seg value={theme} onChange={setTheme} options={THEME_OPTIONS} /></span>
       </header>
 
       <div className="controls">
@@ -673,7 +673,7 @@ export function Shell({ Compare = CompareSection, mast, controlsTail, compareHas
   return <MethodContext.Provider value={openMethod}>{page}</MethodContext.Provider>;
 }
 
-/** The site (index.html): the shell with its own Compare models section. */
+/** The comparison app (compare.html; the root, index.html, is the landing page): the shell with its own Compare models section. */
 export default function App() {
   return <Shell />;
 }

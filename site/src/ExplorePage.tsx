@@ -50,6 +50,7 @@ export default function ExplorePage() {
           <p className="sub">Every judged document of a collection, cut by who called it responsive: a standard, an arm, and an overlay, each a human signal or a model. Click a region to list its documents and read them.</p>
         </div>
         <div className="study-hdr-r">
+          <a className="home-link" href="./" title="The landing page: every page of the site">Home</a>
           <a className="pe-link" href="./study.html">Study</a>
           <Seg value={theme} onChange={setTheme} options={THEME_OPTIONS.map((t) => ({ id: t.id, label: t.label, title: t.title }))} />
         </div>

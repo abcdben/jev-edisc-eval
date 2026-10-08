@@ -10,10 +10,19 @@ Interactive page over `results/findings.json` (written by `bench export-findings
 cd site
 npm install
 npm run dev        # http://127.0.0.1:5173
-npm run build      # static bundle in site/dist (open dist/index.html or host anywhere)
+npm run build      # static bundle in site/dist (host anywhere; open dist/index.html for the landing page, dist/compare.html for the app)
 ```
 
-Three sections, all driven by the sticky control bar (corpus, TREC criteria, prompting arm, scope, gold labels):
+## Pages
+
+- `index.html` (`/`, `src/landing.tsx` → `src/LandingPage.tsx`): the landing page, a card per page below. It also forwards the comparison app's old hash links (`/#compare`, `/#configurations`, `/#tradeoff`; the app used to be the root) to `compare.html` with the hash intact.
+- `compare.html` (`src/main.tsx` → `src/App.tsx`): the comparison app, three views in the hash (below). Its masthead links Home.
+- `study.html` (`src/study.tsx` → `src/StudyPage.tsx`): the human-anchored study, `results/study.json`.
+- `explore.html` (`src/explore.tsx` → `src/ExplorePage.tsx`): the population explorer, `public/explore/`.
+- `b.html` (`src/b.tsx` → `src/AppB.tsx`): variant B of the app for an A/B comparison, links back to A; not linked from the landing page, `noindex`.
+- `studio.html` (`src/studio.tsx` → `src/StudioPage.tsx`): the screenshot studio; unlinked, `noindex`.
+
+The comparison app has three sections, all driven by the sticky control bar (corpus, TREC criteria, prompting arm, scope, gold labels):
 
 - **Compare models**: pick any subset of the headline roster. Recall against precision with 95% interval boxes (or ranked rows with whiskers), plus review time and cost per 100,000 documents for the same selection.
 - **Configurations of one model**: pick Jev or a Laya checkpoint and compare its ablation variants the same way. The optimized configuration (the one selected on the Veridian dev split and carried into the headline comparison) is starred.
@@ -25,4 +34,4 @@ Every mark carries a hover tooltip with the counts and intervals behind it; ever
 
 ## Publishing
 
-`scripts/deploy_site.sh` builds and force-pushes `site/dist` to [github.com/abcdben/tarcalc](https://github.com/abcdben/tarcalc), which GitHub Pages serves at https://tarcalc.com. If results changed, run `.venv/bin/bench export-findings` first. DNS at Namecheap: A records for `@` → 185.199.108.153 / .109.153 / .110.153 / .111.153, CNAME `www` → `abcdben.github.io`.
+`scripts/deploy_site.sh` builds and force-pushes `site/dist` to [github.com/abcdben/tarcalc](https://github.com/abcdben/tarcalc), which GitHub Pages serves at https://decider.tarcalc.com (the script writes that `CNAME`; also at https://abcdben.github.io/tarcalc/). The apex, tarcalc.com, is not served from this repository. If results changed, run `.venv/bin/bench export-findings` first. DNS at Namecheap: CNAME `decider` → `abcdben.github.io`.
