@@ -816,7 +816,7 @@
    "id": "trec-alt",
    "kind": "trec-alt",
    "label": "TREC 2016 Total Recall \u00b7 alternate assessors",
-   "short": "Jeb Bush emails \u00b7 50 documents per topic re-judged by three alternate assessors \u00b7 Jev and TAR scores from the full-collection runs",
+   "short": "Jeb Bush emails \u00b7 50 documents per topic re-judged by three alternate assessors \u00b7 Jev, OpenAI Decisions and TAR scores from the full-collection runs",
    "text": false,
    "text_note": "The Jeb Bush collection is distributed by NIST under the Total Recall usage agreement (see data/trec/README.md); place it at TREC/Jeb Bush TXT/ and rebuild to read the emails.",
    "n": 550,
@@ -999,6 +999,17 @@
      "planned": false,
      "note": null,
      "file": "jev__base.json",
+     "coverage": 0.96
+    },
+    {
+     "id": "openai-decisions@predicate",
+     "name": "OpenAI Decisions \u00b7 Predicate",
+     "short": "Decisions \u00b7 Predicate",
+     "kind": "system1",
+     "color": "var(--c-oad)",
+     "planned": false,
+     "note": null,
+     "file": "openai-decisions__predicate.json",
      "coverage": 0.96
     },
     {

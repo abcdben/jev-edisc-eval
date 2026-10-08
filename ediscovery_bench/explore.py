@@ -91,7 +91,7 @@ DATASETS: list[dict[str, Any]] = [
          src="data/trec/eval_ids.jsonl", task="tasks/trec.yaml", topic_no=TREC_NO, text=False, results="trec", placeholders=False,
          text_note="The Jeb Bush collection is distributed by NIST under the Total Recall usage agreement (see data/trec/README.md); place it at TREC/Jeb Bush TXT/ and rebuild to read the emails.",
          humans=["human@nist"], default=dict(standard="human@nist", a="jev@base", b="gpt-5.6-luna", topics=["415"])),
-    dict(id="trec-alt", kind="trec-alt", label="TREC 2016 Total Recall · alternate assessors", short="Jeb Bush emails · 50 documents per topic re-judged by three alternate assessors · Jev and TAR scores from the full-collection runs",
+    dict(id="trec-alt", kind="trec-alt", label="TREC 2016 Total Recall · alternate assessors", short="Jeb Bush emails · 50 documents per topic re-judged by three alternate assessors · Jev, OpenAI Decisions and TAR scores from the full-collection runs",
          src="data/trec/raw/prels.tr2016.alt1", task="tasks/trec.yaml", topic_no=TREC_NO, text=False, results="trec_full", placeholders=False,
          text_note="The Jeb Bush collection is distributed by NIST under the Total Recall usage agreement (see data/trec/README.md); place it at TREC/Jeb Bush TXT/ and rebuild to read the emails.",
          humans=["human@nist", "human@alt1", "human@alt2", "human@alt3"],

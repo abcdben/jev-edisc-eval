@@ -77,6 +77,27 @@ Pattern: Decisions sits between Jev and the LLMs — much higher recall than Jev
 loses on Mallinckrodt and Veridian. Speed (TREC, concurrency 1, p50): Jev 157 ms, Decisions 208–230 ms, GPT-5.6 Luna 2.5 s (standard tier),
 Sonnet 5 3.7 s.
 
+### 5a. trec_full — the whole 286,326-e-mail Jeb Bush collection
+
+`@predicate` (the Noul analogue) was run over the full collection on 2026-10-07, multi arm, 12 in flight, resumed across several
+segments: 3,149,586 decisions (286,326 e-mails × 11 issues), 0 errors, 0 refusals, 1.28 B input tokens ≈ $128 at list price
+(≈ $0.00045 per e-mail). Jev · Noul (`jev@base`) is the only Jev configuration on this tier. Document level, p ≥ 0.5 on any issue, 95 % bootstrap
+intervals in `results/findings.json["trec_full"]`:
+
+| | Jev · Noul | Decisions · Predicate |
+|---|---|---|
+| e-mails flagged (of 26,317 relevant) | 42,532 | 61,888 |
+| doc recall | **0.8301** (0.826–0.835) | **0.9127** (0.909–0.916) |
+| doc precision, lower bound | **0.5136** (0.509–0.518) | **0.3881** (0.384–0.392) |
+| review share (flagged / collection) | **14.9 %** | **21.6 %** |
+
+Per-issue recall, Decisions vs Jev: large gains where Jev was conservative — Rilya Wilson 0.89 vs 0.40, 2000 recount 0.79 vs 0.47,
+faith-based 0.83 vs 0.68, NRA rifle 0.93 vs 0.80, marketing 0.91 vs 0.79, condominiums 0.90 vs 0.83, Medicaid reform 0.94 vs 0.90,
+Gov. Bush 0.86 vs 0.84; ties on Movie Gallery (0.996), bottled water (0.96) and NRA aliens (0.89, 18 relevant). Precision lower bound is
+below Jev on every issue except Movie Gallery (≈ 0.995 both), most sharply on marketing (0.07 vs 0.13), Medicaid reform (0.10 vs 0.14)
+and NRA rifle (0.13 vs 0.33). Same shape as the sample-level pattern above: Decisions reads about half again as many e-mails as Jev
+to find roughly 8 points more of the relevant set.
+
 ## 6. Wiring
 
 * `export.py` MODELS (primary roster) + `OPENAI_DECISIONS_LEVERS` in `_variant_models()` (configurations page, group `openai-decisions`);
@@ -84,5 +105,8 @@ Sonnet 5 3.7 s.
   (`openai-decisions` notes key); `writeup.py` via the shared report.
 * Site: `data.ts` roster (`--c-oad`, `--c-oad-2` in every theme and Studio preset), `makers.ts` / `logos.tsx` (OpenAI mark), `palettes.ts`,
   `examples.ts` + `Explain.tsx`, `studyData.ts`, copy in `Disclaimer.tsx`, `Method.tsx`, `App.tsx`, `opsRows.ts`.
-* Not run: `trec_full` (the 286 k-message Jeb Bush collection; ≈ $130 and several hours at 12 in flight) — the TREC rows use the
-  3,116-e-mail evaluation sample like every other model. `endo` multi was run for completeness (no gold).
+* `trec_full` (the 286 k-message Jeb Bush collection): `@predicate` only, the Noul analogue, since `jev@base` is the only Jev
+  configuration on that tier. 3.15 M decisions, 1.28 B input tokens, $128, ≈ 8 h at 12 in flight. Against the NIST-judged relevant
+  set (26,317 e-mails): recall 91.3 % [90.9, 91.6] flagging 61,888 e-mails (21.6 % of the collection); Jev · Noul 83.0 % [82.6, 83.5]
+  flagging 42,532 (14.9 %). Precision lower bounds 38.8 % vs 51.4 %. Feeds `findings.json["trec_full"]` and the explorer's
+  alternate-assessor dataset. `endo` multi was run for completeness (no gold).
