@@ -67,6 +67,7 @@ LAYA_NOTES: dict[str, str] = {
 OPENAI_DECISIONS_NOTES: dict[str, str] = {
     "predicate": "One POST /v1/decisions call (GPT-6 Luna) with a `predicate` question per issue: the RFP text is the instruction with the positive and negative descriptions appended, and the answer is p(true), scored as p(responsive). The Decisions API takes a flat text `input`, so the matter background and document are sent as Jev's flat-text state. The Noul analogue.",
     "choice": "The same call with a `choice` question: the two labels are the options and the descriptions their `description`. The answer is a probability per option plus a separate `confidence`; p(responsive) is the responsive option's probability. The Choice analogue.",
+    "decompose": "The predicate call, but each issue is asked as the facets (sub-questions) the task file defines for it: one `predicate` per facet, named `<issue>__f<i>`, with the same positive and negative descriptions appended. p(responsive) is the maximum over the facets (logical OR). An issue without facets is asked as the single predicate. The Facets analogue.",
 }
 
 LLM_NOTE = (
@@ -174,7 +175,14 @@ def _decisions_request(ts: TaskSet, qid: str, doc: Document, form: str) -> dict:
     prov = OpenAIDecisionsProvider.__new__(OpenAIDecisionsProvider)
     prov.spec = MODELS["openai-decisions"]; prov.form = form
     body = prov._body(ts, [qid], doc)
-    agg = "p = answers[0].probability" if form == "predicate" else "p = probabilities[value='responsive'].probability; label = choice"
+    if form == "choice":
+        agg = "p = probabilities[value='responsive'].probability; label = choice"
+    elif form == "decompose" and len(body["questions"]) > 1:
+        agg = f"p = max over {len(body['questions'])} facet predicates' probability"
+    elif form == "decompose":
+        agg = "p = answers[0].probability (no facets defined for this issue: single predicate, as the Predicate form)"
+    else:
+        agg = "p = answers[0].probability"
     return {**body, "aggregate": agg + "; label = responsive if p ≥ 0.5"}
 
 
@@ -285,8 +293,8 @@ def export(out: Path = Path("results"), dest: Path = Path("results/examples.json
                     for d in ex_docs
                 ],
             }
-        # OpenAI Decisions API, both question forms
-        for name in ("predicate", "choice"):
+        # OpenAI Decisions API: the two question forms plus Facets (per-facet predicates, max-combined)
+        for name in ("predicate", "choice", "decompose"):
             exs = [{"request": _decisions_request(ts, qid, d, name), "output": _output(out, corpus, f"openai-decisions__{name}", d.id, qid)} for d in ex_docs]
             if any(e["output"] is not None for e in exs):
                 spec = MODELS["openai-decisions"]

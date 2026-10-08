@@ -98,9 +98,37 @@ below Jev on every issue except Movie Gallery (≈ 0.995 both), most sharply on 
 and NRA rifle (0.13 vs 0.33). Same shape as the sample-level pattern above: Decisions reads about half again as many e-mails as Jev
 to find roughly 8 points more of the relevant set.
 
+### 5b. Facets (`@decompose`) — Jev's strongest TREC lever, replayed on Decisions
+
+Jev's `decompose` lever ("Facets" on the site) asks each issue as the facets (`subparts`) the task file defines for it, one Noul per
+facet, and takes the maximum (logical OR) as the issue probability. `openai-decisions@decompose` does the same on the predicate form:
+one `predicate` per facet, named `<qid>__f<i>`, with the same positive/negative descriptions appended as in `@predicate`; p(responsive)
+= max over the facets; label at p ≥ 0.5; an issue with no facets is sent as the plain predicate (Jev's fallback). The `input` is the
+flat text of `@predicate`, unchanged. Run 2026-10-07, multi arm, 12 in flight, on the four sample corpora: ≈ 8 min, 0 errors, 0 refusals,
+$7.81 paid. Facet coverage is uneven across task files: TREC 11/11 issues (2 facets each), CUAD 12/12 (1–2 facets; a single facet is a
+rephrasing, not an OR), Veridian 4/10 (3–6 facets), Mallinckrodt 0/8 — so on Mallinckrodt the row is a repeat of `@predicate`
+(identical to the decimal, incidentally a determinism check), and on Veridian six of the ten issues are the predicate request.
+
+Decision-level precision / recall / F1, doc-level F1 in brackets:
+
+| corpus | Decisions · Facets | Jev · Facets | Decisions · Predicate | Jev · Noul |
+|---|---|---|---|---|
+| TREC 2016 | 64.1 / 91.5 / 75.4 (79.7) | 69.5 / 85.8 / **76.8** (81.4) | 69.1 / 89.2 / **77.8** (81.5) | 75.2 / 75.9 / 75.6 (79.0) |
+| Mallinckrodt | 75.2 / 86.0 / 80.2 (87.4) | 86.0 / 82.1 / **84.0** (88.6) | 75.2 / 86.0 / 80.2 (87.4) | 85.7 / 82.0 / 83.8 (88.3) |
+| Veridian | 71.8 / 94.9 / 81.7 (97.1) | 75.2 / 91.8 / **82.7** (97.9) | 70.0 / 94.7 / 80.5 (96.5) | 83.8 / 89.6 / **86.6** (97.6) |
+| CUAD | 56.8 / 75.8 / 64.9 (70.3) | 48.0 / 80.7 / 60.2 (66.6) | 56.5 / 77.0 / **65.2** (70.4) | 51.7 / 82.6 / 63.6 (69.1) |
+
+Facets does not do for Decisions what it does for Jev. Jev's Noul is conservative (TREC recall 76 %), so OR-ing facets buys ten points
+of recall for six of precision and lifts F1; the Decisions predicate already answers at 89 % recall, so the OR mostly adds false
+positives (TREC precision 69 → 64, recall 89 → 92, F1 −2.4). On Veridian the four faceted issues gain a little (+1.2 F1), on CUAD the
+single-facet rephrasings cost 0.3. Facets to Facets, Jev stays ahead on the three e-mail-style corpora and loses only on CUAD, where
+Jev's own Facets row is its weakest. Cost: the per-facet predicates roughly double the question tokens, so the TREC run is $0.00081
+per e-mail against $0.00045 for `@predicate` (Jev · Facets $0.00026).
+
 ## 6. Wiring
 
-* `export.py` MODELS (primary roster) + `OPENAI_DECISIONS_LEVERS` in `_variant_models()` (configurations page, group `openai-decisions`);
+* `export.py` MODELS (primary roster) + `OPENAI_DECISIONS_LEVERS` in `_variant_models()` (configurations page, group `openai-decisions`;
+  `decompose` is a configurations-page row only, not on the primary roster);
   `determinism.py` MODELS; `study.py` two measured arms; `explore.py` MEASURED_ARMS; `examples.py` request / response worked examples
   (`openai-decisions` notes key); `writeup.py` via the shared report.
 * Site: `data.ts` roster (`--c-oad`, `--c-oad-2` in every theme and Studio preset), `makers.ts` / `logos.tsx` (OpenAI mark), `palettes.ts`,
@@ -110,3 +138,7 @@ to find roughly 8 points more of the relevant set.
   `findings.json["trec_full"]` via `export-findings` and the explorer's alternate-assessor dataset (`trec-alt`) via `export-explore`.
   `@choice` was not run on this tier; the TREC rows elsewhere on the site use the 3,116-e-mail evaluation sample like every other model.
   `endo` multi was run for completeness (no gold).
+* `@decompose` (section 5b): provider `_plan()` / `_questions()` build the per-facet predicates and `_parse()` max-combines them
+  (per-facet probabilities land in `raw["<qid>_parts"]`, which the runner keeps only for single-arm rows, as for Jev); bare
+  `openai-decisions` on the CLI now expands to all three variants; `examples.py` worked example; site `VARIANT_DEFINITION`,
+  `Explain.tsx` lead ("the analogue of Jev's Facets"), group notes in `data.ts` / `examples.ts`. Sample corpora, multi arm only.

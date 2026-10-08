@@ -108,7 +108,7 @@ const NOTE_KEY_TERM: Record<string, Record<string, string>> = {
     base: "512", choice: "Choice", score: "Score", literal: "literal phrasing", gate: "gates", ensemble: "averaged", decompose: "OR'd",
     compact: "192-token head", chunk: "max over windows", recipe: "compact + chunk", recipe_choice: "Choice form",
   },
-  "openai-decisions": { predicate: "p(true)", choice: "probability per option" },
+  "openai-decisions": { predicate: "p(true)", choice: "probability per option", decompose: "logical OR" },
   llm: { "": "JSON schema" },
 };
 const noteFamily = (group: string) => (group === "jev" ? "jev" : group.startsWith("laya") ? "laya" : group);
@@ -141,8 +141,9 @@ function leadFor(group: string, key: string, corpus: string, groupLabel: string)
     return { pre: `**${p?.short ?? DATA.models[key]?.name ?? key}** is a generative model asked with `, def, post: `.${p?.note ? ` ${p.note}` : ""}` };
   }
   if (group === "openai-decisions") {
-    const analogue = v === "predicate" ? "Jev's Noul Question" : "Jev's Choice Question";
-    return { pre: `${name} is the OpenAI Decisions API (GPT-6 Luna) configuration in which `, def, post: `. It is the analogue of ${analogue}: the same instruction and the same criteria, sent to OpenAI's decision endpoint instead of TypeSafe's.` };
+    const analogue = v === "predicate" ? "Jev's Noul Question" : v === "decompose" ? "Jev's Facets" : "Jev's Choice Question";
+    const same = v === "decompose" ? "the same facets and the same criteria" : "the same instruction and the same criteria";
+    return { pre: `${name} is the OpenAI Decisions API (GPT-6 Luna) configuration in which `, def, post: `. It is the analogue of ${analogue}: ${same}, sent to OpenAI's decision endpoint instead of TypeSafe's.` };
   }
   return null;
 }

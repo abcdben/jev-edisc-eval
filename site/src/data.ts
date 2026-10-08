@@ -190,7 +190,7 @@ export const ABLATION_GROUPS: { id: string; label: string; recipe: string; note:
   { id: "jev", label: "Jev 1.13", recipe: "state_string", note: "Twelve configurations of TypeSafe Jev. Each variant changes a single lever from the default. ★ marks the configuration selected on the Veridian dev split." },
   { id: "laya", label: "Laya", recipe: "recipe", note: "ConvAI Laya, English checkpoint, zero-shot. Two levers (Compact Question, Chunked Document) exist only to fit its 512-token context; ★ marks the configuration that combines them (Compact + Chunked), selected on the Veridian dev split." },
   // No ★: the API offers two question forms and neither was selected on a dev split; both are Compare models rows.
-  { id: "openai-decisions", label: "OpenAI Decisions", recipe: "", note: "OpenAI's Decisions API (GPT-6 Luna, public beta October 2026), zero-shot. Its two question forms map onto Jev's Noul and Choice; the request text is otherwise identical." },
+  { id: "openai-decisions", label: "OpenAI Decisions", recipe: "", note: "OpenAI's Decisions API (GPT-6 Luna, public beta October 2026), zero-shot. Its two question forms map onto Jev's Noul and Choice, and Facets is Jev's Facets lever on the predicate form; the request text is otherwise identical." },
   // The typed and multilingual Laya checkpoints (groups laya-typed, laya-multilingual) stay in findings.json but are not offered: only the English family, whose request the charted fine-tune uses, is shown.
 ];
 export const VARIANT_ORDER = ["base", "choice", "score", "crit_none", "crit_struct", "literal", "no_context", "state_string", "gate", "ensemble", "decompose", "preview", "compact", "chunk", "recipe", "recipe_choice", "predicate"];
@@ -219,9 +219,10 @@ export const VARIANT_DEFINITION: Record<string, string> = {
   "jev@ensemble": "three phrasings of the same question (RFP text, literal, title + positive description) are asked as three Nouls and their probabilities averaged",
   "jev@decompose": "each issue is asked as the facets (sub-questions) the task file defines for it; each facet is its own Noul and the issue probability is the maximum across them (logical OR)",
   "jev@preview": "the request is identical to the Noul Question configuration but is sent to the jev-preview model instead of jev-1.13.0",
-  // OpenAI Decisions API (GPT-6 Luna): the two question forms that map onto Jev's Noul and Choice
+  // OpenAI Decisions API (GPT-6 Luna): the two question forms that map onto Jev's Noul and Choice, plus Facets
   "openai-decisions@predicate": "one `predicate` question per issue is sent to POST /v1/decisions; the RFP text is the instruction with the positive and negative descriptions appended, the matter background and document are one flat text input, and the answer's p(true) is scored as p(responsive)",
   "openai-decisions@choice": "the same request is asked as a `choice` between the two labels, each with its description as the option's description; the model returns a probability per option and a separate confidence, and p(responsive) is the responsive option's probability",
+  "openai-decisions@decompose": "each issue is asked as the facets (sub-questions) the task file defines for it; each facet is its own `predicate` with the same descriptions appended and the issue probability is the maximum across them (logical OR); an issue without facets is asked as the single predicate",
   // Laya, zero-shot (also the typed and multilingual checkpoints)
   "laya@base": "the same request as Jev's default, run through the local Laya encoder, which packs the question head into at most 192 tokens and the whole input into 512, so the instruction and criteria are truncated and most documents are cut from the right",
   "laya@choice": "the question is asked as a Choice over the two labels instead of a Noul",

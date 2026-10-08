@@ -51,7 +51,7 @@ def _expand_models(keys: list[str] | None) -> list[str]:
             elif part == "floors":
                 out += ["lexical", "laya@base", "laya-typed@base", "gemma3-12b"]
             elif part == "openai-decisions":
-                out += ["openai-decisions@choice", "openai-decisions@predicate"]
+                out += ["openai-decisions@choice", "openai-decisions@predicate", "openai-decisions@decompose"]
             elif part:
                 parse_model_key(part)  # validates
                 out.append(part)

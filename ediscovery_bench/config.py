@@ -62,7 +62,7 @@ MODELS: dict[str, ModelSpec] = {
         model_id="gpt-6-luna",
         input_per_mtok=0.10,  # /v1/decisions pricing page 2026-10-07: input only, no output/cache charges
         output_per_mtok=0.0,
-        notes="Decisions API (public beta 2026-10-06). System One-style: predicate/choice/score over fixed options with probabilities. $0.10/M input, output free. Variants: @choice (default), @predicate.",
+        notes="Decisions API (public beta 2026-10-06). System One-style: predicate/choice/score over fixed options with probabilities. $0.10/M input, output free. Variants: @choice (default), @predicate, @decompose (Facets: one predicate per facet, max-combined).",
     ),
     # ---- ConvAI Laya (local System 1; same Noul/Choice/Score surface as Jev) ----
     "laya": ModelSpec(

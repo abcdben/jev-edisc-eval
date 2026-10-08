@@ -125,6 +125,7 @@ LAYA_CHECKPOINTS = {"laya": "English checkpoint", "laya-typed": "Typed checkpoin
 OPENAI_DECISIONS_LEVERS = {
     "predicate": "Question form: `predicate` (Jev Noul analogue): p(true) is scored as p(responsive); the positive/negative descriptions are appended to the instruction",
     "choice": "Question form: `choice` over the two labels (Jev Choice analogue): the labels are the options, the descriptions their `description`; p(responsive) is the option's probability",
+    "decompose": "Decomposition (Jev Facets analogue): one `predicate` per facet the task file defines for the issue, criteria appended as in the predicate form; p(responsive) = max over facets (logical OR); issues without facets fall back to the single predicate",
 }
 
 
