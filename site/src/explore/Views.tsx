@@ -6,7 +6,15 @@ export type Cells = Map<string, number>;
 export const cellKey = (s: Lab, a: Lab, b: Lab | null) => `${s}|${a}|${b ?? "x"}`;
 export type Sel = { kind: "bucket"; key: BucketKey } | { kind: "bin"; lo: number; hi: number } | null;
 export type Scale = "linear" | "sqrt";
-type Common = { cells: Cells; S: Arm; A: Arm | null; B: Arm | null; defs: BucketDef[]; scale: Scale; sel: Sel; onSel: (s: Sel) => void };
+/** `height`: the drawing's pixel height (the page sizes it to the viewport); each view has a fallback. */
+type Common = { cells: Cells; S: Arm; A: Arm | null; B: Arm | null; defs: BucketDef[]; scale: Scale; sel: Sel; onSel: (s: Sel) => void; height?: number };
+
+/** The props of a clickable chart piece: the pointer selects it, and it is a focusable button for keyboard users (Enter or Space select). */
+export const hitProps = (label: string, go: () => void) => ({
+  className: "pe-hit", tabIndex: 0, role: "button" as const, "aria-label": label, style: { cursor: "pointer" } as React.CSSProperties,
+  onClick: go,
+  onKeyDown: (e: React.KeyboardEvent) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } },
+});
 
 const NEUTRAL = "var(--line-2)", GRAYF = "var(--ink-4)";
 const sc = (n: number, s: Scale) => (s === "sqrt" ? Math.sqrt(n) : n);
@@ -28,9 +36,9 @@ function outcomeCells(cells: Cells, o: Outcome, hasB: boolean): { n: number; b1:
 const useHost = () => { const t = useTip(); const w = useWidth(t.hostRef, 820); const at = (e: React.MouseEvent) => { const r = t.hostRef.current?.getBoundingClientRect(); return { x: e.clientX - (r?.left ?? 0), y: e.clientY - (r?.top ?? 0) }; }; return { ...t, w, at }; };
 
 /** Mosaic: one column per outcome of A against the standard (width = units), each split by B's call. */
-export function Mosaic({ cells, S, A, B, defs, scale, sel, onSel }: Common) {
+export function Mosaic({ cells, S, A, B, defs, scale, sel, onSel, height }: Common) {
   const { tip, show, hide, hostRef, w, at } = useHost();
-  const H = 320, top = 40, bottom = 40, gap = 6;
+  const H = height ?? 320, top = 40, bottom = 40, gap = 6;
   const cols = OUTCOME_ORDER.map((o) => ({ o, ...outcomeCells(cells, o, !!B) })).filter((c) => c.n > 0);
   const total = sum(cols.map((c) => sc(c.n, scale))) || 1;
   const all = sum(cols.map((c) => c.n)) || 1;
@@ -71,7 +79,7 @@ export function Mosaic({ cells, S, A, B, defs, scale, sel, onSel }: Common) {
                 const d = def(sg.k);
                 const tipc: TipContent = { title: d?.label ?? sg.who, value: fmtN(sg.n), unit: `${fmtShare(sg.n / all)} of all · ${fmtShare(sg.n / c.n)} of column`, lines: [sg.who] };
                 return (
-                  <g key={sg.k + sg.who} className="pe-hit" style={{ cursor: "pointer" }} opacity={dim(sg.k)} onClick={() => onSel({ kind: "bucket", key: sg.k })} onMouseMove={(e) => { const p = at(e); show(e, { kind: "mark", x: p.x, y: p.y, r: 8 }, tipc); }} onMouseLeave={hide}>
+                  <g key={sg.k + sg.who} {...hitProps(`${tipc.title}: ${fmtN(sg.n)}`, () => onSel({ kind: "bucket", key: sg.k }))} opacity={dim(sg.k)} onMouseMove={(e) => { const p = at(e); show(e, { kind: "mark", x: p.x, y: p.y, r: 8 }, tipc); }} onMouseLeave={hide}>
                     <rect x={x0} y={y0} width={cw} height={Math.max(1, sh)} fill={sg.fill} />
                     {sg.hatch && <rect x={x0} y={y0} width={cw} height={Math.max(1, sh)} fill="url(#pe-hatch)" />}
                     {on(sg.k) && <rect x={x0 + 0.75} y={y0 + 0.75} width={cw - 1.5} height={Math.max(1, sh) - 1.5} fill="none" stroke="var(--ink)" strokeWidth={1.5} />}
@@ -91,9 +99,9 @@ export function Mosaic({ cells, S, A, B, defs, scale, sel, onSel }: Common) {
 }
 
 /** Flow: every unit travels A → standard → B; band width = units. */
-export function Flow({ cells, S, A, B, defs, scale, sel, onSel }: Common & { A: Arm }) {
+export function Flow({ cells, S, A, B, defs, scale, sel, onSel, height }: Common & { A: Arm }) {
   const { tip, show, hide, hostRef, w, at } = useHost();
-  const H = 360, top = 30, bottom = 24, nodeW = 14, gapN = 10;
+  const H = height ?? 360, top = 30, bottom = 24, nodeW = 14, gapN = 10;
   const colsArms = B ? [A, S, B] : [A, S];
   const M = 150; // room for the first and last columns' labels outside their nodes
   const colX = colsArms.map((_, i) => M + (i * (w - 2 * M - nodeW)) / (colsArms.length - 1));
@@ -137,7 +145,7 @@ export function Flow({ cells, S, A, B, defs, scale, sel, onSel }: Common & { A: 
           const d = defs.find((x) => x.key === s.key);
           const tipc: TipContent = { title: d?.label ?? s.key, value: fmtN(s.n), unit: `${fmtShare(s.n / all)} of all`, lines: colsArms.map((a, c) => [a.short, s.labs[c] === 1 ? "responsive" : s.labs[c] === 0 ? "not responsive" : "gray"] as [string, string]) };
           return (
-            <g key={i} className="pe-hit" style={{ cursor: "pointer" }} onClick={() => onSel({ kind: "bucket", key: s.key })} onMouseMove={(e) => { const p = at(e); show(e, { kind: "mark", x: p.x, y: p.y, r: 8 }, tipc); }} onMouseLeave={hide}>
+            <g key={i} {...hitProps(`${tipc.title}: ${fmtN(s.n)}`, () => onSel({ kind: "bucket", key: s.key }))} onMouseMove={(e) => { const p = at(e); show(e, { kind: "mark", x: p.x, y: p.y, r: 8 }, tipc); }} onMouseLeave={hide}>
               {colsArms.slice(1).map((_, c) => <path key={c} d={band(colX[c] + nodeW, L[c].ys.get(s)!, colX[c + 1], L[c + 1].ys.get(s)!, h)} fill={fillFor(s)} opacity={op} stroke={contested && c === 0 ? "var(--ink)" : "none"} strokeWidth={0.6} />)}
             </g>
           );
@@ -157,9 +165,9 @@ export function Flow({ cells, S, A, B, defs, scale, sel, onSel }: Common & { A: 
 
 /** Confidence: the model's p(responsive) in ten bins, stacked by how the other arms came out. */
 export type ConfGroup = { id: string; name: string; color: string; hatch?: boolean };
-export function Confidence({ model, groups, bins, threshold, sel, onSel }: { model: Arm; groups: ConfGroup[]; bins: number[][]; threshold: number; sel: Sel; onSel: (s: Sel) => void }) {
+export function Confidence({ model, groups, bins, threshold, sel, onSel, height }: { model: Arm; groups: ConfGroup[]; bins: number[][]; threshold: number; sel: Sel; onSel: (s: Sel) => void; height?: number }) {
   const { tip, show, hide, hostRef, w, at } = useHost();
-  const H = 320, left = 52, top = 20, bottom = 54;
+  const H = height ?? 320, left = 52, top = 20, bottom = 54;
   const totals = bins.map((b) => sum(b));
   const all = sum(totals) || 1;
   const maxBin = Math.max(1, ...totals);
@@ -175,7 +183,7 @@ export function Confidence({ model, groups, bins, threshold, sel, onSel }: { mod
           let acc = 0;
           const tipc: TipContent = { title: `${model.short} p(responsive) ${lo.toFixed(1)}–${hi.toFixed(1)}`, value: fmtN(totals[i]), unit: `${fmtShare(totals[i] / all)} of all`, lines: groups.map((g, gi) => [g.name, `${fmtN(b[gi])} · ${fmtShare(totals[i] ? b[gi] / totals[i] : 0)}`] as [string, string]) };
           return (
-            <g key={i} className="pe-hit" style={{ cursor: "pointer" }} opacity={sel?.kind === "bin" && !onBin ? 0.3 : 1} onClick={() => onSel({ kind: "bin", lo, hi })} onMouseMove={(e) => { const p = at(e); show(e, { kind: "mark", x: p.x, y: p.y, r: 8 }, tipc); }} onMouseLeave={hide}>
+            <g key={i} {...hitProps(`${tipc.title}: ${fmtN(totals[i])}`, () => onSel({ kind: "bin", lo, hi }))} opacity={sel?.kind === "bin" && !onBin ? 0.3 : 1} onMouseMove={(e) => { const p = at(e); show(e, { kind: "mark", x: p.x, y: p.y, r: 8 }, tipc); }} onMouseLeave={hide}>
               <rect x={left + i * bw} y={top} width={bw} height={H - top - bottom} fill="transparent" />
               {b.map((n, gi) => { const y1 = y(acc), y0 = y(acc + n); acc += n; return <g key={gi}><rect x={left + i * bw + 3} y={y0} width={bw - 6} height={Math.max(0, y1 - y0)} fill={groups[gi].color} />{groups[gi].hatch && <rect x={left + i * bw + 3} y={y0} width={bw - 6} height={Math.max(0, y1 - y0)} fill="url(#pe-hatch2)" />}</g>; })}
               {onBin && <rect x={left + i * bw + 2} y={y(totals[i]) - 1} width={bw - 4} height={H - bottom - y(totals[i]) + 1} fill="none" stroke="var(--ink)" strokeWidth={1.5} />}

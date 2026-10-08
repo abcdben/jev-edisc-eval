@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from "react";
 import { TipBox, useTip, useWidth, type TipContent } from "../components/ui";
 import { bucketOf, fmtN, fmtShare, type Arm, type BucketDef, type BucketKey, type Lab } from "../exploreData";
-import { type Cells, type Scale, type Sel } from "./Views";
+import { hitProps, type Cells, type Scale, type Sel } from "./Views";
 
 /*
  * Area-proportional Euler diagram. One circle per arm, area = units that arm called responsive; the circles are placed so every pairwise
@@ -115,10 +115,10 @@ function layout(areas: number[], wants: Want[]): C[] {
 
 // ------------------------------------------------------------------------------------------------ component
 
-export function Venn({ cells, S, A, B, defs, scale, sel, onSel }: { cells: Cells; S: Arm; A: Arm | null; B: Arm | null; defs: BucketDef[]; scale: Scale; sel: Sel; onSel: (s: Sel) => void }) {
+export function Venn({ cells, S, A, B, defs, scale, sel, onSel, height }: { cells: Cells; S: Arm; A: Arm | null; B: Arm | null; defs: BucketDef[]; scale: Scale; sel: Sel; onSel: (s: Sel) => void; height?: number }) {
   const { tip, show, hide, hostRef } = useTip();
   const w = useWidth(hostRef, 820);
-  const H = 400, PADX = 16, PADT = 30, PADB = 30;
+  const H = height ?? 400, PADX = 16, PADT = 30, PADB = 30;
   const arms = [S, A, B].filter((a): a is Arm => !!a); // bit order: S, A, B
   const n = arms.length;
 
@@ -173,7 +173,7 @@ export function Venn({ cells, S, A, B, defs, scale, sel, onSel }: { cells: Cells
     }
     const fit = wants.length ? Math.sqrt(loss(cs, wants) / wants.length) : 0; // rms overlap error, in area units (= units when linear)
     return { byMask, gray, total, px, box, grayC, maskAt, best, grown, fit, areas };
-  }, [cells, n, scale, w, arms.map((a) => a.id).join()]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cells, n, scale, w, H, arms.map((a) => a.id).join()]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { byMask, gray, total, px, box, grayC, maskAt, best, grown, fit } = model;
   const keyOf = (m: number): BucketKey => { if (m < 0) return "gray"; const sL = ((m & 1) ? 1 : 0) as Lab; const aL = A ? (((m & 2) ? 1 : 0) as Lab) : sL; const bBit = A ? 4 : 2; return bucketOf(sL, aL, B ? (((m & bBit) ? 1 : 0) as Lab) : null); };
@@ -216,13 +216,24 @@ export function Venn({ cells, S, A, B, defs, scale, sel, onSel }: { cells: Cells
         <rect x={box.x} y={box.y} width={box.w} height={box.h} fill="var(--bg-2)" stroke="var(--line-2)" rx={4} />
         {px.map((c, i) => c.r > 0 && <circle key={i} cx={c.x} cy={c.y} r={c.r} fill={arms[i].color} fillOpacity={0.26} stroke={arms[i].color} strokeWidth={1.4} />)}
         {hover != null && (hover < 0 ? (grayC && <circle cx={grayC.x} cy={grayC.y} r={grayC.r} fill="var(--ink)" fillOpacity={0.16} style={{ pointerEvents: "none" }} />) : <g fillOpacity={0.16} style={{ pointerEvents: "none" }}>{regionShape(hover, "var(--ink)")}</g>)}
+        {selKey != null && ( // the regions not selected fade behind the panel colour, so the selection stands out
+          <g fillOpacity={0.55} style={{ pointerEvents: "none" }}>
+            {regions.filter((m) => keyOf(m) !== selKey).map((m) => regionShape(m, "var(--panel)"))}
+          </g>
+        )}
         {selMasks.map((m) => (m < 0 && grayC ? <circle key="g" cx={grayC.x} cy={grayC.y} r={grayC.r} fill="url(#venn-hatch)" /> : regionShape(m, "url(#venn-hatch)")))}
+        {/* keyboard targets: one focusable point per region (its label anchor) and the gray circle; focus tints the region as hover does, Enter selects */}
+        {[...regions.map((m) => ({ m, p: best.get(m), c: byMask.get(m) ?? 0 })), ...(grayC ? [{ m: -1, p: { x: grayC.x, y: grayC.y }, c: gray }] : [])].map(({ m, p, c }) => {
+          if (!p) return null;
+          const k = keyOf(m);
+          return <circle key={`k${m}`} cx={p.x} cy={p.y} r={10} fill="transparent" {...hitProps(`${defOf(k)?.label ?? k}: ${fmtN(c)}`, () => onSel({ kind: "bucket", key: k }))} onClick={undefined} style={{ pointerEvents: "none" }} onFocus={() => setHover(m)} onBlur={() => setHover(null)} />;
+        })}
         {regions.map((m) => { const b = best.get(m); const c = byMask.get(m) ?? 0; if (!b || b.d < 11 || m === 0) return null; const on = selKey != null && keyOf(m) === selKey; return <text key={m} x={b.x} y={b.y + 4} textAnchor="middle" fontSize={b.d < 16 ? 10 : 11.5} fontWeight={on ? 600 : 400} fill="var(--ink)" style={{ pointerEvents: "none", paintOrder: "stroke", stroke: "var(--panel)", strokeWidth: 3, strokeLinejoin: "round" }}>{fmtN(c)}</text>; })}
         {(() => { let x = PADX; return arms.map((a, i) => { const label = `${a.short}${a.planned ? " · placeholder" : ""} · ${fmtN([...byMask].filter(([m]) => m & (1 << i)).reduce((s, [, k]) => s + k, 0))}`; const x0 = x; x += label.length * 6.2 + 30; return <g key={a.id}><rect x={x0} y={8} width={10} height={10} rx={2} fill={a.color} fillOpacity={0.4} stroke={a.color} /><text x={x0 + 15} y={17} fontSize={11.5} fill="var(--ink-2)">{label}</text></g>; }); })()}
         <text x={box.x + 8} y={box.y + box.h - 8} fontSize={11} fill="var(--ink-3)" style={{ pointerEvents: "none" }}>nobody responsive · {fmtN(byMask.get(0) ?? 0)}</text>
         {grayC && (
           <g>
-            <circle cx={grayC.x} cy={grayC.y} r={grayC.r} fill="var(--ink-4)" fillOpacity={0.35} stroke="var(--ink-4)" strokeDasharray="3 3" />
+            <circle cx={grayC.x} cy={grayC.y} r={grayC.r} fill="var(--ink-4)" fillOpacity={selKey != null && selKey !== "gray" ? 0.14 : 0.35} stroke="var(--ink-4)" strokeDasharray="3 3" />
             <text x={grayC.x} y={grayC.y - grayC.r - 6} textAnchor="middle" fontSize={11} fill="var(--ink-3)" style={{ pointerEvents: "none" }}>gray · {fmtN(gray)}</text>
           </g>
         )}

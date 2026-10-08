@@ -3,7 +3,7 @@ import { Modal, Seg } from "./components/ui";
 import { THEME_KEY, THEME_OPTIONS, readTheme, type Theme } from "./theme";
 import {
   LAB_NAME, LAB_SHORT, TEXT_API, armsOf, bucketDefs, bucketOf, fetchText, fmtN, fmtShare, inheritScores, kappa, labelerFor, loadArm, loadIndex, loadMeta, loadRows, outcomeOf, reviewerScores, scorerFor, topicName, unitsOf,
-  type Arm, type ArmScores, type BucketDef, type Dataset, type DocText, type Index, type Lab, type Rows, type TarMeta, type Unit,
+  type Arm, type ArmScores, type Dataset, type DocText, type Index, type Lab, type Rows, type TarMeta, type Unit,
 } from "./exploreData";
 import { Confidence, Flow, Mosaic, cellKey, type Cells, type ConfGroup, type Scale, type Sel } from "./explore/Views";
 import { Venn } from "./explore/Venn";
@@ -13,10 +13,11 @@ import { GRID_RATES, REALISTIC_REVIEWER, asReviewer, isPublished, type ReviewerS
 type View = "mosaic" | "flow" | "venn" | "confidence";
 type Slots = { standard: string; a: string | null; b: string | null; topics: string[] };
 /** `tarReviewer` (tarGrid.ts): the simulated reviewer's error rates for the TAR arms that carry a meta file (exploreData.ts reviewerScores; REALISTIC_REVIEWER to start); "published" is the shipped scores. */
-type State = { dataset: string; slots: Record<string, Slots>; unit: "docs" | "families"; inherit: Record<string, boolean>; view: View; scale: Scale; threshold: number; sort: SortKey; tarReviewer: ReviewerSetting };
+/** `rail`: the controls rail (dataset, topics, arms, options) is shown; folded away, the chart has the whole width. */
+type State = { dataset: string; slots: Record<string, Slots>; unit: "docs" | "families"; inherit: Record<string, boolean>; view: View; scale: Scale; threshold: number; sort: SortKey; tarReviewer: ReviewerSetting; rail: boolean };
 type SortKey = "p_desc" | "p_asc" | "chars" | "psel" | "id";
 const KEY = "explore-state-v1";
-const DEFAULT: State = { dataset: "legal10", slots: {}, unit: "docs", inherit: {}, view: "mosaic", scale: "sqrt", threshold: 0.5, sort: "p_desc", tarReviewer: REALISTIC_REVIEWER };
+const DEFAULT: State = { dataset: "legal10", slots: {}, unit: "docs", inherit: {}, view: "mosaic", scale: "sqrt", threshold: 0.5, sort: "p_desc", tarReviewer: REALISTIC_REVIEWER, rail: true };
 // a stored null (the shipped scores, before the realistic default existed) coerces to undefined and so starts at the default
 const readState = (): State => { try { const s = { ...DEFAULT, ...JSON.parse(localStorage.getItem(KEY) || "{}") }; return { ...s, tarReviewer: asReviewer(s.tarReviewer) ?? REALISTIC_REVIEWER }; } catch { return DEFAULT; } };
 /** What the explorer's reviewer setting does, in place of the grid pages' line: the reviewer's own calls re-coded per document from the run's provenance. */
@@ -49,21 +50,37 @@ export default function ExplorePage() {
       <header className="study-hdr">
         <div>
           <h1>Population explorer</h1>
-          <p className="sub">Every judged document of a collection, cut by who called it responsive: a standard, an arm, and an overlay, each a human signal or a model. Click a region to list its documents and read them.</p>
+          <p className="sub">Who called each judged document responsive. Click a piece of the chart to list and read its documents.</p>
         </div>
         <div className="study-hdr-r">
+          <button className="pe-rail-btn" onClick={() => up({ rail: !s.rail })} aria-pressed={!s.rail} title={s.rail ? "Fold the controls away; the chart takes the whole width" : "Show the dataset, topic, arm and option controls"}>{s.rail ? "Hide controls" : "Show controls"}</button>
           <a className="home-link" href="./" title="The landing page: every page of the site">Home</a>
           <a className="pe-link" href="./study.html">Study</a>
           <Seg value={theme} onChange={setTheme} options={THEME_OPTIONS.map((t) => ({ id: t.id, label: t.label, title: t.title }))} />
         </div>
       </header>
-      <div className="study-body explore-body">
-        <Rail index={index} ds={ds} slots={slots} setSlots={setSlots} state={s} up={up} />
+      <About />
+      <div className={`study-body explore-body${s.rail ? "" : " no-rail"}`}>
+        {s.rail && <Rail index={index} ds={ds} slots={slots} setSlots={setSlots} state={s} up={up} />}
         <main className="study-main">
           <Population key={ds.id} ds={ds} slots={slots} state={s} up={up} />
         </main>
       </div>
     </div>
+  );
+}
+
+/** The method text, folded away under the title ("About this view"); the page itself is the chart. */
+function About() {
+  return (
+    <details className="pe-about">
+      <summary>About this view</summary>
+      <div className="pe-about-body">
+        <p>Every judged document of a collection, cut by who called it responsive: a <b>standard</b>, an <b>arm A</b> read against it, and an optional <b>overlay B</b>, each a human signal or a model. Pick them in the controls; a model's call is its score against the threshold.</p>
+        <p><b>Mosaic</b>: one column per way A came out against the standard (both responsive, both not, A missed, A over-called, gray), width ∝ units, each column split by B's call. <b>Flow</b>: every unit travels A → standard → B, band width ∝ units. <b>Venn</b>: one circle per arm, area ∝ its responsive calls, overlaps where they agree; the box is everyone judged. <b>Confidence</b>: the model's p(responsive) in ten bins, stacked by how the other arms came out.</p>
+        <p>Click any piece of the chart to list its documents below and read them (text comes from <code>bench serve</code> on this machine); click it again, press Esc or use × to clear. Hover for the count and share. <b>linear / √</b> sets whether sizes follow the counts or their square roots, which keeps small groups visible. The reviewer sliders re-code a TAR arm's simulated reviewer document by document from the run's provenance; the classifier and stopping point stay at the published run.</p>
+      </div>
+    </details>
   );
 }
 
@@ -246,6 +263,9 @@ function Population({ ds, slots, state: s, up }: { ds: Dataset; slots: Slots; st
   useEffect(() => { setPick(null); setShown(PAGE); }, [sel, slots.topics.join(), s.unit, inherit, slots.standard, slots.a, slots.b, s.threshold, s.tarReviewer]);
   const sameSel = (x: Sel, y: Sel) => JSON.stringify(x) === JSON.stringify(y);
   const toggle = (x: Sel) => setSel((prev) => (prev && x && sameSel(prev, x) ? null : x));
+  // Esc clears the selection (unless a modal is open: its own Esc closes it)
+  useEffect(() => { const h = (e: KeyboardEvent) => { if (e.key === "Escape" && !document.querySelector(".ex-modal")) setSel(null); }; window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h); }, []);
+  const chartH = useChartHeight();
 
   const pop = useMemo(() => {
     if (!rows || !ready) return null;
@@ -293,6 +313,8 @@ function Population({ ds, slots, state: s, up }: { ds: Dataset; slots: Slots; st
     const prev = xs.filter((x) => x === 1).length / (xs.filter((x) => x >= 0).length || 1);
     return { units, xs, ya, zb, keys, counts, defs, cells, modelArm, scorer, groups, bins, contested, bWithS, prev, kAS: A ? kappa(ya, xs) : null, kBS: zb ? kappa(zb, xs) : null, kBA: zb ? kappa(zb, ya) : null };
   }, [rows, ready, slots.topics, s.unit, inherit, s.threshold, S, A, B, scores]);
+  // a selection the chart no longer has a piece for (the arms changed, so the bucket catalogue did; the model left, so no bins) clears
+  useEffect(() => { if (pop && sel && (sel.kind === "bucket" ? !pop.defs.some((d) => d.key === sel.key) : !pop.scorer)) setSel(null); }, [pop, sel]);
 
   if (!pop) return <div className="card study-card"><div className="study-empty">Loading {ds.label}…</div></div>;
   const listed = (() => {
@@ -316,40 +338,51 @@ function Population({ ds, slots, state: s, up }: { ds: Dataset; slots: Slots; st
   const view = views.some((v) => v.id === s.view) ? s.view : "mosaic";
   const placeholder = [S, A, B].some((a) => a?.planned);
   const hasPsel = pop.units.some((u) => u.psel != null);
+  const selTitle = selDef ? selDef.label : sel?.kind === "bin" ? `${pop.modelArm?.short} p ∈ [${sel.lo.toFixed(1)}, ${sel.hi.toFixed(1)})` : "";
+  const k2 = (k: number | null) => (k == null ? "—" : k.toFixed(2));
 
   return (
     <>
-      <div className="card study-card">
+      <div className="card study-card pe-chart-card">
         <div className="card-t">
           <h3>Who called it responsive</h3>
-          <span className="unit">{ds.label} · {slots.topics.length === 1 ? topicName(ds.topics.find((t) => t.id === slots.topics[0])!) : `${slots.topics.length} topics: ${slots.topics.map((id) => { const t = ds.topics.find((x) => x.id === id)!; return /^\d/.test(t.id) ? t.id : t.title; }).join(", ")}`} · {fmtN(pop.units.length)} {unitWord}{placeholder ? " · placeholder scores" : ""}</span>
+          <span className="unit">{ds.label} · {slots.topics.length === 1 ? topicName(ds.topics.find((t) => t.id === slots.topics[0])!) : `${slots.topics.length} topics: ${slots.topics.map((id) => { const t = ds.topics.find((x) => x.id === id)!; return /^\d/.test(t.id) ? t.id : t.title; }).join(", ")}`}{placeholder ? " · placeholder scores" : ""}</span>
           <span className="right">
             {view !== "confidence" && <Seg value={s.scale} onChange={(v) => up({ scale: v })} options={[{ id: "linear", label: "linear" }, { id: "sqrt", label: "√" }]} />}
             <Seg value={view} onChange={(v) => up({ view: v })} options={views} />
           </span>
         </div>
-        <p className="study-q">{view === "mosaic" ? (A ? <>Columns: how <b>{A.short}</b> came out against <b>{S.short}</b>.{B && <> Each split by <b>{B.short}</b>.</>}</> : <>What <b>{S.short}</b> called responsive, on its own. Choose an arm A in the rail to compare against it.</>) : view === "flow" && A ? <>Each unit travels <b>{A.short}</b> → <b>{S.short}</b>{B && <> → <b>{B.short}</b></>}.</> : view === "venn" ? <>One circle per arm, sized by its responsive calls; overlaps are the units they agree on.</> : <>Where <b>{pop.modelArm!.short}</b>'s confidence puts the units the other arms agreed or disagreed on.</>}</p>
-        {view === "mosaic" && <Mosaic cells={pop.cells} S={S} A={A} B={B} defs={pop.defs} scale={s.scale} sel={sel} onSel={toggle} />}
-        {view === "flow" && A && <Flow cells={pop.cells} S={S} A={A} B={B} defs={pop.defs} scale={s.scale} sel={sel} onSel={toggle} />}
-        {view === "venn" && <Venn cells={pop.cells} S={S} A={A} B={B} defs={pop.defs} scale={s.scale} sel={sel} onSel={toggle} />}
-        {view === "confidence" && pop.modelArm && <Confidence model={pop.modelArm} groups={pop.groups} bins={pop.bins} threshold={s.threshold} sel={sel} onSel={toggle} />}
-        <Buckets defs={pop.defs} counts={pop.counts} total={pop.units.length} sel={sel} onSel={toggle} />
-        <div className="pe-stats">
-          <Stat v={fmtN(pop.units.length)} l={unitWord} />
-          <Stat v={fmtShare(pop.prev)} l={`responsive per ${S.short}`} />
-          {A && <Stat v={fmtN(pop.contested)} l={`${A.short} ≠ ${S.short}`} />}
-          {A && <Stat v={pop.kAS == null ? "—" : pop.kAS.toFixed(2)} l={`κ ${A.short} vs ${S.short}`} />}
-          {B && <Stat v={pop.kBS == null ? "—" : pop.kBS.toFixed(2)} l={`κ ${B.short} vs ${S.short}`} />}
-          {A && B && <Stat v={pop.kBA == null ? "—" : pop.kBA.toFixed(2)} l={`κ ${B.short} vs ${A.short}`} />}
-          {B && pop.bWithS != null && <Stat v={pop.contested ? fmtShare(pop.bWithS / pop.contested) : "—"} l={`${B.short} with ${S.short} where they disagree`} />}
+        <div className="pe-sub">
+          <span className="q">{view === "mosaic" ? (A ? <>Columns: how <b>{A.short}</b> came out against <b>{S.short}</b>{B && <>, each split by <b>{B.short}</b></>}.</> : <>What <b>{S.short}</b> called responsive, on its own. Choose an arm A in the controls to compare against it.</>) : view === "flow" && A ? <>Each unit travels <b>{A.short}</b> → <b>{S.short}</b>{B && <> → <b>{B.short}</b></>}.</> : view === "venn" ? <>One circle per arm, sized by its responsive calls; overlaps are the units they agree on.</> : <>Where <b>{pop.modelArm!.short}</b>'s confidence puts the units the other arms agreed or disagreed on.</>}</span>
+          {sel ? (
+            <span className="pe-sel" title="The selected piece of the chart; its documents are listed below">
+              <b>{selTitle}</b><span className="n">{fmtN(listed.length)} · {fmtShare(pop.units.length ? listed.length / pop.units.length : 0)}</span>
+              <button className="x" onClick={() => setSel(null)} title="Clear the selection (Esc)" aria-label="Clear selection">×</button>
+            </span>
+          ) : <span className="pe-sel-none">click a piece of the chart to list its {unitWord}</span>}
         </div>
+        <div className="pe-sub">
+          <span className="st">
+            <span><b>{fmtN(pop.units.length)}</b> {unitWord}</span>
+            <span><b>{fmtShare(pop.prev)}</b> responsive per {S.short}</span>
+            {A && <span><b>{fmtN(pop.contested)}</b> {A.short} ≠ {S.short}</span>}
+            {A && <span title={`Cohen's κ, ${A.short} against ${S.short}, over the units both judged`}>κ {A.short} vs {S.short} <b>{k2(pop.kAS)}</b></span>}
+            {B && <span title={`Cohen's κ, ${B.short} against ${S.short}`}>κ {B.short} vs {S.short} <b>{k2(pop.kBS)}</b></span>}
+            {A && B && <span title={`Cohen's κ, ${B.short} against ${A.short}`}>κ {B.short} vs {A.short} <b>{k2(pop.kBA)}</b></span>}
+            {B && pop.bWithS != null && <span><b>{pop.contested ? fmtShare(pop.bWithS / pop.contested) : "—"}</b> {B.short} with {S.short} where they disagree</span>}
+          </span>
+        </div>
+        {view === "mosaic" && <Mosaic cells={pop.cells} S={S} A={A} B={B} defs={pop.defs} scale={s.scale} sel={sel} onSel={toggle} height={chartH} />}
+        {view === "flow" && A && <Flow cells={pop.cells} S={S} A={A} B={B} defs={pop.defs} scale={s.scale} sel={sel} onSel={toggle} height={chartH} />}
+        {view === "venn" && <Venn cells={pop.cells} S={S} A={A} B={B} defs={pop.defs} scale={s.scale} sel={sel} onSel={toggle} height={chartH} />}
+        {view === "confidence" && pop.modelArm && <Confidence model={pop.modelArm} groups={pop.groups} bins={pop.bins} threshold={s.threshold} sel={sel} onSel={toggle} height={chartH} />}
       </div>
 
       {sel && (
         <div className="pe-split">
           <div className="card pe-list-card">
             <div className="card-t">
-              <h3>{selDef ? selDef.label : `${pop.modelArm?.short} p ∈ [${sel.kind === "bin" ? sel.lo.toFixed(1) : ""}, ${sel.kind === "bin" ? sel.hi.toFixed(1) : ""})`}</h3>
+              <h3>{selTitle}</h3>
               <span className="unit">{fmtN(listed.length)} {unitWord}</span>
               <span className="right">
                 <select className="pe-sort" value={s.sort} onChange={(e) => up({ sort: e.target.value as SortKey })}>
@@ -396,26 +429,14 @@ function Population({ ds, slots, state: s, up }: { ds: Dataset; slots: Slots; st
 }
 
 const shortId = (id: string) => (id.length > 26 ? `${id.slice(0, 12)}…${id.slice(-8)}` : id);
-const Stat = ({ v, l }: { v: string; l: string }) => <div className="pe-stat"><div className="v">{v}</div><div className="l">{l}</div></div>;
 const Lab = ({ l }: { l: Lab }) => <span className={`pe-lab l${l === 1 ? "r" : l === 0 ? "nr" : "g"}`} title={LAB_NAME[l]}>{LAB_SHORT[l]}</span>;
 
-function Buckets({ defs, counts, total, sel, onSel }: { defs: BucketDef[]; counts: Map<string, number>; total: number; sel: Sel; onSel: (s: Sel) => void }) {
-  const groups = [...new Set(defs.map((d) => d.group))];
-  return (
-    <div className="pe-buckets">
-      {groups.map((g) => (
-        <div key={g} className="pe-bgroup">
-          <div className="pe-bg-t">{g}</div>
-          <div className="pe-pills">
-            {defs.filter((d) => d.group === g).map((d) => {
-              const n = counts.get(d.key) ?? 0, on = sel?.kind === "bucket" && sel.key === d.key;
-              return <button key={d.key} className={`pe-pill${on ? " on" : ""}${n ? "" : " zero"}`} onClick={() => onSel({ kind: "bucket", key: d.key })} title={d.label}>{d.short}<span className="n">{fmtN(n)}</span><span className="pc">{fmtShare(total ? n / total : 0)}</span></button>;
-            })}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+/** The chart's height: most of the viewport (70%), never under 420px; follows window resizes. */
+function useChartHeight() {
+  const calc = () => Math.max(420, Math.round(window.innerHeight * 0.7));
+  const [h, setH] = useState(calc);
+  useEffect(() => { const f = () => setH(calc()); window.addEventListener("resize", f); return () => window.removeEventListener("resize", f); }, []);
+  return h;
 }
 
 // ------------------------------------------------------------------------------------------------ viewer

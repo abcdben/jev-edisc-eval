@@ -1,7 +1,21 @@
 /* Population explorer (explore.html → explore.tsx → ExplorePage.tsx). Shares styles.css and study.css: the palette, .card, .seg, .pick-* rows, the rail. */
 
-.explore-page { max-width: 1560px; }
+.explore-page { max-width: none; padding-top: 16px; }
+.explore-page .study-hdr { margin-bottom: 10px; align-items: center; }
+.explore-page .study-hdr h1 { margin-bottom: 2px; }
 .explore-body { grid-template-columns: 270px minmax(0, 1fr); }
+.explore-body.no-rail { grid-template-columns: minmax(0, 1fr); }
+/* "About this view": the method text, folded away under the title; the summary is the one line that shows */
+.pe-about { margin: 0 0 10px; font-size: 12px; color: var(--ink-3); }
+.pe-about summary { cursor: pointer; display: inline-block; color: var(--ink-4); font-size: 11.5px; letter-spacing: 0.02em; }
+.pe-about summary:hover { color: var(--ink); }
+.pe-about[open] summary { color: var(--ink-2); margin-bottom: 6px; }
+.pe-about-body { max-width: 860px; line-height: 1.5; color: var(--ink-2); padding: 10px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+.pe-about-body p { margin: 0 0 6px; }
+.pe-about-body p:last-child { margin-bottom: 0; }
+.pe-about-body b { font-weight: 500; color: var(--ink); }
+.pe-rail-btn { font: inherit; font-size: 12px; color: var(--ink-3); background: none; border: 1px solid var(--line-2); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.pe-rail-btn:hover { color: var(--ink); }
 .pe-link { font-size: 12.5px; color: var(--ink-3); text-decoration: none; border: 1px solid var(--line-2); border-radius: 6px; padding: 4px 10px; }
 .pe-link:hover { color: var(--ink); }
 
@@ -42,19 +56,21 @@
 .pe-opt b { color: var(--ink); font-weight: 500; }
 .pe-opt input[type="range"] { width: 100%; accent-color: var(--ink); }
 
-/* centre */
-.pe-buckets { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
-.pe-bg-t { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-4); margin-bottom: 4px; }
-.pe-pills { display: flex; flex-wrap: wrap; gap: 5px; }
-.pe-pill { display: inline-flex; align-items: baseline; gap: 6px; border: 1px solid var(--line-2); border-radius: 999px; background: none; font: inherit; font-size: 12px; color: var(--ink-2); padding: 3px 10px; cursor: pointer; }
-.pe-pill:hover { border-color: var(--ink-3); color: var(--ink); }
-.pe-pill.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-.pe-pill.zero { opacity: 0.45; }
-.pe-pill .n { font-weight: 500; font-variant-numeric: tabular-nums; }
-.pe-pill .pc { font-size: 10.5px; opacity: 0.7; font-variant-numeric: tabular-nums; }
-.pe-stats { display: flex; flex-wrap: wrap; gap: 8px 28px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
-.pe-stat .v { font-size: 18px; font-weight: 500; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
-.pe-stat .l { font-size: 11px; color: var(--ink-4); }
+/* centre: the chart is the page; under the card title, two muted lines carry what the chart shows and the population's figures, and the
+   current selection with its clear button. The chart's pieces are the selectors (Views.tsx / Venn.tsx hitProps). */
+.pe-chart-card { padding-bottom: 8px; }
+.pe-sub { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 18px; margin: 0 0 8px; font-size: 11.5px; color: var(--ink-4); line-height: 1.5; }
+.pe-sub .q { color: var(--ink-3); }
+.pe-sub .q b, .pe-sub .st b { font-weight: 500; color: var(--ink-2); }
+.pe-sub .st { display: flex; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.pe-sub .st > span { white-space: nowrap; }
+.pe-sub .st > span + span::before { content: "·"; margin: 0 6px; color: var(--line-2); }
+.pe-sel { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; padding: 1px 4px 1px 9px; border: 1px solid var(--line-2); border-radius: 999px; font-size: 11.5px; color: var(--ink-2); }
+.pe-sel b { font-weight: 500; color: var(--ink); }
+.pe-sel .n { font-variant-numeric: tabular-nums; }
+.pe-sel .x { border: 0; background: none; font: inherit; font-size: 12px; line-height: 1; color: var(--ink-3); padding: 2px 5px; border-radius: 999px; cursor: pointer; }
+.pe-sel .x:hover { color: var(--ink); background: var(--bg-2); }
+.pe-sel-none { margin-left: auto; color: var(--ink-4); font-style: italic; }
 
 /* list + viewer */
 .pe-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; margin-top: 18px; align-items: start; }
@@ -103,8 +119,9 @@
 .pe-note code { font-size: 11.5px; color: var(--ink-2); }
 
 /* clickable chart pieces react under the pointer: Venn regions get a tint (drawn in Venn.tsx); mosaic cells, flow bands and confidence bars brighten */
-.study-svg .pe-hit { transition: filter 120ms var(--ease); }
+.study-svg .pe-hit { transition: filter 120ms var(--ease); outline: none; }
 .study-svg .pe-hit:hover { filter: brightness(1.15) saturate(1.25); }
+.study-svg .pe-hit:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
 
 .pe-check { display: flex; align-items: center; gap: 8px; margin: 8px 8px 0; font-size: 12px; color: var(--ink-2); cursor: pointer; }
 .pe-check input { margin: 0; accent-color: var(--ink); }
