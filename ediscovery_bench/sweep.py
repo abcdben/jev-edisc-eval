@@ -1,15 +1,20 @@
 """Export per-model threshold sweep curves to results/sweep.json (read by site/src/sweep.ts for the Studio's Model threshold slider).
 
 findings.json scores every model at its own label (export.py _score: `p.label == pos`), so the site's fixed points are the
-models' own operating points. This module re-cuts the same saved predictions at p(responsive) >= t for t in THRESHOLDS and
-writes, per corpus, arm and model, the confusion counts the site needs to draw a recall/precision point with its 95% Wilson
-interval at any of those thresholds:
+models' own operating points. This module re-cuts the same saved predictions at p(responsive) >= t for t in `thresholds`
+(0.01 .. 0.99 in steps of 0.01 by default, `--step`; the Trade-off page draws the whole curve, and OpenAI Decisions returns its
+probabilities on a 0.01 grid) and writes, per corpus, arm and model, the confusion counts the site needs to draw a recall/precision
+point with its 95% Wilson interval at any of those thresholds:
 
     curves[<corpus key>][<arm>][<model key>] = {
         "all":    {"P": gold-positive documents, "N": gold-negative documents, "tp": [per threshold], "fp": [per threshold]},
         "nogray": the same with gray documents excluded (export.py _score exclude_gray),
-        "issues": {<question>: {"P", "N", "tp", "fp"}}   per-issue decision counts, all gold (as findings' all.per_issue)
+        "issues": {<question>: {"P", "N", "tp", "fp"}},  per-issue decision counts, all gold (as findings' all.per_issue)
+        "decisions": {"all": {...}, "nogray": {...}}      every decision pooled (findings' all.decision / nogray.decision)
     }
+
+Document level (`all`, `nogray`) is export.py _score's rule: a document is called responsive at t if any of its issue probabilities
+clears t, and it is gold-positive if any issue is; so the 0.50 point reproduces findings' doc figures where the model's label is p >= 0.5.
 
 Counts, not rates: recall = tp / P, precision = tp / (tp + fp), fn = P - tp, tn = N - fp, and the site computes the Wilson
 intervals with metrics.wilson's formula (z = 1.96), so the numbers agree with export.py's _ci / _prf to the same rounding.
@@ -24,6 +29,7 @@ from __future__ import annotations
 
 import json
 import math
+from bisect import bisect_right
 from collections import defaultdict
 from pathlib import Path
 
@@ -32,7 +38,16 @@ from .runner import load_predictions, parse_job_stem
 from .scope import in_scope
 from .tasks import TaskSet, load_corpus
 
-THRESHOLDS = [round(0.05 * i, 2) for i in range(1, 20)]  # 0.05 .. 0.95
+DEFAULT_STEP = 0.01
+
+
+def thresholds_for(step: float = DEFAULT_STEP) -> list[float]:
+    """The thresholds swept at `step`: step, 2 step, ... up to but excluding 1 (0.01 .. 0.99 at the default; 0.05 .. 0.95 at 0.05)."""
+    n = round(1 / step)
+    return [round(step * i, 4) for i in range(1, n)]
+
+
+THRESHOLDS = thresholds_for()
 Z = 1.96
 # Kinds whose label is a decision of its own (a reviewer's coding, a cutoff chosen on a sample, a keyword rule), not p >= 0.5.
 FIXED_KINDS = {"tar", "baseline"}
@@ -42,25 +57,28 @@ def _p_ok(p) -> bool:
     return p is not None and not (isinstance(p, float) and math.isnan(p))
 
 
-def _curve(pairs: list[tuple[float, bool]]) -> dict:
-    """Confusion counts per threshold for (score, gold) pairs: tp[i], fp[i] at THRESHOLDS[i]; P, N the gold totals."""
+def _curve(pairs: list[tuple[float, bool]], thresholds: list[float] = THRESHOLDS) -> dict:
+    """Confusion counts per threshold for (score, gold) pairs: tp[i], fp[i] at thresholds[i]; P, N the gold totals."""
     P = sum(1 for _, g in pairs if g); N = len(pairs) - P
-    tp = [0] * len(THRESHOLDS); fp = [0] * len(THRESHOLDS)
+    tp = [0] * len(thresholds); fp = [0] * len(thresholds)
     for s, g in pairs:
-        for i, t in enumerate(THRESHOLDS):
-            if s >= t:
-                if g: tp[i] += 1
-                else: fp[i] += 1
-            else:
-                break  # thresholds ascend: once s < t it stays below
+        # thresholds ascend: s clears every threshold up to the last one <= s (bisect), none after it
+        k = bisect_right(thresholds, s)
+        if k == 0:
+            continue
+        if g:
+            for i in range(k): tp[i] += 1
+        else:
+            for i in range(k): fp[i] += 1
     return {"P": P, "N": N, "tp": tp, "fp": fp}
 
 
-def _sweep(preds, ts, docs_by_id) -> dict:
-    """The three curve sets for one cell, from the rows export.py _score scores (no error, gold bound, p present)."""
+def _sweep(preds, ts, docs_by_id, thresholds: list[float] = THRESHOLDS) -> dict:
+    """The curve sets for one cell, from the rows export.py _score scores (no error, gold bound, p present)."""
     pos = ts.positive_label
     ok = [p for p in preds if p.error is None and p.gold is not None and _p_ok(p.p_positive)]
     out: dict = {}
+    decisions: dict = {}
     for name, exclude_gray in (("all", False), ("nogray", True)):
         rows = [p for p in ok if not p.gray] if exclude_gray else ok
         by_doc: dict[str, list] = defaultdict(list)
@@ -72,13 +90,16 @@ def _sweep(preds, ts, docs_by_id) -> dict:
                 continue
             # a document is called responsive at t if any of its issue probabilities clears t: max over the rows
             pairs.append((max(p.p_positive for p in rs), any(p.gold == pos for p in rs)))
-        out[name] = _curve(pairs)
+        out[name] = _curve(pairs, thresholds)
+        # every decision pooled (export.py _score's decision level)
+        decisions[name] = _curve([(p.p_positive, p.gold == pos) for p in rows], thresholds)
     issues = {}
     for q in ts.qids:
         qs = [(p.p_positive, p.gold == pos) for p in ok if p.question == q]
         if qs:
-            issues[q] = _curve(qs)
+            issues[q] = _curve(qs, thresholds)
     out["issues"] = issues
+    out["decisions"] = decisions
     return out
 
 
@@ -86,8 +107,12 @@ def _same(a, b) -> bool:
     return json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
 
 
-def export_sweep(out: Path = Path("results"), dest: Path = Path("results/sweep.json"), check: bool = True, arms: tuple[str, ...] = ("multi",)) -> Path:
-    """`arms`: the multi arm alone by default (the arm the site's recall/precision charts draw; the single arm doubles the file to ~630 KB)."""
+def export_sweep(out: Path = Path("results"), dest: Path = Path("results/sweep.json"), check: bool = True, arms: tuple[str, ...] = ("multi",), step: float = DEFAULT_STEP) -> Path:
+    """`arms`: the multi arm alone by default (the arm the site's recall/precision charts draw; the single arm doubles the file).
+    `step`: the threshold grid (thresholds_for); 0.01 writes about 1.9 MB for the multi arm, 0.05 about 0.4 MB. 0.5 must be on the grid."""
+    thresholds = thresholds_for(step)
+    if 0.5 not in thresholds:
+        raise ValueError(f"step {step} does not put 0.5 on the grid; the site's published point is the 0.50 cut")
     root = Path(".")
     findings = None
     if check:
@@ -127,7 +152,7 @@ def export_sweep(out: Path = Path("results"), dest: Path = Path("results/sweep.j
                     continue
                 if not primary and len({p.doc_id for p in preds}) < 0.98 * len(docs):
                     continue  # export.py: stalled cells are not exported
-                cell = _sweep(preds, ts, docs_by_id)
+                cell = _sweep(preds, ts, docs_by_id, thresholds)
                 curves.setdefault(ckey, {}).setdefault(arm, {})[key] = cell
                 n_cells += 1
                 if findings is not None:
@@ -145,11 +170,11 @@ def export_sweep(out: Path = Path("results"), dest: Path = Path("results/sweep.j
                                     print(f"  MISMATCH {ckey}/{arm}/{key} {g}.{lvl}.{m}: {own[g][lvl][m]} != findings {rec[g][lvl][m]}")
                                     n_bad += 1
                     # where the model's own label is not p >= 0.5, the curve's 0.50 point is not the published point; the site shows the published one there
-                    i50 = THRESHOLDS.index(0.5)
+                    i50 = thresholds.index(0.5)
                     c = cell["all"]; doc = own["all"]["doc"]
                     if c["tp"][i50] != doc["tp"] or c["fp"][i50] != doc["fp"]:
                         differ_at_half.append(f"{ckey}/{arm}/{key} (label: tp {doc['tp']} fp {doc['fp']}; p>=0.5: tp {c['tp'][i50]} fp {c['fp'][i50]})")
-    payload = {"thresholds": THRESHOLDS, "z": Z, "default": 0.5, "curves": curves}
+    payload = {"thresholds": thresholds, "z": Z, "default": 0.5, "curves": curves}
     dest.write_text(json.dumps(payload, separators=(",", ":")))
     print(f"{n_cells} cells; findings check: {n_checked} compared, {n_bad} mismatches")
     if differ_at_half:

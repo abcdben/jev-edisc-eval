@@ -1,10 +1,11 @@
 # Results site
 
-Interactive page over `results/findings.json` (written by `bench export-findings`).
+Interactive page over `results/findings.json` (written by `bench export-findings`) and `results/sweep.json` (`bench export-sweep`: the same predictions re-cut at every threshold 0.01 … 0.99, behind the threshold slider and the Trade-off page).
 
 ```sh
 # from the repo root, refresh the data first
 .venv/bin/bench export-findings
+.venv/bin/bench export-sweep     # reads every multi-arm result jsonl; a few minutes
 
 cd site
 npm install
@@ -12,10 +13,11 @@ npm run dev        # http://127.0.0.1:5173
 npm run build      # static bundle in site/dist (open dist/index.html or host anywhere)
 ```
 
-Two sections, both driven by the sticky control bar (corpus, TREC criteria, prompting arm, scope, gold labels):
+Three sections, all driven by the sticky control bar (corpus, TREC criteria, prompting arm, scope, gold labels):
 
 - **Compare models**: pick any subset of the headline roster. Recall against precision with 95% interval boxes (or ranked rows with whiskers), plus review time and cost per 100,000 documents for the same selection.
 - **Configurations of one model**: pick Jev or a Laya checkpoint and compare its ablation variants the same way. The optimized configuration (the one selected on the Veridian dev split and carried into the headline comparison) is starred.
+- **Trade-off** (`#tradeoff`, `src/Tradeoff.tsx`, `src/components/PRCurves.tsx`): recall against precision as a full curve per model, swept over the probability threshold, with a draggable operating point on each (arrow keys work too), the published 0.50 cut as an open ring, iso-F1 contours behind, and a readout of threshold, recall, precision, F1 and the share of the corpus flagged. "Match recall" moves every marker to the cheapest cut that reaches a target; the point being that every model outputs a probability, so the comparison is curve against curve, not label against label.
 
 Every mark carries a hover tooltip with the counts and intervals behind it; every panel title has an (i) explaining the measurement.
 

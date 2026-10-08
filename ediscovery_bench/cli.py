@@ -534,11 +534,12 @@ def export_sweep_cmd(
     dest: Path = typer.Option(Path("results/sweep.json"), "--dest"),
     check: bool = typer.Option(True, "--check/--no-check", help="Score each cell at its own label and compare with findings.json"),
     arms: list[str] = typer.Option(["multi"], "--arm", help="Arms to export (default: multi, the arm the site's recall/precision charts draw)"),
+    step: float = typer.Option(0.01, "--step", help="Threshold grid: t = step, 2 step, ... < 1 (0.01 for the site's Trade-off curves; 0.05 was the original grid)"),
 ):
-    """Recall/precision confusion counts at p(responsive) >= t, t = 0.05..0.95, per corpus/arm/model -> sweep.json (the Studio's threshold slider)."""
+    """Recall/precision confusion counts at p(responsive) >= t, t = 0.01..0.99 (--step), per corpus/arm/model -> sweep.json (the site's threshold slider and Trade-off curves)."""
     from .sweep import export_sweep
 
-    console.print(f"wrote {export_sweep(out, dest, check, tuple(arms))}")
+    console.print(f"wrote {export_sweep(out, dest, check, tuple(arms), step)}")
 
 
 @app.command("export-study")

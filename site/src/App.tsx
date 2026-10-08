@@ -22,6 +22,7 @@ import { DisclaimerLink, DisclaimerModal, useDisclaimer } from "./components/Dis
 import { Logo } from "./logos";
 import { THEME_KEY, THEME_OPTIONS, readTheme, type Theme } from "./theme";
 import { SeriesColorControl, useSeriesColors } from "./seriesColors";
+import { TRADEOFF_DEFAULT_ON, TradeoffPicker, TradeoffSection } from "./Tradeoff";
 
 /** The recall/precision card's views. `ranked` is drawn by PRRail on Compare models (rank rail) and by PRHeat on Compare configurations (vs default), chosen by PRCard's `ranked` prop. */
 export type Chart = "map" | "ranked";
@@ -566,8 +567,10 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
 
 // ------------------------------------------------------------------------------------------------
 
-type Page = "compare" | "configurations";
-const PAGES: { id: Page; label: string }[] = [{ id: "compare", label: "Compare models" }, { id: "configurations", label: "Compare configurations" }];
+type Page = "compare" | "configurations" | "tradeoff";
+const PAGES: { id: Page; label: string }[] = [{ id: "compare", label: "Compare models" }, { id: "configurations", label: "Compare configurations" }, { id: "tradeoff", label: "Trade-off" }];
+/** The page a location hash names; Compare models for anything else (the B variant keeps its tab in the hash). */
+const pageOf = (hash: string): Page => (hash === "#configurations" ? "configurations" : hash === "#tradeoff" ? "tradeoff" : "compare");
 
 /**
  * The page: masthead, sticky control bar, the Compare models or Compare configurations section, the details and disclaimer modals and the foot.
@@ -602,13 +605,15 @@ export function Shell({ Compare = CompareSection, mast, controlsTail, compareHas
   const corpusTitle = `${fmtInt(meta.n_docs)} documents · ${meta.n_issues} issues · ${fmtInt(meta.n_pos_docs_any)} responsive to at least one (${fmtPct(meta.n_pos_docs_any / meta.n_docs, 0)}) · gold: ${meta.gold}`;
   const [theme, setTheme] = useState<Theme>(readTheme);
   useEffect(() => { document.documentElement.dataset.theme = theme; try { localStorage.setItem(THEME_KEY, theme); } catch { /* storage denied: the choice lasts the session */ } }, [theme]);
-  const [pageId, setPageId] = useState<Page>(() => (location.hash === "#configurations" ? "configurations" : "compare"));
+  const [pageId, setPageId] = useState<Page>(() => pageOf(location.hash));
   useEffect(() => {
-    const onHash = () => setPageId(location.hash === "#configurations" ? "configurations" : "compare");
+    const onHash = () => setPageId(pageOf(location.hash));
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
-  const goPage = (p: Page) => { history.replaceState(null, "", p === "compare" ? compareHash : "#configurations"); setPageId(p); window.scrollTo(0, 0); };
+  const goPage = (p: Page) => { history.replaceState(null, "", p === "compare" ? compareHash : `#${p}`); setPageId(p); window.scrollTo(0, 0); };
+  // the Trade-off page's own model selection (Tradeoff.tsx): a shorter default than Compare models', no TAR rows
+  const [tradeOn, setTradeOn] = useState<Set<string>>(new Set(TRADEOFF_DEFAULT_ON));
 
   const page = (
     <div className="page">
@@ -630,7 +635,9 @@ export function Shell({ Compare = CompareSection, mast, controlsTail, compareHas
         </Control>
         {pageId === "compare"
           ? <><ModelPicker v={v} on={on} setOn={setOn} explain={setExplain} /><TarPicker v={v} on={on} setOn={setOn} reviewer={stats.tarReviewer} /></>
-          : <VariantPicker grp={grp} setGrp={setGrp} />}
+          : pageId === "tradeoff"
+            ? <TradeoffPicker v={v} on={tradeOn} setOn={setTradeOn} explain={setExplain} />
+            : <VariantPicker grp={grp} setGrp={setGrp} />}
         <Control label="Issue">
           <span className="select">
             <select value={issue ?? "__doc"} onChange={(e) => { const val = e.target.value; setIssue(val === "__doc" ? null : val); }}>
@@ -644,11 +651,15 @@ export function Shell({ Compare = CompareSection, mast, controlsTail, compareHas
         {pageId === "compare" && controlsTail}
       </div>
 
-      {pageId === "compare" ? <Compare v={v} on={on} setOn={setOn} explain={setExplain} stats={stats} setStats={setStats} /> : <AblationSection v={v} grp={grp} off={off} explain={setExplain} />}
+      {pageId === "compare"
+        ? <Compare v={v} on={on} setOn={setOn} explain={setExplain} stats={stats} setStats={setStats} />
+        : pageId === "tradeoff"
+          ? <TradeoffSection key={corpus} v={v} on={tradeOn} explain={setExplain} /> /* keyed on the corpus: operating points chosen against one corpus's curves start over on another */
+          : <AblationSection v={v} grp={grp} off={off} explain={setExplain} />}
       {explain && (
         <ExplainModal
           initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)}
-          metrics={(k, c) => metricsFor(k, c, v, (rows) => (pageId === "compare" ? rosterOf(rows).filter((r) => on.has(r.model)) : rows.filter((r) => r.group === grp && !!r.variant && !isHidden(r.model) && !off.has(r.variant))))}
+          metrics={(k, c) => metricsFor(k, c, v, (rows) => (pageId === "compare" ? rosterOf(rows).filter((r) => on.has(r.model)) : pageId === "tradeoff" ? rows.filter((r) => tradeOn.has(r.model)) : rows.filter((r) => r.group === grp && !!r.variant && !isHidden(r.model) && !off.has(r.variant))))}
         />
       )}
 
