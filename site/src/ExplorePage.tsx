@@ -14,11 +14,11 @@ type View = "mosaic" | "flow" | "venn" | "confidence";
 type Slots = { standard: string; a: string | null; b: string | null; topics: string[] };
 /** `tarReviewer` (tarGrid.ts): the simulated reviewer's error rates for the TAR arms that carry a meta file (exploreData.ts reviewerScores; REALISTIC_REVIEWER to start); "published" is the shipped scores. */
 /** `v` marks a state stored since the page opened from scratch (migrate); a stored state without it is from before, when the export's suggested arms were pre-placed. */
-/** `rail`: the controls rail (dataset, topics, arms, options) is shown; folded away, the chart has the whole width. */
-type State = { v?: 2; dataset: string; slots: Record<string, Slots>; unit: "docs" | "families"; inherit: Record<string, boolean>; view: View; scale: Scale; threshold: number; sort: SortKey; tarReviewer: ReviewerSetting; rail: boolean };
+/** `rail`: the controls rail (dataset, topics, arms, options) is shown; folded away, the chart has the whole width. `docs`: the documents pane under the chart (the selection's list and the viewer) is open; closed to start, the chart is the page. */
+type State = { v?: 2; dataset: string; slots: Record<string, Slots>; unit: "docs" | "families"; inherit: Record<string, boolean>; view: View; scale: Scale; threshold: number; sort: SortKey; tarReviewer: ReviewerSetting; rail: boolean; docs: boolean };
 type SortKey = "p_desc" | "p_asc" | "chars" | "psel" | "id";
 const KEY = "explore-state-v1";
-const DEFAULT: State = { dataset: "legal10", slots: {}, unit: "docs", inherit: {}, view: "mosaic", scale: "sqrt", threshold: 0.5, sort: "p_desc", tarReviewer: REALISTIC_REVIEWER, rail: true };
+const DEFAULT: State = { dataset: "legal10", slots: {}, unit: "docs", inherit: {}, view: "mosaic", scale: "sqrt", threshold: 0.5, sort: "p_desc", tarReviewer: REALISTIC_REVIEWER, rail: true, docs: false };
 // a stored null (the shipped scores, before the realistic default existed) coerces to undefined and so starts at the default
 const readState = (): State => { try { const s = { ...DEFAULT, ...JSON.parse(localStorage.getItem(KEY) || "{}") }; return { ...s, tarReviewer: asReviewer(s.tarReviewer) ?? REALISTIC_REVIEWER }; } catch { return DEFAULT; } };
 /**
@@ -37,6 +37,20 @@ const REVIEWER_ONLY = "Reviewer error re-codes the simulated reviewer's calls do
 const reviewerArmsOf = (ds: Dataset, slots: Slots) => [slots.standard, slots.a, slots.b].flatMap((id) => { const a = id ? ds.arms.find((x) => x.id === id) : undefined; return a && a.kind === "tar" ? [a] : []; });
 const PAGE = 200;
 
+/** Whether the local text server (`bench serve` at TEXT_API) answers. Probed once per visit; the deployed site never reaches it (127.0.0.1, blocked as mixed content over https), so there the documents pane says text is local-only instead of failing document by document. */
+type TextServer = "unknown" | "up" | "down";
+function useTextServer(): TextServer {
+  const [st, setSt] = useState<TextServer>("unknown");
+  useEffect(() => {
+    const ctl = new AbortController();
+    let timedOut = false; // an abort from the timeout is "down"; one from unmounting (StrictMode's first pass) is nothing
+    const t = window.setTimeout(() => { timedOut = true; ctl.abort(); }, 2500);
+    fetch(`${TEXT_API}/health`, { signal: ctl.signal }).then((r) => setSt(r.ok ? "up" : "down")).catch(() => { if (!ctl.signal.aborted || timedOut) setSt("down"); }).finally(() => clearTimeout(t));
+    return () => { clearTimeout(t); ctl.abort(); };
+  }, []);
+  return st;
+}
+
 export default function ExplorePage() {
   const [theme, setTheme] = useState<Theme>(readTheme);
   useEffect(() => { document.documentElement.dataset.theme = theme; try { localStorage.setItem(THEME_KEY, theme); } catch { /* ignore */ } }, [theme]);
@@ -46,6 +60,7 @@ export default function ExplorePage() {
 
   const [index, setIndex] = useState<Index | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const text = useTextServer();
   useEffect(() => { loadIndex().then((idx) => { setS((cur) => migrate(cur, idx)); setIndex(idx); }).catch((e) => setErr(String(e))); }, []);
 
   if (err) return <div className="page explore-page"><div className="card"><div className="study-empty">Could not load explore/index.json ({err}). Run <code>bench export-explore</code>.</div></div></div>;
@@ -74,7 +89,7 @@ export default function ExplorePage() {
       <div className={`study-body explore-body${s.rail ? "" : " no-rail"}`}>
         {s.rail && <Rail index={index} ds={ds} slots={slots} setSlots={setSlots} state={s} up={up} />}
         <main className="study-main">
-          <Population key={ds.id} ds={ds} slots={slots} state={s} up={up} />
+          <Population key={ds.id} ds={ds} slots={slots} state={s} up={up} text={text} />
         </main>
       </div>
     </div>
@@ -136,7 +151,7 @@ function Rail({ index, ds, slots, setSlots, state: s, up }: { index: Index; ds: 
         {index.datasets.map((d) => (
           <div key={d.id} className={`pick-row${d.id === ds.id ? " on" : ""}`}>
             <button className="pick-main" role="radio" aria-checked={d.id === ds.id} onClick={() => up({ dataset: d.id })} title={d.short}>
-              <span className={`box radio${d.id === ds.id ? " on" : ""}`} /><span className="lbl"><span className="nm">{d.label}</span>{d.placeholders && <span className="tag" title="No model has been run on this collection yet; model arms are placeholders">planned</span>}{!d.text && <span className="tag">no text</span>}</span>
+              <span className={`box radio${d.id === ds.id ? " on" : ""}`} /><span className="lbl pe-ds-lbl"><span className="nm">{d.label}</span>{(d.placeholders || !d.text) && <span className="pe-tagline" title={d.placeholders ? "No model has been run on this collection yet; model arms are placeholders" : undefined}>{[d.placeholders ? "planned" : null, !d.text ? "no text" : null].filter(Boolean).join(" · ")}</span>}</span>
             </button>
           </div>
         ))}
@@ -197,7 +212,10 @@ function Rail({ index, ds, slots, setSlots, state: s, up }: { index: Index; ds: 
         <div className="pe-slots-h"><span /><span title="Reference standard">S</span><span title="Arm A, read against the standard">A</span><span title="Overlay B, optional">B</span></div>
         {arms.map((a) => (
           <div key={a.id} className={`pe-slot-row${[slots.standard, slots.a, slots.b].includes(a.id) ? " on" : ""}`}>
-            <span className="pe-slot-name" title={a.note ?? a.name}><span className="pe-sw" style={{ background: a.color }} />{a.short}{a.planned && <span className="tag">planned</span>}{a.coverage != null && a.coverage < 0.98 && <span className="tag" title={`This run scored ${fmtShare(a.coverage)} of the judged documents; the rest show as unscored (gray). TAR simulations do not score the documents the simulated reviewer read.`}>{fmtShare(a.coverage)} scored</span>}</span>
+            <span className="pe-slot-name" title={a.note ?? a.name}>
+              <span className="pe-sw" style={{ background: a.color }} />{a.short}
+              {(a.planned || (a.coverage != null && a.coverage < 0.98)) && <span className="pe-tagline" title={a.coverage != null && a.coverage < 0.98 ? `This run scored ${fmtShare(a.coverage)} of the judged documents; the rest show as unscored (gray). TAR simulations do not score the documents the simulated reviewer read.` : undefined}>{[a.planned ? "planned" : null, a.coverage != null && a.coverage < 0.98 ? `${fmtShare(a.coverage)} scored` : null].filter(Boolean).join(" · ")}</span>}
+            </span>
             {(["standard", "a", "b"] as const).map((slot) => <button key={slot} className={`box radio${slots[slot] === a.id ? " on" : ""}`} role="radio" aria-checked={slots[slot] === a.id} onClick={() => place(slot, a.id)} title={`${a.short} as ${slot === "standard" ? "the standard" : slot === "a" ? "arm A" : "overlay B"}`} />)}
           </div>
         ))}
@@ -254,7 +272,7 @@ function useScores(ds: Dataset, ids: (string | null)[]) {
   return { scores: got, metas };
 }
 
-function Population({ ds, slots, state: s, up }: { ds: Dataset; slots: Slots; state: State; up: (p: Partial<State>) => void }) {
+function Population({ ds, slots, state: s, up, text }: { ds: Dataset; slots: Slots; state: State; up: (p: Partial<State>) => void; text: TextServer }) {
   const [rows, setRows] = useState<Rows | null>(null);
   useEffect(() => { loadRows(ds.id).then(setRows); }, [ds.id]);
   const { scores: shipped, metas } = useScores(ds, [slots.standard, slots.a, slots.b]);
@@ -389,9 +407,17 @@ function Population({ ds, slots, state: s, up }: { ds: Dataset; slots: Slots; st
         {view === "confidence" && pop.modelArm && <Confidence model={pop.modelArm} groups={pop.groups} bins={pop.bins} threshold={s.threshold} sel={sel} onSel={toggle} height={chartH} />}
       </div>
 
-      {sel && (
+      {/* the documents pane: one slim bar under the chart, the selection's list and the viewer behind it; closed to start, and the count follows the selection without opening it */}
+      <div className={`card pe-docs${s.docs && sel ? " open" : ""}`}>
+        <button className="pe-docs-bar" onClick={() => up({ docs: !s.docs })} aria-expanded={!!(s.docs && sel)} disabled={!sel} title={sel ? (s.docs ? "Fold the documents away" : "List the selection's documents") : "Select a piece of the chart first"}>
+          <span className="t">Documents in selection</span>
+          {sel ? <><span className="n">{fmtN(listed.length)} {unitWord}</span><span className="sub">{selTitle}</span></> : <span className="sub">none selected</span>}
+          {text === "down" && <span className="off">document text is only available when running locally</span>}
+          {sel && <span className="tog">{s.docs ? "hide" : "show"}</span>}
+        </button>
+        {s.docs && sel && (
         <div className="pe-split">
-          <div className="card pe-list-card">
+          <div className="pe-list-card">
             <div className="card-t">
               <h3>{selTitle}</h3>
               <span className="unit">{fmtN(listed.length)} {unitWord}</span>
@@ -432,9 +458,10 @@ function Population({ ds, slots, state: s, up }: { ds: Dataset; slots: Slots; st
               </>
             )}
           </div>
-          <Viewer ds={ds} rows={rows!} unit={pick ?? (listed.length ? pop.units[listed[0]] : null)} arms={[S, A, B].filter((a): a is Arm => !!a)} scores={scores} threshold={s.threshold} />
+          <Viewer ds={ds} rows={rows!} unit={pick ?? (listed.length ? pop.units[listed[0]] : null)} arms={[S, A, B].filter((a): a is Arm => !!a)} scores={scores} threshold={s.threshold} text={text} />
         </div>
-      )}
+        )}
+      </div>
     </>
   );
 }
@@ -452,7 +479,7 @@ function useChartHeight() {
 
 // ------------------------------------------------------------------------------------------------ viewer
 
-function Viewer({ ds, rows, unit, arms, scores, threshold }: { ds: Dataset; rows: Rows; unit: Unit | null; arms: Arm[]; scores: Record<string, ArmScores>; threshold: number }) {
+function Viewer({ ds, rows, unit, arms, scores, threshold, text }: { ds: Dataset; rows: Rows; unit: Unit | null; arms: Arm[]; scores: Record<string, ArmScores>; threshold: number; text: TextServer }) {
   const [doc, setDoc] = useState<DocText | null>(null);
   const [state, setState] = useState<"idle" | "loading" | "offline" | "missing">("idle");
   // in family mode the unit is the message; show the message itself (its own row when judged, else the first member)
@@ -460,12 +487,13 @@ function Viewer({ ds, rows, unit, arms, scores, threshold }: { ds: Dataset; rows
   const docid = ri != null ? rows.docid[ri] : null;
   useEffect(() => {
     if (!docid || !ds.text) { setDoc(null); return; }
+    if (text === "down") { setDoc(null); setState("offline"); return; } // the server is known to be unreachable: no request per document
     let live = true;
     setState("loading");
     fetchText(ds.id, docid).then((d) => { if (!live) return; setDoc(d); setState("idle"); }).catch((e: Error) => { if (!live) return; setDoc(null); setState(/404/.test(e.message) ? "missing" : "offline"); });
     return () => { live = false; };
-  }, [ds.id, ds.text, docid]);
-  if (!unit || ri == null) return <div className="card pe-viewer"><div className="study-empty">Pick a document.</div></div>;
+  }, [ds.id, ds.text, docid, text]);
+  if (!unit || ri == null) return <div className="pe-viewer"><div className="study-empty">Pick a document.</div></div>;
   // the rest of the family, from the rows we know of (same topic)
   const kin: number[] = [];
   for (let i = 0; i < rows.n; i++) if (i !== ri && rows.family[i] === rows.family[ri] && rows.topic[i] === unit.topic) kin.push(i);
@@ -479,7 +507,7 @@ function Viewer({ ds, rows, unit, arms, scores, threshold }: { ds: Dataset; rows
     return { lab: p == null ? -1 : p >= threshold ? 1 : 0, p };
   };
   return (
-    <div className="card pe-viewer">
+    <div className="pe-viewer">
       <div className="card-t">
         <h3>{isAtt ? "Attachment" : "Message"} <span className="pe-id">{docid}</span></h3>
         <span className="unit">{topic.id} · {topic.title}</span>
@@ -495,7 +523,7 @@ function Viewer({ ds, rows, unit, arms, scores, threshold }: { ds: Dataset; rows
       </div>
       <div className="pe-text">
         {!ds.text ? <div className="pe-note">The text for this collection is not on this machine. {ds.text_note ?? "Only the judgments are here."}</div>
-          : state === "offline" ? <div className="pe-note">Text is read from <code>data/</code> on this machine. Start <code>bench serve</code> ({TEXT_API}) to read documents here.</div>
+          : state === "offline" ? <div className="pe-note">Document text is only available when running locally: it is read from <code>data/</code> by <code>bench serve</code> ({TEXT_API}).</div>
           : state === "loading" && !doc ? <div className="pe-note">Loading…</div>
           : doc ? <pre>{doc.text.trim() || "(no extractable text)"}</pre> : <div className="pe-note">{state === "missing" ? "Not found in the local corpus." : "Loading…"}</div>}
       </div>
