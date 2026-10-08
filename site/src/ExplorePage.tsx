@@ -15,10 +15,11 @@ type Slots = { standard: string; a: string | null; b: string | null; topics: str
 /** `tarReviewer` (tarGrid.ts): the simulated reviewer's error rates for the TAR arms that carry a meta file (exploreData.ts reviewerScores; REALISTIC_REVIEWER to start); "published" is the shipped scores. */
 /** `v` marks a state stored since the page opened from scratch (migrate); a stored state without it is from before, when the export's suggested arms were pre-placed. */
 /** `rail`: the controls rail (dataset, topics, arms, options) is shown; folded away, the chart has the whole width. `docs`: the documents pane under the chart (the selection's list and the viewer) is open; closed to start, the chart is the page. */
-type State = { v?: 2; dataset: string; slots: Record<string, Slots>; unit: "docs" | "families"; inherit: Record<string, boolean>; view: View; scale: Scale; threshold: number; sort: SortKey; tarReviewer: ReviewerSetting; rail: boolean; docs: boolean };
+/** `showGray`: the gray / unjudged units (no label from the standard, or unscored by an arm in play) are drawn (the Venn's side circle, the mosaic's column, the flow's gray nodes); hidden to start, and the shares are then over the judged units. */
+type State = { v?: 2; dataset: string; slots: Record<string, Slots>; unit: "docs" | "families"; inherit: Record<string, boolean>; view: View; scale: Scale; threshold: number; sort: SortKey; tarReviewer: ReviewerSetting; rail: boolean; docs: boolean; showGray: boolean };
 type SortKey = "p_desc" | "p_asc" | "chars" | "psel" | "id";
 const KEY = "explore-state-v1";
-const DEFAULT: State = { dataset: "legal10", slots: {}, unit: "docs", inherit: {}, view: "mosaic", scale: "sqrt", threshold: 0.5, sort: "p_desc", tarReviewer: REALISTIC_REVIEWER, rail: true, docs: false };
+const DEFAULT: State = { dataset: "legal10", slots: {}, unit: "docs", inherit: {}, view: "mosaic", scale: "sqrt", threshold: 0.5, sort: "p_desc", tarReviewer: REALISTIC_REVIEWER, rail: true, docs: false, showGray: false };
 // a stored null (the shipped scores, before the realistic default existed) coerces to undefined and so starts at the default
 const readState = (): State => { try { const s = { ...DEFAULT, ...JSON.parse(localStorage.getItem(KEY) || "{}") }; return { ...s, tarReviewer: asReviewer(s.tarReviewer) ?? REALISTIC_REVIEWER }; } catch { return DEFAULT; } };
 /**
@@ -104,6 +105,7 @@ function About() {
       <div className="pe-about-body">
         <p>Every judged document of a collection, cut by who called it responsive: a <b>standard</b>, an <b>arm A</b> read against it, and an optional <b>overlay B</b>, each a human signal or a model. Pick them in the controls; a model's call is its score against the threshold.</p>
         <p><b>Mosaic</b>: one column per way A came out against the standard (both responsive, both not, A missed, A over-called, gray), width ∝ units, each column split by B's call. <b>Flow</b>: every unit travels A → standard → B, band width ∝ units. <b>Venn</b>: one circle per arm, area ∝ its responsive calls, overlaps where they agree; the box is everyone judged. <b>Confidence</b>: the model's p(responsive) in ten bins, stacked by how the other arms came out.</p>
+        <p>Gray / unjudged units (no call from the standard, or unscored by an arm in play) are left out to start, and every share is over the judged units; <b>Show gray</b> in the chart's header draws them as their own piece (a circle beside the Venn box, a column in the mosaic) and counts them in the shares.</p>
         <p>Click any piece of the chart to list its documents below and read them (text comes from <code>bench serve</code> on this machine); click it again, press Esc or use × to clear. Hover for the count and share. <b>linear / √</b> sets whether sizes follow the counts or their square roots, which keeps small groups visible. The reviewer sliders re-code a TAR arm's simulated reviewer document by document from the run's provenance; the classifier and stopping point stay at the published run.</p>
       </div>
     </details>
@@ -289,7 +291,7 @@ function Population({ ds, slots, state: s, up, text }: { ds: Dataset; slots: Slo
   const [sel, setSel] = useState<Sel>({ kind: "bucket", key: !A ? "agree_r" : B ? "miss.std" : "miss" });
   const [pick, setPick] = useState<Unit | null>(null);
   const [shown, setShown] = useState(PAGE);
-  useEffect(() => { setPick(null); setShown(PAGE); }, [sel, slots.topics.join(), s.unit, inherit, slots.standard, slots.a, slots.b, s.threshold, s.tarReviewer]);
+  useEffect(() => { setPick(null); setShown(PAGE); }, [sel, slots.topics.join(), s.unit, inherit, slots.standard, slots.a, slots.b, s.threshold, s.tarReviewer, s.showGray]);
   const sameSel = (x: Sel, y: Sel) => JSON.stringify(x) === JSON.stringify(y);
   const toggle = (x: Sel) => setSel((prev) => (prev && x && sameSel(prev, x) ? null : x));
   // Esc clears the selection (unless a modal is open: its own Esc closes it)
@@ -300,14 +302,20 @@ function Population({ ds, slots, state: s, up, text }: { ds: Dataset; slots: Slo
     if (!rows || !ready) return null;
     const topicIdx = new Set(slots.topics.map((t) => rows.topics.indexOf(t)).filter((i) => i >= 0));
     const families = s.unit === "families" && ds.has_attachments;
-    const units = unitsOf(rows, topicIdx, families);
+    const everyone = unitsOf(rows, topicIdx, families);
     // at document level the track's rule can be applied to the models too (parent p = max over its family); families already take the max
     const sc = (a: Arm): ArmScores | null => { const x = scores[a.id]; return x ? (!families && inherit ? inheritScores(rows, x) : x) : null; };
     const lS = labelerFor(S, rows, sc(S), s.threshold), lA = A ? labelerFor(A, rows, sc(A), s.threshold) : null, lB = B ? labelerFor(B, rows, sc(B), s.threshold) : null;
-    const xs = units.map(lS), ya = lA ? units.map(lA) : xs, zb = lB ? units.map(lB) : null; // with no arm A the standard stands in for it: every unit "agrees"
+    const xsAll = everyone.map(lS), yaAll = lA ? everyone.map(lA) : xsAll, zbAll = lB ? everyone.map(lB) : null; // with no arm A the standard stands in for it: every unit "agrees"
+    // a unit is gray when any arm in play has no call on it (unjudged by the standard, or unscored by a model); hidden, the charts, buckets and
+    // listings are over the judged units only, while the arm figures below (prevalence, κ, disagreements) are over everyone as before
+    const isGray = (i: number) => xsAll[i] < 0 || yaAll[i] < 0 || (zbAll != null && zbAll[i] < 0);
+    const grayN = everyone.reduce((n, _, i) => n + (isGray(i) ? 1 : 0), 0);
+    const kept = s.showGray ? everyone.map((_, i) => i) : everyone.map((_, i) => i).filter((i) => !isGray(i));
+    const units = kept.map((i) => everyone[i]), xs = kept.map((i) => xsAll[i]), ya = kept.map((i) => yaAll[i]), zb = zbAll ? kept.map((i) => zbAll[i]) : null;
     const cells: Cells = new Map();
     const keys = units.map((_, i) => { const k = cellKey(xs[i], ya[i], zb ? zb[i] : null); cells.set(k, (cells.get(k) ?? 0) + 1); return bucketOf(xs[i], ya[i], zb ? zb[i] : null); });
-    const defs = bucketDefs(S.short, A?.short ?? null, B?.short ?? null);
+    const defs = bucketDefs(S.short, A?.short ?? null, B?.short ?? null).filter((d) => s.showGray || d.outcome !== "gray"); // no gray bucket to select while hidden
     const counts = new Map<string, number>();
     for (const k of keys) counts.set(k, (counts.get(k) ?? 0) + 1);
     // the confidence view reads the first model among B, A, S; the stacks are the outcome of the other arms
@@ -334,14 +342,16 @@ function Population({ ds, slots, state: s, up, text }: { ds: Dataset; slots: Slo
         groups = [{ id: "r", name: `${o1.short} responsive`, color: o1.color }, { id: "nr", name: `${o1.short} not responsive`, color: "var(--ink-4)" }, { id: "gray", name: "gray", color: "var(--line-2)" }];
         groupOf = (i) => (l1[i] === 1 ? 0 : l1[i] === 0 ? 1 : 2);
       }
+      if (!s.showGray) groups = groups.filter((g) => g.id !== "gray"); // the gray stack is last in every catalogue and no kept unit falls in it
       bins = Array.from({ length: 10 }, () => groups.map(() => 0));
       units.forEach((u, i) => { const p = scorer(u); if (p == null) return; bins[Math.min(9, Math.floor(p * 10))][groupOf!(i)]++; });
     }
-    const contested = units.filter((_, i) => outcomeOf(xs[i], ya[i]) === "miss" || outcomeOf(xs[i], ya[i]) === "over").length;
-    const bWithS = zb ? units.filter((_, i) => { const o = outcomeOf(xs[i], ya[i]); return (o === "miss" || o === "over") && zb[i] === xs[i]; }).length : null;
-    const prev = xs.filter((x) => x === 1).length / (xs.filter((x) => x >= 0).length || 1);
-    return { units, xs, ya, zb, keys, counts, defs, cells, modelArm, scorer, groups, bins, contested, bWithS, prev, kAS: A ? kappa(ya, xs) : null, kBS: zb ? kappa(zb, xs) : null, kBA: zb ? kappa(zb, ya) : null };
-  }, [rows, ready, slots.topics, s.unit, inherit, s.threshold, S, A, B, scores]);
+    // the arms' own figures, over everyone (gray never counts as a disagreement; κ and prevalence skip the unjudged themselves), whether gray is drawn or not
+    const contested = everyone.filter((_, i) => outcomeOf(xsAll[i], yaAll[i]) === "miss" || outcomeOf(xsAll[i], yaAll[i]) === "over").length;
+    const bWithS = zbAll ? everyone.filter((_, i) => { const o = outcomeOf(xsAll[i], yaAll[i]); return (o === "miss" || o === "over") && zbAll[i] === xsAll[i]; }).length : null;
+    const prev = xsAll.filter((x) => x === 1).length / (xsAll.filter((x) => x >= 0).length || 1);
+    return { units, xs, ya, zb, keys, counts, defs, cells, modelArm, scorer, groups, bins, contested, bWithS, prev, grayN, nAll: everyone.length, kAS: A ? kappa(yaAll, xsAll) : null, kBS: zbAll ? kappa(zbAll, xsAll) : null, kBA: zbAll ? kappa(zbAll, yaAll) : null };
+  }, [rows, ready, slots.topics, s.unit, inherit, s.threshold, S, A, B, scores, s.showGray]);
   // a selection the chart no longer has a piece for (the arms changed, so the bucket catalogue did; the model left, so no bins) clears
   useEffect(() => { if (pop && sel && (sel.kind === "bucket" ? !pop.defs.some((d) => d.key === sel.key) : !pop.scorer)) setSel(null); }, [pop, sel]);
 
@@ -377,6 +387,10 @@ function Population({ ds, slots, state: s, up, text }: { ds: Dataset; slots: Slo
           <h3>Who called it responsive</h3>
           <span className="unit">{ds.label} · {slots.topics.length === 1 ? topicName(ds.topics.find((t) => t.id === slots.topics[0])!) : `${slots.topics.length} topics: ${slots.topics.map((id) => { const t = ds.topics.find((x) => x.id === id)!; return /^\d/.test(t.id) ? t.id : t.title; }).join(", ")}`}{placeholder ? " · placeholder scores" : ""}</span>
           <span className="right">
+            <button className={`pe-gray-tog${s.showGray ? " on" : ""}`} role="checkbox" aria-checked={s.showGray} disabled={!pop.grayN} onClick={() => up({ showGray: !s.showGray })}
+              title={!pop.grayN ? `No gray ${unitWord} here: every unit has a call from every arm in play` : s.showGray ? `Hide the ${fmtN(pop.grayN)} gray / unjudged ${unitWord}; shares are then over the judged ${unitWord}` : `Draw the ${fmtN(pop.grayN)} gray / unjudged ${unitWord} (no call from the standard, or unscored by an arm in play) as their own piece of the chart`}>
+              <span className="box" aria-hidden="true" />Show gray <span className="n">({fmtN(pop.grayN)})</span>
+            </button>
             {view !== "confidence" && <Seg value={s.scale} onChange={(v) => up({ scale: v })} options={[{ id: "linear", label: "linear" }, { id: "sqrt", label: "√" }]} />}
             <Seg value={view} onChange={(v) => up({ view: v })} options={views} />
           </span>
@@ -392,7 +406,7 @@ function Population({ ds, slots, state: s, up, text }: { ds: Dataset; slots: Slo
         </div>
         <div className="pe-sub">
           <span className="st">
-            <span><b>{fmtN(pop.units.length)}</b> {unitWord}</span>
+            {s.showGray || !pop.grayN ? <span><b>{fmtN(pop.units.length)}</b> {unitWord}</span> : <span title={`${fmtN(pop.nAll)} ${unitWord} in all; the ${fmtN(pop.grayN)} with no call from an arm in play are left out of the chart and its shares`}><b>{fmtN(pop.units.length)}</b> judged {unitWord} <span className="dim">({fmtN(pop.grayN)} gray hidden)</span></span>}
             <span><b>{fmtShare(pop.prev)}</b> responsive per {S.short}</span>
             {A && <span><b>{fmtN(pop.contested)}</b> {A.short} ≠ {S.short}</span>}
             {A && <span title={`Cohen's κ, ${A.short} against ${S.short}, over the units both judged`}>κ {A.short} vs {S.short} <b>{k2(pop.kAS)}</b></span>}

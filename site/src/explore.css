@@ -64,6 +64,17 @@
 /* centre: the chart is the page; under the card title, two muted lines carry what the chart shows and the population's figures, and the
    current selection with its clear button. The chart's pieces are the selectors (Views.tsx / Venn.tsx hitProps). */
 .pe-chart-card { padding-bottom: 8px; }
+/* "Show gray": a checkbox-style pill in the chart header beside the scale and view switches; off to start (the gray units are left out of the chart) */
+.pe-gray-tog { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-2); background: var(--panel); border-radius: 6px; padding: 3px 9px 3px 7px; font: inherit; font-size: 11.5px; color: var(--ink-3); cursor: pointer; white-space: nowrap; }
+.pe-gray-tog:hover:not(:disabled) { color: var(--ink); }
+.pe-gray-tog.on { color: var(--ink); }
+.pe-gray-tog:disabled { cursor: default; color: var(--ink-4); }
+.pe-gray-tog .box { width: 11px; height: 11px; border-radius: 3px; border: 1px solid var(--line-2); flex: none; position: relative; }
+.pe-gray-tog.on .box { background: var(--ink); border-color: var(--ink); }
+.pe-gray-tog.on .box::after { content: ""; position: absolute; left: 3px; top: 0.5px; width: 3px; height: 6px; border-right: 1.5px solid var(--bg); border-bottom: 1.5px solid var(--bg); transform: rotate(45deg); }
+.pe-gray-tog .n { color: var(--ink-4); font-variant-numeric: tabular-nums; }
+.pe-gray-tog:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+.pe-sub .st .dim { color: var(--ink-4); font-weight: 400; }
 .pe-sub { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 18px; margin: 0 0 8px; font-size: 11.5px; color: var(--ink-4); line-height: 1.5; }
 .pe-sub .q { color: var(--ink-3); }
 .pe-sub .q b, .pe-sub .st b { font-weight: 500; color: var(--ink-2); }

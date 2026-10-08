@@ -6,8 +6,9 @@ import { hitProps, type Cells, type Scale, type Sel } from "./Views";
 /*
  * Area-proportional Euler diagram. One circle per arm, area = units that arm called responsive; the circles are placed so every pairwise
  * and triple overlap matches the real count as closely as circles allow (exact for two arms, a least-squares fit for three). The outer
- * box is the whole judged population, so the space outside the circles is "nobody called it responsive". Gray / unjudged units sit in
- * a hatched circle of their own outside the box. Geometry after Frederickson's venn.js: intersection areas from the arc polygon, a
+ * box is the whole judged population, so the space outside the circles is "nobody called it responsive". Gray / unjudged units, when the
+ * page passes them in (ExplorePage.tsx `showGray`), sit in a circle of their own outside the box; otherwise the box has the whole plot.
+ * Geometry after Frederickson's venn.js: intersection areas from the arc polygon, a
  * greedy initial layout by bisection on pairwise distances, then gradient descent on the squared area error.
  */
 
@@ -155,7 +156,8 @@ export function Venn({ cells, S, A, B, defs, scale, sel, onSel, height }: { cell
     if (bb.y1 - bb.y0 + 2 * pad > uh) { uh = bb.y1 - bb.y0 + 2 * pad; grown = true; }
     const totalW = uw + (gray ? 2 * grayR + uw * 0.08 : 0);
     const f = Math.min(plotW / totalW, plotH / uh); // px per unit length
-    const ux = PADX, uy = PADT + (plotH - uh * f) / 2;
+    // the box is centred in the plot; with a gray circle it keeps left so the circle has the right-hand side
+    const ux = PADX + (gray ? 0 : (plotW - uw * f) / 2), uy = PADT + (plotH - uh * f) / 2;
     const shift = { x: ux + (uw * f) / 2 - ((bb.x0 + bb.x1) / 2) * f, y: uy + (uh * f) / 2 - ((bb.y0 + bb.y1) / 2) * f };
     const px: C[] = cs.map((c) => ({ x: c.x * f + shift.x, y: c.y * f + shift.y, r: c.r * f }));
     const box = { x: ux, y: uy, w: uw * f, h: uh * f };
