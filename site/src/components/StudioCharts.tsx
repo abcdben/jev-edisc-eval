@@ -99,7 +99,7 @@ function axisTicks(scale: "linear" | "log", dom: [number, number], density: Tick
  * temperature 0) above the rows. The `dots` mode draws the chart as dots whatever `kind` says. Nothing changes while no row carries a `t0`.
  * `orient` (Orient; `h` by default) lays the chart out as rows or as columns (see Orient). `keyNames` are the key's two entries (default sampling / temperature 0 unset).
  */
-export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domain, sort = "asc", axis, fmtTick, logos: logosIn, labelW, textScale = 1, mark: markIn = "dot", onSelect, bg = "none", bars: barMode = "filled", ticks: density = "normal", t0: t0Mode = "none", t0Tag = true, t0Key = false, orient = "h", keyNames = T0_KEY_NAMES }: { rows: StudioRow[]; kind?: "bar" | "dot"; scale?: "linear" | "log"; domain?: [number, number]; sort?: "asc" | "desc" | "none"; axis: string; fmtTick: (v: number) => string; logos?: boolean | LogosMode; labelW?: number; textScale?: number; mark?: MarkShape; onSelect?: (id: string) => void; bg?: PlotBg; bars?: FillMode; ticks?: TickDensity; t0?: T0Mode; t0Tag?: boolean; t0Key?: boolean; orient?: Orient; keyNames?: [string, string] }) {
+export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domain, sort = "asc", axis, fmtTick, logos: logosIn, labelW, textScale = 1, mark: markIn = "dot", onSelect, bg = "none", bars: barMode = "filled", ticks: density = "normal", t0: t0Mode = "none", t0Tag = true, t0Key = false, orient = "h", keyNames = T0_KEY_NAMES, emptyText = "Select at least one model." }: { rows: StudioRow[]; kind?: "bar" | "dot"; scale?: "linear" | "log"; domain?: [number, number]; sort?: "asc" | "desc" | "none"; axis: string; fmtTick: (v: number) => string; logos?: boolean | LogosMode; labelW?: number; textScale?: number; mark?: MarkShape; onSelect?: (id: string) => void; bg?: PlotBg; bars?: FillMode; ticks?: TickDensity; t0?: T0Mode; t0Tag?: boolean; t0Key?: boolean; orient?: Orient; keyNames?: [string, string]; /** The prompt drawn in place of the rows while there are none. */ emptyText?: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const vertical = orient === "v";
   const logosOn = logosMode(logosIn, true), logos = logosOn !== "none";
@@ -166,7 +166,8 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
     }
     return x0 + Math.min(1, Math.max(0, (v - dom[0]) / (dom[1] - dom[0] || 1))) * plotW;
   };
-  const ticks = axisTicks(scale, dom, density, plotW, (t) => measure(fmtTick(t), 11 * s, "mono") + 8 * s), grid = gridOn(density);
+  // no measured row: the domain is a placeholder, so no ticks are drawn either (the prompt stands in for the rows)
+  const ticks = measured.length ? axisTicks(scale, dom, density, plotW, (t) => measure(fmtTick(t), 11 * s, "mono") + 8 * s) : [], grid = gridOn(density);
   const n = sorted.length, bottom = TOP + n * ROW, h = bottom + 46 * s;
   // the hatch tiles: one per measured row and, with paired bars, one per t = 0 figure in the tint
   const hatchItems = paired ? [...measured, ...measured.filter((r) => t0Of(r)).map((r) => ({ id: `${r.id}~t0`, color: T0_TINT(r.color) }))] : measured;
@@ -273,7 +274,7 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
       }
       return baseline - Math.min(1, Math.max(0, (v - dom[0]) / (dom[1] - dom[0] || 1))) * plotH;
     };
-    const vticks = axisTicks(scale, dom, density, plotH, () => FS_TICK * 1.5), vgrid = gridOn(density);
+    const vticks = measured.length ? axisTicks(scale, dom, density, plotH, () => FS_TICK * 1.5) : [], vgrid = gridOn(density);
     // column geometry: one bar 62% of the column (at most 56 s); a paired row's two bars 32% each (at most 36 s) with a 6% gap
     const bw = Math.min(colW * 0.62, 56 * s), bw2 = Math.min(colW * 0.32, 36 * s), gap2 = Math.min(colW * 0.06, 6 * s);
     // value labels shrink together (to 70% at the least) where the widest would not fit its slot: a column, or half of one in a paired row; the t = 0 tag
@@ -408,7 +409,7 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
             <line x1={PL} x2={PL} y1={top} y2={baseline} stroke="var(--axis-y, var(--axis))" />
             <line x1={PL} x2={PL + plotW} y1={baseline} y2={baseline} />
           </g>
-          {n === 0 && <text x={W / 2} y={H / 2} textAnchor="middle" fontSize={13 * s} fill="var(--ink-4)">Select at least one model.</text>}
+          {n === 0 && <text x={W / 2} y={H / 2} textAnchor="middle" fontSize={13 * s} fill="var(--ink-4)">{emptyText}</text>}
           {probes}
         </svg>
       </div>
@@ -522,7 +523,7 @@ export function StudioBars({ rows, kind: kindIn = "bar", scale = "linear", domai
           <line x1={x0} x2={x0 + plotW} y1={bottom} y2={bottom} />
         </g>
         <text x={x0} y={bottom + 36 * s} fontSize={11.5 * s} fill="var(--ink-3)" className="ax">{axis}</text>
-        {n === 0 && <text x={W / 2} y={30} textAnchor="middle" fontSize={13 * s} fill="var(--ink-4)">Select at least one model.</text>}
+        {n === 0 && <text x={W / 2} y={30} textAnchor="middle" fontSize={13 * s} fill="var(--ink-4)">{emptyText}</text>}
         {probes}
       </svg>
     </div>

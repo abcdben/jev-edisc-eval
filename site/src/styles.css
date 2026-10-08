@@ -316,7 +316,8 @@ svg text { user-select: none; font-family: var(--sans); }
 .tar-depth-chart { position: relative; min-width: 0; }
 .tar-depth-chart svg { display: block; max-width: 100%; }
 .tar-depth-key { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px 13px; min-height: 18px; margin: 1px 4px 0; color: var(--ink-3); font-size: 10.5px; }
-.tar-depth-key span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+/* direct children only: the nested .series-swatches popover is a span too and must keep its own display: none until hover/focus */
+.tar-depth-key > span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .tar-depth-key .series-color > input[type="color"] { width: 16px; height: 16px; border-radius: 4px; }
 .tar-depth-key i { width: 14px; height: 2px; border-radius: 2px; }
 .tar-depth-empty { display: grid; place-items: center; min-height: 260px; color: var(--ink-4); font-size: 12px; text-align: center; }

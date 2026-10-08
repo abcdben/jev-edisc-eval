@@ -292,7 +292,7 @@ export default function StudioPage() {
   useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
   // Background (Bg): `presetDots` is whether the panel's own --dots (preset, theme or Custom scheme; not the --plot-dots override) draws anything.
   const [presetDots, setPresetDots] = useState(true);
-  // The inspector's sections (components/Inspector.tsx; the `sections` field): Chart and Canvas open on a first visit, Scheme whenever Style → Custom is chosen.
+  // The inspector's sections (components/Inspector.tsx; the `sections` field): every one closed on a first visit (studioState.ts DEFAULT_SECTIONS), Scheme opened whenever Style → Custom is chosen.
   // Opening or closing one is not a change to the chart: it neither starts persisting a linked state nor marks a loaded preset modified.
   const sections = sectionsApi(state.sections, (f) => setState((p) => ({ ...p, sections: f(p.sections) })));
 
@@ -413,7 +413,8 @@ export default function StudioPage() {
   const cur = current in presets || builtinOf(current) ? current : "";
   const curLabel = cur.replace(BUILTIN_PREFIX, "");
   const curBuiltin = builtinOf(cur);
-  const curState = cur ? (curBuiltin ? builtinState(curBuiltin) : fromPreset(presets[cur].state)) : null;
+  // a built-in preset leaves the model selection alone (studioState.ts builtinState), so the models on screen are not a modification of it
+  const curState = cur ? (curBuiltin ? builtinState(curBuiltin, { on }) : fromPreset(presets[cur].state)) : null;
   const modified = !!curState && !sameState(curState, state);
   const [psMsg, setPsMsg] = useState<string | null>(null);
   const psTimer = useRef(0);
@@ -441,7 +442,7 @@ export default function StudioPage() {
   const loadPreset = (n: string) => {
     if (!n) return;
     const b = builtinOf(n);
-    if (b) applyPreset(builtinState(b), n, b.name);
+    if (b) applyPreset(builtinState(b, { on: stateRef.current.on }), n, b.name);
     else if (presets[n]) applyPreset(fromPreset(presets[n].state), n, n);
   };
   const deletePreset = () => {
@@ -536,7 +537,7 @@ export default function StudioPage() {
   const armsIssue = v.issue ? issueLabel(meta, v.issue).split(" · ")[0] : null;
   const armsRowsKeyed = arms.rows.map(keyed);
 
-  const emptyText = "Select at least one model.";
+  const emptyText = "Choose models to plot.";
   // What the panel actually draws for the 95% interval, read off its computed variables after each style-affecting change (preset, Custom sliders,
   // Fill mode and Contrast all folded in): the map's boxes (--box-alpha, or the outline: --box-stroke in the filled modes, --box-stroke-w in the outline
   // modes) and the whisker charts' whiskers (--op-whisker). The legend note names only what is drawn.
@@ -1139,13 +1140,13 @@ export default function StudioPage() {
             )}
             {/* the bar charts: in columns (vertical) inside the filling canvas, as the scatters; as rows they size themselves */}
             {plot === "cost" && costChart !== "scatter" && barHost(
-              <StudioBars rows={costRows(sel, costUnit).map(keyed)} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={costAxis(costChart, costUnit, costScale)} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} ticks={ticks} orient={orient} />,
+              <StudioBars rows={costRows(sel, costUnit).map(keyed)} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={costAxis(costChart, costUnit, costScale)} fmtTick={fmtMoneyTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} ticks={ticks} orient={orient} emptyText={emptyText} />,
             )}
             {plot === "speed" && barHost(
               <StudioBars
                 rows={speedRows(sel, speedChart, speedUnit).map(keyed)} kind={speedChart === "dots" ? "dot" : "bar"} scale={speedChart === "dots" ? "log" : "linear"} sort={speedChart === "throughput" ? "desc" : "asc"}
                 axis={speedAxis(speedChart)}
-                fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} ticks={ticks} orient={orient}
+                fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} ticks={ticks} orient={orient} emptyText={emptyText}
               />,
             )}
             {plot === "stability" && barHost(
@@ -1153,7 +1154,7 @@ export default function StudioPage() {
                 rows={stabRowsKeyed} kind={stabDots ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? stab.agreeDomain : undefined}
                 axis={stabAxis(stabChart, stabT0Draw)}
                 fmtTick={fmtPctTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} ticks={ticks}
-                t0={stabT0Draw === "paired" ? "paired" : stabT0Draw === "dots" ? "dots" : "none"} t0Tag={stabT0Tag} t0Key={legend && stabT0Key} orient={orient}
+                t0={stabT0Draw === "paired" ? "paired" : stabT0Draw === "dots" ? "dots" : "none"} t0Tag={stabT0Tag} t0Key={legend && stabT0Key} orient={orient} emptyText={emptyText}
               />,
             )}
             {armsMap && (
@@ -1164,7 +1165,7 @@ export default function StudioPage() {
             {plot === "arms" && !armsMap && barHost(
               <StudioBars
                 rows={armsRowsKeyed} kind={armsLayout === "dumbbell" ? "dot" : "bar"} domain={armsLayout === "dumbbell" ? arms.domain : undefined} axis={armsAxis(armsMetric, v, armsIssue)} fmtTick={fmtPctTick} logos={logos} textScale={ts} mark={mark} bg={plotBg("none")} bars={fillMode} ticks={ticks}
-                t0={armsLayout === "dumbbell" ? "dots" : "paired"} t0Tag={armsDelta} t0Key={legend && armsKey} keyNames={ARMS_KEY_NAMES} orient={orient}
+                t0={armsLayout === "dumbbell" ? "dots" : "paired"} t0Tag={armsDelta} t0Key={legend && armsKey} keyNames={ARMS_KEY_NAMES} orient={orient} emptyText={emptyText}
               />,
             )}
             {caption && legendLines.length > 0 && (

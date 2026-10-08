@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import {
-  ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, DEFAULT_ON, GPU_NAME, GPU_USD_PER_HOUR, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER, rosterOf,
+  ABLATION_GROUPS, CORPORA, DATA, DEFAULT_CORPUS, SUGGESTED_ON, GPU_NAME, GPU_USD_PER_HOUR, PRIMARY_BY_KEY, VARIANT_LABEL, VARIANT_ORDER, rosterOf,
   corpusKey, costPerDoc, displayMeta, fmtCI, fmtInt, fmtMs, fmtPct, fmtUSD, isDecider, isGpuRow, isHidden, issueLabel, paidPerDoc, pick, selectableRowsOf, siteCorpus, starOf, tarRowsOf, variantColor,
   type Gray, type Kind, type Level, type PRF, type Rec,
 } from "./data";
@@ -22,7 +22,10 @@ import { DisclaimerLink, DisclaimerModal, useDisclaimer } from "./components/Dis
 import { Logo } from "./logos";
 import { THEME_KEY, THEME_OPTIONS, readTheme, type Theme } from "./theme";
 import { SeriesColorControl, useSeriesColors } from "./seriesColors";
-import { TRADEOFF_DEFAULT_ON, TradeoffPicker, TradeoffSection } from "./Tradeoff";
+import { TradeoffPicker, TradeoffSection } from "./Tradeoff";
+
+/** The prompt a chart shows while nothing is selected (every page opens with nothing selected). */
+export const CHOOSE_MODELS = "Choose models to compare.";
 
 /** The recall/precision card's views. `ranked` is drawn by PRRail on Compare models (rank rail) and by PRHeat on Compare configurations (vs default), chosen by PRCard's `ranked` prop. */
 export type Chart = "map" | "ranked";
@@ -61,8 +64,10 @@ export function PRCard({ items, chart, onChart, defaultZoom, emptyText, logos = 
         </span>
       </div>
       {chart === "map" && <div className="chart-fill" style={{ minHeight: height }}><PRScatter items={items} zoom={zoom} emptyText={emptyText} logos={logos} fill onSelect={onSelect} highlight={hover.id} onHover={hover.set} pulse={pulse} labels={seriesKey ? "none" : "beside"} /></div>}
-      {chart === "ranked" && ranked === "rail" && <PRRail {...railProps} />}
-      {chart === "ranked" && ranked === "heat" && <PRHeat {...rowProps} referenceId={referenceId} />}
+      {/* the ranked views draw rows only: with nothing selected the prompt stands in for them */}
+      {chart === "ranked" && !items.length && <div className="tradeoff-empty">{emptyText ?? CHOOSE_MODELS}</div>}
+      {chart === "ranked" && items.length > 0 && ranked === "rail" && <PRRail {...railProps} />}
+      {chart === "ranked" && items.length > 0 && ranked === "heat" && <PRHeat {...rowProps} referenceId={referenceId} />}
       {seriesKey}
       {chart === "map" && (
         <div className="legend-note">
@@ -279,13 +284,14 @@ export function ModelPicker({ v, on, setOn, explain }: { v: View; on: Set<string
       return { id: r.model, label: m.short, title: m.note, mark: <span style={{ color: m.color }}><Logo model={r.model} /></span>, suffix: starOf(r) ? <span className="sub" title={`scored on ${r.subset}`}>*</span> : undefined, detail: explain ? () => explain(r.model) : undefined, accent: isDecider(kindOf(r)) ? m.color : undefined };
     }),
   }));
-  const reset = () => {
+  // the curated set (data.ts SUGGESTED_ON), the picker's "Suggested set" button; the page itself opens with nothing selected
+  const suggest = () => {
     const next = new Set([...on].filter((k) => k.startsWith("tar@")));
-    DEFAULT_ON.forEach((k) => { if (!k.startsWith("tar@")) next.add(k); });
+    SUGGESTED_ON.forEach((k) => { if (!k.startsWith("tar@")) next.add(k); });
     setOn(next);
   };
   const selected = primary.filter((r) => on.has(r.model));
-  return <Picker label="Models" summary={`${avail} of ${primary.length}`} groups={groups} on={on} onChange={setOn} onReset={reset}
+  return <Picker label="Models" summary={avail ? `${avail} of ${primary.length}` : "None selected"} groups={groups} on={on} onChange={setOn} onReset={suggest}
     selected={selected.length ? <><span className="pick-selected-lab">Selected</span><div className="series-selected">
       {selected.map((r) => {
         const meta = displayMeta(r.model, r);
@@ -320,9 +326,9 @@ export function TarPicker({ v, on, setOn, reviewer = PUBLISHED }: { v: View; on:
   if (!options.length) return null;
   const sizes = [...new Set(options.flatMap((x) => x.n == null ? [] : [x.n]))].sort((a, b) => a - b);
   const ids = new Set(options.map((x) => x.row.model));
-  const defaults = new Set([...DEFAULT_ON].filter((k) => ids.has(k)));
+  const suggested = new Set([...SUGGESTED_ON].filter((k) => ids.has(k)));
   const selectedOptions = options.filter((x) => on.has(x.row.model));
-  const isDefault = selectedOptions.length === defaults.size && selectedOptions.every((x) => defaults.has(x.row.model));
+  const isSuggested = selectedOptions.length === suggested.size && selectedOptions.every((x) => suggested.has(x.row.model));
   const [open, setOpen] = useState(false);
   const [workflow, setWorkflow] = useState<TarWorkflow>("t1");
   const [depth, setDepth] = useState(() => sizes.includes(1000) ? 1000 : sizes[0]);
@@ -352,9 +358,10 @@ export function TarPicker({ v, on, setOn, reviewer = PUBLISHED }: { v: View; on:
   const candidateExists = ids.has(candidate);
   const candidateSelected = on.has(candidate);
   const add = () => { if (!candidateExists || candidateSelected) return; const next = new Set(on); next.add(candidate); setOn(next); };
-  const reset = () => {
+  // the curated TAR pair (data.ts SUGGESTED_ON), the "Suggested set" button; the page opens with no TAR workflow selected
+  const suggest = () => {
     const next = new Set([...on].filter((k) => !k.startsWith("tar@")));
-    DEFAULT_ON.forEach((k) => { if (ids.has(k)) next.add(k); });
+    SUGGESTED_ON.forEach((k) => { if (ids.has(k)) next.add(k); });
     setOn(next);
   };
   const remove = (id: string) => { const next = new Set(on); next.delete(id); setOn(next); };
@@ -362,7 +369,7 @@ export function TarPicker({ v, on, setOn, reviewer = PUBLISHED }: { v: View; on:
     <span ref={wrapRef} className={`pick-wrap tar-build${open ? " open" : ""}`}>
       <button ref={buttonRef} className="pick-btn" onClick={() => setOpen((x) => !x)} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? id : undefined}>
         <span className="pick-lab">TAR workflows</span>
-        <span className="pick-sum">{selectedOptions.length ? `${selectedOptions.length} selected${isDefault ? " · defaults" : ""}` : "None selected"}</span>
+        <span className="pick-sum">{selectedOptions.length ? `${selectedOptions.length} selected${isSuggested ? " · suggested set" : ""}` : "None selected"}</span>
         <span className="chev" />
       </button>
       {open && (
@@ -400,7 +407,7 @@ export function TarPicker({ v, on, setOn, reviewer = PUBLISHED }: { v: View; on:
             </div>
           </div>
           <div className="pick-foot">
-            <button type="button" onClick={reset}>Restore defaults</button>
+            <button type="button" onClick={suggest}>Suggested set</button>
             <button type="button" onClick={() => { const next = new Set([...on].filter((k) => !k.startsWith("tar@"))); setOn(next); }}>Clear TAR</button>
             <span className="pick-foot-r"><span className="pick-note">
               {rev.snapped
@@ -487,7 +494,7 @@ function CompareSection({ v, on, explain, setOn, stats, setStats }: CompareProps
       <HoverProvider>
         <div className={`dash${chart !== "map" ? " ranked" : ""}`}>
           <PRCard
-            items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={(k) => { if (!k.startsWith("tar@")) explain(k); }}
+            items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={(k) => { if (!k.startsWith("tar@")) explain(k); }} emptyText={CHOOSE_MODELS}
             pulse ranked="rail" sig={v.corpus} sort={{ value: stats.sort, onSort: st.onSort }} notes={st.notes}
             seriesKey={setOn ? <ComparisonKey items={items} on={on} setOn={setOn} /> : undefined}
           />
@@ -518,24 +525,45 @@ function useVariants(v: View, grp: string) {
   }, [rows, grp]);
 }
 
-/** Model select + configuration multi-select for the Configurations page, rendered in the control bar. */
-/** Compare configurations shows every configuration of the chosen family; there is no per-configuration picker (the rows' details buttons open the modal). */
-function VariantPicker({ grp, setGrp }: { grp: string; setGrp: (g: string) => void }) {
+/** The prompt the Configurations page shows while nothing is selected. */
+const CHOOSE_CONFIGS = "Choose configurations to compare.";
+
+/**
+ * Model select + configuration multi-select for the Configurations page, rendered in the control bar. The family's configurations are listed in the
+ * same dropdown idiom as Compare models' picker (components/Picker.tsx), each with its colour; `on` holds the configurations shown, by model key, and
+ * starts empty: the page opens with nothing selected. Changing the family clears it (the shell's setGrp), so every family starts from scratch too.
+ */
+function VariantPicker({ v, grp, setGrp, on, setOn, explain }: { v: View; grp: string; setGrp: (g: string) => void; on: Set<string>; setOn: (s: Set<string>) => void; explain?: (k: string) => void }) {
+  const G = ABLATION_GROUPS.find((g) => g.id === grp)!;
+  const variants = useVariants(v, grp);
+  const groups: PickGroup[] = [{
+    id: grp, label: G.label,
+    items: variants.map((r) => ({
+      id: r.model, label: VARIANT_LABEL[r.variant!] ?? r.variant!, title: r.lever ?? undefined,
+      mark: <span className="sw" style={{ background: variantColor(r.variant!, G.recipe) }} aria-hidden="true" />,
+      suffix: starOf(r) ? <span className="sub" title={`scored on ${r.subset}`}>*</span> : undefined,
+      detail: explain ? () => explain(r.model) : undefined,
+    })),
+  }];
+  const n = variants.filter((r) => on.has(r.model)).length;
   return (
-    <Control label="Model">
-      <span className="select">
-        <select value={grp} onChange={(e) => setGrp(e.target.value)}>
-          {ABLATION_GROUPS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
-        </select>
-      </span>
-    </Control>
+    <>
+      <Control label="Model">
+        <span className="select">
+          <select value={grp} onChange={(e) => setGrp(e.target.value)}>
+            {ABLATION_GROUPS.map((g) => <option key={g.id} value={g.id}>{g.label}</option>)}
+          </select>
+        </span>
+      </Control>
+      <Picker label="Configurations" summary={n ? `${n} of ${variants.length}` : "None selected"} groups={groups} on={on} onChange={setOn} />
+    </>
   );
 }
 
-function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: Set<string>; explain: (k: string) => void }) {
+function AblationSection({ v, grp, on, explain }: { v: View; grp: string; on: Set<string>; explain: (k: string) => void }) {
   const G = ABLATION_GROUPS.find((g) => g.id === grp)!;
   const variants = useVariants(v, grp);
-  const sel = variants.filter((r) => !off.has(r.variant!));
+  const sel = variants.filter((r) => on.has(r.model));
   const color = (r: Rec) => variantColor(r.variant!, G.recipe);
   const name = (r: Rec) => VARIANT_LABEL[r.variant!] ?? r.variant!;
   const [chart, setChart] = useState<Chart>("ranked");
@@ -556,7 +584,7 @@ function AblationSection({ v, grp, off, explain }: { v: View; grp: string; off: 
         <div className="dash ranked">
           <PRCard
             items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain}
-            emptyText={variants.length ? "Select at least one configuration." : "No configurations of this model were run on this corpus and arm."}
+            emptyText={variants.length ? CHOOSE_CONFIGS : "No configurations of this model were run on this corpus and arm."}
             logos={false} ranked="heat" referenceId={referenceId} sig={`${v.corpus}:${grp}`} height={460}
           />
         </div>
@@ -597,11 +625,14 @@ export function Shell({ Compare = CompareSection, mast, controlsTail, compareHas
   const disclaimer = useDisclaimer(); // first-visit disclaimer; reopens from the footer
   // The Method modal (components/Method.tsx) is not mounted for now; hint "more" links open the About modal instead.
   const openMethod = disclaimer.show;
-  const [on, setOn] = useState<Set<string>>(new Set(DEFAULT_ON));
+  // the Compare models selection: nothing to start with (every page opens from scratch; the picker's "Suggested set" button selects the curated roster)
+  const [on, setOn] = useState<Set<string>>(() => new Set());
   // the Compare models Statistics row's setting (compareStats.ts: threshold, reviewer, sort), remembered under the site's own key; the TAR picker reads the reviewer for its note
   const [stats, setStats] = useSiteStats();
-  const [grp, setGrp] = useState("jev");
-  const off = useMemo(() => new Set<string>(), []); // every configuration of the family is shown
+  // Compare configurations: the family, and the configurations of it that are shown (by model key); none to start with, and none again when the family changes
+  const [grp, setGrpRaw] = useState("jev");
+  const [cfgOn, setCfgOn] = useState<Set<string>>(() => new Set());
+  const setGrp = (g: string) => { setGrpRaw(g); setCfgOn(new Set()); };
   const corpusTitle = `${fmtInt(meta.n_docs)} documents · ${meta.n_issues} issues · ${fmtInt(meta.n_pos_docs_any)} responsive to at least one (${fmtPct(meta.n_pos_docs_any / meta.n_docs, 0)}) · gold: ${meta.gold}`;
   const [theme, setTheme] = useState<Theme>(readTheme);
   useEffect(() => { document.documentElement.dataset.theme = theme; try { localStorage.setItem(THEME_KEY, theme); } catch { /* storage denied: the choice lasts the session */ } }, [theme]);
@@ -612,8 +643,8 @@ export function Shell({ Compare = CompareSection, mast, controlsTail, compareHas
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
   const goPage = (p: Page) => { history.replaceState(null, "", p === "compare" ? compareHash : `#${p}`); setPageId(p); window.scrollTo(0, 0); };
-  // the Trade-off page's own model selection (Tradeoff.tsx): a shorter default than Compare models', no TAR rows
-  const [tradeOn, setTradeOn] = useState<Set<string>>(new Set(TRADEOFF_DEFAULT_ON));
+  // the Trade-off page's own model selection (Tradeoff.tsx): nothing to start with, as on Compare models; no TAR rows
+  const [tradeOn, setTradeOn] = useState<Set<string>>(() => new Set());
 
   const page = (
     <div className="page">
@@ -637,7 +668,7 @@ export function Shell({ Compare = CompareSection, mast, controlsTail, compareHas
           ? <><ModelPicker v={v} on={on} setOn={setOn} explain={setExplain} /><TarPicker v={v} on={on} setOn={setOn} reviewer={stats.tarReviewer} /></>
           : pageId === "tradeoff"
             ? <TradeoffPicker v={v} on={tradeOn} setOn={setTradeOn} explain={setExplain} />
-            : <VariantPicker grp={grp} setGrp={setGrp} />}
+            : <VariantPicker v={v} grp={grp} setGrp={setGrp} on={cfgOn} setOn={setCfgOn} explain={setExplain} />}
         <Control label="Issue">
           <span className="select">
             <select value={issue ?? "__doc"} onChange={(e) => { const val = e.target.value; setIssue(val === "__doc" ? null : val); }}>
@@ -655,11 +686,11 @@ export function Shell({ Compare = CompareSection, mast, controlsTail, compareHas
         ? <Compare v={v} on={on} setOn={setOn} explain={setExplain} stats={stats} setStats={setStats} />
         : pageId === "tradeoff"
           ? <TradeoffSection key={corpus} v={v} on={tradeOn} explain={setExplain} /> /* keyed on the corpus: operating points chosen against one corpus's curves start over on another */
-          : <AblationSection v={v} grp={grp} off={off} explain={setExplain} />}
+          : <AblationSection v={v} grp={grp} on={cfgOn} explain={setExplain} />}
       {explain && (
         <ExplainModal
           initialKey={explain} initialCorpus={corpus} onClose={() => setExplain(null)}
-          metrics={(k, c) => metricsFor(k, c, v, (rows) => (pageId === "compare" ? rosterOf(rows).filter((r) => on.has(r.model)) : pageId === "tradeoff" ? rows.filter((r) => tradeOn.has(r.model)) : rows.filter((r) => r.group === grp && !!r.variant && !isHidden(r.model) && !off.has(r.variant))))}
+          metrics={(k, c) => metricsFor(k, c, v, (rows) => (pageId === "compare" ? rosterOf(rows).filter((r) => on.has(r.model)) : pageId === "tradeoff" ? rows.filter((r) => tradeOn.has(r.model)) : rows.filter((r) => r.group === grp && !!r.variant && !isHidden(r.model) && cfgOn.has(r.model))))}
         />
       )}
 

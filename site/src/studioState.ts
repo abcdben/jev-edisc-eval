@@ -1,4 +1,4 @@
-import { DATA, DEFAULT_CORPUS, DEFAULT_ON, PRIMARY_BY_KEY, siteCorpus } from "./data";
+import { DATA, DEFAULT_CORPUS, PRIMARY_BY_KEY, siteCorpus } from "./data";
 import type { Chart } from "./App";
 import { INTERVAL_MODES, MARK_SHAPES, type IntervalMode, type LabelsMode, type MarkShape } from "./components/PRScatter";
 import { FILL_MODES, type FillMode } from "./components/hatch";
@@ -126,8 +126,8 @@ const isRecord = (o: unknown): o is Record<string, unknown> => !!o && typeof o =
 const isOpenMap = (o: unknown): o is Record<string, boolean> => isRecord(o) && Object.values(o).every((v) => typeof v === "boolean");
 const ids = <T extends string>(xs: readonly { id: T }[]) => xs.map((x) => x.id);
 
-/** `stats` is the Statistics section (threshold, TAR reviewer, sort), first in the inspector; a stored map from before it existed gains it open through the merge in `sections.coerce`. */
-export const DEFAULT_SECTIONS: Record<string, boolean> = { stats: true, chart: true, canvas: true, style: false, scheme: true, export: false };
+/** The inspector's sections, every one closed to start with (the studio opens from scratch: no models, nothing expanded); a stored map from before a section existed gains it closed through the merge in `sections.coerce`. */
+export const DEFAULT_SECTIONS: Record<string, boolean> = { stats: false, chart: false, canvas: false, style: false, scheme: false, export: false };
 export const DEFAULT_SIZE = { w: 1200, h: 675 };
 
 export const FIELDS: Fields = {
@@ -135,7 +135,8 @@ export const FIELDS: Fields = {
   corpus: { dflt: DEFAULT_CORPUS, coerce: (r) => (typeof r === "string" ? siteCorpus(r) : undefined) },
   issue: { dflt: null, coerce: (r) => (r === null ? null : typeof r === "string" && r.length <= 80 ? r : undefined) },
   on: {
-    dflt: new Set(DEFAULT_ON),
+    // no models to start with: the studio opens from scratch (the Models picker's "Suggested set" button selects the curated roster, data.ts SUGGESTED_ON)
+    dflt: new Set<string>(),
     coerce: (r) => (Array.isArray(r) ? new Set(r.filter((k): k is string => typeof k === "string" && k in PRIMARY_BY_KEY)) : undefined),
     toJson: (s) => [...s].sort(), // sorted, so the set compares by membership whatever order the picker added in
   },
@@ -333,5 +334,5 @@ export const BUILTIN_PRESETS: { name: string; title: string; state: Partial<Stud
   },
 ];
 export const BUILTIN_PREFIX = "builtin:";
-/** A built-in preset's full state: its values over the defaults. */
-export const builtinState = (b: (typeof BUILTIN_PRESETS)[number]): StudioState => ({ ...defaults(), ...b.state });
+/** A built-in preset's full state: its values over the defaults. `keep` is the model selection it leaves alone: a built-in describes a look, not a comparison, and the defaults hold no models. */
+export const builtinState = (b: (typeof BUILTIN_PRESETS)[number], keep: Pick<StudioState, "on"> = { on: new Set<string>() }): StudioState => ({ ...defaults(), on: new Set(keep.on), ...b.state });

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { DATA, fmtInt, issueLabel, corpusKey, starOf } from "./data";
-import { LATENCY_ITEMS, PRCard, Shell, costItems, useStatsItems, type Chart, type CompareProps } from "./App";
+import { CHOOSE_MODELS, LATENCY_ITEMS, PRCard, Shell, costItems, useStatsItems, type Chart, type CompareProps } from "./App";
 import { StatsRow } from "./components/CompareStats";
 import { reviewerNotes } from "./compareStats";
 import { HoverProvider } from "./components/hover";
@@ -90,7 +90,7 @@ function CompareTabs({ v, on, explain, stats, setStats }: CompareProps) {
   let card: ReactNode;
   if (tab === "pr") {
     // taller than A's map (380), which shares its height with the side stack: alone across the page a 620 px plot keeps the interval boxes near square
-    card = <PRCard items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain} pulse ranked="rail" sig={v.corpus} height={620} sort={{ value: stats.sort, onSort: st.onSort }} notes={st.notes} />;
+    card = <PRCard items={items} chart={chart} onChart={setChart} defaultZoom={true} explain={explain} emptyText={CHOOSE_MODELS} pulse ranked="rail" sig={v.corpus} height={620} sort={{ value: stats.sort, onSort: st.onSort }} notes={st.notes} />;
   } else if (tab === "cost") {
     const cu = COST_UNIT[costUnit];
     card = (
@@ -106,10 +106,10 @@ function CompareTabs({ v, on, explain, stats, setStats }: CompareProps) {
         </div>
         {costChart === "scatter" ? (
           <div className="chart-fill" style={{ minHeight: 520 }}>
-            <StudioScatter pts={costPts(sel, v, costUnit)} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} onSelect={explain} />
+            <StudioScatter pts={costPts(sel, v, costUnit)} xLabel={`${cu.axis} (log)`} yLabel={v.issue ? `Recall · ${issueLabel(meta, v.issue).split(" · ")[0]}` : "Recall"} fmtX={fmtMoneyTick} onSelect={explain} emptyText={CHOOSE_MODELS} />
           </div>
         ) : (
-          <StudioBars rows={costRows(sel, costUnit)} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={costAxis(costChart, costUnit, costScale)} fmtTick={fmtMoneyTick} onSelect={explain} />
+          <StudioBars rows={costRows(sel, costUnit)} kind={costChart === "dots" ? "dot" : "bar"} scale={costChart === "dots" ? "log" : costScale} axis={costAxis(costChart, costUnit, costScale)} fmtTick={fmtMoneyTick} onSelect={explain} emptyText={CHOOSE_MODELS} />
         )}
         {caption(costCaption(costChart, costUnit, costScale), costChart === "scatter" ? "mark" : "row", revNotes)}
       </div>
@@ -127,7 +127,7 @@ function CompareTabs({ v, on, explain, stats, setStats }: CompareProps) {
         </div>
         <StudioBars
           rows={speedRows(sel, speedChart, speedUnit)} kind={speedChart === "dots" ? "dot" : "bar"} scale={speedChart === "dots" ? "log" : "linear"} sort={speedChart === "throughput" ? "desc" : "asc"}
-          axis={speedAxis(speedChart)} fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} onSelect={explain}
+          axis={speedAxis(speedChart)} fmtTick={speedChart === "throughput" ? (t) => fmtInt(Math.round(t)) : fmtMsTick} onSelect={explain} emptyText={CHOOSE_MODELS}
         />
         {caption(speedCaption(speedChart), "row", revNotes)}
       </div>
@@ -150,7 +150,7 @@ function CompareTabs({ v, on, explain, stats, setStats }: CompareProps) {
         </div>
         <StudioBars
           rows={stab.rows} kind={stabChart === "dots" ? "dot" : "bar"} sort={stabChart === "agree" ? "desc" : "asc"} domain={stabChart === "agree" ? stab.agreeDomain : undefined}
-          axis={stabAxis(stabChart, stabT0Of(stabSetting))} fmtTick={fmtPctTick} onSelect={explain}
+          axis={stabAxis(stabChart, stabT0Of(stabSetting))} fmtTick={fmtPctTick} onSelect={explain} emptyText={CHOOSE_MODELS}
         />
         {caption(stabCaption(stabChart, stabT0Of(stabSetting), stab.sameRuns, true, stab.runsNotes))}
       </div>

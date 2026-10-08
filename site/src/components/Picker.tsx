@@ -6,7 +6,7 @@ export type PickGroup = { id: string; label: string; items: PickItem[] };
 
 /**
  * A dropdown multi-select: a compact button summarising the selection, opening a panel of grouped checkbox rows.
- * Group headers toggle their whole group; the footer offers reset / all / none.
+ * Group headers toggle their whole group; the footer offers the suggested set (`onReset`) / all / none. Pages open with nothing selected.
  */
 export function Picker({ label, summary, groups, on, onChange, onReset, footer, description, selected, className = "" }: {
   label: string; summary: string; groups: PickGroup[]; on: Set<string>;
@@ -102,7 +102,7 @@ export function Picker({ label, summary, groups, on, onChange, onReset, footer, 
           })}
           </div>
           <div className="pick-foot">
-            {onReset && <button onClick={onReset}>Restore defaults</button>}
+            {onReset && <button onClick={onReset} title="Select the curated comparison set">Suggested set</button>}
             <button onClick={() => set(all, true)}>Select all</button>
             <button onClick={() => set(all, false)}>Clear all</button>
             {footer && <span className="pick-foot-r">{footer}</span>}

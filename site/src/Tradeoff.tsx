@@ -24,11 +24,14 @@ export const TRADEOFF_ROSTER = [
   "laya-ft",
   "claude-haiku-4.5", "claude-sonnet-5", "gpt-5.6-luna", "gpt-5.6-terra", "gemini-3.5-flash-lite", "gemini-3.8-flash", "gemma3-12b",
 ];
-export const TRADEOFF_DEFAULT_ON = new Set(["jev@base", "jev@decompose", "openai-decisions@predicate", "claude-sonnet-5", "gpt-5.6-luna"]);
+/** The curated set the picker's "Suggested set" button selects; the page itself opens with nothing selected. */
+export const TRADEOFF_SUGGESTED = new Set(["jev@base", "jev@decompose", "openai-decisions@predicate", "claude-sonnet-5", "gpt-5.6-luna"]);
+/** The prompt the charts and the readout show while nothing is selected. */
+const CHOOSE = "Choose models to compare.";
 
 /**
  * Display metadata: the headline roster's own (data.ts), plus Decisions · Facets, a Configurations-page row that Compare models does not list. Jev · Facets
- * keeps its name but takes the Jev family's second colour here: its roster colour (--v1) is Sonnet 5's hex, and both are on by default on this page.
+ * keeps its name but takes the Jev family's second colour here: its roster colour (--v1) is Sonnet 5's hex, and both are in the suggested set on this page.
  */
 const EXTRA_META: Record<string, DisplayMeta> = {
   "openai-decisions@decompose": { short: "Decisions · Facets", color: "var(--c-laya)", kind: "system1", note: "OpenAI Decisions API (GPT-6 Luna), Facets: each issue is asked as the facets the task file defines for it, each its own predicate; the issue probability is the maximum (logical OR). The Decisions analogue of Jev · Facets." },
@@ -60,7 +63,7 @@ export function TradeoffPicker({ v, on, setOn, explain }: { v: View; on: Set<str
     }),
   }));
   const selected = rows.filter((r) => on.has(r.model));
-  return <Picker label="Models" summary={`${selected.length} of ${rows.length}`} groups={groups} on={on} onChange={setOn} onReset={() => setOn(new Set(TRADEOFF_DEFAULT_ON))}
+  return <Picker label="Models" summary={selected.length ? `${selected.length} of ${rows.length}` : "None selected"} groups={groups} on={on} onChange={setOn} onReset={() => setOn(new Set(TRADEOFF_SUGGESTED))}
     selected={selected.length ? <><span className="pick-selected-lab">Selected</span><div className="series-selected">
       {selected.map((r) => {
         const meta = tradeoffMeta(r.model, r);
@@ -160,7 +163,7 @@ function CurveCard({ series, setOne, zoom, setZoom, unit, lede, scope }: { serie
       </div>
       <p className="tradeoff-lede">{lede}</p>
       <div className="chart-fill" style={{ minHeight: 460 }}>
-        <PRCurves series={series} onIndex={setOne} zoom={zoom} fill highlight={hover.id} onHover={hover.set} unit={unit} emptyText="Select at least one model." />
+        <PRCurves series={series} onIndex={setOne} zoom={zoom} fill highlight={hover.id} onHover={hover.set} unit={unit} emptyText={CHOOSE} />
       </div>
       <div className="legend-note">
         <span>Filled marker: the operating point (drag it, or focus it and use the arrow keys). Open ring: the published point, p ≥ {fmtThreshold(DEFAULT_THRESHOLD)}. Dashed: equal F1.</span>
@@ -179,7 +182,7 @@ function ReadoutCard({ series, curves, setOne, unit, explain, colorOf, setColor 
       <div className="card-t">
         <h3>At the operating point</h3><span className="unit">per model: the cut, what it finds, and how much it sends to review</span>
       </div>
-      {series.length === 0 ? <div className="tradeoff-empty">Select at least one model.</div> : (
+      {series.length === 0 ? <div className="tradeoff-empty">{CHOOSE}</div> : (
         <div className="tradeoff-wrap"><table className="tradeoff-table">
           <thead>
             <tr><th>Model</th><th>Threshold</th><th className="num">Recall</th><th className="num">Precision</th><th className="num">F1</th><th className="num">Flagged</th><th className="num">Review share</th><th className="num" title="Change against the published point, in percentage points: recall / precision">vs published</th></tr>

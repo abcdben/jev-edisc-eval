@@ -39,7 +39,9 @@ export default function ExplorePage() {
   if (err) return <div className="page explore-page"><div className="card"><div className="study-empty">Could not load explore/index.json ({err}). Run <code>bench export-explore</code>.</div></div></div>;
   if (!index) return <div className="page explore-page"><div className="card"><div className="study-empty">Loading…</div></div></div>;
   const ds = index.datasets.find((d) => d.id === s.dataset) ?? index.datasets[0];
-  const slots: Slots = s.slots[ds.id] ?? { standard: ds.default.standard, a: ds.default.a, b: ds.default.b, topics: ds.default.topics };
+  // A fresh visit starts from scratch: the collection's standard and topic (both required for anything to render) with no arm A and no overlay B; the
+  // export's suggested arms (index.json `default.a` / `default.b`) are not pre-placed, the visitor picks them in the rail.
+  const slots: Slots = s.slots[ds.id] ?? { standard: ds.default.standard, a: null, b: null, topics: ds.default.topics };
   const setSlots = (p: Partial<Slots>) => up({ slots: { ...s.slots, [ds.id]: { ...slots, ...p } } });
 
   return (
@@ -326,7 +328,7 @@ function Population({ ds, slots, state: s, up }: { ds: Dataset; slots: Slots; st
             <Seg value={view} onChange={(v) => up({ view: v })} options={views} />
           </span>
         </div>
-        <p className="study-q">{view === "mosaic" ? (A ? <>Columns: how <b>{A.short}</b> came out against <b>{S.short}</b>.{B && <> Each split by <b>{B.short}</b>.</>}</> : <>What <b>{S.short}</b> called responsive, on its own.</>) : view === "flow" && A ? <>Each unit travels <b>{A.short}</b> → <b>{S.short}</b>{B && <> → <b>{B.short}</b></>}.</> : view === "venn" ? <>One circle per arm, sized by its responsive calls; overlaps are the units they agree on.</> : <>Where <b>{pop.modelArm!.short}</b>'s confidence puts the units the other arms agreed or disagreed on.</>}</p>
+        <p className="study-q">{view === "mosaic" ? (A ? <>Columns: how <b>{A.short}</b> came out against <b>{S.short}</b>.{B && <> Each split by <b>{B.short}</b>.</>}</> : <>What <b>{S.short}</b> called responsive, on its own. Choose an arm A in the rail to compare against it.</>) : view === "flow" && A ? <>Each unit travels <b>{A.short}</b> → <b>{S.short}</b>{B && <> → <b>{B.short}</b></>}.</> : view === "venn" ? <>One circle per arm, sized by its responsive calls; overlaps are the units they agree on.</> : <>Where <b>{pop.modelArm!.short}</b>'s confidence puts the units the other arms agreed or disagreed on.</>}</p>
         {view === "mosaic" && <Mosaic cells={pop.cells} S={S} A={A} B={B} defs={pop.defs} scale={s.scale} sel={sel} onSel={toggle} />}
         {view === "flow" && A && <Flow cells={pop.cells} S={S} A={A} B={B} defs={pop.defs} scale={s.scale} sel={sel} onSel={toggle} />}
         {view === "venn" && <Venn cells={pop.cells} S={S} A={A} B={B} defs={pop.defs} scale={s.scale} sel={sel} onSel={toggle} />}

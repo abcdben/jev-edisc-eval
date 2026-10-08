@@ -3,7 +3,7 @@ import { Seg } from "./components/ui";
 import { PRScatter, type PRItem } from "./components/PRScatter";
 import { THEME_KEY, THEME_OPTIONS, readTheme, type Theme } from "./theme";
 import {
-  ARM_BY_ID, DEFAULT_ARMS, DEFAULT_DATASETS, DS_BY_ID, EX_BY_ID, GROUPS, KIND_LABEL, KIND_ORDER, REVIEWER_MEASURES, STUDY, armsWithData, fmtCell, fmtValue, isHuman, reviewerArms, reviewerCell,
+  ARM_BY_ID, DEFAULT_DATASETS, DS_BY_ID, EX_BY_ID, GROUPS, KIND_LABEL, KIND_ORDER, REVIEWER_MEASURES, STUDY, armsWithData, fmtCell, fmtValue, isHuman, reviewerArms, reviewerCell,
   type Arm, type ArmKind, type Cell, type Experiment, type Measure,
 } from "./studyData";
 import { ArmMark, DotRows, Frontier, SidesBars, type FrontierItem, type SeriesItem, type SidesItem, type ValueItem } from "./study/Charts";
@@ -18,7 +18,10 @@ type CellFn = (ds: string, ex: string, arm: string, m: string) => Cell | null;
 
 const KEY = "study-state-v1";
 const ALL_EXPERIMENTS = STUDY.experiments.map((e) => e.id);
-const DEFAULT: State = { mode: "plot", dataset: "trec", datasets: DEFAULT_DATASETS, experiment: "accuracy", experiments: ALL_EXPERIMENTS, arms: DEFAULT_ARMS, measure: null, prView: "map", tarReviewer: REALISTIC_REVIEWER };
+/** The prompt the charts and the table show while no arm is selected. */
+const CHOOSE_ARMS = "Choose arms to compare.";
+// no arms to start with: the page opens from scratch and the visitor picks them (the dataset and experiment are radios, one is always chosen)
+const DEFAULT: State = { mode: "plot", dataset: "trec", datasets: DEFAULT_DATASETS, experiment: "accuracy", experiments: ALL_EXPERIMENTS, arms: [], measure: null, prView: "map", tarReviewer: REALISTIC_REVIEWER };
 // a stored null (the published cells, before the realistic default existed) coerces to undefined and so starts at the default
 const readState = (): State => { try { const s = { ...DEFAULT, ...JSON.parse(localStorage.getItem(KEY) || "{}") }; return { ...s, tarReviewer: asReviewer(s.tarReviewer) ?? REALISTIC_REVIEWER }; } catch { return DEFAULT; } };
 
@@ -169,7 +172,7 @@ function PlotView({ ex, dsId, arms, measure, onMeasure, prView, onPrView, cell }
       const ci = (c: Cell): [number, number, number] => [c.v!, c.lo ?? c.v!, c.hi ?? c.v!];
       return [{ id: a.id, name: a.short, color: a.color, recall: ci(r), precision: ci(p), dashed: r.planned || a.status === "planned", sub: r.planned ? "placeholder: not yet measured" : r.note ?? (r.n ? `${r.n.toLocaleString()} documents scored` : undefined), decider: isHuman(a) }];
     });
-    chart = <div className="chart-fill" style={{ minHeight: 440 }}><PRScatter items={pr} zoom emptyText="Select at least one arm." fill logos={false} /></div>;
+    chart = <div className="chart-fill" style={{ minHeight: 440 }}><PRScatter items={pr} zoom emptyText={CHOOSE_ARMS} fill logos={false} /></div>;
   } else if (ex.chart === "grid") {
     const rows: SidesItem[] = sel.map((a) => {
       const g = (k: string) => cell(dsId, ex.id, a.id, k);
@@ -178,7 +181,7 @@ function PlotView({ ex, dsId, arms, measure, onMeasure, prView, onPrView, cell }
       if (!tot) return null;
       return { ...seriesOf(a), planned: !!g("agree_both")?.planned, parts: parts.map((p) => p / tot) as [number, number, number, number], kappaA: g("kappa_authority")?.v ?? null, kappaR: g("kappa_reviewer")?.v ?? null, dep: g("error_dependence")?.v ?? null };
     }).filter((x): x is SidesItem => !!x);
-    chart = <SidesBars items={rows} />;
+    chart = <SidesBars items={rows} emptyText={CHOOSE_ARMS} />;
   } else if (ex.chart === "frontier") {
     const rows: FrontierItem[] = sel.map((a) => {
       const g = (k: string) => cell(dsId, ex.id, a.id, k);
@@ -186,10 +189,10 @@ function PlotView({ ex, dsId, arms, measure, onMeasure, prView, onPrView, cell }
       if (r?.v == null || sh?.v == null) return null;
       return { ...seriesOf(a), planned: !!r.planned, recall: r.v, share: sh.v, hours: g("hours_per_100k")?.v ?? null, usd: g("usd_per_100k")?.v ?? null };
     }).filter((x): x is FrontierItem => !!x);
-    chart = <Frontier items={rows} />;
+    chart = <Frontier items={rows} emptyText={CHOOSE_ARMS} />;
   } else {
     const ref = m.unit === "ratio" ? 1 : m.unit === "auc" ? 0.5 : null;
-    chart = <DotRows items={items} unit={m.unit} higherBetter={m.higher_better} axis={m.label} reference={ref} />;
+    chart = <DotRows items={items} unit={m.unit} higherBetter={m.higher_better} axis={m.label} reference={ref} emptyText={CHOOSE_ARMS} />;
   }
 
   const showMeasureSeg = ex.chart === "bars" || ex.chart === "roc" || (ex.chart === "pr" && prView === "ranked");
@@ -236,6 +239,7 @@ function TableView({ state, onJump, cell }: { state: State; onJump: (ds: string,
   const dss = STUDY.datasets.filter((d) => state.datasets.includes(d.id));
   const arms = state.arms.map((id) => ARM_BY_ID[id]).filter(Boolean);
   if (!dss.length || !state.experiments.length) return <div className="card study-card"><div className="study-empty">{dss.length ? "Select at least one experiment." : "Select at least one dataset."}</div></div>;
+  if (!arms.length) return <div className="card study-card"><div className="study-empty">{CHOOSE_ARMS}</div></div>;
   return (
     <div className="card study-card study-matrix-card">
       <div className="card-t"><h3>All measures by dataset</h3><span className="unit">rows: measures grouped by experiment · columns: datasets · each cell lists the selected arms</span></div>

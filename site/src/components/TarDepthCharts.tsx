@@ -101,7 +101,7 @@ function TarDepthChart({ rows, sampling, metric, domain }: { rows: Rec[]; sampli
                     ["Document-level F1", fmtPct(p.row.all.doc.f1)],
                     ["Sampling", sampling === "random" ? "Random" : "Diversity"],
                   ],
-                  sub: s.alignment === 100 ? "Perfect reviewer coding." : `Non-relevant false-positive rate: ${(100 - s.alignment) / 5}% (one-fifth of the miss rate).`,
+                  sub: s.alignment === 100 ? "Perfect reviewer coding." : `Earlier reviewer model: ${(100 - s.alignment) / 5}% over-code rate on non-relevant documents (one-fifth of the miss rate).`,
                 })} onMouseLeave={hide}>
                 <title>{`${s.label} relevant-document coding accuracy, ${fmtInt(p.depth)} reviewed, document-level ${label} ${fmtPct(p.value)}`}</title>
                 <circle cx={X(p.depth)} cy={Y(p.value)} r={4.2} fill="var(--panel)" stroke={colorOf(p.id, colorOf(`tar-depth:${sampling}:${s.alignment}`, s.color))} strokeWidth={2} />
@@ -139,7 +139,7 @@ export function TarDepthCharts({ rows }: { rows: Rec[] }) {
           <TarDepthChart rows={rows} sampling={sampling} metric={metric} domain={domain} />
         </div>
       ))}
-      <p className="tar-depth-note">Lines are reviewer <b>relevant-document coding accuracy</b>, not overall reviewer agreement. For imperfect reviewers, the false-positive rate on non-relevant documents is one-fifth of the relevant-document miss rate. Each point is the median-seed TAR 1.0 result; x is the actual number coded.</p>
+      <p className="tar-depth-note">Lines are reviewer <b>relevant-document coding accuracy</b>, not overall reviewer agreement. These accuracy-sweep runs used the earlier reviewer model, where the over-code rate on non-relevant documents was one-fifth of the miss rate; they have not been re-run under the adjustable miss/over-code model. Each point is the median-seed TAR 1.0 result; x is the actual number coded.</p>
     </div>
   );
 }
