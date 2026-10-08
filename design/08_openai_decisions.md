@@ -79,8 +79,8 @@ Sonnet 5 3.7 s.
 
 ### 5a. trec_full — the whole 286,326-e-mail Jeb Bush collection
 
-`@predicate` (the Noul analogue) was run over the full collection on 2026-10-07, multi arm, 12 in flight, resumed across several
-segments: 3,149,586 decisions (286,326 e-mails × 11 issues), 0 errors, 0 refusals, 1.28 B input tokens ≈ $128 at list price
+`@predicate` (the Noul analogue) was run over the full collection on 2026-10-07, multi arm, 12 in flight (≈ 8 h, resumed across
+several segments): 3,149,586 decisions (286,326 e-mails × 11 issues), 0 errors, 0 refusals, 1.28 B input tokens ≈ $128 at list price
 (≈ $0.00045 per e-mail). Jev · Noul (`jev@base`) is the only Jev configuration on this tier. Document level, p ≥ 0.5 on any issue, 95 % bootstrap
 intervals in `results/findings.json["trec_full"]`:
 
@@ -106,7 +106,7 @@ to find roughly 8 points more of the relevant set.
 * Site: `data.ts` roster (`--c-oad`, `--c-oad-2` in every theme and Studio preset), `makers.ts` / `logos.tsx` (OpenAI mark), `palettes.ts`,
   `examples.ts` + `Explain.tsx`, `studyData.ts`, copy in `Disclaimer.tsx`, `Method.tsx`, `App.tsx`, `opsRows.ts`.
 * `trec_full` (the 286 k-message Jeb Bush collection): `@predicate` only, the Noul analogue, since `jev@base` is the only Jev
-  configuration on that tier. 3.15 M decisions, 1.28 B input tokens, $128, ≈ 8 h at 12 in flight. Against the NIST-judged relevant
-  set (26,317 e-mails): recall 91.3 % [90.9, 91.6] flagging 61,888 e-mails (21.6 % of the collection); Jev · Noul 83.0 % [82.6, 83.5]
-  flagging 42,532 (14.9 %). Precision lower bounds 38.8 % vs 51.4 %. Feeds `findings.json["trec_full"]` and the explorer's
-  alternate-assessor dataset. `endo` multi was run for completeness (no gold).
+  configuration on that tier (section 5a; ≈ 8 h at 12 in flight). `results/trec_full/multi/openai-decisions__predicate.jsonl` feeds
+  `findings.json["trec_full"]` via `export-findings` and the explorer's alternate-assessor dataset (`trec-alt`) via `export-explore`.
+  `@choice` was not run on this tier; the TREC rows elsewhere on the site use the 3,116-e-mail evaluation sample like every other model.
+  `endo` multi was run for completeness (no gold).
