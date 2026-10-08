@@ -14,6 +14,8 @@ Article/.docx-venv/
 # results site
 site/node_modules/
 site/dist/
+# contamination write-up + gallery, staged from results/ by scripts/publish_writeup.sh (the figures under results/ are not tracked)
+site/public/contamination/
 
 # Issue-based rank cutoff explorer. Local only; not part of the published site.
 site/cutoffs.html

@@ -19,6 +19,7 @@ npm run build      # static bundle in site/dist (host anywhere; open dist/index.
 - `compare.html` (`src/main.tsx` → `src/App.tsx`): the comparison app, three views in the hash (below). Its masthead links Home.
 - `study.html` (`src/study.tsx` → `src/StudyPage.tsx`): the human-anchored study, `results/study.json`.
 - `explore.html` (`src/explore.tsx` → `src/ExplorePage.tsx`): the population explorer, `public/explore/`.
+- `contamination/` (`public/contamination/index.html` and `gallery.html`): the contamination study's technical write-up and figure gallery, static pages staged from `results/contam/` by `scripts/publish_writeup.sh` (run by `deploy_site.sh`; the staging directory is git-ignored because the figures under `results/` are not tracked).
 - `b.html` (`src/b.tsx` → `src/AppB.tsx`): variant B of the app for an A/B comparison, links back to A; not linked from the landing page, `noindex`.
 - `studio.html` (`src/studio.tsx` → `src/StudioPage.tsx`): the screenshot studio; unlinked, `noindex`.
 
@@ -34,4 +35,4 @@ Every mark carries a hover tooltip with the counts and intervals behind it; ever
 
 ## Publishing
 
-`scripts/deploy_site.sh` builds and force-pushes `site/dist` to [github.com/abcdben/tarcalc](https://github.com/abcdben/tarcalc), which GitHub Pages serves at https://decider.tarcalc.com (the script writes that `CNAME`; also at https://abcdben.github.io/tarcalc/). The apex, tarcalc.com, is not served from this repository. If results changed, run `.venv/bin/bench export-findings` first. DNS at Namecheap: CNAME `decider` → `abcdben.github.io`.
+`scripts/deploy_site.sh` stages the contamination write-up (`scripts/publish_writeup.sh`), builds, and force-pushes `site/dist` to [github.com/abcdben/tarcalc](https://github.com/abcdben/tarcalc), which GitHub Pages serves at https://decider.tarcalc.com (the script writes that `CNAME`; also at https://abcdben.github.io/tarcalc/). The apex, tarcalc.com, is not served from this repository. If results changed, run `.venv/bin/bench export-findings` first. DNS at Namecheap: CNAME `decider` → `abcdben.github.io`.

@@ -2,7 +2,9 @@
 # Build the site and publish site/dist to github.com/abcdben/tarcalc (GitHub Pages -> tarcalc.com).
 # Usage: scripts/deploy_site.sh            (re-export findings first if results changed: .venv/bin/bench export-findings)
 set -euo pipefail
-cd "$(dirname "$0")/../site"
+cd "$(dirname "$0")/.."
+scripts/publish_writeup.sh                # stage the contamination write-up + gallery under site/public/contamination/
+cd site
 npm run build
 cd dist
 echo "decider.tarcalc.com" > CNAME
