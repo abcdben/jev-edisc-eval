@@ -5,6 +5,8 @@
 .explore-page .study-hdr h1 { margin-bottom: 2px; }
 .explore-body { grid-template-columns: 270px minmax(0, 1fr); }
 .explore-body.no-rail { grid-template-columns: minmax(0, 1fr); }
+/* same break as .study-body: under 900px the rail stacks above the chart (this rule otherwise outranks study.css's media query, loading after it) */
+@media (max-width: 900px) { .explore-body { grid-template-columns: minmax(0, 1fr); } }
 /* "About this view": the method text, folded away under the title; the summary is the one line that shows */
 .pe-about { margin: 0 0 10px; font-size: 12px; color: var(--ink-3); }
 .pe-about summary { cursor: pointer; display: inline-block; color: var(--ink-4); font-size: 11.5px; letter-spacing: 0.02em; }
@@ -19,17 +21,27 @@
 .pe-link { font-size: 12.5px; color: var(--ink-3); text-decoration: none; border: 1px solid var(--line-2); border-radius: 6px; padding: 4px 10px; }
 .pe-link:hover { color: var(--ink); }
 
-/* rail */
-.explore-rail .pick-main .lbl { display: flex; justify-content: space-between; align-items: center; gap: 6px; flex: 1; min-width: 0; }
-.explore-rail .pick-main .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* rail: the cards are 270px wide, so every row has to be able to shrink and wrap. Flex items (and <button>s in particular) default to
+   min-width: auto, which lets a long nowrap label push its count past the card's edge; min-width: 0 on each step of the chain is what
+   lets the text wrap instead. overflow: hidden on the card is only a guard; the rows below are built so that nothing reaches it. */
+.explore-rail section { min-width: 0; overflow: hidden; }
+.explore-rail h4 { flex-wrap: wrap; gap: 2px 8px; min-width: 0; }
+.explore-rail h4 .n { min-width: 0; margin-left: auto; overflow-wrap: anywhere; text-align: right; }
+.explore-rail .pick-row { min-width: 0; }
+.explore-rail .pick-main { flex: 1 1 0; min-width: 0; }
+.explore-rail .pick-main .lbl { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; flex: 1 1 auto; min-width: 0; }
+/* topic names wrap; the count keeps its full width and sits on the first line, right-aligned */
+.explore-rail .pick-main .nm { flex: 1 1 auto; min-width: 0; overflow: visible; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; line-height: 1.3; }
+.explore-rail .pick-main .pe-tn { flex: 0 0 auto; }
 /* dataset names wrap; their qualifiers ("planned", "no text") sit on a line of their own under the name, so nothing can spill past the rail */
 .explore-rail .pick-main .lbl.pe-ds-lbl { display: block; min-width: 0; overflow-wrap: anywhere; white-space: normal; line-height: 1.3; }
 .explore-rail .pick-main .lbl.pe-ds-lbl .nm { display: block; white-space: normal; overflow: visible; }
+.explore-rail .study-ds-note { min-width: 0; overflow-wrap: anywhere; }
 .pe-tagline { display: block; font-size: 9.5px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-4); line-height: 1.4; margin-top: 1px; font-weight: 400; }
 .pe-tn { color: var(--ink-4); font-size: 11px; font-variant-numeric: tabular-nums; }
 .pe-rfp-note { color: var(--ink-4); font-style: italic; }
 .explore-rail .pick-row:hover .pick-i { opacity: 1; }
-.pe-req-btn { margin: 6px 8px 0; border: 0; background: none; padding: 0; font: inherit; font-size: 11.5px; color: var(--ink-3); cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+.pe-req-btn { display: block; max-width: calc(100% - 16px); margin: 6px 8px 0; border: 0; background: none; padding: 0; font: inherit; font-size: 11.5px; color: var(--ink-3); cursor: pointer; text-align: left; white-space: normal; overflow-wrap: anywhere; text-decoration: underline dotted; text-underline-offset: 3px; }
 .pe-req-btn:hover { color: var(--ink); }
 .pe-topic-pop { position: fixed; z-index: 30; width: 340px; background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: var(--ink-2); line-height: 1.5; pointer-events: none; }
 .pe-topic-pop .t { font-weight: 500; color: var(--ink); }
@@ -44,7 +56,8 @@
 .pe-req .m { margin-left: 20px; }
 .pe-req p { margin: 0 0 0 20px; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
 .pe-req p.pe-rfp-note { margin-top: 4px; font-size: 11.5px; }
-.pe-slots-h, .pe-slot-row { display: grid; grid-template-columns: 1fr 22px 22px 22px; align-items: center; gap: 2px; padding: 2px 8px; }
+/* arm rows: the name column shrinks and wraps (minmax(0, 1fr), not 1fr, whose min is the content's width); the S/A/B columns stay fixed and narrow */
+.pe-slots-h, .pe-slot-row { display: grid; grid-template-columns: minmax(0, 1fr) 22px 22px 22px; align-items: center; gap: 2px; padding: 2px 8px; min-width: 0; }
 .pe-slots-h span { font-size: 10px; color: var(--ink-4); text-align: center; letter-spacing: 0.05em; }
 .pe-slot-row { border-radius: 5px; font-size: 12px; color: var(--ink-3); }
 .pe-slot-row:hover { background: var(--bg-2); }
