@@ -252,14 +252,14 @@ function OpsCards({ recs, colorOf, nameOf, logos = true, explain, decider, empha
           <h3>Speed</h3><span className="unit">median latency per document</span>
           <span className="right"><Hint items={LATENCY_ITEMS} more="About" /></span>
         </div>
-        <OpsBars items={latency} axis="milliseconds" unit="per document, median" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
+        <OpsBars items={latency} axis="milliseconds" unit="per document, median" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} emptyText={CHOOSE_MODELS} />
       </div>
       <div className="card">
         <div className="card-t">
           <h3>Cost</h3><span className="unit">per 100k docs</span>
           <span className="right"><Hint items={costItems(recs)} more="About" /></span>
         </div>
-        <OpsBars items={cost} axis="US dollars" unit="per 100k docs" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} />
+        <OpsBars items={cost} axis="US dollars" unit="per 100k docs" logos={logos} onSelect={onSelect} highlight={hover.id} onHover={hover.set} emptyText={CHOOSE_MODELS} />
       </div>
     </>
   );
@@ -500,7 +500,7 @@ function CompareSection({ v, on, explain, setOn, stats, setStats }: CompareProps
           />
           <div className="stack">
             <OpsCards recs={sel} colorOf={(r) => colorOf(r.model, displayMeta(r.model, r).color)} nameOf={gridName} explain={(k) => { if (!k.startsWith("tar@")) explain(k); }} decider={decider} emphasis={emphasis} />
-            <ConsistencyCard recs={sel} colorOf={(r) => colorOf(r.model, displayMeta(r.model, r).color)} nameOf={publishedName} arm={v.arm} onSelect={(r) => { if (!r.model.startsWith("tar@")) explain(r.model); }} emphasis={emphasis} />
+            <ConsistencyCard recs={sel} colorOf={(r) => colorOf(r.model, displayMeta(r.model, r).color)} nameOf={publishedName} arm={v.arm} onSelect={(r) => { if (!r.model.startsWith("tar@")) explain(r.model); }} emphasis={emphasis} emptyText={CHOOSE_MODELS} />
           </div>
         </div>
         <TarDepthCharts rows={rows} />

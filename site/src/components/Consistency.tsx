@@ -49,7 +49,8 @@ export function detLines(x: DetEntry, r: Rec, name: string): { lines: TipLine[];
 }
 
 /** `onSelect` makes each row a button (click, Enter, Space), including the rows without a measurement. `highlight` tints the row of that model (cross-chart hover, see hover.tsx); `onHover` reports the row under the pointer or keyboard focus. `emphasis` (Compare models: the decision-model rows, Jev and Laya) picks the row that carries the faint tint (ui.tsx RowTint). */
-export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, onHover, emphasis }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single"; onSelect?: (r: Rec) => void; highlight?: string | null; onHover?: (id: string | null) => void; emphasis?: (r: Rec) => boolean }) {
+/** `emptyText` is the prompt drawn in place of the rows while there are none; the chart keeps a row's height so the card does not collapse. */
+export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, onHover, emphasis, emptyText }: { recs: Rec[]; colorOf: (r: Rec) => string; nameOf: (r: Rec) => string; arm: "multi" | "single"; onSelect?: (r: Rec) => void; highlight?: string | null; onHover?: (id: string | null) => void; emphasis?: (r: Rec) => boolean; emptyText?: string }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickRow = onSelect && ((r: Rec) => { hide(); onSelect(r); });
   const W = useWidth(hostRef, 760);
@@ -66,7 +67,7 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
   const max = Math.max(0.01, ...measured.map((x) => x.c!.pairwise[2]));
   const plotW = Math.max(120, W - LABEL_W - 90);
   const X = (v: number) => LABEL_W + (v / max) * plotW;
-  const h = sorted.length * ROW + 20;
+  const nRows = Math.max(sorted.length, 1), h = nRows * ROW + 20;
   const lbl = (v: number) => (v === 0 ? "0" : fmtPct(v, v < 0.001 ? 2 : 1));
   // where the widest whisker's figure ends: a tooltip beside the pointer may only sit right of this
   const clearX = Math.max(LABEL_W + 120, ...measured.map((x) => X(x.c!.pairwise[2]) + 7 + lbl(x.c!.pairwise[0]).length * 6.6));
@@ -132,8 +133,9 @@ export function Consistency({ recs, colorOf, nameOf, arm, onSelect, highlight, o
               </g>
             );
           })}
-          <line x1={LABEL_W} x2={LABEL_W} y1={0} y2={sorted.length * ROW} stroke="var(--axis)" />
-          <text x={LABEL_W} y={sorted.length * ROW + 17} fontSize={10.5} fill="var(--ink-3)">probability two runs disagree{setting === "t0" ? " · temperature 0" : ""}</text>
+          <line x1={LABEL_W} x2={LABEL_W} y1={0} y2={nRows * ROW} stroke="var(--axis)" />
+          <text x={LABEL_W} y={nRows * ROW + 17} fontSize={10.5} fill="var(--ink-3)">probability two runs disagree{setting === "t0" ? " · temperature 0" : ""}</text>
+          {sorted.length === 0 && emptyText && <text x={W / 2} y={ROW / 2 + 4} textAnchor="middle" fontSize={12} fill="var(--ink-4)">{emptyText}</text>}
         </svg>
         <TipBox tip={tip} hint={onSelect ? CLICK_HINT : undefined} />
       </div>

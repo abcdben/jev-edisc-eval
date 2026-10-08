@@ -12,18 +12,29 @@ import { REALISTIC_REVIEWER, asReviewer, type ReviewerSetting } from "./tarGrid"
 
 type Mode = "plot" | "table";
 /** `tarReviewer` (tarGrid.ts): the simulated reviewer's error rates for the TAR arms (REALISTIC_REVIEWER to start); "published" is study.json's own cells. */
-type State = { mode: Mode; dataset: string; datasets: string[]; experiment: string; experiments: string[]; arms: string[]; measure: string | null; prView: "map" | "ranked"; tarReviewer: ReviewerSetting };
+/** `v` marks a state read since the page opened from scratch (readState); a stored state without it is from before, when the arms were pre-checked. */
+type State = { v?: 2; mode: Mode; dataset: string; datasets: string[]; experiment: string; experiments: string[]; arms: string[]; measure: string | null; prView: "map" | "ranked"; tarReviewer: ReviewerSetting };
 /** A cell lookup: studyData.cell under the page's reviewer setting (reviewerCell). */
 type CellFn = (ds: string, ex: string, arm: string, m: string) => Cell | null;
 
 const KEY = "study-state-v1";
 const ALL_EXPERIMENTS = STUDY.experiments.map((e) => e.id);
 /** The prompt the charts and the table show while no arm is selected. */
-const CHOOSE_ARMS = "Choose arms to compare.";
+const CHOOSE_ARMS = "Choose arms on the left to compare.";
 // no arms to start with: the page opens from scratch and the visitor picks them (the dataset and experiment are radios, one is always chosen)
 const DEFAULT: State = { mode: "plot", dataset: "trec", datasets: DEFAULT_DATASETS, experiment: "accuracy", experiments: ALL_EXPERIMENTS, arms: [], measure: null, prView: "map", tarReviewer: REALISTIC_REVIEWER };
+/** The arms the page used to pre-check (and so wrote to storage on every visit). A stored selection equal to that set, from before `v` was written, is the old default rather than a choice: it is dropped once, and any other stored selection is kept. */
+const LEGACY_ARMS = ["jev@base", "openai-decisions@predicate", "claude-sonnet-5", "gpt-5.6-luna", "gemini-3.8-flash", "tar@cal", "human@firstpass", "human@literature"];
+const sameSet = (a: unknown, b: string[]) => Array.isArray(a) && a.length === b.length && b.every((x) => a.includes(x));
 // a stored null (the published cells, before the realistic default existed) coerces to undefined and so starts at the default
-const readState = (): State => { try { const s = { ...DEFAULT, ...JSON.parse(localStorage.getItem(KEY) || "{}") }; return { ...s, tarReviewer: asReviewer(s.tarReviewer) ?? REALISTIC_REVIEWER }; } catch { return DEFAULT; } };
+const readState = (): State => {
+  try {
+    const raw: Partial<State> = JSON.parse(localStorage.getItem(KEY) || "{}");
+    const legacyArms = raw.v !== 2 && sameSet(raw.arms, LEGACY_ARMS);
+    const s: State = { ...DEFAULT, ...raw, v: 2, arms: legacyArms || !Array.isArray(raw.arms) ? [] : raw.arms };
+    return { ...s, tarReviewer: asReviewer(s.tarReviewer) ?? REALISTIC_REVIEWER };
+  } catch { return DEFAULT; }
+};
 
 const seriesOf = (a: Arm): SeriesItem => ({ id: a.id, name: a.short, color: a.color, planned: a.status === "planned", human: isHuman(a), note: a.note });
 const withCell = (a: Arm, c: Cell | null): ValueItem => ({ ...seriesOf(a), planned: !!c?.planned || a.status === "planned", v: c?.v ?? null, lo: c?.lo ?? null, hi: c?.hi ?? null, n: c?.n ?? null });

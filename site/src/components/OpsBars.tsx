@@ -10,7 +10,8 @@ const ROW = 20;
 
 /** Horizontal bars with the number written at the end of each bar. Zero-valued items are drawn as a hairline. `unit` follows the value in the tooltip. `onSelect` makes each row a button (click, Enter, Space). `highlight` tints the row with that id (cross-chart hover, see hover.tsx); `onHover` reports the row under the pointer or keyboard focus. */
 /** Motion (ui.tsx): bars grow from 0 on first paint and ease to a new length over 320 ms; rows slide to their new order (CSS transform on the keyed group) and fade in and out over 150 ms. */
-export function OpsBars({ items, axis, unit, sort = true, logos = true, onSelect, highlight, onHover }: { items: BarItem[]; axis: string; unit?: string; sort?: boolean; logos?: boolean; onSelect?: (item: BarItem) => void; highlight?: string | null; onHover?: (id: string | null) => void }) {
+/** `emptyText` is the prompt drawn in place of the rows while there are none (a dash by default); the chart keeps a row's height so the card does not collapse. */
+export function OpsBars({ items, axis, unit, sort = true, logos = true, onSelect, highlight, onHover, emptyText = "—" }: { items: BarItem[]; axis: string; unit?: string; sort?: boolean; logos?: boolean; onSelect?: (item: BarItem) => void; highlight?: string | null; onHover?: (id: string | null) => void; emptyText?: string }) {
   const { tip, show, hide, hostRef } = useTip();
   const pickRow = onSelect && ((it: BarItem) => { hide(); onSelect(it); });
   const W = useWidth(hostRef, 560);
@@ -18,7 +19,7 @@ export function OpsBars({ items, axis, unit, sort = true, logos = true, onSelect
   const rows = sort ? [...items].sort((a, b) => (a.value ?? Infinity) - (b.value ?? Infinity)) : items;
   const max = Math.max(1e-9, ...rows.map((r) => r.value ?? 0));
   const plotW = W - LABEL_W - 80;
-  const h = rows.length * ROW + 20;
+  const h = Math.max(rows.length, 1) * ROW + 20;
   const barW = (v: number | null) => (v == null ? 0 : v === 0 ? 1.5 : Math.max(2, (v / max) * plotW));
   // where the longest bar's figure ends: a tooltip beside the pointer may only sit right of this
   const clearX = Math.max(LABEL_W, ...rows.map((r) => LABEL_W + barW(r.value) + 7 + (r.value == null ? r.empty ?? "not measured" : r.label).length * 6.6));
@@ -61,9 +62,9 @@ export function OpsBars({ items, axis, unit, sort = true, logos = true, onSelect
             </g>
           );
         })}
-        <line x1={LABEL_W} x2={LABEL_W} y1={0} y2={rows.length * ROW} stroke="var(--axis)" />
-        <text x={LABEL_W} y={rows.length * ROW + 15} fontSize={10.5} fill="var(--ink-3)">{axis}</text>
-        {rows.length === 0 && <text x={W / 2} y={12} textAnchor="middle" fontSize={12} fill="var(--ink-4)">—</text>}
+        <line x1={LABEL_W} x2={LABEL_W} y1={0} y2={Math.max(rows.length, 1) * ROW} stroke="var(--axis)" />
+        <text x={LABEL_W} y={Math.max(rows.length, 1) * ROW + 15} fontSize={10.5} fill="var(--ink-3)">{axis}</text>
+        {rows.length === 0 && <text x={W / 2} y={ROW / 2 + 4} textAnchor="middle" fontSize={12} fill="var(--ink-4)">{emptyText}</text>}
       </svg>
       <TipBox tip={tip} hint={onSelect ? CLICK_HINT : undefined} />
     </div>

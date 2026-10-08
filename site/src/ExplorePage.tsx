@@ -13,13 +13,24 @@ import { GRID_RATES, REALISTIC_REVIEWER, asReviewer, isPublished, type ReviewerS
 type View = "mosaic" | "flow" | "venn" | "confidence";
 type Slots = { standard: string; a: string | null; b: string | null; topics: string[] };
 /** `tarReviewer` (tarGrid.ts): the simulated reviewer's error rates for the TAR arms that carry a meta file (exploreData.ts reviewerScores; REALISTIC_REVIEWER to start); "published" is the shipped scores. */
+/** `v` marks a state stored since the page opened from scratch (migrate); a stored state without it is from before, when the export's suggested arms were pre-placed. */
 /** `rail`: the controls rail (dataset, topics, arms, options) is shown; folded away, the chart has the whole width. */
-type State = { dataset: string; slots: Record<string, Slots>; unit: "docs" | "families"; inherit: Record<string, boolean>; view: View; scale: Scale; threshold: number; sort: SortKey; tarReviewer: ReviewerSetting; rail: boolean };
+type State = { v?: 2; dataset: string; slots: Record<string, Slots>; unit: "docs" | "families"; inherit: Record<string, boolean>; view: View; scale: Scale; threshold: number; sort: SortKey; tarReviewer: ReviewerSetting; rail: boolean };
 type SortKey = "p_desc" | "p_asc" | "chars" | "psel" | "id";
 const KEY = "explore-state-v1";
 const DEFAULT: State = { dataset: "legal10", slots: {}, unit: "docs", inherit: {}, view: "mosaic", scale: "sqrt", threshold: 0.5, sort: "p_desc", tarReviewer: REALISTIC_REVIEWER, rail: true };
 // a stored null (the shipped scores, before the realistic default existed) coerces to undefined and so starts at the default
 const readState = (): State => { try { const s = { ...DEFAULT, ...JSON.parse(localStorage.getItem(KEY) || "{}") }; return { ...s, tarReviewer: asReviewer(s.tarReviewer) ?? REALISTIC_REVIEWER }; } catch { return DEFAULT; } };
+/**
+ * A state stored before the page opened from scratch (no `v`), once the index is known: a dataset's slots holding exactly the export's suggested
+ * pair (index.json `default.a` / `default.b`, pre-placed on every visit back then) are the old default rather than a choice, and are emptied; any
+ * other stored placement is kept. Runs once: the state is marked `v: 2` after.
+ */
+const migrate = (s: State, index: Index): State => {
+  if (s.v === 2) return s;
+  const slots = Object.fromEntries(Object.entries(s.slots).map(([id, sl]) => { const d = index.datasets.find((x) => x.id === id); return [id, d && sl.a === d.default.a && sl.b === d.default.b ? { ...sl, a: null, b: null } : sl]; }));
+  return { ...s, v: 2, slots };
+};
 /** What the explorer's reviewer setting does, in place of the grid pages' line: the reviewer's own calls re-coded per document from the run's provenance. */
 const REVIEWER_ONLY = "Reviewer error re-codes the simulated reviewer's calls document by document from the run's provenance; the classifier and stopping point stay at the published run.";
 /** The TAR arms in the slots that carry reviewer provenance: the ones the reviewer sliders can re-code. */
@@ -35,7 +46,7 @@ export default function ExplorePage() {
 
   const [index, setIndex] = useState<Index | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  useEffect(() => { loadIndex().then(setIndex).catch((e) => setErr(String(e))); }, []);
+  useEffect(() => { loadIndex().then((idx) => { setS((cur) => migrate(cur, idx)); setIndex(idx); }).catch((e) => setErr(String(e))); }, []);
 
   if (err) return <div className="page explore-page"><div className="card"><div className="study-empty">Could not load explore/index.json ({err}). Run <code>bench export-explore</code>.</div></div></div>;
   if (!index) return <div className="page explore-page"><div className="card"><div className="study-empty">Loading…</div></div></div>;
